@@ -11,14 +11,22 @@ import {
   Maximize2,
   Trash2,
   Search,
-  Check
+  Check,
+  Globe,
+  Keyboard,
+  User,
+  ShieldCheck,
+  Sparkles
 } from 'lucide-react';
 import { INSTRUMENTS } from '../../config/instruments';
 import { useBacktestStore } from '../../store/backtestStore';
+import { useAuthStore } from '../../store/authStore';
+import { translations, Language } from '../../i18n/translations';
 import { AssetCategory, DrawingToolType, Timeframe } from '../../types/market';
 
 export const Header: React.FC = () => {
   const [isSymbolDropdownOpen, setIsSymbolDropdownOpen] = useState(false);
+  const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false);
   const [symbolSearch, setSymbolSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<AssetCategory | 'ALL'>('ALL');
 
@@ -32,13 +40,27 @@ export const Header: React.FC = () => {
     setActiveTool,
     clearDrawings,
     autoTradingEnabled,
+    language,
+    setLanguage,
     setOrderModalOpen,
     setAIModalOpen,
     setAnalyticsModalOpen,
-    setDataModalOpen
+    setDataModalOpen,
+    setShortcutsModalOpen,
+    setProfileModalOpen
   } = useBacktestStore();
 
+  const { user, isAuthenticated, setAuthModalOpen } = useAuthStore();
+  const t = translations[language] || translations.vi;
+
   const timeframes: Timeframe[] = ['M1', 'M5', 'M15', 'M30', 'H1', 'H4', 'D1'];
+
+  const languages: { code: Language; label: string; flag: string }[] = [
+    { code: 'vi', label: 'Tiếng Việt', flag: '🇻🇳' },
+    { code: 'en', label: 'English', flag: '🇺🇸' },
+    { code: 'ja', label: '日本語', flag: '🇯🇵' },
+    { code: 'zh', label: '中文', flag: '🇨🇳' }
+  ];
 
   const filteredInstruments = Object.values(INSTRUMENTS).filter(inst => {
     const matchCategory = selectedCategory === 'ALL' || inst.category === selectedCategory;
@@ -58,7 +80,7 @@ export const Header: React.FC = () => {
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/25">
             <TrendingUp className="w-5 h-5 text-white" />
           </div>
-          <span className="font-bold text-sm bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent hidden sm:inline">
+          <span className="font-bold text-sm bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent hidden sm:inline font-mono">
             QuantBacktest<span className="text-indigo-400 font-mono text-xs ml-1 px-1.5 py-0.5 rounded bg-indigo-950/80 border border-indigo-500/40">PRO</span>
           </span>
         </div>
@@ -142,7 +164,7 @@ export const Header: React.FC = () => {
         </div>
 
         {/* Drawing Tools Quick Bar */}
-        <div className="hidden lg:flex items-center gap-0.5 bg-slate-900/90 rounded-md p-0.5 border border-slate-800">
+        <div className="hidden xl:flex items-center gap-0.5 bg-slate-900/90 rounded-md p-0.5 border border-slate-800">
           <button
             onClick={() => setActiveTool('cursor')}
             title="Con trỏ chuột"
@@ -196,9 +218,9 @@ export const Header: React.FC = () => {
       </div>
 
       {/* RIGHT: ACCOUNT METRICS & ACTIONS */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2.5">
         {/* Live Account Stats */}
-        <div className="flex items-center gap-3 bg-slate-900/90 px-3 py-1.5 rounded-lg border border-slate-800 text-xs font-mono">
+        <div className="hidden lg:flex items-center gap-3 bg-slate-900/90 px-3 py-1.5 rounded-lg border border-slate-800 text-xs font-mono">
           <div>
             <span className="text-slate-500 mr-1.5">Balance:</span>
             <span className="font-semibold text-slate-200">${account.balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
@@ -223,7 +245,7 @@ export const Header: React.FC = () => {
           className="flex items-center gap-1.5 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white px-3 py-1.5 rounded-md text-xs font-semibold shadow-md shadow-indigo-600/30 transition-all active:scale-95"
         >
           <PlusCircle className="w-3.5 h-3.5" />
-          <span>Vào lệnh</span>
+          <span className="hidden sm:inline">{t.orderEntry}</span>
         </button>
 
         {/* AI Strategy Studio Button */}
@@ -246,21 +268,91 @@ export const Header: React.FC = () => {
         <button
           onClick={() => setAnalyticsModalOpen(true)}
           className="p-1.5 sm:px-2.5 sm:py-1.5 bg-slate-800/80 hover:bg-slate-700 text-slate-300 border border-slate-700 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors"
-          title="Báo cáo & Thống kê"
+          title={t.analytics}
         >
           <BarChart3 className="w-4 h-4 text-emerald-400" />
-          <span className="hidden md:inline">Báo cáo</span>
+          <span className="hidden md:inline">{t.analytics.split('&')[0].trim()}</span>
         </button>
 
         {/* Data Import Button */}
         <button
           onClick={() => setDataModalOpen(true)}
           className="p-1.5 sm:px-2.5 sm:py-1.5 bg-slate-800/80 hover:bg-slate-700 text-slate-300 border border-slate-700 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors"
-          title="Nạp dữ liệu CSV / Mẫu"
+          title={t.dataImport}
         >
           <Upload className="w-4 h-4 text-sky-400" />
-          <span className="hidden md:inline">Data</span>
+          <span className="hidden md:inline">{t.dataImport}</span>
         </button>
+
+        {/* Shortcuts Button */}
+        <button
+          onClick={() => setShortcutsModalOpen(true)}
+          className="p-1.5 bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-slate-200 border border-slate-700 rounded-md transition-colors"
+          title={t.shortcuts}
+        >
+          <Keyboard className="w-4 h-4" />
+        </button>
+
+        {/* LANGUAGE SWITCHER */}
+        <div className="relative">
+          <button
+            onClick={() => setIsLangDropdownOpen(!isLangDropdownOpen)}
+            className="flex items-center gap-1 px-2 py-1.5 bg-slate-800/80 hover:bg-slate-700 border border-slate-700 rounded-md text-xs font-mono text-slate-300 transition-colors"
+            title="Đổi ngôn ngữ (Language)"
+          >
+            <span>{languages.find(l => l.code === language)?.flag}</span>
+            <span className="font-bold uppercase text-[11px]">{language}</span>
+          </button>
+
+          {isLangDropdownOpen && (
+            <div className="absolute right-0 mt-2 w-36 glass-dropdown rounded-lg p-1.5 z-50 animate-in fade-in zoom-in-95">
+              {languages.map(item => (
+                <button
+                  key={item.code}
+                  onClick={() => {
+                    setLanguage(item.code);
+                    setIsLangDropdownOpen(false);
+                  }}
+                  className={`w-full flex items-center justify-between p-1.5 rounded text-xs transition-colors ${language === item.code ? 'bg-indigo-950 text-indigo-300 font-bold' : 'text-slate-300 hover:bg-slate-800'}`}
+                >
+                  <div className="flex items-center gap-2">
+                    <span>{item.flag}</span>
+                    <span>{item.label}</span>
+                  </div>
+                  {language === item.code && <Check className="w-3.5 h-3.5 text-indigo-400" />}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* USER PROFILE / AUTH BUTTON */}
+        {isAuthenticated && user ? (
+          <button
+            onClick={() => setProfileModalOpen(true)}
+            className="flex items-center gap-2 pl-2 pr-2.5 py-1 bg-slate-900 hover:bg-slate-800 border border-slate-700 rounded-full transition-all active:scale-95"
+          >
+            <img
+              src={user.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80'}
+              alt={user.name}
+              className="w-6 h-6 rounded-full object-cover border border-indigo-500/50"
+            />
+            <span className="text-xs font-semibold text-slate-200 hidden md:inline max-w-[90px] truncate">
+              {user.name}
+            </span>
+            <span className="px-1.5 py-0.2 rounded text-[9px] font-extrabold bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950">
+              {user.tier}
+            </span>
+          </button>
+        ) : (
+          <button
+            onClick={() => setAuthModalOpen(true, 'login')}
+            className="px-3 py-1.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-semibold rounded-md text-xs shadow-md shadow-indigo-600/30 transition-all active:scale-95 flex items-center gap-1.5"
+          >
+            <User className="w-3.5 h-3.5" />
+            <span>{t.login}</span>
+          </button>
+        )}
       </div>
     </header>
   );

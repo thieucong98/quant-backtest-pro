@@ -10,6 +10,7 @@ import {
   Layers
 } from 'lucide-react';
 import { useBacktestStore } from '../../store/backtestStore';
+import { translations } from '../../i18n/translations';
 
 export const ReplayBar: React.FC = () => {
   const {
@@ -24,8 +25,11 @@ export const ReplayBar: React.FC = () => {
     currentIndex,
     candles,
     jumpToIndex,
-    timeframe
+    timeframe,
+    language
   } = useBacktestStore();
+
+  const t = translations[language] || translations.vi;
 
   const currentCandle = candles[currentIndex];
   const totalCandles = candles.length;
@@ -46,7 +50,7 @@ export const ReplayBar: React.FC = () => {
           onClick={stepBackward}
           disabled={isPlaying || currentIndex <= 0}
           className="p-1.5 bg-slate-800 hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed border border-slate-700 text-slate-300 hover:text-white rounded-md transition-colors"
-          title="Lùi 1 nến (Step -1)"
+          title={`${t.stepBackward} (Ctrl+Z)`}
         >
           <SkipBack className="w-3.5 h-3.5" />
         </button>
@@ -59,17 +63,17 @@ export const ReplayBar: React.FC = () => {
               ? 'bg-amber-600 hover:bg-amber-500 shadow-amber-600/30'
               : 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-600/30'
           }`}
-          title="Play / Pause (Phím Space)"
+          title={`${t.play} / ${t.pause} (Space)`}
         >
           {isPlaying ? (
             <>
               <Pause className="w-3.5 h-3.5 fill-current" />
-              <span>Pause</span>
+              <span>{t.pause}</span>
             </>
           ) : (
             <>
               <Play className="w-3.5 h-3.5 fill-current" />
-              <span>Play</span>
+              <span>{t.play}</span>
             </>
           )}
         </button>
@@ -79,17 +83,17 @@ export const ReplayBar: React.FC = () => {
           onClick={stepForward}
           disabled={isPlaying || currentIndex >= totalCandles - 1}
           className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed border border-slate-700 text-slate-200 rounded-md flex items-center gap-1 font-mono transition-colors"
-          title="Tới 1 nến (Phím F)"
+          title={`${t.stepForward} (F)`}
         >
           <SkipForward className="w-3.5 h-3.5" />
-          <span className="hidden sm:inline">Step +1</span>
+          <span className="hidden sm:inline">{t.stepForward}</span>
         </button>
 
         {/* Reset Button */}
         <button
           onClick={resetSimulation}
           className="p-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-400 hover:text-slate-200 rounded-md transition-colors"
-          title="Khởi động lại mô phỏng"
+          title={t.reset}
         >
           <RotateCcw className="w-3.5 h-3.5" />
         </button>
@@ -97,13 +101,13 @@ export const ReplayBar: React.FC = () => {
         {/* Speed Selector */}
         <div className="flex items-center gap-1.5 bg-slate-900 px-2 py-1 rounded-md border border-slate-800 ml-1">
           <Gauge className="w-3.5 h-3.5 text-indigo-400" />
-          <span className="text-slate-400 font-mono hidden md:inline">Tốc độ:</span>
+          <span className="text-slate-400 font-mono hidden md:inline">{t.speed}:</span>
           <select
             value={speed}
             onChange={(e) => setSpeed(Number(e.target.value))}
             className="bg-transparent text-indigo-300 font-bold font-mono focus:outline-none cursor-pointer text-xs"
           >
-            <option value={1} className="bg-slate-900">1x (1 nến/s)</option>
+            <option value={1} className="bg-slate-900">1x (1 {t.candlesCount}/s)</option>
             <option value={2} className="bg-slate-900">2x</option>
             <option value={5} className="bg-slate-900">5x</option>
             <option value={10} className="bg-slate-900">10x</option>
@@ -117,7 +121,7 @@ export const ReplayBar: React.FC = () => {
       {/* TIMELINE PROGRESS & SCRUBBER */}
       <div className="flex-1 max-w-xl flex items-center gap-3">
         <span className="font-mono text-[11px] text-slate-400 hidden md:inline">
-          {currentIndex + 1} / {totalCandles} nến
+          {currentIndex + 1} / {totalCandles} {t.candlesCount}
         </span>
 
         {/* Scrubber Range Slider */}

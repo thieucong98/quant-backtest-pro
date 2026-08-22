@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { createChart, IChartApi, ISeriesApi, CandlestickData, Time, LineStyle } from 'lightweight-charts';
 import { ArrowUpRight, ArrowDownRight, Zap, Shield, Target } from 'lucide-react';
 import { useBacktestStore } from '../../store/backtestStore';
+import { translations } from '../../i18n/translations';
 import { DrawingCanvas } from './DrawingCanvas';
 
 export const TradingViewChart: React.FC = () => {
@@ -29,8 +30,11 @@ export const TradingViewChart: React.FC = () => {
     markers,
     economicNews,
     executeMarketOrder,
-    account
+    account,
+    language
   } = useBacktestStore();
+
+  const t = translations[language] || translations.vi;
 
   // Khởi tạo Chart khi component mount
   useEffect(() => {
@@ -283,7 +287,7 @@ export const TradingViewChart: React.FC = () => {
               className="px-3.5 py-2 bg-gradient-to-r from-teal-600 to-teal-500 hover:from-teal-500 hover:to-teal-400 text-white font-bold rounded-lg flex items-center gap-1.5 shadow-lg shadow-teal-600/30 active:scale-95 transition-all"
             >
               <ArrowUpRight className="w-4 h-4" />
-              <span>BUY</span>
+              <span>{t.buy}</span>
             </button>
 
             {/* LOT SIZE INPUT */}
@@ -305,7 +309,7 @@ export const TradingViewChart: React.FC = () => {
               className="px-3.5 py-2 bg-gradient-to-r from-rose-600 to-rose-500 hover:from-rose-500 hover:to-rose-400 text-white font-bold rounded-lg flex items-center gap-1.5 shadow-lg shadow-rose-600/30 active:scale-95 transition-all"
             >
               <ArrowDownRight className="w-4 h-4" />
-              <span>SELL</span>
+              <span>{t.sell}</span>
             </button>
 
             <div className="h-6 w-px bg-slate-800 mx-0.5" />
@@ -318,14 +322,14 @@ export const TradingViewChart: React.FC = () => {
                 onChange={(e) => setUseAutoSL(e.target.checked)}
                 className="rounded accent-indigo-500"
               />
-              <span className="text-rose-400 font-semibold">SL:</span>
+              <span className="text-rose-400 font-semibold">{t.autoSL}:</span>
               <input
                 type="number"
                 value={autoSLPips}
                 onChange={(e) => setAutoSLPips(parseInt(e.target.value) || 0)}
                 className="w-9 bg-slate-900 border border-slate-700 text-center text-[10px] rounded p-0.5 text-slate-200"
               />
-              <span className="text-slate-500">p</span>
+              <span className="text-slate-500">{t.pips}</span>
             </label>
 
             {/* AUTO TP CHECKBOX */}
@@ -336,21 +340,21 @@ export const TradingViewChart: React.FC = () => {
                 onChange={(e) => setUseAutoTP(e.target.checked)}
                 className="rounded accent-indigo-500"
               />
-              <span className="text-teal-400 font-semibold">TP:</span>
+              <span className="text-teal-400 font-semibold">{t.autoTP}:</span>
               <input
                 type="number"
                 value={autoTPPips}
                 onChange={(e) => setAutoTPPips(parseInt(e.target.value) || 0)}
                 className="w-9 bg-slate-900 border border-slate-700 text-center text-[10px] rounded p-0.5 text-slate-200"
               />
-              <span className="text-slate-500">p</span>
+              <span className="text-slate-500">{t.pips}</span>
             </label>
 
             {/* Minimize button */}
             <button
               onClick={() => setIsQuickDockOpen(false)}
               className="text-slate-500 hover:text-slate-300 px-1"
-              title="Thu nhỏ thanh đặt lệnh nhanh"
+              title="Minimize"
             >
               ✕
             </button>
@@ -361,7 +365,7 @@ export const TradingViewChart: React.FC = () => {
             className="glass-panel px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 text-xs text-indigo-300 font-semibold hover:bg-slate-800 transition-colors shadow-lg"
           >
             <Zap className="w-3.5 h-3.5 text-amber-400" />
-            <span>Quick Trade</span>
+            <span>{t.quickTrade}</span>
           </button>
         )}
       </div>

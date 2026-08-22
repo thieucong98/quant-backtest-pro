@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { AnalyticsEngine, MonteCarloResult, DayHourHeatmapCell } from '../../engine/analytics';
 import { useBacktestStore } from '../../store/backtestStore';
+import { translations } from '../../i18n/translations';
 
 export const AnalyticsDashboardModal: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'overview' | 'montecarlo' | 'heatmap'>('overview');
@@ -26,11 +27,13 @@ export const AnalyticsDashboardModal: React.FC = () => {
     closedPositions,
     account,
     equityCurve,
-    instrument
+    instrument,
+    language
   } = useBacktestStore();
 
   if (!isAnalyticsModalOpen) return null;
 
+  const t = translations[language] || translations.vi;
   const report = AnalyticsEngine.calculateReport(account.initialBalance, closedPositions);
   const monteCarlo: MonteCarloResult = AnalyticsEngine.runMonteCarlo(account.initialBalance, closedPositions, 1000);
   const heatmapData: DayHourHeatmapCell[] = AnalyticsEngine.calculateHeatmap(closedPositions);
@@ -127,7 +130,7 @@ export const AnalyticsDashboardModal: React.FC = () => {
     return (
       <div className="relative w-full h-48 bg-slate-950 p-2 rounded-lg border border-slate-800">
         <div className="absolute top-2 left-3 text-[10px] font-mono text-purple-300">
-          🎲 10 Đường Mô phỏng Mẫu (Trong tổng số 1,000 kịch bản ngẫu nhiên)
+          🎲 10 Representative Paths (out of 1,000 runs)
         </div>
         <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full">
           <line x1={padding} y1={height / 2} x2={width - padding} y2={height / 2} stroke="#1e293b" strokeDasharray="3 3" />
@@ -163,7 +166,7 @@ export const AnalyticsDashboardModal: React.FC = () => {
             <div className="w-6 h-6 rounded bg-emerald-600/30 border border-emerald-500/40 flex items-center justify-center">
               <Activity className="w-3.5 h-3.5 text-emerald-400" />
             </div>
-            <span className="font-bold text-sm text-slate-100">Báo cáo & Thống kê Định lượng (Quantitative Analytics)</span>
+            <span className="font-bold text-sm text-slate-100">{t.analyticsTitle}</span>
           </div>
 
           <div className="flex items-center gap-2">
@@ -173,7 +176,7 @@ export const AnalyticsDashboardModal: React.FC = () => {
               className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 disabled:opacity-40 text-slate-200 border border-slate-700 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-colors"
             >
               <Download className="w-3.5 h-3.5 text-indigo-400" />
-              <span>Xuất CSV Lịch sử</span>
+              <span>{t.exportCSV}</span>
             </button>
 
             <button
@@ -194,7 +197,7 @@ export const AnalyticsDashboardModal: React.FC = () => {
             }`}
           >
             <Activity className="w-3.5 h-3.5" />
-            <span>Tổng quan & Chỉ số</span>
+            <span>{t.overviewTab}</span>
           </button>
 
           <button
@@ -204,7 +207,7 @@ export const AnalyticsDashboardModal: React.FC = () => {
             }`}
           >
             <Dice5 className="w-3.5 h-3.5 text-purple-400" />
-            <span>Mô phỏng Monte Carlo (1,000 chu kỳ)</span>
+            <span>{t.monteCarloTab}</span>
           </button>
 
           <button
@@ -214,7 +217,7 @@ export const AnalyticsDashboardModal: React.FC = () => {
             }`}
           >
             <Grid className="w-3.5 h-3.5 text-amber-400" />
-            <span>Heatmap Lợi nhuận theo Giờ/Thứ</span>
+            <span>{t.heatmapTab}</span>
           </button>
         </div>
 
@@ -225,32 +228,32 @@ export const AnalyticsDashboardModal: React.FC = () => {
             <div className="space-y-4">
               {/* EQUITY CURVE GRAPH */}
               <div>
-                <h4 className="font-bold text-slate-300 text-xs mb-2">Biểu đồ Tăng trưởng Vốn (Equity / Balance Growth):</h4>
+                <h4 className="font-bold text-slate-300 text-xs mb-2">{t.equityGrowth}:</h4>
                 {renderEquityChart()}
               </div>
 
               {/* KEY METRICS GRID */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <div className="bg-slate-900 border border-slate-800 p-3 rounded-lg">
-                  <div className="text-slate-400 text-[11px]">Lợi nhuận ròng:</div>
+                  <div className="text-slate-400 text-[11px]">{t.netProfit}:</div>
                   <div className={`text-lg font-bold mt-1 ${report.netProfit >= 0 ? 'text-teal-400' : 'text-rose-400'}`}>
                     {report.netProfit >= 0 ? '+' : ''}${report.netProfit.toLocaleString()}
                   </div>
                 </div>
 
                 <div className="bg-slate-900 border border-slate-800 p-3 rounded-lg">
-                  <div className="text-slate-400 text-[11px]">Tỷ lệ Thắng (Win Rate):</div>
+                  <div className="text-slate-400 text-[11px]">{t.winRate}:</div>
                   <div className="text-lg font-bold text-indigo-300 mt-1">{report.winRate}%</div>
-                  <div className="text-[10px] text-slate-500 mt-0.5">{report.winTrades} Thắng / {report.lossTrades} Thua</div>
+                  <div className="text-[10px] text-slate-500 mt-0.5">{report.winTrades} W / {report.lossTrades} L</div>
                 </div>
 
                 <div className="bg-slate-900 border border-slate-800 p-3 rounded-lg">
-                  <div className="text-slate-400 text-[11px]">Profit Factor:</div>
+                  <div className="text-slate-400 text-[11px]">{t.profitFactor}:</div>
                   <div className="text-lg font-bold text-amber-300 mt-1">{report.profitFactor}</div>
                 </div>
 
                 <div className="bg-slate-900 border border-slate-800 p-3 rounded-lg">
-                  <div className="text-slate-400 text-[11px]">Sụt giảm tối đa (Max DD):</div>
+                  <div className="text-slate-400 text-[11px]">{t.maxDrawdown}:</div>
                   <div className="text-lg font-bold text-rose-400 mt-1">{report.maxDrawdownPercent.toFixed(1)}%</div>
                   <div className="text-[10px] text-slate-500 mt-0.5">-${report.maxDrawdownAmount.toFixed(2)}</div>
                 </div>
@@ -259,41 +262,41 @@ export const AnalyticsDashboardModal: React.FC = () => {
               {/* DETAILED STATS TABLE */}
               <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-4 grid grid-cols-2 sm:grid-cols-3 gap-y-3 gap-x-6 text-xs">
                 <div className="flex justify-between border-b border-slate-800/80 pb-1.5">
-                  <span className="text-slate-400">Tổng số lệnh:</span>
+                  <span className="text-slate-400">{t.totalTrades}:</span>
                   <span className="font-semibold text-slate-200">{report.totalTrades}</span>
                 </div>
                 <div className="flex justify-between border-b border-slate-800/80 pb-1.5">
-                  <span className="text-slate-400">Tổng Lãi (Gross Profit):</span>
+                  <span className="text-slate-400">{t.grossProfit}:</span>
                   <span className="font-semibold text-teal-400">+${report.grossProfit}</span>
                 </div>
                 <div className="flex justify-between border-b border-slate-800/80 pb-1.5">
-                  <span className="text-slate-400">Tổng Lỗ (Gross Loss):</span>
+                  <span className="text-slate-400">{t.grossLoss}:</span>
                   <span className="font-semibold text-rose-400">-${report.grossLoss}</span>
                 </div>
 
                 <div className="flex justify-between border-b border-slate-800/80 pb-1.5">
-                  <span className="text-slate-400">Lãi TB / lệnh thắng:</span>
+                  <span className="text-slate-400">{t.avgWin}:</span>
                   <span className="text-teal-400">+${report.avgWin}</span>
                 </div>
                 <div className="flex justify-between border-b border-slate-800/80 pb-1.5">
-                  <span className="text-slate-400">Lỗ TB / lệnh thua:</span>
+                  <span className="text-slate-400">{t.avgLoss}:</span>
                   <span className="text-rose-400">-${report.avgLoss}</span>
                 </div>
                 <div className="flex justify-between border-b border-slate-800/80 pb-1.5">
-                  <span className="text-slate-400">Tỷ lệ Risk : Reward:</span>
+                  <span className="text-slate-400">{t.riskReward}:</span>
                   <span className="font-bold text-indigo-300">1 : {report.riskRewardRatio}</span>
                 </div>
 
                 <div className="flex justify-between border-b border-slate-800/80 pb-1.5">
-                  <span className="text-slate-400">Expected Payoff:</span>
+                  <span className="text-slate-400">{t.expectedPayoff}:</span>
                   <span className="text-slate-200">${report.expectedPayoff}</span>
                 </div>
                 <div className="flex justify-between border-b border-slate-800/80 pb-1.5">
-                  <span className="text-slate-400">Sharpe Ratio:</span>
+                  <span className="text-slate-400">{t.sharpeRatio}:</span>
                   <span className="font-bold text-amber-400">{report.sharpeRatio}</span>
                 </div>
                 <div className="flex justify-between border-b border-slate-800/80 pb-1.5">
-                  <span className="text-slate-400">Sortino Ratio:</span>
+                  <span className="text-slate-400">{t.sortinoRatio}:</span>
                   <span className="font-bold text-amber-400">{report.sortinoRatio}</span>
                 </div>
               </div>
@@ -304,7 +307,7 @@ export const AnalyticsDashboardModal: React.FC = () => {
           {activeTab === 'montecarlo' && (
             <div className="space-y-4">
               <div className="bg-purple-950/40 border border-purple-500/30 p-3 rounded-lg text-xs leading-relaxed text-purple-200">
-                🎲 <b>Mô phỏng Monte Carlo</b> xáo trộn ngẫu nhiên thứ tự các lệnh đã thực thi <b>1,000 lần</b> để kiểm định độ bền bỉ của chiến lược dưới các kịch bản thị trường bất lợi nhất.
+                🎲 {t.monteCarloDesc}
               </div>
 
               {renderMonteCarloChart()}
@@ -312,22 +315,22 @@ export const AnalyticsDashboardModal: React.FC = () => {
               {/* Monte Carlo Results Grid */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <div className="bg-slate-900 border border-slate-800 p-3 rounded-lg">
-                  <div className="text-slate-400 text-[11px]">Lợi nhuận Trung vị (Median):</div>
+                  <div className="text-slate-400 text-[11px]">{t.medianProfit}:</div>
                   <div className="text-lg font-bold text-teal-400 mt-1">+${monteCarlo.medianProfit}</div>
                 </div>
 
                 <div className="bg-slate-900 border border-slate-800 p-3 rounded-lg">
-                  <div className="text-slate-400 text-[11px]">Max DD Kịch bản Xấu nhất:</div>
+                  <div className="text-slate-400 text-[11px]">{t.worstCaseDD}:</div>
                   <div className="text-lg font-bold text-rose-400 mt-1">-{monteCarlo.worstCaseDrawdown}%</div>
                 </div>
 
                 <div className="bg-slate-900 border border-slate-800 p-3 rounded-lg">
-                  <div className="text-slate-400 text-[11px]">95% Phân vị Max DD:</div>
+                  <div className="text-slate-400 text-[11px]">{t.percentile95DD}:</div>
                   <div className="text-lg font-bold text-amber-300 mt-1">-{monteCarlo.percentile95Drawdown}%</div>
                 </div>
 
                 <div className="bg-slate-900 border border-slate-800 p-3 rounded-lg">
-                  <div className="text-slate-400 text-[11px]">Xác suất Cháy vốn (&gt;50% DD):</div>
+                  <div className="text-slate-400 text-[11px]">{t.riskOfRuin}:</div>
                   <div className={`text-lg font-bold mt-1 ${monteCarlo.riskOfRuinPercent > 5 ? 'text-rose-400' : 'text-teal-400'}`}>
                     {monteCarlo.riskOfRuinPercent}%
                   </div>
@@ -340,7 +343,7 @@ export const AnalyticsDashboardModal: React.FC = () => {
           {activeTab === 'heatmap' && (
             <div className="space-y-3">
               <div className="text-slate-300 text-xs font-semibold">
-                Phân bố Lợi nhuận và Hiệu suất theo Khung Giờ (UTC) & Ngày trong tuần:
+                {t.heatmapDesc}
               </div>
 
               <div className="bg-slate-950 p-4 rounded-lg border border-slate-800 overflow-x-auto">
@@ -363,7 +366,7 @@ export const AnalyticsDashboardModal: React.FC = () => {
                       >
                         <div className="font-bold">{cell.dayName} {cell.hour}h</div>
                         <div className="text-[11px] font-bold mt-0.5">{cell.pnl >= 0 ? '+' : ''}${cell.pnl}</div>
-                        <div className="text-[9px] opacity-75">{cell.tradesCount} lệnh ({cell.winRate}%)</div>
+                        <div className="text-[9px] opacity-75">{cell.tradesCount} trades ({cell.winRate}%)</div>
                       </div>
                     ))
                   )}

@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { PREBUILT_STRATEGIES } from '../../engine/strategySandbox';
 import { useBacktestStore } from '../../store/backtestStore';
+import { translations } from '../../i18n/translations';
 import { AIStrategyDefinition } from '../../types/strategy';
 
 export const AIStrategyModal: React.FC = () => {
@@ -26,8 +27,11 @@ export const AIStrategyModal: React.FC = () => {
     autoTradingEnabled,
     toggleAutoTrading,
     addStrategyLog,
-    instrument
+    instrument,
+    language
   } = useBacktestStore();
+
+  const t = translations[language] || translations.vi;
 
   const [prompt, setPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);

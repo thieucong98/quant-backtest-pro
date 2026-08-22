@@ -43,11 +43,14 @@ interface BacktestStore {
   llmApiKey: string;
   llmProvider: 'openai' | 'claude' | 'gemini' | 'ollama';
 
-  // Modals
+  // Modals & Language
+  language: 'vi' | 'en' | 'ja' | 'zh';
   isOrderModalOpen: boolean;
   isAnalyticsModalOpen: boolean;
   isAIModalOpen: boolean;
   isDataModalOpen: boolean;
+  isShortcutsModalOpen: boolean;
+  isProfileModalOpen: boolean;
 
   // Engine references
   matchingEngine: OrderMatchingEngine;
@@ -91,11 +94,14 @@ interface BacktestStore {
   addStrategyLog: (type: 'INFO' | 'SIGNAL' | 'ERROR', message: string) => void;
   setLLMSettings: (provider: 'openai' | 'claude' | 'gemini' | 'ollama', apiKey: string) => void;
 
-  // Modal Toggles
+  // Modal & Lang Toggles
+  setLanguage: (lang: 'vi' | 'en' | 'ja' | 'zh') => void;
   setOrderModalOpen: (open: boolean) => void;
   setAnalyticsModalOpen: (open: boolean) => void;
   setAIModalOpen: (open: boolean) => void;
   setDataModalOpen: (open: boolean) => void;
+  setShortcutsModalOpen: (open: boolean) => void;
+  setProfileModalOpen: (open: boolean) => void;
 }
 
 // Khởi tạo dữ liệu mẫu ban đầu
@@ -151,10 +157,13 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
     llmApiKey: '',
     llmProvider: 'gemini',
 
+    language: (localStorage.getItem('quant_lang') as any) || 'vi',
     isOrderModalOpen: false,
     isAnalyticsModalOpen: false,
     isAIModalOpen: false,
     isDataModalOpen: false,
+    isShortcutsModalOpen: false,
+    isProfileModalOpen: false,
 
     matchingEngine: initialMatchingEngine,
     strategyRunner: initialStrategyRunner,
@@ -613,10 +622,16 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
       set({ llmProvider: provider, llmApiKey: apiKey });
     },
 
-    // --- MODAL TOGGLES ---
+    // --- MODAL & LANG TOGGLES ---
+    setLanguage: (lang) => {
+      localStorage.setItem('quant_lang', lang);
+      set({ language: lang });
+    },
     setOrderModalOpen: (open) => set({ isOrderModalOpen: open }),
     setAnalyticsModalOpen: (open) => set({ isAnalyticsModalOpen: open }),
     setAIModalOpen: (open) => set({ isAIModalOpen: open }),
-    setDataModalOpen: (open) => set({ isDataModalOpen: open })
+    setDataModalOpen: (open) => set({ isDataModalOpen: open }),
+    setShortcutsModalOpen: (open) => set({ isShortcutsModalOpen: open }),
+    setProfileModalOpen: (open) => set({ isProfileModalOpen: open })
   };
 });

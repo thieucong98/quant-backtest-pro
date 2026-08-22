@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, ShieldAlert, ArrowUpRight, ArrowDownRight, Calculator } from 'lucide-react';
 import { useBacktestStore } from '../../store/backtestStore';
+import { translations } from '../../i18n/translations';
 import { OrderSide, OrderType } from '../../types/order';
 
 export const OrderEntryModal: React.FC = () => {
@@ -12,8 +13,11 @@ export const OrderEntryModal: React.FC = () => {
     candles,
     currentIndex,
     executeMarketOrder,
-    placePendingOrder
+    placePendingOrder,
+    language
   } = useBacktestStore();
+
+  const t = translations[language] || translations.vi;
 
   const currentCandle = candles[currentIndex];
 

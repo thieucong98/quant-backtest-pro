@@ -15,6 +15,7 @@ import {
   BookOpen
 } from 'lucide-react';
 import { useBacktestStore } from '../../store/backtestStore';
+import { translations } from '../../i18n/translations';
 import { Position } from '../../types/order';
 
 export const PositionsTable: React.FC = () => {
@@ -38,9 +39,11 @@ export const PositionsTable: React.FC = () => {
     updatePositionTags,
     instrument,
     candles,
-    currentIndex
+    currentIndex,
+    language
   } = useBacktestStore();
 
+  const t = translations[language] || translations.vi;
   const currentCandle = candles[currentIndex];
 
   const handleOpenEdit = (pos: Position) => {
@@ -80,7 +83,7 @@ export const PositionsTable: React.FC = () => {
             }`}
           >
             <Layers className="w-3.5 h-3.5" />
-            <span>Vị thế mở ({openPositions.length})</span>
+            <span>{t.openPositions} ({openPositions.length})</span>
           </button>
 
           <button
@@ -92,7 +95,7 @@ export const PositionsTable: React.FC = () => {
             }`}
           >
             <Clock className="w-3.5 h-3.5" />
-            <span>Lệnh chờ ({pendingOrders.length})</span>
+            <span>{t.pendingOrders} ({pendingOrders.length})</span>
           </button>
 
           <button
@@ -104,7 +107,7 @@ export const PositionsTable: React.FC = () => {
             }`}
           >
             <History className="w-3.5 h-3.5" />
-            <span>Lịch sử ({closedPositions.length})</span>
+            <span>{t.history} ({closedPositions.length})</span>
           </button>
 
           <button
@@ -116,7 +119,7 @@ export const PositionsTable: React.FC = () => {
             }`}
           >
             <Terminal className="w-3.5 h-3.5" />
-            <span>AI Strategy Logs ({strategyLogs.length})</span>
+            <span>{t.strategyLogs} ({strategyLogs.length})</span>
           </button>
         </div>
 
@@ -128,7 +131,7 @@ export const PositionsTable: React.FC = () => {
             }}
             className="text-[11px] px-2 py-0.5 bg-rose-950/80 hover:bg-rose-900 border border-rose-500/40 text-rose-300 rounded transition-colors"
           >
-            Đóng tất cả lệnh
+            {t.closeAll}
           </button>
         )}
       </div>
@@ -140,22 +143,22 @@ export const PositionsTable: React.FC = () => {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-slate-800 text-slate-400 bg-slate-900/50 sticky top-0 text-[11px]">
-                <th className="py-1.5 px-3">Symbol</th>
-                <th className="py-1.5 px-2">Side</th>
-                <th className="py-1.5 px-2">Lot</th>
-                <th className="py-1.5 px-2">Giá vào</th>
-                <th className="py-1.5 px-2">Giá hiện tại</th>
+                <th className="py-1.5 px-3">{t.symbol}</th>
+                <th className="py-1.5 px-2">{t.side}</th>
+                <th className="py-1.5 px-2">{t.lot}</th>
+                <th className="py-1.5 px-2">{t.entryPrice}</th>
+                <th className="py-1.5 px-2">{t.currentPrice}</th>
                 <th className="py-1.5 px-2">SL / TP</th>
-                <th className="py-1.5 px-2">Quick Pro Actions</th>
-                <th className="py-1.5 px-3 text-right">Floating PnL</th>
-                <th className="py-1.5 px-3 text-center">Đóng</th>
+                <th className="py-1.5 px-2">Pro Actions</th>
+                <th className="py-1.5 px-3 text-right">{t.floatingPnL}</th>
+                <th className="py-1.5 px-3 text-center">{t.actions}</th>
               </tr>
             </thead>
             <tbody>
               {openPositions.length === 0 ? (
                 <tr>
                   <td colSpan={9} className="text-center py-8 text-slate-500">
-                    Chưa có vị thế nào đang mở. Nhấn <b>"BUY / SELL"</b> trên thanh Quick Trade để mở vị thế.
+                    {t.noOpenPositions}
                   </td>
                 </tr>
               ) : (
@@ -182,24 +185,23 @@ export const PositionsTable: React.FC = () => {
                       <div className="text-teal-400 text-[10px]">TP: {pos.takeProfit ? pos.takeProfit.toFixed(instrument.digits) : 'None'}</div>
                     </td>
                     <td className="py-1.5 px-2">
-                      {/* Pro Actions: Set BE & Close 50% */}
                       <div className="flex items-center gap-1">
                         <button
                           onClick={() => setBreakeven(pos.id)}
                           className="px-1.5 py-0.5 bg-amber-950/80 hover:bg-amber-900 border border-amber-500/40 text-amber-300 rounded text-[10px] font-bold flex items-center gap-0.5"
-                          title="Dời Stop Loss về Hòa vốn (Entry + 1 pip)"
+                          title="Set Breakeven SL"
                         >
                           <ShieldCheck className="w-3 h-3" />
-                          <span>Set BE</span>
+                          <span>{t.setBE}</span>
                         </button>
                         <button
                           onClick={() => partialClose(pos.id, 50)}
                           disabled={pos.lotSize <= instrument.minLot}
                           className="px-1.5 py-0.5 bg-sky-950/80 hover:bg-sky-900 disabled:opacity-40 border border-sky-500/40 text-sky-300 rounded text-[10px] font-bold flex items-center gap-0.5"
-                          title="Chốt lời 50% khối lượng lệnh"
+                          title="Close 50% Lot"
                         >
                           <Percent className="w-3 h-3" />
-                          <span>Cắt 50%</span>
+                          <span>{t.close50}</span>
                         </button>
                       </div>
                     </td>
@@ -211,14 +213,14 @@ export const PositionsTable: React.FC = () => {
                         <button
                           onClick={() => handleOpenEdit(pos)}
                           className="p-1 hover:bg-slate-700 rounded text-slate-400 hover:text-indigo-300"
-                          title="Sửa SL / TP & Gắn Tag chiến thuật"
+                          title={t.editSLTP}
                         >
                           <Edit2 className="w-3.5 h-3.5" />
                         </button>
                         <button
                           onClick={() => closePosition(pos.id)}
                           className="p-1 hover:bg-rose-900/60 rounded text-slate-400 hover:text-rose-300"
-                          title="Đóng vị thế 100%"
+                          title={t.closePosition}
                         >
                           <X className="w-3.5 h-3.5" />
                         </button>
@@ -236,21 +238,21 @@ export const PositionsTable: React.FC = () => {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-slate-800 text-slate-400 bg-slate-900/50 sticky top-0 text-[11px]">
-                <th className="py-1.5 px-3">Symbol</th>
+                <th className="py-1.5 px-3">{t.symbol}</th>
                 <th className="py-1.5 px-2">Type</th>
-                <th className="py-1.5 px-2">Side</th>
-                <th className="py-1.5 px-2">Lot</th>
-                <th className="py-1.5 px-2">Giá kích hoạt</th>
+                <th className="py-1.5 px-2">{t.side}</th>
+                <th className="py-1.5 px-2">{t.lot}</th>
+                <th className="py-1.5 px-2">Trigger Price</th>
                 <th className="py-1.5 px-2">SL</th>
                 <th className="py-1.5 px-2">TP</th>
-                <th className="py-1.5 px-3 text-center">Hành động</th>
+                <th className="py-1.5 px-3 text-center">{t.actions}</th>
               </tr>
             </thead>
             <tbody>
               {pendingOrders.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="text-center py-8 text-slate-500">
-                    Không có lệnh chờ nào.
+                    {t.noPendingOrders}
                   </td>
                 </tr>
               ) : (
@@ -272,7 +274,7 @@ export const PositionsTable: React.FC = () => {
                         onClick={() => cancelPendingOrder(order.id)}
                         className="px-2 py-0.5 bg-slate-800 hover:bg-rose-900/60 text-slate-300 hover:text-rose-300 rounded text-[10px]"
                       >
-                        Hủy
+                        {t.cancel}
                       </button>
                     </td>
                   </tr>
@@ -287,21 +289,21 @@ export const PositionsTable: React.FC = () => {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-slate-800 text-slate-400 bg-slate-900/50 sticky top-0 text-[11px]">
-                <th className="py-1.5 px-3">Thời gian</th>
-                <th className="py-1.5 px-2">Symbol</th>
-                <th className="py-1.5 px-2">Side</th>
-                <th className="py-1.5 px-2">Lot</th>
-                <th className="py-1.5 px-2">Giá vào / Ra</th>
-                <th className="py-1.5 px-2">Lý do đóng</th>
-                <th className="py-1.5 px-2">Ghi chú / Tag</th>
-                <th className="py-1.5 px-3 text-right">Lợi nhuận ròng (PnL)</th>
+                <th className="py-1.5 px-3">Time</th>
+                <th className="py-1.5 px-2">{t.symbol}</th>
+                <th className="py-1.5 px-2">{t.side}</th>
+                <th className="py-1.5 px-2">{t.lot}</th>
+                <th className="py-1.5 px-2">Entry / Exit</th>
+                <th className="py-1.5 px-2">Reason</th>
+                <th className="py-1.5 px-2">Tag / Note</th>
+                <th className="py-1.5 px-3 text-right">{t.realizedPnL}</th>
               </tr>
             </thead>
             <tbody>
               {closedPositions.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="text-center py-8 text-slate-500">
-                    Chưa có giao dịch nào hoàn tất.
+                    {t.noHistory}
                   </td>
                 </tr>
               ) : (
@@ -358,53 +360,53 @@ export const PositionsTable: React.FC = () => {
       {editingPosition && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 animate-in fade-in">
           <div className="bg-slate-900 border border-slate-700 p-5 rounded-lg w-84 shadow-2xl space-y-3.5 text-xs">
-            <h3 className="font-bold text-sm text-slate-200">Sửa Vị thế & Gắn Tag Chiến Thuật</h3>
+            <h3 className="font-bold text-sm text-slate-200">{t.editSLTP} & {t.tagStrategy}</h3>
             
             <div className="space-y-2.5">
               <div>
-                <label className="block text-slate-400 mb-1">Stop Loss (Giá):</label>
+                <label className="block text-slate-400 mb-1">Stop Loss ({instrument.symbol}):</label>
                 <input
                   type="number"
                   step="any"
                   value={editSL}
                   onChange={(e) => setEditSL(e.target.value)}
-                  placeholder="Bỏ trống nếu không có"
+                  placeholder="None"
                   className="w-full bg-slate-800 border border-slate-700 rounded p-2 text-slate-200 focus:outline-none focus:border-indigo-500"
                 />
               </div>
               <div>
-                <label className="block text-slate-400 mb-1">Take Profit (Giá):</label>
+                <label className="block text-slate-400 mb-1">Take Profit ({instrument.symbol}):</label>
                 <input
                   type="number"
                   step="any"
                   value={editTP}
                   onChange={(e) => setEditTP(e.target.value)}
-                  placeholder="Bỏ trống nếu không có"
+                  placeholder="None"
                   className="w-full bg-slate-800 border border-slate-700 rounded p-2 text-slate-200 focus:outline-none focus:border-indigo-500"
                 />
               </div>
               <div>
-                <label className="block text-slate-400 mb-1">Gắn Tag Chiến thuật (Setup):</label>
+                <label className="block text-slate-400 mb-1">{t.tagStrategy}:</label>
                 <select
                   value={selectedTag}
                   onChange={(e) => setSelectedTag(e.target.value)}
                   className="w-full bg-slate-800 border border-slate-700 rounded p-2 text-indigo-300 focus:outline-none"
                 >
                   <option value="SMC Order Block">SMC Order Block & FVG</option>
-                  <option value="Trend Pullback">Trend Pullback (Thuận xu hướng)</option>
-                  <option value="Breakout">Breakout Đỉnh/Đáy</option>
+                  <option value="Trend Pullback">Trend Pullback</option>
+                  <option value="Breakout">Breakout Major Level</option>
                   <option value="Fibonacci 0.618">Fibonacci 0.618 Golden Pocket</option>
-                  <option value="FOMO (Lỗi tâm lý)">FOMO (Lỗi tâm lý vào sớm)</option>
-                  <option value="Revenge Trade">Giao dịch trả thù (Revenge)</option>
+                  <option value="FOMO (Mistake)">FOMO (Premature Entry)</option>
+                  <option value="Revenge Trade">Revenge Trade (Psychology Error)</option>
                 </select>
               </div>
               <div>
-                <label className="block text-slate-400 mb-1">Ghi chú tâm lý:</label>
+                <label className="block text-slate-400 mb-1">{t.psychologyNote}:</label>
                 <input
                   type="text"
                   value={noteText}
                   onChange={(e) => setNoteText(e.target.value)}
-                  placeholder="Nhận xét lý do vào lệnh..."
+                  placeholder="Trade reflections & thoughts..."
                   className="w-full bg-slate-800 border border-slate-700 rounded p-2 text-slate-200 focus:outline-none focus:border-indigo-500"
                 />
               </div>
@@ -415,13 +417,13 @@ export const PositionsTable: React.FC = () => {
                 onClick={() => setEditingPosition(null)}
                 className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-xs"
               >
-                Hủy
+                {t.cancel}
               </button>
               <button
                 onClick={handleSaveEdit}
                 className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded text-xs font-semibold"
               >
-                Lưu thay đổi
+                {t.saveChanges}
               </button>
             </div>
           </div>
