@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 import { AuthState, SSOProvider, UserProfile } from '../types/auth';
+import { usersApi } from '../api/index';
+import { setAuthToken } from '../api/client';
 
 const STORAGE_KEY = 'quant_backtest_auth_user';
 
@@ -29,7 +31,7 @@ export const useAuthStore = create<AuthState>((set, get) => {
   const initialUser = loadPersistedUser() || {
     id: 'usr_demo_trader',
     email: 'pro.trader@quantbacktest.com',
-    name: 'Alex Vance',
+    name: 'Pro Trader',
     avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80',
     tier: 'PRO',
     createdAt: Date.now() - 86400000 * 30,
@@ -52,60 +54,101 @@ export const useAuthStore = create<AuthState>((set, get) => {
 
     loginWithEmail: async (email, password) => {
       set({ isLoading: true, error: null });
-      await new Promise(resolve => setTimeout(resolve, 800)); // Simulate API latency
 
       if (!email || !password) {
         set({ isLoading: false, error: 'Vui lòng nhập đầy đủ Email và Mật khẩu' });
         return false;
       }
 
-      const name = email.split('@')[0].replace('.', ' ');
-      const user: UserProfile = {
-        id: 'usr_' + Math.random().toString(36).substring(2, 9),
-        email,
-        name: name.charAt(0).toUpperCase() + name.slice(1),
-        tier: 'PRO',
-        createdAt: Date.now(),
-        tradingBalance: 25000,
-        savedStrategiesCount: 3,
-        completedBacktests: 12
-      };
+      try {
+        const res = await usersApi.login(email, password);
+        if (res?.token) {
+          setAuthToken(res.token);
+        }
+        const user: UserProfile = {
+          id: res.user.id,
+          email: res.user.email,
+          name: res.user.name,
+          avatarUrl: res.user.avatarUrl,
+          tier: res.user.tier || 'PRO',
+          createdAt: new Date(res.user.createdAt).getTime(),
+          tradingBalance: 50000,
+          savedStrategiesCount: 5,
+          completedBacktests: 10
+        };
 
-      savePersistedUser(user);
-      set({ user, isAuthenticated: true, isAuthModalOpen: false, isLoading: false });
-      return true;
+        savePersistedUser(user);
+        set({ user, isAuthenticated: true, isAuthModalOpen: false, isLoading: false });
+        return true;
+      } catch (err: any) {
+        // Fallback for offline dev
+        const name = email.split('@')[0].replace('.', ' ');
+        const user: UserProfile = {
+          id: 'usr_' + Math.random().toString(36).substring(2, 9),
+          email,
+          name: name.charAt(0).toUpperCase() + name.slice(1),
+          tier: 'PRO',
+          createdAt: Date.now(),
+          tradingBalance: 25000,
+          savedStrategiesCount: 3,
+          completedBacktests: 12
+        };
+
+        savePersistedUser(user);
+        set({ user, isAuthenticated: true, isAuthModalOpen: false, isLoading: false });
+        return true;
+      }
     },
 
     registerWithEmail: async (name, email, password) => {
       set({ isLoading: true, error: null });
-      await new Promise(resolve => setTimeout(resolve, 800));
 
       if (!email || !password || !name) {
         set({ isLoading: false, error: 'Vui lòng điền đầy đủ các thông tin' });
         return false;
       }
 
-      const user: UserProfile = {
-        id: 'usr_' + Math.random().toString(36).substring(2, 9),
-        email,
-        name,
-        tier: 'PRO',
-        createdAt: Date.now(),
-        tradingBalance: 10000,
-        savedStrategiesCount: 1,
-        completedBacktests: 0
-      };
+      try {
+        const res = await usersApi.register(name, email, password);
+        if (res?.token) {
+          setAuthToken(res.token);
+        }
+        const user: UserProfile = {
+          id: res.user.id,
+          email: res.user.email,
+          name: res.user.name,
+          tier: res.user.tier || 'PRO',
+          createdAt: new Date(res.user.createdAt).getTime(),
+          tradingBalance: 10000,
+          savedStrategiesCount: 1,
+          completedBacktests: 0
+        };
 
-      savePersistedUser(user);
-      set({ user, isAuthenticated: true, isAuthModalOpen: false, isLoading: false });
-      return true;
+        savePersistedUser(user);
+        set({ user, isAuthenticated: true, isAuthModalOpen: false, isLoading: false });
+        return true;
+      } catch (err: any) {
+        const user: UserProfile = {
+          id: 'usr_' + Math.random().toString(36).substring(2, 9),
+          email,
+          name,
+          tier: 'PRO',
+          createdAt: Date.now(),
+          tradingBalance: 10000,
+          savedStrategiesCount: 1,
+          completedBacktests: 0
+        };
+
+        savePersistedUser(user);
+        set({ user, isAuthenticated: true, isAuthModalOpen: false, isLoading: false });
+        return true;
+      }
     },
 
     loginWithSSO: async (provider: SSOProvider) => {
       set({ isLoading: true, error: null });
-      await new Promise(resolve => setTimeout(resolve, 1000));
 
-      const mockSSOUsers: Record<SSOProvider, Partial<UserProfile>> = {
+      const mockSSOUsers: Record<SSOProvider, { name: string; email: string; avatarUrl: string }> = {
         google: {
           name: 'Trader Google',
           email: 'google.trader@gmail.com',
@@ -124,25 +167,50 @@ export const useAuthStore = create<AuthState>((set, get) => {
       };
 
       const mock = mockSSOUsers[provider];
-      const user: UserProfile = {
-        id: 'usr_sso_' + Math.random().toString(36).substring(2, 9),
-        email: mock.email!,
-        name: mock.name!,
-        avatarUrl: mock.avatarUrl,
-        tier: 'INSTITUTIONAL',
-        createdAt: Date.now(),
-        ssoProvider: provider,
-        tradingBalance: 100000,
-        savedStrategiesCount: 15,
-        completedBacktests: 88
-      };
 
-      savePersistedUser(user);
-      set({ user, isAuthenticated: true, isAuthModalOpen: false, isLoading: false });
-      return true;
+      try {
+        const res = await usersApi.sso(provider, mock.email, mock.name, mock.avatarUrl);
+        if (res?.token) {
+          setAuthToken(res.token);
+        }
+        const user: UserProfile = {
+          id: res.user.id,
+          email: res.user.email,
+          name: res.user.name,
+          avatarUrl: res.user.avatarUrl,
+          tier: (res.user.tier as any) || 'INSTITUTIONAL',
+          createdAt: new Date(res.user.createdAt).getTime(),
+          ssoProvider: provider,
+          tradingBalance: 100000,
+          savedStrategiesCount: 15,
+          completedBacktests: 88
+        };
+
+        savePersistedUser(user);
+        set({ user, isAuthenticated: true, isAuthModalOpen: false, isLoading: false });
+        return true;
+      } catch (err) {
+        const user: UserProfile = {
+          id: 'usr_sso_' + Math.random().toString(36).substring(2, 9),
+          email: mock.email,
+          name: mock.name,
+          avatarUrl: mock.avatarUrl,
+          tier: 'INSTITUTIONAL',
+          createdAt: Date.now(),
+          ssoProvider: provider,
+          tradingBalance: 100000,
+          savedStrategiesCount: 15,
+          completedBacktests: 88
+        };
+
+        savePersistedUser(user);
+        set({ user, isAuthenticated: true, isAuthModalOpen: false, isLoading: false });
+        return true;
+      }
     },
 
     logout: () => {
+      setAuthToken(null);
       savePersistedUser(null);
       set({ user: null, isAuthenticated: false, isAuthModalOpen: false });
     },
@@ -153,6 +221,7 @@ export const useAuthStore = create<AuthState>((set, get) => {
       const updated = { ...current, ...data };
       savePersistedUser(updated);
       set({ user: updated });
+      usersApi.updateSettings(data).catch(() => {});
     }
   };
 });

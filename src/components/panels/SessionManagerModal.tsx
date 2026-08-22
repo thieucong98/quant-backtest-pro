@@ -18,6 +18,7 @@ import {
 import { useBacktestStore } from '../../store/backtestStore';
 import { sessionsApi, SessionListItem } from '../../api/sessions';
 import { INSTRUMENTS } from '../../config/instruments';
+import { translations } from '../../i18n/translations';
 
 export const SessionManagerModal: React.FC = () => {
   const {
@@ -28,8 +29,11 @@ export const SessionManagerModal: React.FC = () => {
     createNewSession,
     deleteSessionById,
     completeCurrentSession,
-    isServerOnline
+    isServerOnline,
+    language
   } = useBacktestStore();
+
+  const t = translations[language] || translations.vi;
 
   const [sessions, setSessions] = useState<SessionListItem[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -87,7 +91,7 @@ export const SessionManagerModal: React.FC = () => {
 
   const handleDelete = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (window.confirm('Bạn có chắc chắn muốn xóa phiên backtest này khỏi cơ sở dữ liệu?')) {
+    if (window.confirm(t.confirmDeleteSession)) {
       await deleteSessionById(id);
       await fetchSessions();
     }
@@ -111,7 +115,7 @@ export const SessionManagerModal: React.FC = () => {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-base font-bold text-slate-100">Quản Lý Phiên Backtest (Database Sessions)</h2>
+                <h2 className="text-base font-bold text-slate-100">{t.sessionManagerTitle}</h2>
                 {isServerOnline ? (
                   <span className="flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-950/80 text-emerald-400 border border-emerald-500/30">
                     <Database className="w-3 h-3" /> SQLite Connected
@@ -123,7 +127,7 @@ export const SessionManagerModal: React.FC = () => {
                 )}
               </div>
               <p className="text-xs text-slate-400 mt-0.5">
-                Dữ liệu phiên, lịch sử lệnh, bản vẽ và thống kê được lưu vĩnh viễn trong Database.
+                {t.sessionManagerDesc}
               </p>
             </div>
           </div>
@@ -134,12 +138,12 @@ export const SessionManagerModal: React.FC = () => {
               className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white rounded-lg text-xs font-semibold shadow-md transition-all active:scale-95"
             >
               <PlusCircle className="w-4 h-4" />
-              <span>{isCreating ? 'Danh sách phiên' : 'Tạo phiên mới'}</span>
+              <span>{isCreating ? t.sessionList : t.createNewSession}</span>
             </button>
             <button
               onClick={fetchSessions}
               className="p-2 text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-lg transition-colors"
-              title="Làm mới"
+              title="Refresh"
             >
               <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
             </button>

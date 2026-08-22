@@ -10,6 +10,7 @@ import { Candle, ChartMarker, DrawingObject, DrawingToolType, InstrumentSpec, Ti
 import { AccountState, EquityPoint, Order, OrderSide, OrderType, Position } from '../types/order';
 import { AIStrategyDefinition, StrategyLogMessage } from '../types/strategy';
 import { sessionsApi } from '../api/sessions';
+import { tradesApi } from '../api/trades';
 import { checkServerHealth } from '../api/client';
 import { AnalyticsEngine } from '../engine/analytics';
 
@@ -120,22 +121,85 @@ interface BacktestStore {
   setProfileModalOpen: (open: boolean) => void;
 }
 
+// Helper: Sync current session state to both Local Cache (0ms) and Database API
+const syncCurrentSessionToStorage = (get: () => BacktestStore) => {
+  const { activeSessionId, isServerOnline, account, currentIndex, openPositions, closedPositions, drawings, equityCurve, instrument, timeframe } = get();
+
+  // 1. Instant local persistence (0ms latency, survives F5 reload immediately)
+  try {
+    const localSnapshot = {
+      activeSessionId,
+      symbol: instrument.symbol,
+      timeframe,
+      currentIndex,
+      balance: account.balance,
+      equity: account.equity,
+      openPositions,
+      closedPositions,
+      drawings,
+      equityCurve,
+      savedAt: Date.now()
+    };
+    localStorage.setItem('quant_active_session_cache', JSON.stringify(localSnapshot));
+  } catch (e) {}
+
+  // 2. Instant async database persistence (if online)
+  if (activeSessionId && isServerOnline) {
+    const allTrades = [
+      ...openPositions.map(p => ({ ...p, status: 'OPEN' })),
+      ...closedPositions.map(p => ({ ...p, status: 'CLOSED' }))
+    ];
+    sessionsApi.update(activeSessionId, {
+      finalBalance: account.balance,
+      finalEquity: account.equity,
+      currentIndex,
+      symbol: instrument.symbol,
+      timeframe
+    }).catch(() => {});
+
+    tradesApi.bulkSync(activeSessionId, allTrades).catch(() => {});
+  }
+};
+
+// Helper: Load cached snapshot on startup
+const loadInitialCachedSession = () => {
+  try {
+    const raw = localStorage.getItem('quant_active_session_cache');
+    if (raw) {
+      return JSON.parse(raw);
+    }
+  } catch (e) {}
+  return null;
+};
+
+const cachedInit = loadInitialCachedSession();
+
 // Khởi tạo dữ liệu mẫu ban đầu
-const initialM1 = generateRealisticCandles(DEFAULT_INSTRUMENT.symbol, 2650.0, 2500, 5);
+const initialInstrument = cachedInit?.symbol ? (INSTRUMENTS[cachedInit.symbol] || DEFAULT_INSTRUMENT) : DEFAULT_INSTRUMENT;
+const initialM1 = generateRealisticCandles(initialInstrument.symbol, initialInstrument.symbol === 'BTCUSD' ? 68500 : initialInstrument.symbol === 'XAUUSD' ? 2650 : 1.0850, 2500, 5);
 const initialNews = generateNewsForCandles(initialM1);
-const initialMatchingEngine = new OrderMatchingEngine(10000, DEFAULT_INSTRUMENT);
+const initialMatchingEngine = new OrderMatchingEngine(cachedInit?.balance || 10000, initialInstrument);
 const initialStrategyRunner = new StrategyRunner();
 const initialIndicatorCalculator = new IndicatorCalculator();
+
+if (cachedInit) {
+  if (cachedInit.openPositions) initialMatchingEngine.openPositions = [...cachedInit.openPositions];
+  if (cachedInit.closedPositions) initialMatchingEngine.closedPositions = [...cachedInit.closedPositions];
+  if (cachedInit.balance) initialMatchingEngine.balance = cachedInit.balance;
+  if (cachedInit.equity) initialMatchingEngine.equity = cachedInit.equity;
+}
 
 export const useBacktestStore = create<BacktestStore>((set, get) => {
   // Đăng ký callback cho Matching Engine
   initialMatchingEngine.events = {
     onOrderFilled: (order, pos) => {
       get().addStrategyLog('SIGNAL', `Khớp lệnh ${pos.side} ${pos.lotSize}L @ ${pos.entryPrice}`);
+      syncCurrentSessionToStorage(get);
     },
     onPositionClosed: (pos, reason) => {
       const pnlStr = pos.realizedPnL >= 0 ? `+$${pos.realizedPnL}` : `-$${Math.abs(pos.realizedPnL)}`;
       get().addStrategyLog('INFO', `Đóng lệnh ${pos.side} (${reason}) @ ${pos.closePrice} | PnL: ${pnlStr}`);
+      syncCurrentSessionToStorage(get);
     },
     onLog: (msg) => {
       get().addStrategyLog('INFO', msg);
@@ -147,15 +211,15 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
 
   return {
     // Session Persistence
-    activeSessionId: null,
+    activeSessionId: cachedInit?.activeSessionId || null,
     isServerOnline: false,
     isSessionManagerOpen: false,
 
-    instrument: DEFAULT_INSTRUMENT,
-    timeframe: 'M5',
+    instrument: initialInstrument,
+    timeframe: cachedInit?.timeframe || 'M5',
     rawM1Candles: initialM1,
     candles: initialM1,
-    currentIndex: Math.min(200, initialM1.length - 1),
+    currentIndex: cachedInit?.currentIndex || Math.min(200, initialM1.length - 1),
     economicNews: initialNews,
 
     isPlaying: false,
@@ -164,12 +228,12 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
 
     account: initialMatchingEngine.getAccountState(),
     pendingOrders: [],
-    openPositions: [],
-    closedPositions: [],
-    equityCurve: [{ timestamp: initialM1[0]?.timestamp || 0, balance: 10000, equity: 10000 }],
+    openPositions: cachedInit?.openPositions || [],
+    closedPositions: cachedInit?.closedPositions || [],
+    equityCurve: cachedInit?.equityCurve || [{ timestamp: initialM1[0]?.timestamp || 0, balance: 10000, equity: 10000 }],
 
     activeTool: 'cursor',
-    drawings: [],
+    drawings: cachedInit?.drawings || [],
     markers: [],
 
     activeStrategy: PREBUILT_STRATEGIES[0],
@@ -406,6 +470,11 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
         closedPositions: [...matchingEngine.closedPositions],
         equityCurve: [...state.equityCurve, equityPoint]
       }));
+
+      // Sync state on position changes or periodically
+      if (matchingEngine.openPositions.length > 0 || nextIndex % 25 === 0) {
+        syncCurrentSessionToStorage(get);
+      }
     },
 
     stepBackward: () => {
@@ -505,6 +574,7 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
           openPositions: [...matchingEngine.openPositions],
           markers: [...get().markers, marker]
         });
+        syncCurrentSessionToStorage(get);
         return true;
       }
       return false;
@@ -526,6 +596,7 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
       set({
         pendingOrders: [...matchingEngine.pendingOrders]
       });
+      syncCurrentSessionToStorage(get);
       return true;
     },
 
@@ -534,6 +605,7 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
       const res = matchingEngine.cancelPendingOrder(orderId);
       if (res) {
         set({ pendingOrders: [...matchingEngine.pendingOrders] });
+        syncCurrentSessionToStorage(get);
       }
       return res;
     },
@@ -550,6 +622,7 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
           openPositions: [...matchingEngine.openPositions],
           closedPositions: [...matchingEngine.closedPositions]
         });
+        syncCurrentSessionToStorage(get);
       }
       return res;
     },
@@ -559,6 +632,7 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
       const res = matchingEngine.setBreakeven(positionId);
       if (res) {
         set({ openPositions: [...matchingEngine.openPositions] });
+        syncCurrentSessionToStorage(get);
       }
       return res;
     },
@@ -575,6 +649,7 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
           openPositions: [...matchingEngine.openPositions],
           closedPositions: [...matchingEngine.closedPositions]
         });
+        syncCurrentSessionToStorage(get);
       }
       return res;
     },
@@ -586,6 +661,7 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
         if (newSL !== undefined) pos.stopLoss = newSL;
         if (newTP !== undefined) pos.takeProfit = newTP;
         set({ openPositions: [...matchingEngine.openPositions] });
+        syncCurrentSessionToStorage(get);
       }
     },
 
@@ -607,13 +683,23 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
         openPositions: [...matchingEngine.openPositions],
         closedPositions: [...closedPositions]
       });
+      syncCurrentSessionToStorage(get);
     },
 
     // --- DRAWING ACTIONS ---
     setActiveTool: (tool) => set({ activeTool: tool }),
-    addDrawing: (drawing) => set(s => ({ drawings: [...s.drawings, drawing] })),
-    removeDrawing: (id) => set(s => ({ drawings: s.drawings.filter(d => d.id !== id) })),
-    clearDrawings: () => set({ drawings: [] }),
+    addDrawing: (drawing) => {
+      set(s => ({ drawings: [...s.drawings, drawing] }));
+      syncCurrentSessionToStorage(get);
+    },
+    removeDrawing: (id) => {
+      set(s => ({ drawings: s.drawings.filter(d => d.id !== id) }));
+      syncCurrentSessionToStorage(get);
+    },
+    clearDrawings: () => {
+      set({ drawings: [] });
+      syncCurrentSessionToStorage(get);
+    },
 
     // --- AI STRATEGY ACTIONS ---
     setActiveStrategy: (strat) => {
