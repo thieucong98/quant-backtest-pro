@@ -3,46 +3,52 @@ import { AIStrategyDefinition, IndicatorLibrary, StrategyAccountInfo, StrategyEx
 
 export const PREBUILT_STRATEGIES: AIStrategyDefinition[] = [
   {
-    id: 'strat_ema_rsi',
-    name: 'EMA 200 Trend + RSI Pullback',
-    description: 'Chiến lược đánh thuận xu hướng: Mua khi giá nằm trên EMA 200 và RSI quá bán dưới 35; Bán khi giá dưới EMA 200 và RSI quá mua trên 65.',
+    id: 'strat_ema_scalp',
+    name: 'EMA 9/21 Fast Scalper (Tín hiệu Nhanh)',
+    description: 'Chiến lược lướt sóng nhanh: Mua khi EMA 9 cắt lên EMA 21; Bán khi EMA 9 cắt xuống EMA 21. Tín hiệu vào lệnh liên tục và rõ ràng khi tua nến.',
     parameters: {
-      emaPeriod: 200,
-      rsiPeriod: 14,
-      rsiOversold: 35,
-      rsiOverbought: 65,
-      slPips: 20,
-      tpPips: 40,
+      emaFast: 9,
+      emaSlow: 21,
+      slPips: 15,
+      tpPips: 30,
       lotSize: 0.1
     },
     enabled: true,
     createdAt: Date.now(),
-    code: `// EMA 200 Trend + RSI Pullback Strategy
+    code: `// EMA 9/21 Fast Scalper Strategy
 return {
-  onCandle(candle, indicators, account, api) {
-    const ema200 = indicators.ema(this.parameters.emaPeriod);
-    const rsi14 = indicators.rsi(this.parameters.rsiPeriod);
+  parameters: {
+    emaFast: 9,
+    emaSlow: 21,
+    slPips: 15,
+    tpPips: 30,
+    lotSize: 0.1
+  },
 
-    // Không mở lệnh mới nếu đang có lệnh mở
+  onCandle(candle, indicators, account, api) {
+    const fast = indicators.ema(this.parameters.emaFast);
+    const slow = indicators.ema(this.parameters.emaSlow);
+
+    // Không mở thêm nếu đang có vị thế
     if (account.openPositionsCount > 0) return;
 
-    // Tín hiệu BUY: Nến đóng trên EMA 200 và RSI chạm vùng quá bán
-    if (candle.close > ema200 && rsi14 < this.parameters.rsiOversold) {
+    // Tín hiệu BUY: Nến đóng trên EMA Fast và EMA Fast > EMA Slow
+    if (candle.close > fast && fast > slow) {
       api.buy({
         lotSize: this.parameters.lotSize,
         stopLossPips: this.parameters.slPips,
         takeProfitPips: this.parameters.tpPips,
-        comment: 'AI BUY: RSI ' + rsi14.toFixed(1) + ' < ' + this.parameters.rsiOversold
+        comment: 'AI BUY: EMA 9 > 21 Scalp'
       });
       api.log('[AI SIGNAL] Khớp BUY ' + this.parameters.lotSize + 'L @ ' + candle.close);
     }
-    // Tín hiệu SELL: Nến đóng dưới EMA 200 và RSI chạm vùng quá mua
-    else if (candle.close < ema200 && rsi14 > this.parameters.rsiOverbought) {
+    // Tín hiệu SELL: Nến đóng dưới EMA Fast và EMA Fast < EMA Slow
+    else if (candle.close < fast && fast < slow) {
       api.sell({
         lotSize: this.parameters.lotSize,
         stopLossPips: this.parameters.slPips,
         takeProfitPips: this.parameters.tpPips,
-        comment: 'AI SELL: RSI ' + rsi14.toFixed(1) + ' > ' + this.parameters.rsiOverbought
+        comment: 'AI SELL: EMA 9 < 21 Scalp'
       });
       api.log('[AI SIGNAL] Khớp SELL ' + this.parameters.lotSize + 'L @ ' + candle.close);
     }
@@ -50,20 +56,81 @@ return {
 };`
   },
   {
+    id: 'strat_rsi_pullback',
+    name: 'RSI Dynamic Oversold/Overbought Pullback',
+    description: 'Chiến lược bắt nhịp hồi: Mua khi RSI < 35 (Quá bán) và có nến xanh xác nhận; Bán khi RSI > 65 (Quá mua) và có nến đỏ.',
+    parameters: {
+      rsiPeriod: 14,
+      rsiBuy: 35,
+      rsiSell: 65,
+      slPips: 20,
+      tpPips: 40,
+      lotSize: 0.1
+    },
+    enabled: false,
+    createdAt: Date.now(),
+    code: `// RSI Dynamic Pullback Strategy
+return {
+  parameters: {
+    rsiPeriod: 14,
+    rsiBuy: 35,
+    rsiSell: 65,
+    slPips: 20,
+    tpPips: 40,
+    lotSize: 0.1
+  },
+
+  onCandle(candle, indicators, account, api) {
+    const rsi = indicators.rsi(this.parameters.rsiPeriod);
+
+    if (account.openPositionsCount > 0) return;
+
+    // BUY: RSI chạm quá bán + nến tăng
+    if (rsi <= this.parameters.rsiBuy && candle.close > candle.open) {
+      api.buy({
+        lotSize: this.parameters.lotSize,
+        stopLossPips: this.parameters.slPips,
+        takeProfitPips: this.parameters.tpPips,
+        comment: 'AI BUY: RSI ' + rsi.toFixed(1)
+      });
+      api.log('[AI SIGNAL] Khớp BUY RSI Quá bán @ ' + candle.close);
+    }
+    // SELL: RSI chạm quá mua + nến giảm
+    else if (rsi >= this.parameters.rsiSell && candle.close < candle.open) {
+      api.sell({
+        lotSize: this.parameters.lotSize,
+        stopLossPips: this.parameters.slPips,
+        takeProfitPips: this.parameters.tpPips,
+        comment: 'AI SELL: RSI ' + rsi.toFixed(1)
+      });
+      api.log('[AI SIGNAL] Khớp SELL RSI Quá mua @ ' + candle.close);
+    }
+  }
+};`
+  },
+  {
     id: 'strat_bollinger_breakout',
     name: 'Bollinger Bands Mean Reversion',
-    description: 'Chiến lược bắt đỉnh đáy đảo chiều khi giá thoát khỏi dải Bollinger Bands rồi quay trở lại vào trong.',
+    description: 'Chiến lược bắt đỉnh đáy đảo chiều khi giá đâm thủng dải Bollinger Bands rồi đóng cửa quay lại vào trong dải.',
     parameters: {
       bbPeriod: 20,
       bbStdDev: 2,
-      slPips: 25,
-      tpPips: 50,
+      slPips: 20,
+      tpPips: 40,
       lotSize: 0.1
     },
     enabled: false,
     createdAt: Date.now(),
     code: `// Bollinger Bands Mean Reversion Strategy
 return {
+  parameters: {
+    bbPeriod: 20,
+    bbStdDev: 2,
+    slPips: 20,
+    tpPips: 40,
+    lotSize: 0.1
+  },
+
   onCandle(candle, indicators, account, api) {
     const bb = indicators.bollingerBands(this.parameters.bbPeriod, this.parameters.bbStdDev);
 
@@ -91,6 +158,56 @@ return {
     }
   }
 };`
+  },
+  {
+    id: 'strat_macd_trend',
+    name: 'MACD Zero Line + Momentum Crossover',
+    description: 'Chiến lược xung lượng: Mua khi MACD Histogram chuyển từ âm sang dương; Bán khi Histogram chuyển từ dương sang âm.',
+    parameters: {
+      fast: 12,
+      slow: 26,
+      signal: 9,
+      slPips: 20,
+      tpPips: 45,
+      lotSize: 0.1
+    },
+    enabled: false,
+    createdAt: Date.now(),
+    code: `// MACD Momentum Strategy
+return {
+  parameters: {
+    fast: 12,
+    slow: 26,
+    signal: 9,
+    slPips: 20,
+    tpPips: 45,
+    lotSize: 0.1
+  },
+
+  onCandle(candle, indicators, account, api) {
+    const macd = indicators.macd(this.parameters.fast, this.parameters.slow, this.parameters.signal);
+
+    if (account.openPositionsCount > 0) return;
+
+    if (macd.histogram > 0 && macd.macd > macd.signal) {
+      api.buy({
+        lotSize: this.parameters.lotSize,
+        stopLossPips: this.parameters.slPips,
+        takeProfitPips: this.parameters.tpPips,
+        comment: 'AI BUY: MACD Bullish Crossover'
+      });
+      api.log('[AI SIGNAL] Khớp BUY MACD Bullish @ ' + candle.close);
+    } else if (macd.histogram < 0 && macd.macd < macd.signal) {
+      api.sell({
+        lotSize: this.parameters.lotSize,
+        stopLossPips: this.parameters.slPips,
+        takeProfitPips: this.parameters.tpPips,
+        comment: 'AI SELL: MACD Bearish Crossover'
+      });
+      api.log('[AI SIGNAL] Khớp SELL MACD Bearish @ ' + candle.close);
+    }
+  }
+};`
   }
 ];
 
@@ -100,18 +217,35 @@ export class StrategyRunner {
 
   public compile(code: string, parameters: Record<string, any> = {}): { success: boolean; error?: string } {
     try {
-      this.parameters = parameters;
-      // Wrap code in a safe function
-      const cleanCode = code.trim();
-      let functionBody = cleanCode;
-      if (!cleanCode.startsWith('return')) {
-        functionBody = `return (${cleanCode});`;
+      this.parameters = { slPips: 20, tpPips: 40, lotSize: 0.1, ...parameters };
+      const rawCode = code.trim();
+
+      // Kiểm tra xem code đã có câu lệnh return hay chưa (bỏ qua comments)
+      // Loại bỏ comment để kiểm tra cú pháp
+      const uncommented = rawCode
+        .replace(/\/\*[\s\S]*?\*\//g, '')
+        .replace(/\/\/.*/g, '')
+        .trim();
+
+      let functionBody = rawCode;
+      if (!uncommented.startsWith('return')) {
+        functionBody = `return (${rawCode});`;
       }
 
       // Khởi tạo hàm thực thi
       const factory = new Function(functionBody);
       this.compiledStrategy = factory();
+
+      if (!this.compiledStrategy || typeof this.compiledStrategy.onCandle !== 'function') {
+        throw new Error('Chiến lược phải trả về một đối tượng chứa phương thức onCandle(candle, indicators, account, api).');
+      }
+
+      // Merge parameters if defined inside the code
+      if (this.compiledStrategy.parameters) {
+        this.parameters = { ...this.parameters, ...this.compiledStrategy.parameters };
+      }
       this.compiledStrategy.parameters = this.parameters;
+
       return { success: true };
     } catch (err: any) {
       this.compiledStrategy = null;

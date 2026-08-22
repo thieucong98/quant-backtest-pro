@@ -61,10 +61,17 @@ Giao diện của Quant Backtest Pro được thiết kế theo phong cách Dark
   - 📈 **INDICES**: `DXY` (Chỉ số Dollar Index), `US30` (Dow Jones).
 - Hệ thống tự động thiết lập Contract Size, Pip Size, Leverage và Spread tương ứng chính xác với từng loại tài sản.
 
-### 2.2. Nạp Dữ liệu Lịch sử (CSV Import)
-1. Bấm nút **"Data"** trên Header.
-2. Chọn tập tin CSV được xuất từ **MetaTrader 4**, **MetaTrader 5**, **TradingView**, **Dukascopy** hoặc **Binance**.
-3. Hệ thống tự động nhận diện định dạng nến (`Timestamp, Open, High, Low, Close, Volume`) và lưu cục bộ vào cơ sở dữ liệu **IndexedDB** trên trình duyệt của bạn (không tốn băng thông tải lại).
+### 2.2. Nạp Dữ liệu Lịch sử & Tự Động Crawl Trực Tuyến
+Bấm nút **"Data"** trên Header để mở trình quản lý dữ liệu với 3 lựa chọn:
+1. **🌐 Tự động Crawl Trực tuyến (Online Live REST API)**:
+   - Chọn cặp tiền (ví dụ: `BTCUSDT`, `ETHUSDT`, `SOLUSDT`, `XRPUSDT`).
+   - Chọn khung thời gian (`1m`, `5m`, `15m`, `1h`, `4h`, `1d`) và số lượng nến (500 hoặc 1,000 nến).
+   - Bấm **"Bắt đầu Crawl & Nạp vào Chart"**: Hệ thống tự động gọi Binance Public API kéo dữ liệu thực tế về và lưu vào IndexedDB.
+2. **📁 Nạp File CSV / TXT từ Broker**:
+   - Kéo thả file CSV được xuất từ **MetaTrader 4**, **MetaTrader 5**, **TradingView**, **Dukascopy** hoặc **Binance**.
+   - Hệ thống tự động nhận diện định dạng nến (`Timestamp, Open, High, Low, Close, Volume`) và lưu cục bộ vào cơ sở dữ liệu **IndexedDB** trên trình duyệt của bạn (không tốn băng thông tải lại).
+3. **✨ Dữ liệu Mẫu Chân Thực (Geometric Brownian Motion Presets)**:
+   - 1 click nạp ngay 3,000 nến mẫu chất lượng cao cho `XAUUSD`, `BTCUSD`, `EURUSD`, `DXY`.
 
 ---
 
@@ -127,14 +134,29 @@ Quant Backtest Pro tích hợp Canvas Overlay trong suốt hỗ trợ đầy đ�
 
 ---
 
-## 7. AI STRATEGY STUDIO & TỰ ĐỘNG GIAO DỊCH
+## 7. AI STRATEGY STUDIO & TỰ ĐỘNG GIAO DỊCH (MULTI-LLM COPILOT)
 
-1. Bấm nút **"AI Studio"** trên Header.
-2. **Nhập mô tả chiến lược bằng ngôn ngữ tự nhiên** vào ô Prompt (Ví dụ: *"Chiến lược EMA 20 cắt EMA 50 kết hợp RSI dưới 30 và thoát lệnh khi RSI vượt 70"*).
-3. Bấm **"Tạo Chiến Lược AI"** -> AI Copilot sẽ tự động viết mã JavaScript Sandbox với hàm `onCandle(candle, indicators, account, api)`.
-4. Bật công tắc **"Tự động giao dịch AI"**:
-   - Khi tua nến, bot AI sẽ tự động tính toán chỉ báo, bắn lệnh BUY/SELL, dời SL/TP theo đúng thuật toán.
-   - Các điểm vào lệnh của AI sẽ được vẽ mũi tên **BUY (Xanh)** và **SELL (Đỏ)** trực tiếp lên biểu đồ.
+Bấm nút **"AI Studio"** trên Header để mở trung tâm phát triển thuật toán gồm 3 Tab:
+
+### 7.1. Tab 1: AI Copilot Studio
+- **Nhập mô tả chiến lược bằng ngôn ngữ tự nhiên** vào ô Prompt (Ví dụ: *"Chiến lược EMA 9 cắt EMA 21 kết hợp RSI quá bán dưới 35 kèm SL 15pips, TP 30pips"*).
+- Bấm **"Tạo Chiến Lược AI"** -> AI Copilot sẽ tự động viết mã JavaScript Sandbox với cấu trúc `onCandle(candle, indicators, account, api)`.
+- Bấm **"Áp dụng & Kích hoạt"** để nạp chiến lược vào hệ thống.
+- Bật công tắc **"Tự động giao dịch (Replay)"**:
+  - Khi tua nến, bot AI sẽ tự động tính toán chỉ báo và bắn lệnh BUY/SELL tự động.
+
+### 7.2. Tab 2: Thư viện Mẫu Chiến Lược (Preset Templates)
+- Nạp nhanh 4 chiến lược chuẩn hóa: **EMA 9/21 Fast Scalper**, **RSI Dynamic Oversold/Overbought**, **Bollinger Bands Rejection**, **MACD Momentum Crossover**.
+
+### 7.3. Tab 3: Cấu Hình AI Provider & LLM Models
+- Hỗ trợ kết nối linh hoạt với **6 nhà cung cấp AI**:
+  1. **Built-in Quant AI Synthesizer**: Trình sinh mã thông minh tích hợp sẵn, hoàn toàn miễn phí, hoạt động offline không cần API Key.
+  2. **Google Gemini**: Hỗ trợ `gemini-1.5-flash`, `gemini-1.5-pro`, `gemini-2.0-flash`.
+  3. **OpenAI**: Hỗ trợ `gpt-4o`, `gpt-4o-mini`, `o1-mini`.
+  4. **DeepSeek**: Hỗ trợ `deepseek-chat`, `deepseek-coder`.
+  5. **Anthropic Claude**: Hỗ trợ `claude-3-5-sonnet`, `claude-3-5-haiku`.
+  6. **Local Ollama**: Chạy LLM riêng tư trực tiếp trên máy tính (`http://localhost:11434` với `llama3.2`, `deepseek-coder-v2`).
+- Nút **"Kiểm tra kết nối API"**: Thử nghiệm kết nối trước khi sử dụng.
 
 ---
 

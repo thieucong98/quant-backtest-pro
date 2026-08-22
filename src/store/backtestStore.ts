@@ -597,7 +597,12 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
     // --- AI STRATEGY ACTIONS ---
     setActiveStrategy: (strat) => {
       if (strat) {
-        get().strategyRunner.compile(strat.code, strat.parameters);
+        const res = get().strategyRunner.compile(strat.code, strat.parameters);
+        if (res.success) {
+          get().addStrategyLog('INFO', `Đã nạp & biên dịch thành công: "${strat.name}"`);
+        } else {
+          get().addStrategyLog('ERROR', `Lỗi biên dịch chiến lược: ${res.error}`);
+        }
       }
       set({ activeStrategy: strat });
     },
