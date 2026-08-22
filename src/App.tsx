@@ -8,6 +8,7 @@ import { AIStrategyModal } from './components/panels/AIStrategyModal';
 import { AnalyticsDashboardModal } from './components/panels/AnalyticsDashboardModal';
 import { DataImportModal } from './components/panels/DataImportModal';
 import { ShortcutsModal } from './components/panels/ShortcutsModal';
+import { SessionManagerModal } from './components/panels/SessionManagerModal';
 import { AuthModal } from './components/auth/AuthModal';
 import { UserProfileModal } from './components/auth/UserProfileModal';
 import { useBacktestStore } from './store/backtestStore';
@@ -27,11 +28,13 @@ export const App: React.FC = () => {
     isDataModalOpen,
     isShortcutsModalOpen,
     isProfileModalOpen,
+    isSessionManagerOpen,
     setAIModalOpen,
     setAnalyticsModalOpen,
     setDataModalOpen,
     setShortcutsModalOpen,
     setProfileModalOpen,
+    setSessionManagerOpen,
     initSession
   } = useBacktestStore();
 
@@ -71,6 +74,7 @@ export const App: React.FC = () => {
         if (isDataModalOpen) setDataModalOpen(false);
         if (isShortcutsModalOpen) setShortcutsModalOpen(false);
         if (isProfileModalOpen) setProfileModalOpen(false);
+        if (isSessionManagerOpen) setSessionManagerOpen(false);
       }
     };
 
@@ -87,7 +91,8 @@ export const App: React.FC = () => {
     isAnalyticsModalOpen,
     isDataModalOpen,
     isShortcutsModalOpen,
-    isProfileModalOpen
+    isProfileModalOpen,
+    isSessionManagerOpen
   ]);
 
   return (
@@ -111,6 +116,7 @@ export const App: React.FC = () => {
       <AIStrategyModal />
       <AnalyticsDashboardModal />
       <DataImportModal />
+      <SessionManagerModal />
       <ShortcutsModal
         isOpen={isShortcutsModalOpen}
         onClose={() => setShortcutsModalOpen(false)}

@@ -17,7 +17,8 @@ import {
   Zap,
   Coins,
   DollarSign,
-  BarChart2
+  BarChart2,
+  FolderOpen
 } from 'lucide-react';
 import { INSTRUMENTS } from '../../config/instruments';
 import { useBacktestStore } from '../../store/backtestStore';
@@ -47,7 +48,8 @@ export const Header: React.FC = () => {
     setAnalyticsModalOpen,
     setDataModalOpen,
     setShortcutsModalOpen,
-    setProfileModalOpen
+    setProfileModalOpen,
+    setSessionManagerOpen
   } = useBacktestStore();
 
   const { user, isAuthenticated, setAuthModalOpen } = useAuthStore();
@@ -221,6 +223,16 @@ export const Header: React.FC = () => {
             {autoTradingEnabled && (
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
             )}
+          </button>
+
+          {/* Sessions Manager Button */}
+          <button
+            onClick={() => setSessionManagerOpen(true)}
+            className="p-1.5 sm:px-2.5 sm:py-1.5 bg-slate-900/90 hover:bg-slate-800 text-slate-300 border border-slate-700/80 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors"
+            title="Quản lý Phiên Backtest (Database Sessions)"
+          >
+            <FolderOpen className="w-3.5 h-3.5 text-indigo-400" />
+            <span className="hidden xl:inline">Phiên</span>
           </button>
 
           {/* Analytics Report Button */}

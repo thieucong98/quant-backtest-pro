@@ -11,6 +11,7 @@ import { AccountState, EquityPoint, Order, OrderSide, OrderType, Position } from
 import { AIStrategyDefinition, StrategyLogMessage } from '../types/strategy';
 import { sessionsApi } from '../api/sessions';
 import { checkServerHealth } from '../api/client';
+import { AnalyticsEngine } from '../engine/analytics';
 
 interface BacktestStore {
   // Session Persistence
@@ -103,6 +104,10 @@ interface BacktestStore {
 
   // Session Persistence Actions
   initSession: () => Promise<void>;
+  loadSessionById: (sessionId: string) => Promise<boolean>;
+  createNewSession: (name?: string, symbol?: string, timeframe?: Timeframe, initialBalance?: number) => Promise<string>;
+  completeCurrentSession: () => Promise<void>;
+  deleteSessionById: (sessionId: string) => Promise<boolean>;
   setSessionManagerOpen: (open: boolean) => void;
 
   // Modal & Lang Toggles
@@ -656,10 +661,10 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
         // Check for active session
         const sessions = await sessionsApi.list('ACTIVE');
         if (sessions.length > 0) {
-          // Resume last active session
+          // Resume last active session with full trade/state restoration
           const lastSession = sessions[0];
-          set({ activeSessionId: lastSession.id });
-          get().addStrategyLog('INFO', `Đã kết nối server — Phiên "${lastSession.name}" đang hoạt động`);
+          await get().loadSessionById(lastSession.id);
+          get().addStrategyLog('INFO', `Đã kết nối server — Đã khôi phục phiên: "${lastSession.name}"`);
         } else {
           // Create a new session
           const { instrument, timeframe, account } = get();
@@ -674,6 +679,273 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
       } catch (err: any) {
         console.warn('[Session Init Error]', err);
         set({ isServerOnline: false });
+      }
+    },
+
+    loadSessionById: async (sessionId: string) => {
+      try {
+        get().pause();
+        const session = await sessionsApi.get(sessionId);
+        if (!session) return false;
+
+        const spec = INSTRUMENTS[session.symbol] || DEFAULT_INSTRUMENT;
+        const tf = (session.timeframe as Timeframe) || 'M5';
+
+        // Load candles for the symbol
+        let rawM1 = get().rawM1Candles;
+        if (get().instrument.symbol !== session.symbol || rawM1.length === 0) {
+          let startPrice = 1.0850;
+          if (session.symbol === 'XAUUSD') startPrice = 2650.0;
+          if (session.symbol === 'BTCUSD') startPrice = 68500.0;
+          if (session.symbol === 'USDJPY') startPrice = 155.0;
+          if (session.symbol === 'DXY') startPrice = 104.5;
+          rawM1 = generateRealisticCandles(session.symbol, startPrice, 2500, 5);
+        }
+
+        const resampled = TimeframeResampler.resample(rawM1, tf);
+        const news = generateNewsForCandles(rawM1);
+
+        // Parse open positions
+        const openPositions: Position[] = (session.trades || [])
+          .filter((t: any) => t.status === 'OPEN')
+          .map((t: any) => ({
+            id: t.id,
+            orderId: t.orderId || t.id,
+            symbol: t.symbol,
+            side: t.side,
+            lotSize: t.lotSize,
+            entryPrice: t.entryPrice,
+            stopLoss: t.stopLoss,
+            takeProfit: t.takeProfit,
+            trailingStopPips: t.trailingStopPips,
+            highestPriceSinceOpen: t.entryPrice,
+            lowestPriceSinceOpen: t.entryPrice,
+            commission: t.commission || 0,
+            swap: t.swap || 0,
+            openTime: Number(t.openTime),
+            floatingPnL: t.floatingPnL || 0,
+            realizedPnL: 0,
+            status: 'OPEN',
+            comment: t.comment,
+            tags: typeof t.tags === 'string' ? JSON.parse(t.tags) : t.tags,
+            note: t.note
+          }));
+
+        // Parse closed positions
+        const closedPositions: Position[] = (session.trades || [])
+          .filter((t: any) => t.status === 'CLOSED')
+          .map((t: any) => ({
+            id: t.id,
+            orderId: t.orderId || t.id,
+            symbol: t.symbol,
+            side: t.side,
+            lotSize: t.lotSize,
+            entryPrice: t.entryPrice,
+            closePrice: t.closePrice,
+            stopLoss: t.stopLoss,
+            takeProfit: t.takeProfit,
+            trailingStopPips: t.trailingStopPips,
+            highestPriceSinceOpen: t.entryPrice,
+            lowestPriceSinceOpen: t.entryPrice,
+            commission: t.commission || 0,
+            swap: t.swap || 0,
+            openTime: Number(t.openTime),
+            closeTime: t.closeTime ? Number(t.closeTime) : undefined,
+            floatingPnL: 0,
+            realizedPnL: t.realizedPnL || 0,
+            status: 'CLOSED',
+            closeReason: t.closeReason,
+            comment: t.comment,
+            tags: typeof t.tags === 'string' ? JSON.parse(t.tags) : t.tags,
+            note: t.note
+          }));
+
+        // Drawings
+        const drawings: DrawingObject[] = (session.drawings || []).map((d: any) => ({
+          id: d.id,
+          type: d.type,
+          points: typeof d.points === 'string' ? JSON.parse(d.points) : d.points,
+          color: d.color,
+          lineWidth: d.lineWidth,
+          text: d.text
+        }));
+
+        // Equity Curve
+        const equityCurve: EquityPoint[] = (session.equityPoints && session.equityPoints.length > 0)
+          ? session.equityPoints.map((ep: any) => ({
+              timestamp: Number(ep.timestamp),
+              balance: ep.balance,
+              equity: ep.equity
+            }))
+          : [{ timestamp: resampled[0]?.timestamp || 0, balance: session.initialBalance, equity: session.initialBalance }];
+
+        // Rebuild chart markers from trades
+        const markers: ChartMarker[] = [
+          ...openPositions.map(p => ({
+            id: 'marker_' + p.id,
+            time: p.openTime,
+            position: (p.side === 'BUY' ? 'belowBar' : 'aboveBar') as 'belowBar' | 'aboveBar',
+            color: p.side === 'BUY' ? '#26a69a' : '#ef5350',
+            shape: (p.side === 'BUY' ? 'arrowUp' : 'arrowDown') as 'arrowUp' | 'arrowDown',
+            text: p.side,
+            tooltip: `${p.side} ${p.lotSize}L @ ${p.entryPrice}`
+          })),
+          ...closedPositions.map(p => ({
+            id: 'marker_' + p.id,
+            time: p.openTime,
+            position: (p.side === 'BUY' ? 'belowBar' : 'aboveBar') as 'belowBar' | 'aboveBar',
+            color: p.side === 'BUY' ? '#26a69a' : '#ef5350',
+            shape: (p.side === 'BUY' ? 'arrowUp' : 'arrowDown') as 'arrowUp' | 'arrowDown',
+            text: p.side,
+            tooltip: `${p.side} ${p.lotSize}L (Đã đóng PnL: $${p.realizedPnL})`
+          }))
+        ];
+
+        // Setup matching engine state
+        const engine = get().matchingEngine;
+        engine.setConfig(spec);
+        engine.reset(session.initialBalance);
+        engine.balance = session.finalBalance;
+        engine.equity = session.finalEquity;
+        engine.openPositions = [...openPositions];
+        engine.closedPositions = [...closedPositions];
+
+        set({
+          activeSessionId: session.id,
+          instrument: spec,
+          timeframe: tf,
+          rawM1Candles: rawM1,
+          candles: resampled,
+          currentIndex: Math.min(session.currentIndex ?? 100, resampled.length - 1),
+          economicNews: news,
+          account: engine.getAccountState(),
+          pendingOrders: [],
+          openPositions,
+          closedPositions,
+          drawings,
+          markers,
+          equityCurve
+        });
+
+        get().addStrategyLog('INFO', `Đã tải phiên "${session.name}" — ${openPositions.length} vị thế mở, ${closedPositions.length} vị thế đã đóng`);
+        return true;
+      } catch (err: any) {
+        console.error('[Load Session Error]', err);
+        return false;
+      }
+    },
+
+    createNewSession: async (name, symbol, timeframe, initialBalance) => {
+      try {
+        const targetSymbol = symbol || get().instrument.symbol;
+        const targetTf = timeframe || get().timeframe;
+        const targetBalance = initialBalance || 10000;
+        const spec = INSTRUMENTS[targetSymbol] || DEFAULT_INSTRUMENT;
+
+        const sessionName = name || `${targetSymbol} ${targetTf} - ${new Date().toLocaleDateString('vi-VN')} ${new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}`;
+
+        const newSession = await sessionsApi.create({
+          name: sessionName,
+          symbol: targetSymbol,
+          timeframe: targetTf,
+          initialBalance: targetBalance
+        });
+
+        // Initialize simulation for the new session
+        let startPrice = 1.0850;
+        if (targetSymbol === 'XAUUSD') startPrice = 2650.0;
+        if (targetSymbol === 'BTCUSD') startPrice = 68500.0;
+        if (targetSymbol === 'USDJPY') startPrice = 155.0;
+        if (targetSymbol === 'DXY') startPrice = 104.5;
+
+        const newM1 = generateRealisticCandles(targetSymbol, startPrice, 2500, 5);
+        const resampled = TimeframeResampler.resample(newM1, targetTf);
+        const news = generateNewsForCandles(newM1);
+
+        const engine = get().matchingEngine;
+        engine.setConfig(spec);
+        engine.reset(targetBalance);
+
+        set({
+          activeSessionId: newSession.id,
+          instrument: spec,
+          timeframe: targetTf,
+          rawM1Candles: newM1,
+          candles: resampled,
+          currentIndex: Math.min(100, resampled.length - 1),
+          economicNews: news,
+          account: engine.getAccountState(),
+          pendingOrders: [],
+          openPositions: [],
+          closedPositions: [],
+          drawings: [],
+          markers: [],
+          equityCurve: [{ timestamp: resampled[0]?.timestamp || 0, balance: targetBalance, equity: targetBalance }]
+        });
+
+        get().addStrategyLog('INFO', `Đã tạo phiên mới: "${sessionName}" với vốn ban đầu $${targetBalance.toLocaleString()}`);
+        return newSession.id;
+      } catch (err: any) {
+        console.error('[Create Session Error]', err);
+        throw err;
+      }
+    },
+
+    completeCurrentSession: async () => {
+      const { activeSessionId, account, closedPositions } = get();
+      if (!activeSessionId) return;
+
+      try {
+        const report = AnalyticsEngine.calculateReport(account.initialBalance, closedPositions);
+        const heatmap = AnalyticsEngine.calculateHeatmap(closedPositions);
+        const monteCarlo = AnalyticsEngine.runMonteCarlo(account.initialBalance, closedPositions, 500);
+
+        await sessionsApi.complete(activeSessionId, {
+          finalBalance: account.balance,
+          finalEquity: account.equity,
+          analyticsSnapshot: {
+            totalTrades: report.totalTrades,
+            winTrades: report.winTrades,
+            lossTrades: report.lossTrades,
+            winRate: report.winRate,
+            grossProfit: report.grossProfit,
+            grossLoss: report.grossLoss,
+            netProfit: report.netProfit,
+            profitFactor: report.profitFactor,
+            expectedPayoff: report.expectedPayoff,
+            maxDrawdownAmount: report.maxDrawdownAmount,
+            maxDrawdownPercent: report.maxDrawdownPercent,
+            avgWin: report.avgWin,
+            avgLoss: report.avgLoss,
+            riskRewardRatio: report.riskRewardRatio,
+            consecutiveWins: report.consecutiveWins,
+            consecutiveLosses: report.consecutiveLosses,
+            sharpeRatio: report.sharpeRatio,
+            sortinoRatio: report.sortinoRatio,
+            heatmapData: JSON.stringify(heatmap),
+            monteCarloData: JSON.stringify(monteCarlo)
+          }
+        });
+
+        get().addStrategyLog('INFO', `Phiên #${activeSessionId.substring(0, 8)} đã được lưu trữ hoàn thành (Net PnL: $${report.netProfit})`);
+      } catch (err: any) {
+        console.error('[Complete Session Error]', err);
+      }
+    },
+
+    deleteSessionById: async (sessionId: string) => {
+      try {
+        await sessionsApi.delete(sessionId);
+        get().addStrategyLog('INFO', `Đã xóa phiên #${sessionId.substring(0, 8)} khỏi cơ sở dữ liệu`);
+
+        // If active session was deleted, create a new one
+        if (get().activeSessionId === sessionId) {
+          await get().createNewSession();
+        }
+        return true;
+      } catch (err: any) {
+        console.error('[Delete Session Error]', err);
+        return false;
       }
     },
 
