@@ -247,7 +247,7 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ chart, series }) =
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
-      className={`absolute inset-0 pointer-events-${activeTool === 'cursor' ? 'none' : 'auto'} ${activeTool !== 'cursor' ? 'cursor-crosshair' : ''}`}
+      className={`absolute inset-0 ${activeTool === 'cursor' ? 'pointer-events-none' : 'pointer-events-auto'} ${activeTool !== 'cursor' ? 'cursor-crosshair' : ''}`}
       style={{ zIndex: 15 }}
     />
   );
