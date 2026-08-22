@@ -9,8 +9,15 @@ import { PREBUILT_STRATEGIES, StrategyRunner } from '../engine/strategySandbox';
 import { Candle, ChartMarker, DrawingObject, DrawingToolType, InstrumentSpec, Timeframe } from '../types/market';
 import { AccountState, EquityPoint, Order, OrderSide, OrderType, Position } from '../types/order';
 import { AIStrategyDefinition, StrategyLogMessage } from '../types/strategy';
+import { sessionsApi } from '../api/sessions';
+import { checkServerHealth } from '../api/client';
 
 interface BacktestStore {
+  // Session Persistence
+  activeSessionId: string | null;
+  isServerOnline: boolean;
+  isSessionManagerOpen: boolean;
+
   // Instrument & Data
   instrument: InstrumentSpec;
   timeframe: Timeframe;
@@ -94,6 +101,10 @@ interface BacktestStore {
   addStrategyLog: (type: 'INFO' | 'SIGNAL' | 'ERROR', message: string) => void;
   setLLMSettings: (provider: 'openai' | 'claude' | 'gemini' | 'ollama', apiKey: string) => void;
 
+  // Session Persistence Actions
+  initSession: () => Promise<void>;
+  setSessionManagerOpen: (open: boolean) => void;
+
   // Modal & Lang Toggles
   setLanguage: (lang: 'vi' | 'en' | 'ja' | 'zh') => void;
   setOrderModalOpen: (open: boolean) => void;
@@ -130,6 +141,11 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
   initialStrategyRunner.compile(PREBUILT_STRATEGIES[0].code, PREBUILT_STRATEGIES[0].parameters);
 
   return {
+    // Session Persistence
+    activeSessionId: null,
+    isServerOnline: false,
+    isSessionManagerOpen: false,
+
     instrument: DEFAULT_INSTRUMENT,
     timeframe: 'M5',
     rawM1Candles: initialM1,
@@ -626,6 +642,42 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
     setLLMSettings: (provider, apiKey) => {
       set({ llmProvider: provider, llmApiKey: apiKey });
     },
+
+    // --- SESSION PERSISTENCE ---
+    initSession: async () => {
+      try {
+        const online = await checkServerHealth();
+        set({ isServerOnline: online });
+        if (!online) {
+          get().addStrategyLog('INFO', 'Server offline — chế độ cục bộ, dữ liệu không được lưu tự động');
+          return;
+        }
+
+        // Check for active session
+        const sessions = await sessionsApi.list('ACTIVE');
+        if (sessions.length > 0) {
+          // Resume last active session
+          const lastSession = sessions[0];
+          set({ activeSessionId: lastSession.id });
+          get().addStrategyLog('INFO', `Đã kết nối server — Phiên "${lastSession.name}" đang hoạt động`);
+        } else {
+          // Create a new session
+          const { instrument, timeframe, account } = get();
+          const newSession = await sessionsApi.create({
+            symbol: instrument.symbol,
+            timeframe,
+            initialBalance: account.initialBalance
+          });
+          set({ activeSessionId: newSession.id });
+          get().addStrategyLog('INFO', `Đã tạo phiên mới — ID: ${newSession.id}`);
+        }
+      } catch (err: any) {
+        console.warn('[Session Init Error]', err);
+        set({ isServerOnline: false });
+      }
+    },
+
+    setSessionManagerOpen: (open) => set({ isSessionManagerOpen: open }),
 
     // --- MODAL & LANG TOGGLES ---
     setLanguage: (lang) => {

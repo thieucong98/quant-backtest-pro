@@ -6,7 +6,11 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "server": "cd server && npx tsx watch index.ts",
+    "server:start": "cd server && npx tsx index.ts",
+    "db:studio": "cd server && npx prisma studio",
+    "db:migrate": "cd server && npx prisma migrate dev"
   },
   "dependencies": {
     "clsx": "^2.1.1",

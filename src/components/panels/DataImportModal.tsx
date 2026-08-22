@@ -16,7 +16,7 @@ import {
 import { generateRealisticCandles } from '../../config/sampleData';
 import { CSVDataParser } from '../../engine/csvParser';
 import { DataCrawler } from '../../engine/dataCrawler';
-import { db } from '../../engine/db';
+import { datasetsApi } from '../../api';
 import { useBacktestStore } from '../../store/backtestStore';
 
 export const DataImportModal: React.FC = () => {
@@ -58,17 +58,13 @@ export const DataImportModal: React.FC = () => {
         return;
       }
 
-      // Lưu vào IndexedDB
+      // Lưu vào Database Backend
       try {
-        await db.datasets.put({
-          id: `${instrument.symbol}_custom`,
+        await datasetsApi.save({
           symbol: instrument.symbol,
           timeframe: 'M1',
-          candleCount: parsed.candles.length,
-          startDate: parsed.candles[0].timestamp,
-          endDate: parsed.candles[parsed.candles.length - 1].timestamp,
           candles: parsed.candles,
-          updatedAt: Date.now()
+          source: 'import'
         });
       } catch (e) {}
 
@@ -94,17 +90,13 @@ export const DataImportModal: React.FC = () => {
       if (crawlSymbol.includes('BTC')) setInstrument('BTCUSD');
       else if (crawlSymbol.includes('ETH')) setInstrument('ETHUSD');
 
-      // Lưu vào IndexedDB
+      // Lưu vào Database Backend
       try {
-        await db.datasets.put({
-          id: `${crawlSymbol}_${crawlInterval}`,
+        await datasetsApi.save({
           symbol: crawlSymbol,
-          timeframe: 'M5',
-          candleCount: candles.length,
-          startDate: candles[0].timestamp,
-          endDate: candles[candles.length - 1].timestamp,
-          candles: candles,
-          updatedAt: Date.now()
+          timeframe: crawlInterval.toUpperCase(),
+          candles,
+          source: 'crawl'
         });
       } catch (e) {}
 

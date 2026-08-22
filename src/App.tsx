@@ -11,6 +11,7 @@ import { ShortcutsModal } from './components/panels/ShortcutsModal';
 import { AuthModal } from './components/auth/AuthModal';
 import { UserProfileModal } from './components/auth/UserProfileModal';
 import { useBacktestStore } from './store/backtestStore';
+import { useAutoSave } from './hooks/useAutoSave';
 
 export const App: React.FC = () => {
   const {
@@ -30,8 +31,17 @@ export const App: React.FC = () => {
     setAnalyticsModalOpen,
     setDataModalOpen,
     setShortcutsModalOpen,
-    setProfileModalOpen
+    setProfileModalOpen,
+    initSession
   } = useBacktestStore();
+
+  // Initialize auto-save connection
+  useAutoSave();
+
+  // Initialize session on mount
+  useEffect(() => {
+    initSession();
+  }, []);
 
   // Global Keyboard Shortcuts Listener
   useEffect(() => {

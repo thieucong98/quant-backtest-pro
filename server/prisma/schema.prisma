@@ -1,0 +1,203 @@
+// Prisma Schema for Quant Backtest Pro
+// Dev: SQLite | Prod: PostgreSQL (chỉ đổi provider + url)
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ─── USER & AUTH ───────────────────────────────────────────
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  avatarUrl    String?
+  tier         String   @default("PRO") // FREE | PRO | INSTITUTIONAL
+  passwordHash String?
+  ssoProvider  String?  // google | github | apple
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  sessions   Session[]
+  strategies Strategy[]
+  datasets   Dataset[]
+  settings   UserSettings?
+}
+
+model UserSettings {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  language    String   @default("vi")
+  llmProvider String   @default("gemini")
+  llmApiKey   String?
+  llmModel    String?
+  llmBaseUrl  String?
+  theme       String   @default("dark")
+  defaultLot  Float    @default(0.1)
+  autoSLPips  Int      @default(300)
+  autoTPPips  Int      @default(600)
+  updatedAt   DateTime @updatedAt
+}
+
+// ─── BACKTEST SESSION ──────────────────────────────────────
+
+model Session {
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name           String
+  symbol         String
+  timeframe      String
+  initialBalance Float
+  finalBalance   Float
+  finalEquity    Float
+  currentIndex   Int      @default(0)
+  status         String   @default("ACTIVE") // ACTIVE | COMPLETED | ARCHIVED
+  strategyId     String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  trades            Trade[]
+  drawings          Drawing[]
+  equityPoints      EquityPoint[]
+  analyticsSnapshot AnalyticsSnapshot?
+
+  @@index([userId])
+  @@index([status])
+}
+
+// ─── TRADE (ORDER / POSITION) ──────────────────────────────
+
+model Trade {
+  id               String    @id @default(cuid())
+  sessionId        String
+  session          Session   @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  orderId          String
+  symbol           String
+  side             String    // BUY | SELL
+  lotSize          Float
+  entryPrice       Float
+  closePrice       Float?
+  stopLoss         Float?
+  takeProfit       Float?
+  trailingStopPips Float?
+  commission       Float     @default(0)
+  swap             Float     @default(0)
+  floatingPnL      Float     @default(0)
+  realizedPnL      Float     @default(0)
+  status           String    // OPEN | CLOSED
+  closeReason      String?   // SL | TP | MANUAL | STOP_OUT | TRAILING_SL
+  comment          String?
+  tags             String?   // JSON array as string
+  note             String?
+  openTime         BigInt
+  closeTime        BigInt?
+  createdAt        DateTime  @default(now())
+
+  @@index([sessionId])
+  @@index([symbol])
+  @@index([status])
+}
+
+// ─── CHART DRAWING ─────────────────────────────────────────
+
+model Drawing {
+  id        String   @id @default(cuid())
+  sessionId String
+  session   Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  type      String   // trendline | horizontal | fibonacci | rectangle | measure
+  points    String   // JSON array of {time, price}
+  color     String   @default("#2196F3")
+  lineWidth Int      @default(1)
+  text      String?
+  createdAt DateTime @default(now())
+
+  @@index([sessionId])
+}
+
+// ─── EQUITY CURVE POINT ────────────────────────────────────
+
+model EquityPoint {
+  id        String  @id @default(cuid())
+  sessionId String
+  session   Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  timestamp BigInt
+  balance   Float
+  equity    Float
+
+  @@index([sessionId])
+}
+
+// ─── AI STRATEGY ───────────────────────────────────────────
+
+model Strategy {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  description String
+  code        String
+  parameters  String   // JSON string
+  enabled     Boolean  @default(true)
+  isBuiltIn   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+}
+
+// ─── MARKET DATA CACHE ─────────────────────────────────────
+
+model Dataset {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  symbol      String
+  timeframe   String
+  candleCount Int
+  startDate   BigInt
+  endDate     BigInt
+  candles     String   // JSON compressed
+  source      String   @default("import") // import | crawl | sample
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([userId, symbol, timeframe])
+  @@index([userId])
+}
+
+// ─── ANALYTICS SNAPSHOT ────────────────────────────────────
+
+model AnalyticsSnapshot {
+  id                 String   @id @default(cuid())
+  sessionId          String   @unique
+  session            Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  totalTrades        Int      @default(0)
+  winTrades          Int      @default(0)
+  lossTrades         Int      @default(0)
+  winRate            Float    @default(0)
+  grossProfit        Float    @default(0)
+  grossLoss          Float    @default(0)
+  netProfit          Float    @default(0)
+  profitFactor       Float    @default(0)
+  expectedPayoff     Float    @default(0)
+  maxDrawdownAmount  Float    @default(0)
+  maxDrawdownPercent Float    @default(0)
+  avgWin             Float    @default(0)
+  avgLoss            Float    @default(0)
+  riskRewardRatio    Float    @default(0)
+  consecutiveWins    Int      @default(0)
+  consecutiveLosses  Int      @default(0)
+  sharpeRatio        Float    @default(0)
+  sortinoRatio       Float    @default(0)
+  heatmapData        String?  // JSON
+  monteCarloData     String?  // JSON
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}

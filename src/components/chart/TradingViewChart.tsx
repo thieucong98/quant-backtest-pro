@@ -280,18 +280,27 @@ export const TradingViewChart: React.FC = () => {
       {/* 1. ONE-CLICK QUICK TRADING DOCK (OVERLAY) */}
       <div className="absolute top-3 left-3 z-20 flex items-center gap-2">
         {isQuickDockOpen ? (
-          <div className="glass-panel p-2 rounded-xl flex items-center gap-2 shadow-2xl animate-in fade-in zoom-in-95 text-xs font-mono">
+          <div className="bg-[#111622]/95 border border-slate-700/90 backdrop-blur-md p-2 rounded-xl flex items-center gap-2.5 shadow-2xl animate-in fade-in zoom-in-95 text-xs font-mono">
             {/* BUY BUTTON */}
             <button
               onClick={() => handleQuickTrade('BUY')}
-              className="px-3.5 py-2 bg-gradient-to-r from-teal-600 to-teal-500 hover:from-teal-500 hover:to-teal-400 text-white font-bold rounded-lg flex items-center gap-1.5 shadow-lg shadow-teal-600/30 active:scale-95 transition-all"
+              className="px-3 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold rounded-lg flex items-center gap-1.5 shadow-md shadow-emerald-600/25 active:scale-95 transition-all"
+              title="Vào lệnh BUY thị trường"
             >
               <ArrowUpRight className="w-4 h-4" />
               <span>{t.buy}</span>
             </button>
 
-            {/* LOT SIZE INPUT */}
-            <div className="flex flex-col">
+            {/* LOT SIZE STEPPER CONTROLLER */}
+            <div className="flex items-center bg-slate-950 border border-slate-700/80 rounded-lg overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setQuickLot(Math.max(instrument.minLot, Number((quickLot - instrument.lotStep).toFixed(2))))}
+                className="px-2 py-1 text-slate-400 hover:text-white hover:bg-slate-800 transition-colors font-bold text-xs"
+                title="Giảm Lot"
+              >
+                -
+              </button>
               <input
                 type="number"
                 step={instrument.lotStep}
@@ -299,62 +308,89 @@ export const TradingViewChart: React.FC = () => {
                 max={instrument.maxLot}
                 value={quickLot}
                 onChange={(e) => setQuickLot(parseFloat(e.target.value) || instrument.minLot)}
-                className="w-16 bg-slate-900 border border-slate-700 text-center font-bold text-slate-100 rounded px-1 py-1.5 focus:outline-none focus:border-indigo-500"
+                className="w-13 bg-transparent text-center font-bold text-slate-100 py-1 text-xs focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                title="Khối lượng Lot"
               />
+              <button
+                type="button"
+                onClick={() => setQuickLot(Math.min(instrument.maxLot, Number((quickLot + instrument.lotStep).toFixed(2))))}
+                className="px-2 py-1 text-slate-400 hover:text-white hover:bg-slate-800 transition-colors font-bold text-xs"
+                title="Tăng Lot"
+              >
+                +
+              </button>
             </div>
 
             {/* SELL BUTTON */}
             <button
               onClick={() => handleQuickTrade('SELL')}
-              className="px-3.5 py-2 bg-gradient-to-r from-rose-600 to-rose-500 hover:from-rose-500 hover:to-rose-400 text-white font-bold rounded-lg flex items-center gap-1.5 shadow-lg shadow-rose-600/30 active:scale-95 transition-all"
+              className="px-3 py-1.5 bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white font-bold rounded-lg flex items-center gap-1.5 shadow-md shadow-rose-600/25 active:scale-95 transition-all"
+              title="Vào lệnh SELL thị trường"
             >
               <ArrowDownRight className="w-4 h-4" />
               <span>{t.sell}</span>
             </button>
 
-            <div className="h-6 w-px bg-slate-800 mx-0.5" />
+            <div className="h-5 w-px bg-slate-800 mx-0.5" />
 
-            {/* AUTO SL CHECKBOX */}
-            <label className="flex items-center gap-1 text-[11px] text-slate-300 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={useAutoSL}
-                onChange={(e) => setUseAutoSL(e.target.checked)}
-                className="rounded accent-indigo-500"
-              />
-              <span className="text-rose-400 font-semibold">{t.autoSL}:</span>
+            {/* AUTO SL PILL CONTAINER */}
+            <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border transition-colors ${
+              useAutoSL ? 'bg-rose-950/40 border-rose-500/40' : 'bg-slate-950/60 border-slate-800 opacity-70'
+            }`}>
+              <label className="flex items-center gap-1 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={useAutoSL}
+                  onChange={(e) => setUseAutoSL(e.target.checked)}
+                  className="rounded accent-rose-500 w-3.5 h-3.5 cursor-pointer"
+                />
+                <span className="text-rose-400 font-bold text-[11px]">SL:</span>
+              </label>
               <input
                 type="number"
                 value={autoSLPips}
                 onChange={(e) => setAutoSLPips(parseInt(e.target.value) || 0)}
-                className="w-9 bg-slate-900 border border-slate-700 text-center text-[10px] rounded p-0.5 text-slate-200"
+                disabled={!useAutoSL}
+                className="w-12 bg-slate-900 border border-slate-700/80 rounded text-center text-xs font-bold py-0.5 text-slate-100 focus:outline-none focus:border-rose-500 disabled:opacity-50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
-              <span className="text-slate-500">{t.pips}</span>
-            </label>
+              <span className="text-slate-500 text-[10px]">p</span>
+            </div>
 
-            {/* AUTO TP CHECKBOX */}
-            <label className="flex items-center gap-1 text-[11px] text-slate-300 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={useAutoTP}
-                onChange={(e) => setUseAutoTP(e.target.checked)}
-                className="rounded accent-indigo-500"
-              />
-              <span className="text-teal-400 font-semibold">{t.autoTP}:</span>
+            {/* AUTO TP PILL CONTAINER */}
+            <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border transition-colors ${
+              useAutoTP ? 'bg-teal-950/40 border-teal-500/40' : 'bg-slate-950/60 border-slate-800 opacity-70'
+            }`}>
+              <label className="flex items-center gap-1 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={useAutoTP}
+                  onChange={(e) => setUseAutoTP(e.target.checked)}
+                  className="rounded accent-teal-500 w-3.5 h-3.5 cursor-pointer"
+                />
+                <span className="text-teal-400 font-bold text-[11px]">TP:</span>
+              </label>
               <input
                 type="number"
                 value={autoTPPips}
                 onChange={(e) => setAutoTPPips(parseInt(e.target.value) || 0)}
-                className="w-9 bg-slate-900 border border-slate-700 text-center text-[10px] rounded p-0.5 text-slate-200"
+                disabled={!useAutoTP}
+                className="w-12 bg-slate-900 border border-slate-700/80 rounded text-center text-xs font-bold py-0.5 text-slate-100 focus:outline-none focus:border-teal-500 disabled:opacity-50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
-              <span className="text-slate-500">{t.pips}</span>
-            </label>
+              <span className="text-slate-500 text-[10px]">p</span>
+            </div>
 
-            {/* Minimize button */}
+            {/* LIVE R:R RATIO BADGE */}
+            {useAutoSL && useAutoTP && autoSLPips > 0 && autoTPPips > 0 && (
+              <span className="px-1.5 py-0.5 rounded bg-indigo-950/80 border border-indigo-500/40 text-indigo-300 font-bold text-[10px]" title="Tỷ lệ Risk:Reward">
+                1:{(autoTPPips / autoSLPips).toFixed(1)} R
+              </span>
+            )}
+
+            {/* MINIMIZE BUTTON */}
             <button
               onClick={() => setIsQuickDockOpen(false)}
-              className="text-slate-500 hover:text-slate-300 px-1"
-              title="Minimize"
+              className="p-1 hover:bg-slate-800 text-slate-500 hover:text-slate-300 rounded transition-colors"
+              title="Thu gọn"
             >
               ✕
             </button>
@@ -362,7 +398,8 @@ export const TradingViewChart: React.FC = () => {
         ) : (
           <button
             onClick={() => setIsQuickDockOpen(true)}
-            className="glass-panel px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 text-xs text-indigo-300 font-semibold hover:bg-slate-800 transition-colors shadow-lg"
+            className="bg-[#111622]/95 border border-slate-700/90 px-3 py-1.5 rounded-lg flex items-center gap-1.5 text-xs text-indigo-300 font-bold hover:bg-slate-800 transition-all shadow-xl backdrop-blur-md active:scale-95"
+            title="Mở Quick Trade"
           >
             <Zap className="w-3.5 h-3.5 text-amber-400" />
             <span>{t.quickTrade}</span>
