@@ -278,7 +278,7 @@ export const TradingViewChart: React.FC = () => {
   return (
     <div className="relative w-full h-full flex flex-col bg-[#0b0e14] overflow-hidden select-none">
       {/* 1. ONE-CLICK QUICK TRADING DOCK (OVERLAY) */}
-      <div className="absolute top-3 left-3 z-30 flex items-center gap-2">
+      <div className="absolute top-3 left-3 z-10 flex items-center gap-2">
         {isQuickDockOpen ? (
           <div className="glass-panel p-2 rounded-xl flex items-center gap-2 shadow-2xl animate-in fade-in zoom-in-95 text-xs font-mono">
             {/* BUY BUTTON */}
