@@ -7,6 +7,9 @@ import { OrderEntryModal } from './components/panels/OrderEntryModal';
 import { AIStrategyModal } from './components/panels/AIStrategyModal';
 import { AnalyticsDashboardModal } from './components/panels/AnalyticsDashboardModal';
 import { DataImportModal } from './components/panels/DataImportModal';
+import { ShortcutsModal } from './components/panels/ShortcutsModal';
+import { AuthModal } from './components/auth/AuthModal';
+import { UserProfileModal } from './components/auth/UserProfileModal';
 import { useBacktestStore } from './store/backtestStore';
 
 export const App: React.FC = () => {
@@ -15,20 +18,25 @@ export const App: React.FC = () => {
     play,
     pause,
     stepForward,
+    stepBackward,
     setOrderModalOpen,
     isOrderModalOpen,
     isAIModalOpen,
     isAnalyticsModalOpen,
     isDataModalOpen,
+    isShortcutsModalOpen,
+    isProfileModalOpen,
     setAIModalOpen,
     setAnalyticsModalOpen,
-    setDataModalOpen
+    setDataModalOpen,
+    setShortcutsModalOpen,
+    setProfileModalOpen
   } = useBacktestStore();
 
-  // Keyboard Shortcuts Listener
+  // Global Keyboard Shortcuts Listener
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Don't trigger if user is typing in an input or textarea
+      // Don't trigger shortcuts if user is typing in an input field or textarea
       if (['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement).tagName)) {
         return;
       }
@@ -40,6 +48,9 @@ export const App: React.FC = () => {
       } else if (e.code === 'KeyF') {
         e.preventDefault();
         stepForward();
+      } else if ((e.ctrlKey || e.metaKey) && e.code === 'KeyZ') {
+        e.preventDefault();
+        stepBackward();
       } else if (e.code === 'KeyB') {
         e.preventDefault();
         setOrderModalOpen(true);
@@ -48,12 +59,26 @@ export const App: React.FC = () => {
         if (isAIModalOpen) setAIModalOpen(false);
         if (isAnalyticsModalOpen) setAnalyticsModalOpen(false);
         if (isDataModalOpen) setDataModalOpen(false);
+        if (isShortcutsModalOpen) setShortcutsModalOpen(false);
+        if (isProfileModalOpen) setProfileModalOpen(false);
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isPlaying, play, pause, stepForward, isOrderModalOpen, isAIModalOpen, isAnalyticsModalOpen, isDataModalOpen]);
+  }, [
+    isPlaying,
+    play,
+    pause,
+    stepForward,
+    stepBackward,
+    isOrderModalOpen,
+    isAIModalOpen,
+    isAnalyticsModalOpen,
+    isDataModalOpen,
+    isShortcutsModalOpen,
+    isProfileModalOpen
+  ]);
 
   return (
     <div className="w-screen h-screen flex flex-col bg-[#0b0e14] text-slate-100 overflow-hidden select-none font-sans">
@@ -76,6 +101,15 @@ export const App: React.FC = () => {
       <AIStrategyModal />
       <AnalyticsDashboardModal />
       <DataImportModal />
+      <ShortcutsModal
+        isOpen={isShortcutsModalOpen}
+        onClose={() => setShortcutsModalOpen(false)}
+      />
+      <AuthModal />
+      <UserProfileModal
+        isOpen={isProfileModalOpen}
+        onClose={() => setProfileModalOpen(false)}
+      />
     </div>
   );
 };
