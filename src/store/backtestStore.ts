@@ -1,0 +1,622 @@
+import { create } from 'zustand';
+import { INSTRUMENTS, DEFAULT_INSTRUMENT } from '../config/instruments';
+import { EconomicNewsEvent, generateNewsForCandles } from '../config/newsEvents';
+import { generateRealisticCandles } from '../config/sampleData';
+import { IndicatorCalculator } from '../engine/indicators';
+import { OrderMatchingEngine } from '../engine/orderMatchingEngine';
+import { TimeframeResampler } from '../engine/resampler';
+import { PREBUILT_STRATEGIES, StrategyRunner } from '../engine/strategySandbox';
+import { Candle, ChartMarker, DrawingObject, DrawingToolType, InstrumentSpec, Timeframe } from '../types/market';
+import { AccountState, EquityPoint, Order, OrderSide, OrderType, Position } from '../types/order';
+import { AIStrategyDefinition, StrategyLogMessage } from '../types/strategy';
+
+interface BacktestStore {
+  // Instrument & Data
+  instrument: InstrumentSpec;
+  timeframe: Timeframe;
+  rawM1Candles: Candle[];
+  candles: Candle[];
+  currentIndex: number;
+  economicNews: EconomicNewsEvent[];
+
+  // Replay Controller
+  isPlaying: boolean;
+  speed: number; // 1 to 100
+  replayIntervalId: any;
+
+  // Account & OMS
+  account: AccountState;
+  pendingOrders: Order[];
+  openPositions: Position[];
+  closedPositions: Position[];
+  equityCurve: EquityPoint[];
+
+  // Drawing Tools
+  activeTool: DrawingToolType;
+  drawings: DrawingObject[];
+  markers: ChartMarker[];
+
+  // AI Strategy
+  activeStrategy: AIStrategyDefinition | null;
+  autoTradingEnabled: boolean;
+  strategyLogs: StrategyLogMessage[];
+  llmApiKey: string;
+  llmProvider: 'openai' | 'claude' | 'gemini' | 'ollama';
+
+  // Modals
+  isOrderModalOpen: boolean;
+  isAnalyticsModalOpen: boolean;
+  isAIModalOpen: boolean;
+  isDataModalOpen: boolean;
+
+  // Engine references
+  matchingEngine: OrderMatchingEngine;
+  strategyRunner: StrategyRunner;
+  indicatorCalculator: IndicatorCalculator;
+
+  // Actions
+  setInstrument: (symbol: string) => void;
+  setTimeframe: (tf: Timeframe) => void;
+  loadCandles: (candles: Candle[]) => void;
+  
+  // Replay Actions
+  play: () => void;
+  pause: () => void;
+  stepForward: () => void;
+  stepBackward: () => void;
+  setSpeed: (speed: number) => void;
+  jumpToIndex: (index: number) => void;
+  jumpToDate: (timestamp: number) => void;
+  resetSimulation: () => void;
+
+  // Trading Actions
+  executeMarketOrder: (side: OrderSide, lotSize: number, sl?: number, tp?: number, trailingStop?: number) => boolean;
+  placePendingOrder: (side: OrderSide, type: OrderType, lotSize: number, price: number, sl?: number, tp?: number, trailingStop?: number) => boolean;
+  cancelPendingOrder: (orderId: string) => boolean;
+  closePosition: (positionId: string) => boolean;
+  setBreakeven: (positionId: string) => boolean;
+  partialClose: (positionId: string, percent: number) => boolean;
+  modifyPositionSLTP: (positionId: string, newSL?: number, newTP?: number) => void;
+  updatePositionTags: (positionId: string, tags: string[], note?: string) => void;
+
+  // Drawing Actions
+  setActiveTool: (tool: DrawingToolType) => void;
+  addDrawing: (drawing: DrawingObject) => void;
+  removeDrawing: (id: string) => void;
+  clearDrawings: () => void;
+
+  // AI Strategy Actions
+  setActiveStrategy: (strategy: AIStrategyDefinition | null) => void;
+  toggleAutoTrading: (enabled?: boolean) => void;
+  addStrategyLog: (type: 'INFO' | 'SIGNAL' | 'ERROR', message: string) => void;
+  setLLMSettings: (provider: 'openai' | 'claude' | 'gemini' | 'ollama', apiKey: string) => void;
+
+  // Modal Toggles
+  setOrderModalOpen: (open: boolean) => void;
+  setAnalyticsModalOpen: (open: boolean) => void;
+  setAIModalOpen: (open: boolean) => void;
+  setDataModalOpen: (open: boolean) => void;
+}
+
+// Khởi tạo dữ liệu mẫu ban đầu
+const initialM1 = generateRealisticCandles(DEFAULT_INSTRUMENT.symbol, 2650.0, 2500, 5);
+const initialNews = generateNewsForCandles(initialM1);
+const initialMatchingEngine = new OrderMatchingEngine(10000, DEFAULT_INSTRUMENT);
+const initialStrategyRunner = new StrategyRunner();
+const initialIndicatorCalculator = new IndicatorCalculator();
+
+export const useBacktestStore = create<BacktestStore>((set, get) => {
+  // Đăng ký callback cho Matching Engine
+  initialMatchingEngine.events = {
+    onOrderFilled: (order, pos) => {
+      get().addStrategyLog('SIGNAL', `Khớp lệnh ${pos.side} ${pos.lotSize}L @ ${pos.entryPrice}`);
+    },
+    onPositionClosed: (pos, reason) => {
+      const pnlStr = pos.realizedPnL >= 0 ? `+$${pos.realizedPnL}` : `-$${Math.abs(pos.realizedPnL)}`;
+      get().addStrategyLog('INFO', `Đóng lệnh ${pos.side} (${reason}) @ ${pos.closePrice} | PnL: ${pnlStr}`);
+    },
+    onLog: (msg) => {
+      get().addStrategyLog('INFO', msg);
+    }
+  };
+
+  // Compile chiến lược mẫu
+  initialStrategyRunner.compile(PREBUILT_STRATEGIES[0].code, PREBUILT_STRATEGIES[0].parameters);
+
+  return {
+    instrument: DEFAULT_INSTRUMENT,
+    timeframe: 'M5',
+    rawM1Candles: initialM1,
+    candles: initialM1,
+    currentIndex: Math.min(200, initialM1.length - 1),
+    economicNews: initialNews,
+
+    isPlaying: false,
+    speed: 5,
+    replayIntervalId: null,
+
+    account: initialMatchingEngine.getAccountState(),
+    pendingOrders: [],
+    openPositions: [],
+    closedPositions: [],
+    equityCurve: [{ timestamp: initialM1[0]?.timestamp || 0, balance: 10000, equity: 10000 }],
+
+    activeTool: 'cursor',
+    drawings: [],
+    markers: [],
+
+    activeStrategy: PREBUILT_STRATEGIES[0],
+    autoTradingEnabled: false,
+    strategyLogs: [{ id: 'init', timestamp: Date.now(), type: 'INFO', message: 'Hệ thống Quant Backtest Pro khởi tạo thành công.' }],
+    llmApiKey: '',
+    llmProvider: 'gemini',
+
+    isOrderModalOpen: false,
+    isAnalyticsModalOpen: false,
+    isAIModalOpen: false,
+    isDataModalOpen: false,
+
+    matchingEngine: initialMatchingEngine,
+    strategyRunner: initialStrategyRunner,
+    indicatorCalculator: initialIndicatorCalculator,
+
+    setInstrument: (symbol) => {
+      const spec = INSTRUMENTS[symbol] || DEFAULT_INSTRUMENT;
+      get().pause();
+      
+      let startPrice = 1.0850;
+      if (symbol === 'XAUUSD') startPrice = 2650.0;
+      if (symbol === 'BTCUSD') startPrice = 68500.0;
+      if (symbol === 'USDJPY') startPrice = 155.0;
+      if (symbol === 'DXY') startPrice = 104.5;
+
+      const newM1 = generateRealisticCandles(symbol, startPrice, 2500, 5);
+      const news = generateNewsForCandles(newM1);
+      const resampled = TimeframeResampler.resample(newM1, get().timeframe);
+      const engine = get().matchingEngine;
+      engine.setConfig(spec);
+      engine.reset();
+
+      set({
+        instrument: spec,
+        rawM1Candles: newM1,
+        candles: resampled,
+        currentIndex: Math.min(200, resampled.length - 1),
+        economicNews: news,
+        account: engine.getAccountState(),
+        pendingOrders: [],
+        openPositions: [],
+        closedPositions: [],
+        markers: [],
+        equityCurve: [{ timestamp: resampled[0]?.timestamp || 0, balance: engine.initialBalance, equity: engine.initialBalance }]
+      });
+    },
+
+    setTimeframe: (tf) => {
+      const { rawM1Candles, currentIndex, candles } = get();
+      const currentTimestamp = candles[currentIndex]?.timestamp || 0;
+      const resampled = TimeframeResampler.resample(rawM1Candles, tf);
+      
+      let newIdx = resampled.findIndex(c => c.timestamp >= currentTimestamp);
+      if (newIdx === -1) newIdx = Math.min(100, resampled.length - 1);
+
+      set({
+        timeframe: tf,
+        candles: resampled,
+        currentIndex: newIdx
+      });
+    },
+
+    loadCandles: (newCandles) => {
+      get().pause();
+      const { timeframe, matchingEngine } = get();
+      const resampled = TimeframeResampler.resample(newCandles, timeframe);
+      const news = generateNewsForCandles(newCandles);
+      matchingEngine.reset();
+
+      set({
+        rawM1Candles: newCandles,
+        candles: resampled,
+        currentIndex: Math.min(150, resampled.length - 1),
+        economicNews: news,
+        account: matchingEngine.getAccountState(),
+        pendingOrders: [],
+        openPositions: [],
+        closedPositions: [],
+        markers: [],
+        equityCurve: [{ timestamp: resampled[0]?.timestamp || 0, balance: matchingEngine.initialBalance, equity: matchingEngine.initialBalance }]
+      });
+    },
+
+    // --- REPLAY CONTROLS ---
+    play: () => {
+      if (get().isPlaying) return;
+      set({ isPlaying: true });
+
+      const intervalMs = Math.max(20, Math.floor(1000 / get().speed));
+      const intervalId = setInterval(() => {
+        get().stepForward();
+      }, intervalMs);
+
+      set({ replayIntervalId: intervalId });
+    },
+
+    pause: () => {
+      const { replayIntervalId } = get();
+      if (replayIntervalId) {
+        clearInterval(replayIntervalId);
+      }
+      set({ isPlaying: false, replayIntervalId: null });
+    },
+
+    stepForward: () => {
+      const { currentIndex, candles, matchingEngine, strategyRunner, indicatorCalculator, activeStrategy, autoTradingEnabled, instrument } = get();
+      
+      if (currentIndex >= candles.length - 1) {
+        get().pause();
+        return;
+      }
+
+      const nextIndex = currentIndex + 1;
+      const currentCandle = candles[nextIndex];
+      const sliceCandles = candles.slice(0, nextIndex + 1);
+
+      // 1. Process Candle in Matching Engine
+      matchingEngine.processCandle(currentCandle);
+
+      // 2. Process AI Strategy if auto trading is on
+      if (autoTradingEnabled && activeStrategy) {
+        indicatorCalculator.setCandles(sliceCandles);
+        const lib = indicatorCalculator.createLibrary();
+        
+        const accountInfo = {
+          balance: matchingEngine.balance,
+          equity: matchingEngine.equity,
+          freeMargin: matchingEngine.freeMargin,
+          openPositionsCount: matchingEngine.openPositions.length,
+          openPositions: matchingEngine.openPositions
+        };
+
+        const api = {
+          buy: (params: any) => {
+            const spread = instrument.defaultSpreadPips * instrument.pipSize;
+            let slPrice = params.stopLossPrice;
+            let tpPrice = params.takeProfitPrice;
+            if (params.stopLossPips && !slPrice) slPrice = currentCandle.close - (params.stopLossPips * instrument.pipSize);
+            if (params.takeProfitPips && !tpPrice) tpPrice = currentCandle.close + (params.takeProfitPips * instrument.pipSize);
+
+            const pos = matchingEngine.executeMarketOrder({
+              side: 'BUY',
+              lotSize: params.lotSize || 0.1,
+              candle: currentCandle,
+              stopLoss: slPrice,
+              takeProfit: tpPrice,
+              trailingStopPips: params.trailingStopPips,
+              comment: params.comment || 'AI Buy'
+            });
+
+            if (pos) {
+              const newMarker: ChartMarker = {
+                id: 'marker_' + Date.now(),
+                time: currentCandle.timestamp,
+                position: 'belowBar',
+                color: '#26a69a',
+                shape: 'arrowUp',
+                text: 'BUY',
+                tooltip: params.comment || 'AI Signal Buy'
+              };
+              set(s => ({ markers: [...s.markers, newMarker] }));
+            }
+          },
+          sell: (params: any) => {
+            let slPrice = params.stopLossPrice;
+            let tpPrice = params.takeProfitPrice;
+            if (params.stopLossPips && !slPrice) slPrice = currentCandle.close + (params.stopLossPips * instrument.pipSize);
+            if (params.takeProfitPips && !tpPrice) tpPrice = currentCandle.close - (params.takeProfitPips * instrument.pipSize);
+
+            const pos = matchingEngine.executeMarketOrder({
+              side: 'SELL',
+              lotSize: params.lotSize || 0.1,
+              candle: currentCandle,
+              stopLoss: slPrice,
+              takeProfit: tpPrice,
+              trailingStopPips: params.trailingStopPips,
+              comment: params.comment || 'AI Sell'
+            });
+
+            if (pos) {
+              const newMarker: ChartMarker = {
+                id: 'marker_' + Date.now(),
+                time: currentCandle.timestamp,
+                position: 'aboveBar',
+                color: '#ef5350',
+                shape: 'arrowDown',
+                text: 'SELL',
+                tooltip: params.comment || 'AI Signal Sell'
+              };
+              set(s => ({ markers: [...s.markers, newMarker] }));
+            }
+          },
+          closeAll: () => {
+            for (const p of [...matchingEngine.openPositions]) {
+              matchingEngine.closePositionManual(p.id, currentCandle);
+            }
+          },
+          closePosition: (id: string) => {
+            matchingEngine.closePositionManual(id, currentCandle);
+          },
+          modifySLTP: (id: string, sl?: number, tp?: number) => {
+            const p = matchingEngine.openPositions.find(pos => pos.id === id);
+            if (p) {
+              if (sl !== undefined) p.stopLoss = sl;
+              if (tp !== undefined) p.takeProfit = tp;
+            }
+          },
+          log: (msg: string) => {
+            get().addStrategyLog('INFO', msg);
+          }
+        };
+
+        strategyRunner.executeCandle(currentCandle, lib, accountInfo, api);
+      }
+
+      // 3. Update Store State
+      const currentAccount = matchingEngine.getAccountState();
+      const equityPoint: EquityPoint = {
+        timestamp: currentCandle.timestamp,
+        balance: currentAccount.balance,
+        equity: currentAccount.equity
+      };
+
+      set(state => ({
+        currentIndex: nextIndex,
+        account: currentAccount,
+        pendingOrders: [...matchingEngine.pendingOrders],
+        openPositions: [...matchingEngine.openPositions],
+        closedPositions: [...matchingEngine.closedPositions],
+        equityCurve: [...state.equityCurve, equityPoint]
+      }));
+    },
+
+    stepBackward: () => {
+      const { currentIndex } = get();
+      if (currentIndex <= 0) return;
+      get().jumpToIndex(currentIndex - 1);
+    },
+
+    setSpeed: (newSpeed) => {
+      const isRunning = get().isPlaying;
+      if (isRunning) {
+        get().pause();
+      }
+      set({ speed: newSpeed });
+      if (isRunning) {
+        get().play();
+      }
+    },
+
+    jumpToIndex: (targetIndex) => {
+      const { candles, matchingEngine } = get();
+      if (targetIndex < 0 || targetIndex >= candles.length) return;
+
+      get().pause();
+      matchingEngine.reset();
+
+      // Fast forward matching engine up to targetIndex
+      for (let i = 0; i <= targetIndex; i++) {
+        matchingEngine.processCandle(candles[i]);
+      }
+
+      const acc = matchingEngine.getAccountState();
+      set({
+        currentIndex: targetIndex,
+        account: acc,
+        pendingOrders: [...matchingEngine.pendingOrders],
+        openPositions: [...matchingEngine.openPositions],
+        closedPositions: [...matchingEngine.closedPositions],
+        equityCurve: [{ timestamp: candles[0]?.timestamp || 0, balance: acc.initialBalance, equity: acc.equity }]
+      });
+    },
+
+    jumpToDate: (targetTimestamp) => {
+      const { candles } = get();
+      const idx = candles.findIndex(c => c.timestamp >= targetTimestamp);
+      if (idx !== -1) {
+        get().jumpToIndex(idx);
+      }
+    },
+
+    resetSimulation: () => {
+      get().pause();
+      const { matchingEngine, candles } = get();
+      matchingEngine.reset();
+      const acc = matchingEngine.getAccountState();
+
+      set({
+        currentIndex: Math.min(100, candles.length - 1),
+        account: acc,
+        pendingOrders: [],
+        openPositions: [],
+        closedPositions: [],
+        markers: [],
+        equityCurve: [{ timestamp: candles[0]?.timestamp || 0, balance: acc.initialBalance, equity: acc.initialBalance }]
+      });
+    },
+
+    // --- TRADING ACTIONS ---
+    executeMarketOrder: (side, lotSize, sl, tp, trailingStop) => {
+      const { matchingEngine, candles, currentIndex } = get();
+      const currentCandle = candles[currentIndex];
+      if (!currentCandle) return false;
+
+      const pos = matchingEngine.executeMarketOrder({
+        side,
+        lotSize,
+        candle: currentCandle,
+        stopLoss: sl,
+        takeProfit: tp,
+        trailingStopPips: trailingStop,
+        comment: 'Manual Entry'
+      });
+
+      if (pos) {
+        const marker: ChartMarker = {
+          id: 'manual_' + Date.now(),
+          time: currentCandle.timestamp,
+          position: side === 'BUY' ? 'belowBar' : 'aboveBar',
+          color: side === 'BUY' ? '#26a69a' : '#ef5350',
+          shape: side === 'BUY' ? 'arrowUp' : 'arrowDown',
+          text: side,
+          tooltip: `Manual ${side} ${lotSize}L @ ${pos.entryPrice}`
+        };
+
+        set({
+          account: matchingEngine.getAccountState(),
+          openPositions: [...matchingEngine.openPositions],
+          markers: [...get().markers, marker]
+        });
+        return true;
+      }
+      return false;
+    },
+
+    placePendingOrder: (side, type, lotSize, price, sl, tp, trailingStop) => {
+      const { matchingEngine } = get();
+      matchingEngine.placePendingOrder({
+        side,
+        type,
+        lotSize,
+        price,
+        stopLoss: sl,
+        takeProfit: tp,
+        trailingStopPips: trailingStop,
+        comment: 'Manual Pending'
+      });
+
+      set({
+        pendingOrders: [...matchingEngine.pendingOrders]
+      });
+      return true;
+    },
+
+    cancelPendingOrder: (orderId) => {
+      const { matchingEngine } = get();
+      const res = matchingEngine.cancelPendingOrder(orderId);
+      if (res) {
+        set({ pendingOrders: [...matchingEngine.pendingOrders] });
+      }
+      return res;
+    },
+
+    closePosition: (positionId) => {
+      const { matchingEngine, candles, currentIndex } = get();
+      const currentCandle = candles[currentIndex];
+      if (!currentCandle) return false;
+
+      const res = matchingEngine.closePositionManual(positionId, currentCandle);
+      if (res) {
+        set({
+          account: matchingEngine.getAccountState(),
+          openPositions: [...matchingEngine.openPositions],
+          closedPositions: [...matchingEngine.closedPositions]
+        });
+      }
+      return res;
+    },
+
+    setBreakeven: (positionId) => {
+      const { matchingEngine } = get();
+      const res = matchingEngine.setBreakeven(positionId);
+      if (res) {
+        set({ openPositions: [...matchingEngine.openPositions] });
+      }
+      return res;
+    },
+
+    partialClose: (positionId, percent) => {
+      const { matchingEngine, candles, currentIndex } = get();
+      const currentCandle = candles[currentIndex];
+      if (!currentCandle) return false;
+
+      const res = matchingEngine.partialClosePosition(positionId, percent, currentCandle);
+      if (res) {
+        set({
+          account: matchingEngine.getAccountState(),
+          openPositions: [...matchingEngine.openPositions],
+          closedPositions: [...matchingEngine.closedPositions]
+        });
+      }
+      return res;
+    },
+
+    modifyPositionSLTP: (positionId, newSL, newTP) => {
+      const { matchingEngine } = get();
+      const pos = matchingEngine.openPositions.find(p => p.id === positionId);
+      if (pos) {
+        if (newSL !== undefined) pos.stopLoss = newSL;
+        if (newTP !== undefined) pos.takeProfit = newTP;
+        set({ openPositions: [...matchingEngine.openPositions] });
+      }
+    },
+
+    updatePositionTags: (positionId, tags, note) => {
+      const { matchingEngine, closedPositions } = get();
+      // Update in openPositions if present
+      const pos = matchingEngine.openPositions.find(p => p.id === positionId);
+      if (pos) {
+        pos.tags = tags;
+        if (note !== undefined) pos.note = note;
+      }
+      // Update in closedPositions
+      const closed = closedPositions.find(p => p.id === positionId);
+      if (closed) {
+        closed.tags = tags;
+        if (note !== undefined) closed.note = note;
+      }
+      set({
+        openPositions: [...matchingEngine.openPositions],
+        closedPositions: [...closedPositions]
+      });
+    },
+
+    // --- DRAWING ACTIONS ---
+    setActiveTool: (tool) => set({ activeTool: tool }),
+    addDrawing: (drawing) => set(s => ({ drawings: [...s.drawings, drawing] })),
+    removeDrawing: (id) => set(s => ({ drawings: s.drawings.filter(d => d.id !== id) })),
+    clearDrawings: () => set({ drawings: [] }),
+
+    // --- AI STRATEGY ACTIONS ---
+    setActiveStrategy: (strat) => {
+      if (strat) {
+        get().strategyRunner.compile(strat.code, strat.parameters);
+      }
+      set({ activeStrategy: strat });
+    },
+
+    toggleAutoTrading: (enabled) => {
+      const next = enabled !== undefined ? enabled : !get().autoTradingEnabled;
+      set({ autoTradingEnabled: next });
+      get().addStrategyLog('INFO', `Tự động giao dịch AI: ${next ? 'ĐÃ BẬT' : 'ĐÃ TẮT'}`);
+    },
+
+    addStrategyLog: (type, message) => {
+      const newLog: StrategyLogMessage = {
+        id: Math.random().toString(36).substring(2, 9),
+        timestamp: Date.now(),
+        type,
+        message
+      };
+      set(s => ({ strategyLogs: [newLog, ...s.strategyLogs.slice(0, 150)] }));
+    },
+
+    setLLMSettings: (provider, apiKey) => {
+      set({ llmProvider: provider, llmApiKey: apiKey });
+    },
+
+    // --- MODAL TOGGLES ---
+    setOrderModalOpen: (open) => set({ isOrderModalOpen: open }),
+    setAnalyticsModalOpen: (open) => set({ isAnalyticsModalOpen: open }),
+    setAIModalOpen: (open) => set({ isAIModalOpen: open }),
+    setDataModalOpen: (open) => set({ isDataModalOpen: open })
+  };
+});
