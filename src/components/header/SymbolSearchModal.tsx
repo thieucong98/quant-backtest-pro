@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Search, X, Check, ArrowRight, Zap, Coins, DollarSign, BarChart2 } from 'lucide-react';
 import { INSTRUMENTS } from '../../config/instruments';
 import { AssetCategory } from '../../types/market';
+import { useBacktestStore } from '../../store/backtestStore';
+import { translations } from '../../i18n/translations';
 
 interface SymbolSearchModalProps {
   isOpen: boolean;
@@ -16,6 +18,9 @@ export const SymbolSearchModal: React.FC<SymbolSearchModalProps> = ({
   currentSymbol,
   onSelectSymbol
 }) => {
+  const { language } = useBacktestStore();
+  const t = translations[language] || translations.en;
+
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<AssetCategory | 'ALL'>('ALL');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -60,7 +65,7 @@ export const SymbolSearchModal: React.FC<SymbolSearchModalProps> = ({
           <input
             ref={inputRef}
             type="text"
-            placeholder="Tìm kiếm mã tài sản (ví dụ: XAUUSD, BTC, EURUSD...)"
+            placeholder={t.searchSymbolPlaceholder}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="flex-1 bg-transparent text-sm text-slate-100 placeholder-slate-500 focus:outline-none font-mono"
@@ -111,7 +116,7 @@ export const SymbolSearchModal: React.FC<SymbolSearchModalProps> = ({
         <div className="max-h-80 overflow-y-auto p-2 space-y-1 font-mono">
           {filtered.length === 0 ? (
             <div className="py-8 text-center text-slate-500 text-xs">
-              Không tìm thấy tài sản nào phù hợp với từ khóa "{search}".
+              {t.noSymbolsFound}
             </div>
           ) : (
             filtered.map(inst => {
@@ -150,8 +155,8 @@ export const SymbolSearchModal: React.FC<SymbolSearchModalProps> = ({
 
                   <div className="flex items-center gap-3">
                     <div className="text-right text-[10px] text-slate-400 hidden sm:block">
-                      <div>Đòn bẩy: <b className="text-slate-200">1:{inst.leverage}</b></div>
-                      <div>Spread: <b className="text-indigo-400">{inst.defaultSpreadPips}p</b></div>
+                      <div>{t.leverageLabel}: <b className="text-slate-200">1:{inst.leverage}</b></div>
+                      <div>{t.spreadLabel}: <b className="text-indigo-400">{inst.defaultSpreadPips}p</b></div>
                     </div>
                     {isSelected ? (
                       <div className="w-5 h-5 rounded-full bg-indigo-600 flex items-center justify-center text-white">

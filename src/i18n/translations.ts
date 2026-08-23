@@ -195,6 +195,35 @@ export interface TranslationDict {
   googleSSO: string;
   githubSSO: string;
   appleSSO: string;
+
+  // Global & Symbol Search & Profile
+  searchSymbolPlaceholder: string;
+  noSymbolsFound: string;
+  leverageLabel: string;
+  spreadLabel: string;
+  demoBalance: string;
+  completedBacktests: string;
+  savedAIStrategies: string;
+  vipPerksTitle: string;
+  closeModalBtn: string;
+  refreshBtn: string;
+  processingBtn: string;
+  databasePortfolioTitle: string;
+  databasePortfolioDesc: string;
+  totalSessionsCount: string;
+  totalTradesAll: string;
+  portfolioWinRate: string;
+  portfolioNetProfit: string;
+  sessionHistoryTitle: string;
+  clickToViewReport: string;
+  viewReportBadge: string;
+  capitalLabel: string;
+  savedSessionsInDB: string;
+  noSessionsMatch: string;
+  searchSessionsPlaceholder: string;
+  selectAtLeastOneSession: string;
+  metricCriteriaHeader: string;
+  closedTradesCount: string;
 }
 
 export const translations: Record<Language, TranslationDict> = {
@@ -379,7 +408,35 @@ export const translations: Record<Language, TranslationDict> = {
     haveAccount: 'Đã có tài khoản?',
     googleSSO: 'Google Account',
     githubSSO: 'GitHub Account',
-    appleSSO: 'Apple ID'
+    appleSSO: 'Apple ID',
+
+    searchSymbolPlaceholder: 'Tìm kiếm mã tài sản (ví dụ: XAUUSD, BTC, EURUSD...)',
+    noSymbolsFound: 'Không tìm thấy tài sản nào phù hợp với từ khóa.',
+    leverageLabel: 'Đòn bẩy',
+    spreadLabel: 'Spread',
+    demoBalance: 'Số dư Demo',
+    completedBacktests: 'Số phiên Backtest',
+    savedAIStrategies: 'Chiến lược AI',
+    vipPerksTitle: 'Đặc quyền Gói VIP',
+    closeModalBtn: 'Đóng',
+    refreshBtn: 'Làm mới',
+    processingBtn: 'Đang xử lý...',
+    databasePortfolioTitle: 'Hiệu Suất Tổng Hợp Danh Mục (Database Portfolio)',
+    databasePortfolioDesc: 'Thống kê tổng hợp toàn bộ các phiên backtest đã lưu trong cơ sở dữ liệu.',
+    totalSessionsCount: 'Tổng số phiên',
+    totalTradesAll: 'Tổng số lệnh toàn bộ',
+    portfolioWinRate: 'Win Rate Danh mục',
+    portfolioNetProfit: 'Tổng PnL Danh mục',
+    sessionHistoryTitle: 'Lịch Sử Các Phiên Backtest',
+    clickToViewReport: 'Bấm vào phiên để xem báo cáo chi tiết',
+    viewReportBadge: 'Xem report →',
+    capitalLabel: 'Vốn',
+    savedSessionsInDB: 'Phiên Đã Lưu Trong Database',
+    noSessionsMatch: 'Không tìm thấy phiên phù hợp',
+    searchSessionsPlaceholder: 'Tìm kiếm phiên theo tên hoặc mã...',
+    selectAtLeastOneSession: 'Chọn ít nhất 1 phiên ở trên để xem bảng so sánh chi tiết.',
+    metricCriteriaHeader: 'Chỉ Số / Tiêu Chí Đánh Giá',
+    closedTradesCount: 'lệnh đã chốt'
   },
   en: {
     appTitle: 'Quant Backtest Pro',
@@ -562,7 +619,35 @@ export const translations: Record<Language, TranslationDict> = {
     haveAccount: 'Already have an account?',
     googleSSO: 'Google Account',
     githubSSO: 'GitHub Account',
-    appleSSO: 'Apple ID'
+    appleSSO: 'Apple ID',
+
+    searchSymbolPlaceholder: 'Search symbols (e.g. XAUUSD, BTC, EURUSD...)',
+    noSymbolsFound: 'No symbols found matching your search.',
+    leverageLabel: 'Leverage',
+    spreadLabel: 'Spread',
+    demoBalance: 'Demo Balance',
+    completedBacktests: 'Completed Backtests',
+    savedAIStrategies: 'AI Strategies',
+    vipPerksTitle: 'VIP Tier Privileges',
+    closeModalBtn: 'Close',
+    refreshBtn: 'Refresh',
+    processingBtn: 'Processing...',
+    databasePortfolioTitle: 'Aggregated Portfolio Performance (Database)',
+    databasePortfolioDesc: 'Aggregated metrics across all backtest sessions stored in the SQLite database.',
+    totalSessionsCount: 'Total Sessions',
+    totalTradesAll: 'Total Trades Executed',
+    portfolioWinRate: 'Portfolio Win Rate',
+    portfolioNetProfit: 'Portfolio Net PnL',
+    sessionHistoryTitle: 'Backtest Sessions History',
+    clickToViewReport: 'Click session to inspect report',
+    viewReportBadge: 'View Report →',
+    capitalLabel: 'Capital',
+    savedSessionsInDB: 'Sessions Saved in Database',
+    noSessionsMatch: 'No matching sessions found',
+    searchSessionsPlaceholder: 'Search sessions by name or symbol...',
+    selectAtLeastOneSession: 'Select at least 1 session above to view the detailed comparison matrix.',
+    metricCriteriaHeader: 'Metric / Evaluation Criterion',
+    closedTradesCount: 'closed trades'
   },
   ja: {
     appTitle: 'Quant Backtest Pro',
@@ -745,7 +830,35 @@ export const translations: Record<Language, TranslationDict> = {
     haveAccount: '既にアカウントをお持ちですか？',
     googleSSO: 'Google アカウント',
     githubSSO: 'GitHub アカウント',
-    appleSSO: 'Apple ID'
+    appleSSO: 'Apple ID',
+
+    searchSymbolPlaceholder: '銘柄を検索 (例: XAUUSD, BTC, EURUSD...)',
+    noSymbolsFound: '該当する銘柄が見つかりませんでした。',
+    leverageLabel: 'レバレッジ',
+    spreadLabel: 'スプレッド',
+    demoBalance: 'デモ残高',
+    completedBacktests: '完了したバックテスト',
+    savedAIStrategies: 'AIストラテジー',
+    vipPerksTitle: 'VIP特典＆プロ機能',
+    closeModalBtn: '閉じる',
+    refreshBtn: '更新',
+    processingBtn: '処理中...',
+    databasePortfolioTitle: '統合ポートフォリオパフォーマンス (Database)',
+    databasePortfolioDesc: 'データベースに保存されたすべてのバックテストセッションの統計集計。',
+    totalSessionsCount: '総セッション数',
+    totalTradesAll: '総取引数 (全期間)',
+    portfolioWinRate: 'ポートフォリオ勝率',
+    portfolioNetProfit: 'ポートフォリオ純損益',
+    sessionHistoryTitle: 'バックテスト履歴一覧',
+    clickToViewReport: 'クリックして詳細レポートを表示',
+    viewReportBadge: 'レポートを見る →',
+    capitalLabel: '初期資金',
+    savedSessionsInDB: '保存済みセッション (DB)',
+    noSessionsMatch: '一致するセッションがありません',
+    searchSessionsPlaceholder: 'セッション名または銘柄で検索...',
+    selectAtLeastOneSession: '詳細な比較マトリクスを表示するには、上記から1つ以上のセッションを選択してください。',
+    metricCriteriaHeader: '評価指標 / 項目',
+    closedTradesCount: '件の決済済み取引'
   },
   zh: {
     appTitle: 'Quant Backtest Pro',
@@ -928,6 +1041,34 @@ export const translations: Record<Language, TranslationDict> = {
     haveAccount: '已有账户？',
     googleSSO: 'Google 账号',
     githubSSO: 'GitHub 账号',
-    appleSSO: 'Apple ID'
+    appleSSO: 'Apple ID',
+
+    searchSymbolPlaceholder: '搜索交易品种 (例如：XAUUSD, BTC, EURUSD...)',
+    noSymbolsFound: '未找到匹配的交易品种。',
+    leverageLabel: '杠杆',
+    spreadLabel: '点差',
+    demoBalance: '模拟资金余额',
+    completedBacktests: '已完成回测数',
+    savedAIStrategies: 'AI量化策略',
+    vipPerksTitle: 'VIP尊享权益',
+    closeModalBtn: '关闭',
+    refreshBtn: '刷新',
+    processingBtn: '正在处理...',
+    databasePortfolioTitle: '组合总体绩效汇总 (Database Portfolio)',
+    databasePortfolioDesc: '汇总数据库中已存储的所有回测会话的综合量化指标。',
+    totalSessionsCount: '总会话数',
+    totalTradesAll: '全部交易总笔数',
+    portfolioWinRate: '组合综合胜率',
+    portfolioNetProfit: '组合净收益',
+    sessionHistoryTitle: '回测会话历史记录',
+    clickToViewReport: '点击会话查看详细分析报告',
+    viewReportBadge: '查看报告 →',
+    capitalLabel: '初始资金',
+    savedSessionsInDB: '已保存会话 (Database)',
+    noSessionsMatch: '未找到符合条件的会话',
+    searchSessionsPlaceholder: '按名称或品种搜索会话...',
+    selectAtLeastOneSession: '请在上方选择至少1个会话以查看详细对比矩阵。',
+    metricCriteriaHeader: '评估指标 / 维度',
+    closedTradesCount: '笔已平仓交易'
   }
 };

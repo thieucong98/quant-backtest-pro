@@ -485,7 +485,7 @@ export const AnalyticsDashboardModal: React.FC = () => {
                   <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-slate-400" />
                   <input
                     type="text"
-                    placeholder="Tìm kiếm phiên theo tên hoặc mã..."
+                    placeholder={t.searchSessionsPlaceholder}
                     value={sessionSearchQuery}
                     onChange={(e) => setSessionSearchQuery(e.target.value)}
                     className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 font-mono"
@@ -513,7 +513,7 @@ export const AnalyticsDashboardModal: React.FC = () => {
                           <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-950 text-emerald-400 border border-emerald-500/30 font-mono">LIVE REPLAY</span>
                         </div>
                         <div className="text-[10px] text-slate-400 font-mono mt-0.5">
-                          {instrument.symbol} • {closedPositions.length} lệnh đã chốt
+                          {instrument.symbol} • {closedPositions.length} {t.closedTradesCount}
                         </div>
                       </div>
                     </div>
@@ -522,13 +522,13 @@ export const AnalyticsDashboardModal: React.FC = () => {
 
                   {/* Divider Title */}
                   <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider px-2 pt-2 pb-0.5 font-mono">
-                    Phiên Đã Lưu Trong Database ({filteredSessions.length})
+                    {t.savedSessionsInDB} ({filteredSessions.length})
                   </div>
 
                   {/* Saved Sessions Cards */}
                   {filteredSessions.length === 0 ? (
                     <div className="text-center py-4 text-slate-500 text-xs font-mono">
-                      Không tìm thấy phiên phù hợp
+                      {t.noSessionsMatch}
                     </div>
                   ) : (
                     filteredSessions.map((s) => {
@@ -558,7 +558,7 @@ export const AnalyticsDashboardModal: React.FC = () => {
                               <span>•</span>
                               <span>{s.timeframe}</span>
                               <span>•</span>
-                              <span>{s._count?.trades || 0} lệnh</span>
+                              <span>{s._count?.trades || 0} {t.tradesCountLabel}</span>
                             </div>
                           </div>
 
@@ -873,18 +873,18 @@ export const AnalyticsDashboardModal: React.FC = () => {
                   {isLoadingComparison ? (
                     <div className="py-16 text-center text-slate-500 text-xs">
                       <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 opacity-40 text-indigo-400" />
-                      Đang tổng hợp dữ liệu so sánh...
+                      {t.processingBtn}
                     </div>
                   ) : comparisonData.length === 0 ? (
                     <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-8 text-center text-slate-500 text-xs">
-                      Chọn ít nhất 1 phiên ở trên để xem bảng so sánh chi tiết.
+                      {t.selectAtLeastOneSession}
                     </div>
                   ) : (
                     <div className="bg-slate-950 rounded-xl border border-slate-800 overflow-x-auto">
                       <table className="w-full text-left text-xs border-collapse">
                         <thead>
                           <tr className="border-b border-slate-800 bg-slate-900/80">
-                            <th className="p-3 text-slate-400 font-bold">Chỉ Số / Tiêu Chí</th>
+                            <th className="p-3 text-slate-400 font-bold">{t.metricCriteriaHeader}</th>
                             {comparisonData.map((c) => (
                               <th key={c.id} className="p-3 font-bold text-slate-200 border-l border-slate-800 min-w-[150px]">
                                 <div className="truncate">{c.name}</div>
@@ -972,10 +972,10 @@ export const AnalyticsDashboardModal: React.FC = () => {
                     <div>
                       <h3 className="font-bold text-sm text-slate-100 flex items-center gap-2">
                         <Database className="w-4 h-4 text-emerald-400" />
-                        Hiệu Suất Tổng Hợp Danh Mục (Database Portfolio)
+                        {t.databasePortfolioTitle}
                       </h3>
                       <p className="text-slate-400 text-[11px] mt-0.5">
-                        Thống kê tổng hợp toàn bộ các phiên backtest đã lưu trong cơ sở dữ liệu.
+                        {t.databasePortfolioDesc}
                       </p>
                     </div>
                     <button
@@ -983,37 +983,37 @@ export const AnalyticsDashboardModal: React.FC = () => {
                       className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors"
                     >
                       <RefreshCw className={`w-3.5 h-3.5 ${isLoadingDB ? 'animate-spin' : ''}`} />
-                      <span>Làm mới</span>
+                      <span>{t.refreshBtn}</span>
                     </button>
                   </div>
 
                   {isLoadingDB ? (
                     <div className="py-16 text-center text-slate-500 text-xs">
                       <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 opacity-40 text-indigo-400" />
-                      Đang truy vấn dữ liệu báo cáo từ SQLite Database...
+                      {t.processingBtn}
                     </div>
                   ) : portfolioData ? (
                     <div className="space-y-4">
                       {/* Aggregated Cards */}
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                         <div className="bg-slate-900 border border-slate-800 p-3 rounded-lg">
-                          <div className="text-slate-400 text-[11px]">Tổng số phiên:</div>
+                          <div className="text-slate-400 text-[11px]">{t.totalSessionsCount}:</div>
                           <div className="text-lg font-bold text-indigo-300 mt-1">{portfolioData.totalSessions}</div>
                         </div>
 
                         <div className="bg-slate-900 border border-slate-800 p-3 rounded-lg">
-                          <div className="text-slate-400 text-[11px]">Tổng số lệnh toàn bộ:</div>
+                          <div className="text-slate-400 text-[11px]">{t.totalTradesAll}:</div>
                           <div className="text-lg font-bold text-slate-200 mt-1">{portfolioData.totalTrades}</div>
                           <div className="text-[10px] text-slate-500 mt-0.5">{portfolioData.totalWins} W / {portfolioData.totalLosses} L</div>
                         </div>
 
                         <div className="bg-slate-900 border border-slate-800 p-3 rounded-lg">
-                          <div className="text-slate-400 text-[11px]">Win Rate Danh mục:</div>
+                          <div className="text-slate-400 text-[11px]">{t.portfolioWinRate}:</div>
                           <div className="text-lg font-bold text-teal-400 mt-1">{portfolioData.overallWinRate}%</div>
                         </div>
 
                         <div className="bg-slate-900 border border-slate-800 p-3 rounded-lg">
-                          <div className="text-slate-400 text-[11px]">Tổng PnL Danh mục:</div>
+                          <div className="text-slate-400 text-[11px]">{t.portfolioNetProfit}:</div>
                           <div className={`text-lg font-bold mt-1 ${portfolioData.totalNetProfit >= 0 ? 'text-teal-400' : 'text-rose-400'}`}>
                             {portfolioData.totalNetProfit >= 0 ? '+' : ''}${portfolioData.totalNetProfit.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                           </div>
@@ -1023,8 +1023,8 @@ export const AnalyticsDashboardModal: React.FC = () => {
                       {/* Sessions Breakdown Table */}
                       <div className="bg-slate-950 rounded-xl border border-slate-800 overflow-hidden">
                         <div className="px-4 py-2.5 border-b border-slate-800 font-bold text-xs text-slate-300 flex items-center justify-between">
-                          <span>Lịch Sử Các Phiên Backtest ({portfolioData.sessions?.length || 0})</span>
-                          <span className="text-[10px] text-slate-500 font-normal">Bấm vào phiên để xem báo cáo chi tiết</span>
+                          <span>{t.sessionHistoryTitle} ({portfolioData.sessions?.length || 0})</span>
+                          <span className="text-[10px] text-slate-500 font-normal">{t.clickToViewReport}</span>
                         </div>
                         <div className="divide-y divide-slate-900 max-h-60 overflow-y-auto">
                           {(portfolioData.sessions || []).map((s: any) => {
@@ -1042,10 +1042,10 @@ export const AnalyticsDashboardModal: React.FC = () => {
                                 <div>
                                   <div className="font-bold text-slate-200 hover:text-indigo-300 flex items-center gap-1.5">
                                     <span>{s.name}</span>
-                                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-400 font-mono">Xem report →</span>
+                                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-400 font-mono">{t.viewReportBadge}</span>
                                   </div>
                                   <div className="text-[10px] text-slate-500 mt-0.5">
-                                    {s.symbol} • {s.timeframe} • {new Date(s.createdAt).toLocaleDateString('vi-VN')} • {s.tradeCount} lệnh
+                                    {s.symbol} • {s.timeframe} • {new Date(s.createdAt).toLocaleDateString(language === 'vi' ? 'vi-VN' : 'en-US')} • {s.tradeCount} {t.tradesCountLabel}
                                   </div>
                                 </div>
                                 <div className="text-right font-mono">
@@ -1053,7 +1053,7 @@ export const AnalyticsDashboardModal: React.FC = () => {
                                     {isWin ? '+' : ''}${net.toFixed(2)}
                                   </div>
                                   <div className="text-[10px] text-slate-500">
-                                    Vốn: ${s.initialBalance.toLocaleString()}
+                                    {t.capitalLabel}: ${s.initialBalance.toLocaleString()}
                                   </div>
                                 </div>
                               </div>

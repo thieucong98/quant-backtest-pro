@@ -69,7 +69,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onCl
             <div className="bg-slate-900/80 border border-slate-800 p-3 rounded-xl">
               <div className="flex items-center gap-1.5 text-slate-400 text-[11px]">
                 <Wallet className="w-3.5 h-3.5 text-teal-400" />
-                <span>Số dư Demo:</span>
+                <span>{t.demoBalance}:</span>
               </div>
               <div className="text-base font-bold text-teal-400 mt-1">
                 ${user.tradingBalance.toLocaleString()}
@@ -79,7 +79,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onCl
             <div className="bg-slate-900/80 border border-slate-800 p-3 rounded-xl">
               <div className="flex items-center gap-1.5 text-slate-400 text-[11px]">
                 <BarChart2 className="w-3.5 h-3.5 text-indigo-400" />
-                <span>Số phiên Backtest:</span>
+                <span>{t.completedBacktests}:</span>
               </div>
               <div className="text-base font-bold text-indigo-300 mt-1">
                 {user.completedBacktests}
@@ -89,7 +89,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onCl
             <div className="bg-slate-900/80 border border-slate-800 p-3 rounded-xl">
               <div className="flex items-center gap-1.5 text-slate-400 text-[11px]">
                 <Cpu className="w-3.5 h-3.5 text-purple-400" />
-                <span>AI Strategies:</span>
+                <span>{t.savedAIStrategies}:</span>
               </div>
               <div className="text-base font-bold text-purple-300 mt-1">
                 {user.savedStrategiesCount}
@@ -101,20 +101,20 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onCl
           <div className="bg-indigo-950/20 border border-indigo-500/30 rounded-xl p-4 space-y-2">
             <div className="flex items-center gap-2 text-indigo-300 font-bold text-xs">
               <Sparkles className="w-4 h-4 text-amber-400" />
-              <span>Đặc quyền Gói {user.tier} VIP:</span>
+              <span>{t.vipPerksTitle} ({user.tier} Tier):</span>
             </div>
             <ul className="space-y-1.5 text-[11px] text-slate-300">
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-teal-400" />
-                <span>Tua nến không giới hạn tốc độ 100x với Đa khung thời gian M1 - D1</span>
+                <span>{language === 'vi' ? 'Tua nến không giới hạn tốc độ 100x với Đa khung thời gian M1 - D1' : 'Unlimited 100x Replay Speed with Multi-Timeframe M1 - D1'}</span>
               </li>
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-teal-400" />
-                <span>AI Copilot & Sandbox sinh mã chiến lược JavaScript không giới hạn</span>
+                <span>{language === 'vi' ? 'AI Copilot & Sandbox sinh mã chiến lược JavaScript không giới hạn' : 'Unlimited AI Copilot & JavaScript Execution Sandbox'}</span>
               </li>
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-teal-400" />
-                <span>Mô phỏng Monte Carlo 1,000 chu kỳ & Heatmap theo giờ/thứ</span>
+                <span>{language === 'vi' ? 'Mô phỏng Monte Carlo 1,000 chu kỳ & Heatmap theo giờ/thứ' : 'Monte Carlo 1,000 Stress Testing & PnL Heatmap Analytics'}</span>
               </li>
             </ul>
           </div>
@@ -137,7 +137,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onCl
             onClick={onClose}
             className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-semibold transition-colors shadow-lg shadow-indigo-600/30"
           >
-            Đóng
+            {t.closeModalBtn}
           </button>
         </div>
       </div>

@@ -247,7 +247,7 @@ export const AuthModal: React.FC = () => {
             {isLoading ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Đang xử lý...</span>
+                <span>{t.processingBtn}</span>
               </>
             ) : (
               <>
