@@ -19,6 +19,44 @@
 
 ---
 
+## 📸 Visual Previews & Screenshots
+
+### 1. ⚡ High-Speed Historical Replay & Order Execution
+![Quant Backtest Pro Replay Dashboard](docs/assets/dashboard_replay.png)
+*Real-time candlestick replay, TradingView Lightweight Charts, Multi-timeframe resampling, and One-Click Trading Dock.*
+
+---
+
+### 2. 🧠 AI Strategy Studio & Multi-LLM Copilot
+![AI Strategy Studio](docs/assets/ai_strategy_studio.png)
+*Generate executable JavaScript strategy code from natural language with multi-provider LLM support (OpenAI, Gemini, Claude, DeepSeek, Local Ollama, Custom Proxy Tunnels).*
+
+---
+
+### 3. 🛡️ Prop Firm Challenge Shield (Drawdown Guard)
+![Prop Firm Challenge Shield](docs/assets/prop_firm_shield.png)
+*Set daily maximum loss limits, max total drawdown, and real-time audio/visual circuit breakers for funded trader evaluations.*
+
+---
+
+### 4. 📊 Multi-Session Comparison Matrix (SQLite Persistence)
+![Session Comparison Matrix](docs/assets/session_comparison_matrix.png)
+*Inspect and compare performance side-by-side across multiple backtested sessions.*
+
+---
+
+### 5. 🎲 Institutional Analytics & Monte Carlo Simulation
+![Monte Carlo Simulation](docs/assets/monte_carlo_simulation.png)
+*500-run Monte Carlo stress testing to compute risk-of-ruin probability and confidence intervals.*
+
+---
+
+### 6. 📅 PnL Calendar Heatmap
+![PnL Calendar Heatmap](docs/assets/pnl_heatmap.png)
+*Visual calendar matrix breakdown of daily, weekly, and monthly net profitability.*
+
+---
+
 ## 📖 Overview
 
 **Quant Backtest Pro** is a modern, high-performance, open-source trading simulation and backtesting platform built for quantitative traders, manual price-action traders, and algorithmic developers. It brings together ultra-smooth candlestick/tick replay, realistic order execution matching, AI-powered strategy creation, backtest session persistence, and instant multi-platform trading bot exportation.
@@ -80,7 +118,7 @@ Export any backtested strategy to production-ready bot code in seconds:
 - **PnL Calendar Heatmap**: Visual breakdown of daily, weekly, and monthly performance.
 
 ### 6. 🌍 Full Multi-Language Localization (i18n)
-- Seamless real-time switching between **English (`en`)**, **Tiếng Việt (`vi`)**, **日本語 (`ja`)**, and **中文 (`zh`)**.
+- Seamless real-time switching between **English (`en`)**, **Tiếng Việt (`vi`)**, **日本語 (`ja`)**, và **中文 (`zh`)**.
 
 ---
 

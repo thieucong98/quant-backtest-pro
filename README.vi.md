@@ -19,6 +19,44 @@
 
 ---
 
+## 📸 Hình Ảnh Trực Quan & Trải Nghiệm Giao Diện
+
+### 1. ⚡ Bộ Tua Nến Replay & Khớp Lệnh Real-Time
+![Giao diện Tua Nến Replay](docs/assets/dashboard_replay.png)
+*Giao diện tua nến bar-by-bar mượt mà, biểu đồ TradingView Lightweight Charts, tự động gom nến đa khung thời gian và thanh đặt lệnh nhanh 1-Click.*
+
+---
+
+### 2. 🧠 AI Strategy Studio & Trợ Lý Thuật Toán Multi-LLM
+![AI Strategy Studio](docs/assets/ai_strategy_studio.png)
+*Tạo mã chiến lược JavaScript tự động từ ngôn ngữ tự nhiên, hỗ trợ đa mô hình (OpenAI, Gemini, Claude, DeepSeek, Local Ollama, Custom Proxy Tunnel).*
+
+---
+
+### 3. 🛡️ Lá Chắn Quỹ Giao Dịch (Prop Firm Shield)
+![Lá Chắn Quỹ Giao Dịch](docs/assets/prop_firm_shield.png)
+*Cài đặt hạn mức lỗ tối đa trong ngày, sụt giảm vốn tối đa (Max Drawdown) và ngắt giao dịch tự động kèm âm thanh cảnh báo.*
+
+---
+
+### 4. 📊 Ma Trận So Sánh Đa Phiên (Lưu Trữ SQLite)
+![Ma trận so sánh phiên](docs/assets/session_comparison_matrix.png)
+*Theo dõi, đối chiếu và so sánh trực quan hiệu suất giữa nhiều phiên kiểm thử (Win Rate, Profit Factor, Drawdown, Sharpe).*
+
+---
+
+### 5. 🎲 Phân Tích Định Lượng & Mô Phỏng Monte Carlo 500 Vòng
+![Mô phỏng Monte Carlo](docs/assets/monte_carlo_simulation.png)
+*Đánh giá rủi ro xác suất cháy tài khoản (Risk of Ruin) và kiểm định khoảng tin cậy thuật toán qua 500 chu kỳ xáo trộn ngẫu nhiên.*
+
+---
+
+### 6. 📅 Bản Đồ Nhiệt Hiệu Suất PnL
+![Bản đồ nhiệt PnL](docs/assets/pnl_heatmap.png)
+*Xem chi tiết bức tranh phân bố lợi nhuận theo từng ngày trong tuần, từng tháng trong năm.*
+
+---
+
 ## 📖 Giới thiệu Tổng quan
 
 **Quant Backtest Pro** là nền tảng mô phỏng và kiểm thử chiến lược giao dịch định lượng (Backtesting Platform) mã nguồn mở hiện đại, hiệu năng cao, được thiết kế cho các nhà giao dịch định lượng (Quant Traders), Price Action Traders và các kỹ sư phát triển Bot thuật toán. Ứng dụng tích hợp bộ tua nến mượt mà, công cụ khớp lệnh thực tế, AI sinh mã chiến lược tự động, lưu trữ phiên kiểm thử trên SQLite và xuất mã nguồn Bot sang các nền tảng MT4/MT5/TradingView/Python chỉ với 1 cú click.
