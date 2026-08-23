@@ -87,6 +87,7 @@ export const useAuthStore = create<AuthState>((set, get) => {
 
         savePersistedUser(user);
         set({ user, isAuthenticated: true, isAuthModalOpen: false, isLoading: false, error: null });
+        import('./backtestStore').then(m => m.useBacktestStore.getState().initSession()).catch(() => {});
         return true;
       } catch (err: any) {
         console.error('Login error:', err);
@@ -139,6 +140,7 @@ export const useAuthStore = create<AuthState>((set, get) => {
 
         savePersistedUser(user);
         set({ user, isAuthenticated: true, isAuthModalOpen: false, isLoading: false, error: null });
+        import('./backtestStore').then(m => m.useBacktestStore.getState().initSession()).catch(() => {});
         return true;
       } catch (err: any) {
         console.error('Register error:', err);
@@ -198,6 +200,7 @@ export const useAuthStore = create<AuthState>((set, get) => {
 
         savePersistedUser(user);
         set({ user, isAuthenticated: true, isAuthModalOpen: false, isLoading: false });
+        import('./backtestStore').then(m => m.useBacktestStore.getState().initSession()).catch(() => {});
         return true;
       } catch (err) {
         const user: UserProfile = {
@@ -215,6 +218,7 @@ export const useAuthStore = create<AuthState>((set, get) => {
 
         savePersistedUser(user);
         set({ user, isAuthenticated: true, isAuthModalOpen: false, isLoading: false });
+        import('./backtestStore').then(m => m.useBacktestStore.getState().initSession()).catch(() => {});
         return true;
       }
     },
@@ -223,6 +227,7 @@ export const useAuthStore = create<AuthState>((set, get) => {
       setAuthToken(null);
       savePersistedUser(null);
       set({ user: null, isAuthenticated: false, isAuthModalOpen: false });
+      import('./backtestStore').then(m => m.useBacktestStore.getState().resetToDefaultWorkspace(10000)).catch(() => {});
     },
 
     updateProfile: (data) => {

@@ -69,5 +69,14 @@ export const sessionsApi = {
     api.put(`/sessions/${id}/complete`, data),
 
   delete: (id: string) =>
-    api.delete(`/sessions/${id}`)
+    api.delete(`/sessions/${id}`),
+
+  bulkDelete: (ids: string[]) =>
+    api.post<{ success: boolean; count: number }>('/sessions/bulk-delete', { ids }),
+
+  clearAll: () =>
+    api.delete<{ success: boolean; count: number }>('/sessions/clear-all'),
+
+  reset: (id: string) =>
+    api.post<SessionDetail>(`/sessions/${id}/reset`, {})
 };
