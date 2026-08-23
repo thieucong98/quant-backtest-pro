@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createChart, IChartApi, ISeriesApi, CandlestickData, Time, LineStyle } from 'lightweight-charts';
-import { ArrowUpRight, ArrowDownRight, Zap, Shield, Target } from 'lucide-react';
+import { ArrowUpRight, ArrowDownRight, Zap, Shield, Target, AlertTriangle, CheckCircle, Sliders, ChevronDown, ChevronUp } from 'lucide-react';
 import { useBacktestStore } from '../../store/backtestStore';
 import { translations } from '../../i18n/translations';
 import { DrawingCanvas } from './DrawingCanvas';
@@ -22,6 +22,9 @@ export const TradingViewChart: React.FC = () => {
   const [autoTPPips, setAutoTPPips] = useState<number>(40);
   const [isQuickDockOpen, setIsQuickDockOpen] = useState<boolean>(true);
 
+  // Prop Firm Shield State
+  const [isShieldExpanded, setIsShieldExpanded] = useState<boolean>(true);
+
   const {
     candles,
     currentIndex,
@@ -31,7 +34,13 @@ export const TradingViewChart: React.FC = () => {
     economicNews,
     executeMarketOrder,
     account,
-    language
+    language,
+    isPropFirmMode,
+    propFirmDailyLossLimit,
+    propFirmMaxDrawdownLimit,
+    propFirmProfitTarget,
+    propFirmStartingDayBalance,
+    togglePropFirmMode
   } = useBacktestStore();
 
   const t = translations[language] || translations.vi;
@@ -98,10 +107,9 @@ export const TradingViewChart: React.FC = () => {
     const volumeSeries = chart.addHistogramSeries({
       color: '#38bdf8',
       priceFormat: { type: 'volume' },
-      priceScaleId: 'volume_scale'
+      priceScaleId: ''
     });
-
-    chart.priceScale('volume_scale').applyOptions({
+    chart.priceScale('').applyOptions({
       scaleMargins: {
         top: 0.82,
         bottom: 0
@@ -126,16 +134,12 @@ export const TradingViewChart: React.FC = () => {
     return () => {
       window.removeEventListener('resize', handleResize);
       chart.remove();
-      chartRef.current = null;
-      candleSeriesRef.current = null;
-      volumeSeriesRef.current = null;
     };
-  }, [instrument.symbol]);
+  }, []);
 
-  // Cập nhật dữ liệu nến & Markers khi Replay hoặc chuyển Timeframe
+  // Update Instrument digits khi đổi Symbol
   useEffect(() => {
-    if (!candleSeriesRef.current || !volumeSeriesRef.current || candles.length === 0) return;
-
+    if (!candleSeriesRef.current) return;
     candleSeriesRef.current.applyOptions({
       priceFormat: {
         type: 'price',
@@ -143,65 +147,62 @@ export const TradingViewChart: React.FC = () => {
         minMove: instrument.pipSize / 10
       }
     });
+  }, [instrument]);
+
+  // Cập nhật dữ liệu nến khi Replay thay đổi
+  useEffect(() => {
+    if (!candleSeriesRef.current || !volumeSeriesRef.current || candles.length === 0) return;
 
     const visibleCandles = candles.slice(0, currentIndex + 1);
-    
-    const formattedCandles: CandlestickData<Time>[] = visibleCandles.map(c => ({
-      time: c.timestamp as Time,
+
+    const candleData: CandlestickData<Time>[] = visibleCandles.map(c => ({
+      time: (c.timestamp / 1000) as Time,
       open: c.open,
       high: c.high,
       low: c.low,
       close: c.close
     }));
 
-    const formattedVolume = visibleCandles.map(c => ({
-      time: c.timestamp as Time,
+    const volumeData = visibleCandles.map(c => ({
+      time: (c.timestamp / 1000) as Time,
       value: c.volume,
       color: c.close >= c.open ? 'rgba(38, 166, 154, 0.35)' : 'rgba(239, 83, 80, 0.35)'
     }));
 
-    candleSeriesRef.current.setData(formattedCandles);
-    volumeSeriesRef.current.setData(formattedVolume);
+    candleSeriesRef.current.setData(candleData);
+    volumeSeriesRef.current.setData(volumeData);
 
-    // Gộp Trade Markers + Economic News Markers
-    const allMarkers: any[] = [];
+    // Render Markers
+    const currentMaxTime = visibleCandles[visibleCandles.length - 1]?.timestamp || 0;
+    const activeMarkers = markers
+      .filter(m => m.time <= currentMaxTime)
+      .map(m => ({
+        time: (Math.floor(m.time / 1000)) as Time,
+        position: m.position as any,
+        color: m.color,
+        shape: m.shape as any,
+        text: m.text,
+        size: 1.2
+      }));
 
-    // 1. Trade Markers
-    markers
-      .filter(m => m.time <= (candles[currentIndex]?.timestamp || Infinity))
-      .forEach(m => {
-        allMarkers.push({
-          time: m.time as Time,
-          position: m.position,
-          color: m.color,
-          shape: m.shape,
-          text: m.text
-        });
-      });
+    // Thêm Economic News Markers
+    const newsMarkers = economicNews
+      .filter(n => n.timestamp <= currentMaxTime)
+      .map(n => ({
+        time: (Math.floor(n.timestamp / 1000)) as Time,
+        position: 'aboveBar' as any,
+        color: n.impact === 'HIGH' ? '#f43f5e' : '#f59e0b',
+        shape: 'circle' as any,
+        text: `📰 ${n.title}`,
+        size: 1.5
+      }));
 
-    // 2. Economic News Markers
-    if (economicNews) {
-      economicNews
-        .filter(n => n.timestamp <= (candles[currentIndex]?.timestamp || Infinity))
-        .forEach(n => {
-          allMarkers.push({
-            time: n.timestamp as Time,
-            position: 'inBar',
-            color: '#f59e0b',
-            shape: 'circle',
-            text: `🔴 ${n.title.split(' ')[0]}`
-          });
-        });
-    }
-
-    // Sort ascending by time (bắt buộc đối với Lightweight Charts)
-    allMarkers.sort((a, b) => Number(a.time) - Number(b.time));
-
+    const allMarkers = [...activeMarkers, ...newsMarkers].sort((a, b) => (a.time as number) - (b.time as number));
     candleSeriesRef.current.setMarkers(allMarkers);
     chartRef.current?.timeScale().scrollToRealTime();
   }, [candles, currentIndex, markers, economicNews, instrument.digits]);
 
-  // Cập nhật đường giá hiển thị cho Open Positions (Entry, SL, TP lines)
+  // Cập nhật đường giá hiển thị cho Open Positions (Entry, SL, TP lines với số tiền USD & %)
   useEffect(() => {
     if (!candleSeriesRef.current) return;
 
@@ -220,37 +221,45 @@ export const TradingViewChart: React.FC = () => {
         lineWidth: 2,
         lineStyle: LineStyle.Solid,
         axisLabelVisible: true,
-        title: `${pos.side} ${pos.lotSize}L`
+        title: `${pos.side} ${pos.lotSize}L @ ${pos.entryPrice.toFixed(instrument.digits)}`
       });
       if (entryLine) priceLinesRef.current.push(entryLine);
 
-      // 2. Stop Loss Line
+      // 2. Stop Loss Line with Dollar Risk & Percent
       if (pos.stopLoss) {
+        const slDiff = pos.side === 'BUY' ? pos.stopLoss - pos.entryPrice : pos.entryPrice - pos.stopLoss;
+        const slDollar = slDiff * instrument.contractSize * pos.lotSize;
+        const slPercent = (slDollar / account.initialBalance) * 100;
+
         const slLine = candleSeriesRef.current?.createPriceLine({
           price: pos.stopLoss,
           color: '#ef5350',
           lineWidth: 1,
           lineStyle: LineStyle.Dashed,
           axisLabelVisible: true,
-          title: `SL (${pos.side})`
+          title: `SL: -$${Math.abs(slDollar).toFixed(2)} (${slPercent.toFixed(2)}%)`
         });
         if (slLine) priceLinesRef.current.push(slLine);
       }
 
-      // 3. Take Profit Line
+      // 3. Take Profit Line with Dollar Gain & Percent
       if (pos.takeProfit) {
+        const tpDiff = pos.side === 'BUY' ? pos.takeProfit - pos.entryPrice : pos.entryPrice - pos.takeProfit;
+        const tpDollar = tpDiff * instrument.contractSize * pos.lotSize;
+        const tpPercent = (tpDollar / account.initialBalance) * 100;
+
         const tpLine = candleSeriesRef.current?.createPriceLine({
           price: pos.takeProfit,
           color: '#26a69a',
           lineWidth: 1,
           lineStyle: LineStyle.Dashed,
           axisLabelVisible: true,
-          title: `TP (${pos.side})`
+          title: `TP: +$${tpDollar.toFixed(2)} (+${tpPercent.toFixed(2)}%)`
         });
         if (tpLine) priceLinesRef.current.push(tpLine);
       }
     });
-  }, [openPositions]);
+  }, [openPositions, instrument, account.initialBalance]);
 
   // Handle Quick Market Entry
   const handleQuickTrade = (side: 'BUY' | 'SELL') => {
@@ -275,9 +284,26 @@ export const TradingViewChart: React.FC = () => {
     executeMarketOrder(side, quickLot, slPrice, tpPrice);
   };
 
+  // Prop Firm Calculations
+  const dailyLossMax = (propFirmStartingDayBalance * (propFirmDailyLossLimit / 100));
+  const currentDailyLoss = Math.max(0, propFirmStartingDayBalance - account.equity);
+  const dailyLossPercent = (currentDailyLoss / propFirmStartingDayBalance) * 100;
+
+  const maxDDMax = (account.initialBalance * (propFirmMaxDrawdownLimit / 100));
+  const currentMaxDD = Math.max(0, account.initialBalance - account.equity);
+  const maxDDPercent = (currentMaxDD / account.initialBalance) * 100;
+
+  const profitTargetMax = (account.initialBalance * (propFirmProfitTarget / 100));
+  const currentProfit = Math.max(0, account.equity - account.initialBalance);
+  const profitProgressPercent = Math.min(100, (currentProfit / profitTargetMax) * 100);
+
+  const isDailyBreached = dailyLossPercent >= propFirmDailyLossLimit;
+  const isMaxDDBreached = maxDDPercent >= propFirmMaxDrawdownLimit;
+  const isPassed = currentProfit >= profitTargetMax;
+
   return (
     <div className="relative w-full h-full flex flex-col bg-[#0b0e14] overflow-hidden select-none">
-      {/* 1. ONE-CLICK QUICK TRADING DOCK (OVERLAY) */}
+      {/* 1. ONE-CLICK QUICK TRADING DOCK (TOP-LEFT OVERLAY) */}
       <div className="absolute top-3 left-3 z-20 flex items-center gap-2">
         {isQuickDockOpen ? (
           <div className="bg-[#111622]/95 border border-slate-700/90 backdrop-blur-md p-2 rounded-xl flex items-center gap-2.5 shadow-2xl animate-in fade-in zoom-in-95 text-xs font-mono">
@@ -406,6 +432,101 @@ export const TradingViewChart: React.FC = () => {
           </button>
         )}
       </div>
+
+      {/* 2. PROP FIRM CHALLENGE SHIELD (TOP-RIGHT OVERLAY) */}
+      {isPropFirmMode && (
+        <div className="absolute top-3 right-3 z-20 font-mono text-xs animate-in fade-in">
+          {isShieldExpanded ? (
+            <div className="bg-[#111622]/95 border border-slate-700/90 backdrop-blur-md p-3 rounded-xl shadow-2xl w-64 space-y-2">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-1.5">
+                <div className="flex items-center gap-1.5">
+                  <Shield className="w-4 h-4 text-emerald-400" />
+                  <span className="font-bold text-slate-200 text-[11px]">Prop Firm Shield</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  {isPassed ? (
+                    <span className="px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-500/40 text-[9px] font-bold">
+                      PASS CHALLENGE 🎉
+                    </span>
+                  ) : isDailyBreached || isMaxDDBreached ? (
+                    <span className="px-1.5 py-0.5 rounded bg-rose-950 text-rose-300 border border-rose-500/40 text-[9px] font-bold">
+                      VIOLATED ⛔
+                    </span>
+                  ) : (
+                    <span className="px-1.5 py-0.5 rounded bg-indigo-950 text-indigo-300 border border-indigo-500/40 text-[9px] font-bold">
+                      ACTIVE
+                    </span>
+                  )}
+                  <button
+                    onClick={() => setIsShieldExpanded(false)}
+                    className="text-slate-500 hover:text-slate-300 p-0.5"
+                  >
+                    <ChevronUp className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Metric 1: Daily Loss Limit */}
+              <div className="space-y-1">
+                <div className="flex items-center justify-between text-[10px]">
+                  <span className="text-slate-400">Daily Loss (Max {propFirmDailyLossLimit}%):</span>
+                  <span className={`font-bold ${dailyLossPercent >= 4.0 ? 'text-rose-400' : 'text-slate-300'}`}>
+                    ${currentDailyLoss.toFixed(1)} / ${dailyLossMax.toFixed(0)} ({dailyLossPercent.toFixed(1)}%)
+                  </span>
+                </div>
+                <div className="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full transition-all duration-300 ${dailyLossPercent >= 4.0 ? 'bg-rose-500' : 'bg-amber-500'}`}
+                    style={{ width: `${Math.min(100, (dailyLossPercent / propFirmDailyLossLimit) * 100)}%` }}
+                  />
+                </div>
+              </div>
+
+              {/* Metric 2: Max Drawdown Limit */}
+              <div className="space-y-1">
+                <div className="flex items-center justify-between text-[10px]">
+                  <span className="text-slate-400">Max DD (Max {propFirmMaxDrawdownLimit}%):</span>
+                  <span className={`font-bold ${maxDDPercent >= 8.0 ? 'text-rose-400' : 'text-slate-300'}`}>
+                    ${currentMaxDD.toFixed(1)} / ${maxDDMax.toFixed(0)} ({maxDDPercent.toFixed(1)}%)
+                  </span>
+                </div>
+                <div className="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full transition-all duration-300 ${maxDDPercent >= 8.0 ? 'bg-rose-500' : 'bg-indigo-500'}`}
+                    style={{ width: `${Math.min(100, (maxDDPercent / propFirmMaxDrawdownLimit) * 100)}%` }}
+                  />
+                </div>
+              </div>
+
+              {/* Metric 3: Target Profit Progress */}
+              <div className="space-y-1">
+                <div className="flex items-center justify-between text-[10px]">
+                  <span className="text-slate-400">Mục tiêu (+{propFirmProfitTarget}%):</span>
+                  <span className="font-bold text-emerald-400">
+                    +${currentProfit.toFixed(1)} / ${profitTargetMax.toFixed(0)} ({profitProgressPercent.toFixed(0)}%)
+                  </span>
+                </div>
+                <div className="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-emerald-500 transition-all duration-300"
+                    style={{ width: `${profitProgressPercent}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={() => setIsShieldExpanded(true)}
+              className="bg-[#111622]/95 border border-slate-700/90 px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 shadow-xl backdrop-blur-md hover:bg-slate-800 text-[11px] font-bold text-slate-300"
+              title="Mở rộng Prop Firm Shield"
+            >
+              <Shield className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Shield: {isDailyBreached || isMaxDDBreached ? '⛔' : `${dailyLossPercent.toFixed(1)}% / 5%`}</span>
+              <ChevronDown className="w-3 h-3 text-slate-400" />
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Chart Canvas */}
       <div ref={chartContainerRef} className="w-full h-full relative" />

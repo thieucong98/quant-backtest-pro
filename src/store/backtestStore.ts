@@ -13,12 +13,22 @@ import { sessionsApi } from '../api/sessions';
 import { tradesApi } from '../api/trades';
 import { checkServerHealth } from '../api/client';
 import { AnalyticsEngine } from '../engine/analytics';
+import { soundFx } from '../engine/audioEngine';
 
 interface BacktestStore {
   // Session Persistence
   activeSessionId: string | null;
   isServerOnline: boolean;
   isSessionManagerOpen: boolean;
+
+  // Prop Firm Simulator Mode
+  isPropFirmMode: boolean;
+  propFirmDailyLossLimit: number;
+  propFirmMaxDrawdownLimit: number;
+  propFirmProfitTarget: number;
+  propFirmStartingDayBalance: number;
+  togglePropFirmMode: (enabled?: boolean) => void;
+  setPropFirmLimits: (dailyLoss: number, maxDD: number, target: number) => void;
 
   // Instrument & Data
   instrument: InstrumentSpec;
@@ -193,10 +203,16 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
   // Đăng ký callback cho Matching Engine
   initialMatchingEngine.events = {
     onOrderFilled: (order, pos) => {
+      soundFx.playOrderFilled();
       get().addStrategyLog('SIGNAL', `Khớp lệnh ${pos.side} ${pos.lotSize}L @ ${pos.entryPrice}`);
       syncCurrentSessionToStorage(get);
     },
     onPositionClosed: (pos, reason) => {
+      if (pos.realizedPnL >= 0) {
+        soundFx.playTakeProfit();
+      } else {
+        soundFx.playStopLoss();
+      }
       const pnlStr = pos.realizedPnL >= 0 ? `+$${pos.realizedPnL}` : `-$${Math.abs(pos.realizedPnL)}`;
       get().addStrategyLog('INFO', `Đóng lệnh ${pos.side} (${reason}) @ ${pos.closePrice} | PnL: ${pnlStr}`);
       syncCurrentSessionToStorage(get);
@@ -214,6 +230,15 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
     activeSessionId: cachedInit?.activeSessionId || null,
     isServerOnline: false,
     isSessionManagerOpen: false,
+
+    // Prop Firm Simulator Mode
+    isPropFirmMode: true,
+    propFirmDailyLossLimit: 5,
+    propFirmMaxDrawdownLimit: 10,
+    propFirmProfitTarget: 10,
+    propFirmStartingDayBalance: cachedInit?.balance || 10000,
+    togglePropFirmMode: (enabled) => set(s => ({ isPropFirmMode: enabled !== undefined ? enabled : !s.isPropFirmMode })),
+    setPropFirmLimits: (dailyLoss, maxDD, target) => set({ propFirmDailyLossLimit: dailyLoss, propFirmMaxDrawdownLimit: maxDD, propFirmProfitTarget: target }),
 
     instrument: initialInstrument,
     timeframe: cachedInit?.timeframe || 'M5',

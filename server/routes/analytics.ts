@@ -22,14 +22,16 @@ analyticsRouter.get('/dashboard', async (req: Request, res: Response) => {
   try {
     const userId = await getUserId(req);
 
-    // Get all completed sessions with snapshots
+    // Get all sessions with their trades & snapshots
     const sessions = await prisma.session.findMany({
-      where: { userId, status: 'COMPLETED' },
-      include: { analyticsSnapshot: true },
+      where: { userId },
+      include: {
+        analyticsSnapshot: true,
+        trades: { where: { status: 'CLOSED' } }
+      },
       orderBy: { updatedAt: 'desc' }
     });
 
-    // Aggregate stats
     let totalSessions = sessions.length;
     let totalTrades = 0;
     let totalNetProfit = 0;
@@ -52,6 +54,30 @@ analyticsRouter.get('/dashboard', async (req: Request, res: Response) => {
         if (!worstSession || snap.netProfit < worstSession.netProfit) {
           worstSession = { sessionId: s.id, name: s.name, netProfit: snap.netProfit };
         }
+      } else if (s.trades && s.trades.length > 0) {
+        // Compute dynamically if snapshot not yet generated
+        let sessionNet = 0;
+        let sessionWins = 0;
+        let sessionLosses = 0;
+        for (const t of s.trades) {
+          totalTrades++;
+          totalNetProfit += t.realizedPnL;
+          sessionNet += t.realizedPnL;
+          if (t.realizedPnL > 0) {
+            totalWins++;
+            sessionWins++;
+          } else if (t.realizedPnL < 0) {
+            totalLosses++;
+            sessionLosses++;
+          }
+        }
+
+        if (!bestSession || sessionNet > bestSession.netProfit) {
+          bestSession = { sessionId: s.id, name: s.name, netProfit: sessionNet };
+        }
+        if (!worstSession || sessionNet < worstSession.netProfit) {
+          worstSession = { sessionId: s.id, name: s.name, netProfit: sessionNet };
+        }
       }
     }
 
@@ -73,7 +99,9 @@ analyticsRouter.get('/dashboard', async (req: Request, res: Response) => {
         timeframe: s.timeframe,
         initialBalance: s.initialBalance,
         finalBalance: s.finalBalance,
+        finalEquity: s.finalEquity,
         status: s.status,
+        tradeCount: s.trades?.length || s.analyticsSnapshot?.totalTrades || 0,
         createdAt: s.createdAt,
         updatedAt: s.updatedAt,
         analytics: s.analyticsSnapshot
