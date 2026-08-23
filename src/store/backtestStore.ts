@@ -132,7 +132,7 @@ interface BacktestStore {
 }
 
 // Helper: Sync current session state to both Local Cache (0ms) and Database API
-const syncCurrentSessionToStorage = (get: () => BacktestStore) => {
+const syncCurrentSessionToStorage = async (get: () => BacktestStore) => {
   const { activeSessionId, isServerOnline, account, currentIndex, openPositions, closedPositions, drawings, equityCurve, instrument, timeframe } = get();
 
   // 1. Instant local persistence (0ms latency, survives F5 reload immediately)
@@ -159,15 +159,18 @@ const syncCurrentSessionToStorage = (get: () => BacktestStore) => {
       ...openPositions.map(p => ({ ...p, status: 'OPEN' })),
       ...closedPositions.map(p => ({ ...p, status: 'CLOSED' }))
     ];
-    sessionsApi.update(activeSessionId, {
-      finalBalance: account.balance,
-      finalEquity: account.equity,
-      currentIndex,
-      symbol: instrument.symbol,
-      timeframe
-    }).catch(() => {});
-
-    tradesApi.bulkSync(activeSessionId, allTrades).catch(() => {});
+    try {
+      await Promise.all([
+        sessionsApi.update(activeSessionId, {
+          finalBalance: account.balance,
+          finalEquity: account.equity,
+          currentIndex,
+          symbol: instrument.symbol,
+          timeframe
+        }),
+        tradesApi.bulkSync(activeSessionId, allTrades)
+      ]);
+    } catch (e) {}
   }
 };
 
@@ -818,6 +821,12 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
     loadSessionById: async (sessionId: string) => {
       try {
         get().pause();
+
+        // Flush & save outgoing active session before switching
+        if (get().activeSessionId && get().activeSessionId !== sessionId) {
+          await syncCurrentSessionToStorage(get);
+        }
+
         const session = await sessionsApi.get(sessionId);
         if (!session) return false;
 
