@@ -19,6 +19,7 @@ import { StrategyExporter, ExportPlatform, EXPORT_PLATFORMS } from '../../engine
 import { useBacktestStore } from '../../store/backtestStore';
 import { translations } from '../../i18n/translations';
 import { DEFAULT_LLM_CONFIG, LLMConfig } from '../../engine/aiService';
+import { useAuthStore } from '../../store/authStore';
 
 interface ExportStrategyModalProps {
   isOpen: boolean;
@@ -84,12 +85,22 @@ export const ExportStrategyModal: React.FC<ExportStrategyModalProps> = ({
   const currentMeta = EXPORT_PLATFORMS[activePlatform];
 
   const handleCopy = () => {
+    const { isAuthenticated, setAuthModalOpen } = useAuthStore.getState();
+    if (!isAuthenticated) {
+      setAuthModalOpen(true, 'login');
+      return;
+    }
     navigator.clipboard.writeText(generatedCode);
     setIsCopied(true);
     setTimeout(() => setIsCopied(false), 2000);
   };
 
   const handleDownload = () => {
+    const { isAuthenticated, setAuthModalOpen } = useAuthStore.getState();
+    if (!isAuthenticated) {
+      setAuthModalOpen(true, 'login');
+      return;
+    }
     const filename = `${strategy.name.toLowerCase().replace(/[^a-z0-9]/g, '_')}_bot${currentMeta.extension}`;
     const blob = new Blob([generatedCode], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
@@ -103,6 +114,11 @@ export const ExportStrategyModal: React.FC<ExportStrategyModalProps> = ({
   };
 
   const handleAIDeepTranspile = async () => {
+    const { isAuthenticated, setAuthModalOpen } = useAuthStore.getState();
+    if (!isAuthenticated) {
+      setAuthModalOpen(true, 'login');
+      return;
+    }
     setIsAITranspiling(true);
     setTranspileError(null);
     try {

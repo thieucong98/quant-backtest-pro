@@ -146,6 +146,71 @@ sessionsRouter.put('/:id/complete', async (req: Request, res: Response) => {
   }
 });
 
+// POST /api/sessions/bulk-delete — Delete multiple sessions
+sessionsRouter.post('/bulk-delete', async (req: Request, res: Response) => {
+  try {
+    const { ids } = req.body as { ids: string[] };
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      res.status(400).json({ error: 'ids array required' });
+      return;
+    }
+
+    const result = await prisma.session.deleteMany({
+      where: { id: { in: ids } }
+    });
+
+    res.json({ success: true, count: result.count });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// DELETE /api/sessions/clear-all — Delete all sessions for current user
+sessionsRouter.delete('/clear-all', async (req: Request, res: Response) => {
+  try {
+    const userId = await getUserId(req);
+    const result = await prisma.session.deleteMany({
+      where: { userId }
+    });
+    res.json({ success: true, count: result.count });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/sessions/:id/reset — Reset trades & balance of a session
+sessionsRouter.post('/:id/reset', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params as { id: string };
+    const session = await prisma.session.findUnique({ where: { id } });
+    if (!session) {
+      res.status(404).json({ error: 'Session not found' });
+      return;
+    }
+
+    // Delete trades, drawings, equity points, analytics
+    await prisma.trade.deleteMany({ where: { sessionId: id } });
+    await prisma.drawing.deleteMany({ where: { sessionId: id } });
+    await prisma.equityPoint.deleteMany({ where: { sessionId: id } });
+    await prisma.analyticsSnapshot.deleteMany({ where: { sessionId: id } });
+
+    // Reset balance
+    const updated = await prisma.session.update({
+      where: { id },
+      data: {
+        finalBalance: session.initialBalance,
+        finalEquity: session.initialBalance,
+        currentIndex: 0,
+        status: 'ACTIVE'
+      }
+    });
+
+    res.json(updated);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // DELETE /api/sessions/:id
 sessionsRouter.delete('/:id', async (req: Request, res: Response) => {
   try {
