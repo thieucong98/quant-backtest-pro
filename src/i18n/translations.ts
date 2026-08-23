@@ -70,6 +70,12 @@ export interface TranslationDict {
   monteCarloTab: string;
   heatmapTab: string;
   portfolioTab: string;
+  comparisonTab: string;
+  selectSessionPrompt: string;
+  currentActiveSessionLabel: string;
+  compareSessionsTitle: string;
+  selectSessionsToCompare: string;
+  bestPerformerBadge: string;
   exportCSV: string;
   saveSnapshot: string;
   snapshotSaved: string;
@@ -224,6 +230,12 @@ export const translations: Record<Language, TranslationDict> = {
     monteCarloTab: 'Mô phỏng Monte Carlo (1,000 lần)',
     heatmapTab: 'Ma trận Khung Giờ & Thứ',
     portfolioTab: 'Danh Mục Đa Phiên (DB)',
+    comparisonTab: 'So Sánh Các Phiên',
+    selectSessionPrompt: 'Chọn phiên cần xem:',
+    currentActiveSessionLabel: 'Phiên Đang Chạy (Active)',
+    compareSessionsTitle: 'Ma Trận So Sánh Đa Phiên',
+    selectSessionsToCompare: 'Chọn các phiên để so sánh hiệu suất:',
+    bestPerformerBadge: 'Hiệu Quả Cao Nhất 🏆',
     exportCSV: 'Xuất file CSV',
     saveSnapshot: 'Lưu Snapshot',
     snapshotSaved: 'Đã lưu DB ✓',
@@ -372,6 +384,12 @@ export const translations: Record<Language, TranslationDict> = {
     monteCarloTab: 'Monte Carlo Stress Test (1,000 runs)',
     heatmapTab: 'Day & Hour PnL Heatmap',
     portfolioTab: 'Database Portfolio',
+    comparisonTab: 'Session Comparison',
+    selectSessionPrompt: 'Select session:',
+    currentActiveSessionLabel: 'Active Replay Session',
+    compareSessionsTitle: 'Multi-Session Comparison Matrix',
+    selectSessionsToCompare: 'Select sessions to compare performance:',
+    bestPerformerBadge: 'Top Performer 🏆',
     exportCSV: 'Export CSV History',
     saveSnapshot: 'Save Snapshot',
     snapshotSaved: 'Saved to DB ✓',
@@ -520,6 +538,12 @@ export const translations: Record<Language, TranslationDict> = {
     monteCarloTab: 'モンテカルロ分析 (1,000回試行)',
     heatmapTab: '曜日・時間帯別損益ヒートマップ',
     portfolioTab: 'DBポートフォリオ',
+    comparisonTab: 'セッション比較',
+    selectSessionPrompt: 'セッション選択:',
+    currentActiveSessionLabel: 'アクティブセッション',
+    compareSessionsTitle: 'マルチセッション比較マトリクス',
+    selectSessionsToCompare: '比較するセッションを選択:',
+    bestPerformerBadge: '最高パフォーマンス 🏆',
     exportCSV: 'CSVエクスポート',
     saveSnapshot: 'スナップショット保存',
     snapshotSaved: 'DB保存完了 ✓',
@@ -668,6 +692,12 @@ export const translations: Record<Language, TranslationDict> = {
     monteCarloTab: '蒙特卡洛模拟 (1,000次随机迭代)',
     heatmapTab: '时段与星期盈亏热力图',
     portfolioTab: '多会话总投资组合 (DB)',
+    comparisonTab: '会话对比分析',
+    selectSessionPrompt: '选择查看会话:',
+    currentActiveSessionLabel: '当前进行中会话',
+    compareSessionsTitle: '多会话对比分析矩阵',
+    selectSessionsToCompare: '选择要对比的会话:',
+    bestPerformerBadge: '表现最佳 🏆',
     exportCSV: '导出历史 CSV',
     saveSnapshot: '保存快照',
     snapshotSaved: '已保存至DB ✓',
