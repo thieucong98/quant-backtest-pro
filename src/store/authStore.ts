@@ -55,13 +55,21 @@ export const useAuthStore = create<AuthState>((set, get) => {
     loginWithEmail: async (email, password) => {
       set({ isLoading: true, error: null });
 
-      if (!email || !password) {
+      const cleanEmail = email.trim().toLowerCase();
+      if (!cleanEmail || !password) {
         set({ isLoading: false, error: 'Vui lòng nhập đầy đủ Email và Mật khẩu' });
         return false;
       }
 
+      // Basic email pattern check
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(cleanEmail)) {
+        set({ isLoading: false, error: 'Định dạng Email không hợp lệ (VD: trader@quantbacktest.pro)' });
+        return false;
+      }
+
       try {
-        const res = await usersApi.login(email, password);
+        const res = await usersApi.login(cleanEmail, password);
         if (res?.token) {
           setAuthToken(res.token);
         }
@@ -69,47 +77,51 @@ export const useAuthStore = create<AuthState>((set, get) => {
           id: res.user.id,
           email: res.user.email,
           name: res.user.name,
-          avatarUrl: res.user.avatarUrl,
-          tier: res.user.tier || 'PRO',
+          avatarUrl: res.user.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80',
+          tier: res.user.tier || 'INSTITUTIONAL',
           createdAt: new Date(res.user.createdAt).getTime(),
           tradingBalance: 50000,
-          savedStrategiesCount: 5,
-          completedBacktests: 10
+          savedStrategiesCount: 8,
+          completedBacktests: 42
         };
 
         savePersistedUser(user);
-        set({ user, isAuthenticated: true, isAuthModalOpen: false, isLoading: false });
+        set({ user, isAuthenticated: true, isAuthModalOpen: false, isLoading: false, error: null });
         return true;
       } catch (err: any) {
-        // Fallback for offline dev
-        const name = email.split('@')[0].replace('.', ' ');
-        const user: UserProfile = {
-          id: 'usr_' + Math.random().toString(36).substring(2, 9),
-          email,
-          name: name.charAt(0).toUpperCase() + name.slice(1),
-          tier: 'PRO',
-          createdAt: Date.now(),
-          tradingBalance: 25000,
-          savedStrategiesCount: 3,
-          completedBacktests: 12
-        };
-
-        savePersistedUser(user);
-        set({ user, isAuthenticated: true, isAuthModalOpen: false, isLoading: false });
-        return true;
+        console.error('Login error:', err);
+        set({
+          isLoading: false,
+          error: err.message || 'Email hoặc mật khẩu không chính xác. Vui lòng thử lại!'
+        });
+        return false;
       }
     },
 
     registerWithEmail: async (name, email, password) => {
       set({ isLoading: true, error: null });
 
-      if (!email || !password || !name) {
-        set({ isLoading: false, error: 'Vui lòng điền đầy đủ các thông tin' });
+      const cleanEmail = email.trim().toLowerCase();
+      const cleanName = name.trim();
+
+      if (!cleanEmail || !password || !cleanName) {
+        set({ isLoading: false, error: 'Vui lòng điền đầy đủ Họ tên, Email và Mật khẩu' });
+        return false;
+      }
+
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(cleanEmail)) {
+        set({ isLoading: false, error: 'Định dạng Email không hợp lệ (VD: trader@quantbacktest.pro)' });
+        return false;
+      }
+
+      if (password.length < 6) {
+        set({ isLoading: false, error: 'Mật khẩu phải có độ dài tối thiểu từ 6 ký tự' });
         return false;
       }
 
       try {
-        const res = await usersApi.register(name, email, password);
+        const res = await usersApi.register(cleanName, cleanEmail, password);
         if (res?.token) {
           setAuthToken(res.token);
         }
@@ -117,32 +129,30 @@ export const useAuthStore = create<AuthState>((set, get) => {
           id: res.user.id,
           email: res.user.email,
           name: res.user.name,
+          avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80',
           tier: res.user.tier || 'PRO',
           createdAt: new Date(res.user.createdAt).getTime(),
-          tradingBalance: 10000,
+          tradingBalance: 25000,
           savedStrategiesCount: 1,
           completedBacktests: 0
         };
 
         savePersistedUser(user);
-        set({ user, isAuthenticated: true, isAuthModalOpen: false, isLoading: false });
+        set({ user, isAuthenticated: true, isAuthModalOpen: false, isLoading: false, error: null });
         return true;
       } catch (err: any) {
-        const user: UserProfile = {
-          id: 'usr_' + Math.random().toString(36).substring(2, 9),
-          email,
-          name,
-          tier: 'PRO',
-          createdAt: Date.now(),
-          tradingBalance: 10000,
-          savedStrategiesCount: 1,
-          completedBacktests: 0
-        };
-
-        savePersistedUser(user);
-        set({ user, isAuthenticated: true, isAuthModalOpen: false, isLoading: false });
-        return true;
+        console.error('Register error:', err);
+        set({
+          isLoading: false,
+          error: err.message || 'Đăng ký không thành công. Email này có thể đã được sử dụng!'
+        });
+        return false;
       }
+    },
+
+    loginDemoTrader: async () => {
+      set({ isLoading: true, error: null });
+      return await get().loginWithEmail('admin@quantbacktest.pro', 'QuantPro@2026');
     },
 
     loginWithSSO: async (provider: SSOProvider) => {

@@ -20,14 +20,18 @@ export async function authMiddleware(req: Request, _res: Response, next: Functio
 }
 
 // Helper: Get or create default dev user
-async function getOrCreateDefaultUser() {
-  let user = await prisma.user.findFirst();
+export async function getOrCreateDefaultUser() {
+  const DEFAULT_EMAIL = 'admin@quantbacktest.pro';
+  let user = await prisma.user.findUnique({ where: { email: DEFAULT_EMAIL } });
   if (!user) {
+    const passwordHash = await bcrypt.hash('QuantPro@2026', 10);
     user = await prisma.user.create({
       data: {
-        email: 'pro.trader@quantbacktest.com',
-        name: 'Pro Trader',
-        tier: 'PRO',
+        email: DEFAULT_EMAIL,
+        name: 'Quant Pro Trader',
+        passwordHash,
+        tier: 'INSTITUTIONAL',
+        avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80',
         settings: {
           create: {
             language: 'vi',
@@ -36,6 +40,7 @@ async function getOrCreateDefaultUser() {
         }
       }
     });
+    console.log(`[AUTH] Seeded default institutional account: ${DEFAULT_EMAIL} / QuantPro@2026`);
   }
   return user;
 }

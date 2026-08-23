@@ -3,6 +3,15 @@
 
 Chào mừng bạn đến với **Quant Backtest Pro** - Nền tảng kiểm thử định lượng và mô phỏng giao dịch đa tài sản chuyên nghiệp.
 
+## 0. ĐĂNG NHẬP & TÀI KHOẢN MẶC ĐỊNH
+Khi mở ứng dụng lần đầu tiên, bấm nút **Đăng nhập / Sign In** ở góc trên cùng bên phải:
+- **Tài khoản định lượng mặc định (Pre-seeded)**:
+  - **Email**: `admin@quantbacktest.pro`
+  - **Mật khẩu**: `QuantPro@2026`
+  - **Cấp bậc (Tier)**: `INSTITUTIONAL`
+- **Đăng nhập 1-Click**: Bấm nút **1-Click** ngay trên bảng đăng nhập để vào ngay lập tức mà không cần gõ mật khẩu.
+- **Tạo tài khoản cá nhân**: Chuyển sang tab **Đăng ký** để tạo tài khoản mới được lưu trữ bảo mật vào SQLite.
+
 ---
 
 ## 1. GIAO DIỆN CHÍNH & ĐIỀU KHIỂN REPLAY

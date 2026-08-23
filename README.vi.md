@@ -146,9 +146,16 @@ npm install
 npm run dev
 ```
 
-Truy cập ứng dụng trên trình duyệt:
-- **Giao diện người dùng (Frontend)**: `http://localhost:5173/`
-- **Cơ sở dữ liệu & API Backend**: `http://localhost:3001/api/health`
+Mở trình duyệt tại địa chỉ:
+- **Ứng dụng Web**: `http://localhost:5173/`
+- **Backend API**: `http://localhost:3001/api/health`
+
+### 🔑 Tài Khoản Mặc Định (Default Account)
+Hệ thống đã tự động khởi tạo sẵn tài khoản quản trị viên / định lượng cấp cao (Institutional) để bạn có thể trải nghiệm ngay mà không cần đăng ký:
+- **Email**: `admin@quantbacktest.pro`
+- **Mật khẩu**: `QuantPro@2026`
+- **Cấp bậc (Tier)**: `INSTITUTIONAL` (Mở khóa toàn bộ tính năng và chiến lược)
+- *Hoặc bạn chỉ cần bấm nút **1-Click** ngay trên bảng Đăng nhập để truy cập tức thì.*
 
 ---
 

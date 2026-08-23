@@ -3,6 +3,15 @@
 
 Welcome to **Quant Backtest Pro** — the institutional-grade quantitative backtesting, market replay, and algorithmic bot deployment platform.
 
+## 0. Authentication & Default Account
+When opening the application for the first time, click the **Sign In** button in the top right header:
+- **Pre-Seeded Default Account**:
+  - **Email**: `admin@quantbacktest.pro`
+  - **Password**: `QuantPro@2026`
+  - **Tier**: `INSTITUTIONAL`
+- **1-Click Login**: Simply click the **1-Click** button on top of the modal to immediately log in without typing credentials.
+- **Custom Registration**: Switch to the **Sign Up** tab to register your personal trader account.
+
 ---
 
 ## 1. Main Workspace & Replay Navigation

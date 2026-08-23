@@ -150,6 +150,13 @@ Open your browser at:
 - **Frontend App**: `http://localhost:5173/`
 - **Backend API**: `http://localhost:3001/api/health`
 
+### 🔑 Default Developer / Trader Account
+The project includes a pre-seeded institutional account for instant offline testing and development:
+- **Email**: `admin@quantbacktest.pro`
+- **Password**: `QuantPro@2026`
+- **Tier**: `INSTITUTIONAL` (All features & unlimited backtests unlocked)
+- *Or simply click the **1-Click** button inside the Sign In modal to log in immediately.*
+
 ---
 
 ## 🏗️ Architecture & Technology Stack

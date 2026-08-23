@@ -6,7 +6,7 @@ import { tradesRouter } from './routes/trades.js';
 import { strategiesRouter } from './routes/strategies.js';
 import { datasetsRouter } from './routes/datasets.js';
 import { analyticsRouter } from './routes/analytics.js';
-import { usersRouter } from './routes/users.js';
+import { usersRouter, getOrCreateDefaultUser } from './routes/users.js';
 import { drawingsRouter } from './routes/drawings.js';
 
 // Polyfill BigInt JSON serialization for Prisma
@@ -53,11 +53,17 @@ process.on('SIGTERM', async () => {
   process.exit(0);
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
+  try {
+    await getOrCreateDefaultUser();
+  } catch (e: any) {
+    console.error('[AUTH SEED ERROR]', e.message);
+  }
   console.log(`\n🚀 Quant Backtest Pro API Server`);
-  console.log(`   ├─ URL:      http://localhost:${PORT}`);
-  console.log(`   ├─ Database: SQLite (Prisma ORM)`);
-  console.log(`   └─ Status:   Ready\n`);
+  console.log(`   ├─ URL:             http://localhost:${PORT}`);
+  console.log(`   ├─ Database:        SQLite (Prisma ORM)`);
+  console.log(`   ├─ Default Account: admin@quantbacktest.pro / QuantPro@2026`);
+  console.log(`   └─ Status:          Ready\n`);
 });
 
 export default app;

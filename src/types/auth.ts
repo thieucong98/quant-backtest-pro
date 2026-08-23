@@ -27,6 +27,7 @@ export interface AuthState {
   setAuthModalOpen: (open: boolean, mode?: 'login' | 'register') => void;
   loginWithEmail: (email: string, pass: string) => Promise<boolean>;
   registerWithEmail: (name: string, email: string, pass: string) => Promise<boolean>;
+  loginDemoTrader: () => Promise<boolean>;
   loginWithSSO: (provider: SSOProvider) => Promise<boolean>;
   logout: () => void;
   updateProfile: (data: Partial<UserProfile>) => void;
