@@ -234,6 +234,11 @@ export interface TranslationDict {
   llmTemperatureLabel: string;
   quickFillCustomBtn: string;
   customModelInputPlaceholder: string;
+  exportBotBtn: string;
+  exportBotModalTitle: string;
+  importStrategyBtn: string;
+  importStrategySuccess: string;
+  importStrategyError: string;
 }
 
 export const translations: Record<Language, TranslationDict> = {
@@ -456,7 +461,12 @@ export const translations: Record<Language, TranslationDict> = {
     llmCustomEndpointDesc: 'Hỗ trợ OpenAI format, Proxy Tunnel, OpenRouter, Groq, LiteLLM, vLLM...',
     llmTemperatureLabel: 'Độ sáng tạo (Temperature):',
     quickFillCustomBtn: 'Điền cấu hình mẫu của bạn (Tunnel & Gemini Agent)',
-    customModelInputPlaceholder: 'Nhập hoặc chọn mã model (ví dụ: ag/gemini-pro-agent, gpt-4o...)'
+    customModelInputPlaceholder: 'Nhập hoặc chọn mã model (ví dụ: ag/gemini-pro-agent, gpt-4o...)',
+    exportBotBtn: 'Xuất Bot / Code',
+    exportBotModalTitle: 'Xuất Chiến Lược Sang Bot Giao Dịch Đa Nền Tảng',
+    importStrategyBtn: 'Nhập Chiến Lược (.json/.js)',
+    importStrategySuccess: 'Đã nạp chiến lược thành công!',
+    importStrategyError: 'Lỗi định dạng file chiến lược.'
   },
   en: {
     appTitle: 'Quant Backtest Pro',
@@ -677,7 +687,12 @@ export const translations: Record<Language, TranslationDict> = {
     llmCustomEndpointDesc: 'Supports OpenAI format, Reverse Proxies, OpenRouter, Groq, LiteLLM, vLLM...',
     llmTemperatureLabel: 'Temperature (Creativity):',
     quickFillCustomBtn: 'Quick Fill My Preset (Tunnel & Gemini Agent)',
-    customModelInputPlaceholder: 'Enter or choose model ID (e.g. ag/gemini-pro-agent, gpt-4o...)'
+    customModelInputPlaceholder: 'Enter or choose model ID (e.g. ag/gemini-pro-agent, gpt-4o...)',
+    exportBotBtn: 'Export Bot / Code',
+    exportBotModalTitle: 'Export Strategy to Trading Bot Hub',
+    importStrategyBtn: 'Import Strategy (.json/.js)',
+    importStrategySuccess: 'Strategy imported successfully!',
+    importStrategyError: 'Invalid strategy file format.'
   },
   ja: {
     appTitle: 'Quant Backtest Pro',
@@ -898,7 +913,12 @@ export const translations: Record<Language, TranslationDict> = {
     llmCustomEndpointDesc: 'OpenAI形式、プロキシトンネル、OpenRouter、Groq、LiteLLMに対応...',
     llmTemperatureLabel: 'Temperature (創造性):',
     quickFillCustomBtn: 'カスタムプリセットを自動入力 (Tunnel & Gemini Agent)',
-    customModelInputPlaceholder: 'モデルIDを入力または選択 (例: ag/gemini-pro-agent, gpt-4o...)'
+    customModelInputPlaceholder: 'モデルIDを入力または選択 (例: ag/gemini-pro-agent, gpt-4o...)',
+    exportBotBtn: 'Bot / コードを出力',
+    exportBotModalTitle: 'マルチプラットフォーム自動売買Bot出力ハブ',
+    importStrategyBtn: 'ストラテジーをインポート (.json/.js)',
+    importStrategySuccess: 'ストラテジーが正常に読み込まれました！',
+    importStrategyError: 'ストラテジーファイルの形式が無効です。'
   },
   zh: {
     appTitle: 'Quant Backtest Pro',
@@ -1119,6 +1139,11 @@ export const translations: Record<Language, TranslationDict> = {
     llmCustomEndpointDesc: '支持 OpenAI 兼容格式、代理隧道、OpenRouter、Groq、LiteLLM 等...',
     llmTemperatureLabel: '采样温度 (Temperature):',
     quickFillCustomBtn: '一键填入您的预设 (Tunnel & Gemini Agent)',
-    customModelInputPlaceholder: '输入或选择模型 ID (例如: ag/gemini-pro-agent, gpt-4o...)'
+    customModelInputPlaceholder: '输入或选择模型 ID (例如: ag/gemini-pro-agent, gpt-4o...)',
+    exportBotBtn: '导出 Bot / 代码',
+    exportBotModalTitle: '导出策略至多平台量化交易 Bot',
+    importStrategyBtn: '导入策略 (.json/.js)',
+    importStrategySuccess: '策略导入成功！',
+    importStrategyError: '策略文件格式无效。'
   }
 };

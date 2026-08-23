@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   X,
   BrainCircuit,
@@ -22,7 +22,9 @@ import {
   FolderOpen,
   Save,
   Trash2,
-  BookOpen
+  BookOpen,
+  Download,
+  Upload
 } from 'lucide-react';
 import { PREBUILT_STRATEGIES } from '../../engine/strategySandbox';
 import { AIService, AIProvider, LLMConfig, DEFAULT_LLM_CONFIG, AI_PROVIDER_MODELS } from '../../engine/aiService';
@@ -30,6 +32,7 @@ import { useBacktestStore } from '../../store/backtestStore';
 import { translations } from '../../i18n/translations';
 import { AIStrategyDefinition } from '../../types/strategy';
 import { strategiesApi } from '../../api';
+import { ExportStrategyModal } from './ExportStrategyModal';
 
 const LLM_STORAGE_KEY = 'quant_llm_config';
 
@@ -61,6 +64,11 @@ export const AIStrategyModal: React.FC = () => {
   const [isCopied, setIsCopied] = useState(false);
   const [isSavingDB, setIsSavingDB] = useState(false);
   const [dbSaveMessage, setDbSaveMessage] = useState<string | null>(null);
+
+  // Export & Import Bot State
+  const [isExportModalOpen, setExportModalOpen] = useState<boolean>(false);
+  const [exportTargetStrategy, setExportTargetStrategy] = useState<AIStrategyDefinition | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // My Strategies from DB
   const [myStrategies, setMyStrategies] = useState<any[]>([]);
@@ -235,6 +243,64 @@ export const AIStrategyModal: React.FC = () => {
     addStrategyLog('SIGNAL', `[AI Copilot] Đã nạp & chạy chiến lược từ DB: "${loaded.name}" (Auto-Trading: BẬT)`);
     setAIModalOpen(false);
     play();
+  };
+
+  const handleImportStrategyFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      let importedName = file.name.replace(/\.[^/.]+$/, "");
+      let importedDesc = 'Chiến lược được import từ file ' + file.name;
+      let importedCode = text;
+      let importedParams = {};
+
+      if (file.name.endsWith('.json')) {
+        try {
+          const json = JSON.parse(text);
+          if (json.strategy) {
+            importedName = json.strategy.name || importedName;
+            importedDesc = json.strategy.description || importedDesc;
+            importedCode = json.strategy.code || importedCode;
+            importedParams = json.strategy.parameters || {};
+          }
+        } catch (jsonErr) {
+          console.warn('JSON parsing error, fallback to raw text', jsonErr);
+        }
+      }
+
+      await strategiesApi.create({
+        name: importedName,
+        description: importedDesc,
+        code: importedCode,
+        parameters: importedParams,
+        enabled: true
+      });
+
+      await fetchMyStrategies();
+      setDbSaveMessage(t.importStrategySuccess || 'Đã import chiến lược thành công!');
+      setTimeout(() => setDbSaveMessage(null), 3000);
+      addStrategyLog('INFO', `[Strategy Import] Đã import thành công chiến lược "${importedName}"`);
+    } catch (err: any) {
+      alert(t.importStrategyError || 'Lỗi khi đọc file chiến lược: ' + err.message);
+    } finally {
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleOpenExportModal = (strat?: AIStrategyDefinition) => {
+    const target = strat || {
+      id: activeStrategy?.id || 'strat_' + Date.now(),
+      name: strategyName,
+      description: strategyDesc,
+      code: strategyCode,
+      parameters: activeStrategy?.parameters || {},
+      enabled: true,
+      createdAt: activeStrategy?.createdAt || Date.now()
+    };
+    setExportTargetStrategy(target);
+    setExportModalOpen(true);
   };
 
   const handleDeleteCustomStrategy = async (id: string, e: React.MouseEvent) => {
@@ -496,6 +562,15 @@ export const AIStrategyModal: React.FC = () => {
                       </button>
 
                       <button
+                        onClick={() => handleOpenExportModal()}
+                        className="px-2.5 py-1 bg-gradient-to-r from-teal-600 to-indigo-600 hover:from-teal-500 hover:to-indigo-500 text-white rounded text-[10px] font-bold flex items-center gap-1 transition-all shadow-xs"
+                        title="Xuất chiến lược sang Bot MT4/MT5/TradingView/Python/cTrader"
+                      >
+                        <Download className="w-3 h-3" />
+                        <span>{t.exportBotBtn || 'Xuất Bot'}</span>
+                      </button>
+
+                      <button
                         onClick={handleSaveToDatabase}
                         disabled={isSavingDB}
                         className="px-2.5 py-1 bg-amber-600/90 hover:bg-amber-500 text-white rounded text-[10px] font-bold flex items-center gap-1 transition-colors shadow-xs"
@@ -558,13 +633,31 @@ export const AIStrategyModal: React.FC = () => {
                 <p className="text-slate-400 text-xs">
                   Danh sách các chiến lược định lượng đã lưu trong cơ sở dữ liệu SQLite:
                 </p>
-                <button
-                  onClick={fetchMyStrategies}
-                  className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-xs flex items-center gap-1 transition-colors"
-                >
-                  <RefreshCw className={`w-3 h-3 ${isLoadingMyStrats ? 'animate-spin' : ''}`} />
-                  <span>{t.refreshBtn}</span>
-                </button>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleImportStrategyFile}
+                    accept=".json,.js"
+                    className="hidden"
+                  />
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-xs flex items-center gap-1 transition-colors border border-slate-700"
+                    title="Nhập chiến lược từ file JSON hoặc JS"
+                  >
+                    <Upload className="w-3 h-3 text-indigo-400" />
+                    <span>{t.importStrategyBtn || 'Nhập Chiến Lược'}</span>
+                  </button>
+
+                  <button
+                    onClick={fetchMyStrategies}
+                    className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-xs flex items-center gap-1 transition-colors"
+                  >
+                    <RefreshCw className={`w-3 h-3 ${isLoadingMyStrats ? 'animate-spin' : ''}`} />
+                    <span>{t.refreshBtn}</span>
+                  </button>
+                </div>
               </div>
 
               {isLoadingMyStrats ? (
@@ -597,6 +690,21 @@ export const AIStrategyModal: React.FC = () => {
                       </div>
 
                       <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-800/80">
+                        <button
+                          onClick={() => handleOpenExportModal({
+                            id: strat.id,
+                            name: strat.name,
+                            description: strat.description || '',
+                            code: strat.code,
+                            parameters: strat.parameters || {},
+                            enabled: strat.enabled ?? true,
+                            createdAt: new Date(strat.createdAt).getTime()
+                          })}
+                          className="p-1.5 text-slate-400 hover:text-teal-300 hover:bg-slate-800 rounded transition-colors"
+                          title="Xuất Bot MT5/MT4/Pine/Python/cTrader"
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                        </button>
                         <button
                           onClick={(e) => handleDeleteCustomStrategy(strat.id, e)}
                           className="p-1.5 text-slate-500 hover:text-rose-400 hover:bg-rose-950/40 rounded transition-colors"
@@ -843,6 +951,13 @@ export const AIStrategyModal: React.FC = () => {
           <span>Quant Backtest Pro AI Studio</span>
         </div>
       </div>
+
+      {/* BOT EXPORT & TRANSPILER MODAL */}
+      <ExportStrategyModal
+        isOpen={isExportModalOpen}
+        onClose={() => setExportModalOpen(false)}
+        strategy={exportTargetStrategy}
+      />
     </div>
   );
 };
