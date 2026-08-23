@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   X,
   TrendingUp,
@@ -23,7 +23,12 @@ import {
   CheckSquare,
   Square,
   Trophy,
-  SlidersHorizontal
+  SlidersHorizontal,
+  ChevronDown,
+  Search,
+  Check,
+  FolderKanban,
+  Sparkles
 } from 'lucide-react';
 import { AnalyticsEngine, MonteCarloResult, DayHourHeatmapCell, PerformanceReport } from '../../engine/analytics';
 import { useBacktestStore } from '../../store/backtestStore';
@@ -36,6 +41,11 @@ export const AnalyticsDashboardModal: React.FC = () => {
   const [selectedSessionId, setSelectedSessionId] = useState<string>('ACTIVE_SESSION');
   const [selectedSessionDetail, setSelectedSessionDetail] = useState<any>(null);
   const [isLoadingSession, setIsLoadingSession] = useState<boolean>(false);
+
+  // Custom Dropdown UI State
+  const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
+  const [sessionSearchQuery, setSessionSearchQuery] = useState<string>('');
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Comparison State
   const [comparisonSessionIds, setComparisonSessionIds] = useState<string[]>([]);
@@ -60,6 +70,17 @@ export const AnalyticsDashboardModal: React.FC = () => {
   } = useBacktestStore();
 
   const t = translations[language] || translations.vi;
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // 1. Fetch available sessions list from DB
   const fetchSessionList = async () => {
@@ -176,10 +197,12 @@ export const AnalyticsDashboardModal: React.FC = () => {
   let heatmapData: DayHourHeatmapCell[];
   let targetEquityCurve: any[];
   let currentSymbolName = instrument.symbol;
+  let currentSessionTitle = t.currentActiveSessionLabel;
 
   if (selectedSessionDetail && selectedSessionId !== 'ACTIVE_SESSION') {
     const s = selectedSessionDetail;
     currentSymbolName = s.symbol;
+    currentSessionTitle = s.name;
     const closedTrades = (s.trades || [])
       .filter((t: any) => t.status === 'CLOSED')
       .map((t: any) => ({
@@ -266,6 +289,12 @@ export const AnalyticsDashboardModal: React.FC = () => {
     setComparisonSessionIds(next);
     fetchComparisonDetails(next);
   };
+
+  // Filtered session list for search
+  const filteredSessions = sessionList.filter(s =>
+    s.name.toLowerCase().includes(sessionSearchQuery.toLowerCase()) ||
+    s.symbol.toLowerCase().includes(sessionSearchQuery.toLowerCase())
+  );
 
   // Helper render Equity Chart SVG
   const renderEquityChart = () => {
@@ -373,44 +402,34 @@ export const AnalyticsDashboardModal: React.FC = () => {
     : null;
 
   return (
-    <div className="fixed inset-0 bg-black/75 backdrop-blur-xs flex items-center justify-center z-50 animate-in fade-in select-none p-3">
-      <div className="bg-[#111622] border border-slate-700/80 rounded-xl w-full max-w-5xl max-h-[92vh] shadow-2xl flex flex-col overflow-hidden text-xs">
-        {/* MODAL HEADER */}
-        <div className="h-12 bg-slate-900/95 border-b border-slate-800 px-4 flex items-center justify-between">
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 animate-in fade-in select-none p-4">
+      <div className="bg-[#0f141f] border border-slate-700/80 rounded-2xl w-full max-w-5xl max-h-[92vh] shadow-2xl flex flex-col overflow-hidden text-xs">
+        
+        {/* TOP HEADER: Clean Title & Primary Actions */}
+        <div className="bg-[#0b0e17] border-b border-slate-800 px-6 py-3.5 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-6 h-6 rounded bg-emerald-600/30 border border-emerald-500/40 flex items-center justify-center">
-              <Activity className="w-3.5 h-3.5 text-emerald-400" />
+            <div className="p-2 bg-gradient-to-br from-emerald-500/20 to-teal-500/10 border border-emerald-500/30 rounded-xl text-emerald-400 shadow-sm">
+              <Activity className="w-5 h-5" />
             </div>
             <div>
-              <span className="font-bold text-sm text-slate-100">{t.analyticsTitle}</span>
+              <div className="flex items-center gap-2">
+                <h2 className="text-sm font-bold text-slate-100">{t.analyticsTitle}</h2>
+                <span className="px-2 py-0.5 rounded-full bg-indigo-950 text-indigo-300 border border-indigo-500/30 text-[10px] font-mono font-bold">
+                  QUANT ANALYTICS PRO
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-400 mt-0.5">
+                Phân tích định lượng, đường cong vốn & mô phỏng Monte Carlo theo chuẩn quỹ đầu tư
+              </p>
             </div>
           </div>
 
+          {/* Action Buttons */}
           <div className="flex items-center gap-2">
-            {/* Session Selector Dropdown */}
-            {activeTab !== 'database' && activeTab !== 'comparison' && (
-              <div className="flex items-center gap-1.5 bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800 font-mono text-xs">
-                <span className="text-slate-500 text-[10px]">{t.selectSessionPrompt}</span>
-                <select
-                  value={selectedSessionId}
-                  onChange={(e) => setSelectedSessionId(e.target.value)}
-                  className="bg-transparent text-slate-200 font-bold focus:outline-none cursor-pointer max-w-[200px] truncate"
-                >
-                  <option value="ACTIVE_SESSION">🌟 {t.currentActiveSessionLabel} ({instrument.symbol})</option>
-                  {sessionList.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      📁 {s.name} ({s.symbol})
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-
-            {/* Save Snapshot Button */}
             <button
               onClick={handleSaveSnapshot}
               disabled={saveStatus === 'saving'}
-              className="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-md text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-xs"
+              className="px-3 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all shadow-md active:scale-95"
               title="Lưu Snapshot Báo cáo vào Database"
             >
               <Save className="w-3.5 h-3.5" />
@@ -421,7 +440,7 @@ export const AnalyticsDashboardModal: React.FC = () => {
 
             <button
               onClick={handleExportCSV}
-              className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-colors"
+              className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-xs"
             >
               <Download className="w-3.5 h-3.5 text-indigo-400" />
               <span>{t.exportCSV}</span>
@@ -429,20 +448,141 @@ export const AnalyticsDashboardModal: React.FC = () => {
 
             <button
               onClick={() => setAnalyticsModalOpen(false)}
-              className="p-1 hover:bg-slate-800 text-slate-400 hover:text-slate-200 rounded transition-colors"
+              className="p-1.5 hover:bg-slate-800 text-slate-400 hover:text-slate-200 rounded-xl transition-colors ml-1"
             >
-              <X className="w-4 h-4" />
+              <X className="w-5 h-5" />
             </button>
           </div>
         </div>
 
-        {/* SUB TABS NAVIGATION */}
-        <div className="h-10 bg-slate-900 border-b border-slate-800 px-4 flex items-center justify-between text-xs font-mono">
-          <div className="flex items-center gap-1.5">
+        {/* SUB-BAR: Dedicated Luxury Session Selector & Navigation Tabs */}
+        <div className="bg-[#0e121d] border-b border-slate-800 px-6 py-2.5 flex items-center justify-between flex-wrap gap-3">
+          
+          {/* LEFT: LUXURY CUSTOM SESSION SELECTOR (Anchored with left-0 so it NEVER clips!) */}
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              className="flex items-center gap-2.5 px-3.5 py-1.5 bg-slate-900/95 hover:bg-slate-800 border border-slate-700/90 hover:border-indigo-500/70 rounded-xl text-xs transition-all shadow-md group"
+            >
+              <FolderKanban className="w-4 h-4 text-indigo-400 shrink-0" />
+              <div className="flex flex-col text-left max-w-[210px] sm:max-w-[280px]">
+                <span className="text-[9px] text-slate-400 uppercase font-sans font-bold tracking-wider">
+                  {t.selectSessionPrompt}
+                </span>
+                <span className="font-bold text-slate-100 truncate text-[11px] font-mono group-hover:text-indigo-300 transition-colors">
+                  {selectedSessionId === 'ACTIVE_SESSION' ? `🌟 ${t.currentActiveSessionLabel}` : (selectedSessionDetail?.name || 'Chọn phiên...')}
+                </span>
+              </div>
+              <ChevronDown className={`w-3.5 h-3.5 text-slate-400 group-hover:text-slate-200 transition-transform shrink-0 ${isDropdownOpen ? 'rotate-180 text-indigo-400' : ''}`} />
+            </button>
+
+            {/* DROPDOWN POPOVER MENU (Anchored to left-0, extends to the right with ample space) */}
+            {isDropdownOpen && (
+              <div className="absolute left-0 top-full mt-2 w-84 sm:w-96 bg-[#111726] border border-slate-700/90 rounded-2xl shadow-2xl z-50 p-2.5 text-xs font-sans animate-in fade-in zoom-in-95 duration-150 backdrop-blur-2xl">
+                
+                {/* Search input */}
+                <div className="relative mb-2 px-1">
+                  <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-slate-400" />
+                  <input
+                    type="text"
+                    placeholder="Tìm kiếm phiên theo tên hoặc mã..."
+                    value={sessionSearchQuery}
+                    onChange={(e) => setSessionSearchQuery(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 font-mono"
+                  />
+                </div>
+
+                <div className="max-h-64 overflow-y-auto space-y-1.5 pr-1">
+                  {/* Active Replay Session Card */}
+                  <div
+                    onClick={() => {
+                      setSelectedSessionId('ACTIVE_SESSION');
+                      setIsDropdownOpen(false);
+                    }}
+                    className={`p-2.5 rounded-xl cursor-pointer transition-all border flex items-center justify-between ${
+                      selectedSessionId === 'ACTIVE_SESSION'
+                        ? 'bg-indigo-950/70 border-indigo-500/70 text-white shadow-md'
+                        : 'bg-slate-900/50 border-slate-800 hover:bg-slate-800/70 text-slate-300'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                      <div className="truncate">
+                        <div className="font-bold text-xs text-slate-100 flex items-center gap-1.5">
+                          <span>🌟 {t.currentActiveSessionLabel}</span>
+                          <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-950 text-emerald-400 border border-emerald-500/30 font-mono">LIVE REPLAY</span>
+                        </div>
+                        <div className="text-[10px] text-slate-400 font-mono mt-0.5">
+                          {instrument.symbol} • {closedPositions.length} lệnh đã chốt
+                        </div>
+                      </div>
+                    </div>
+                    {selectedSessionId === 'ACTIVE_SESSION' && <Check className="w-4 h-4 text-indigo-400 shrink-0" />}
+                  </div>
+
+                  {/* Divider Title */}
+                  <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider px-2 pt-2 pb-0.5 font-mono">
+                    Phiên Đã Lưu Trong Database ({filteredSessions.length})
+                  </div>
+
+                  {/* Saved Sessions Cards */}
+                  {filteredSessions.length === 0 ? (
+                    <div className="text-center py-4 text-slate-500 text-xs font-mono">
+                      Không tìm thấy phiên phù hợp
+                    </div>
+                  ) : (
+                    filteredSessions.map((s) => {
+                      const isSelected = selectedSessionId === s.id;
+                      const pnl = s.finalEquity - s.initialBalance;
+                      const isProfit = pnl >= 0;
+
+                      return (
+                        <div
+                          key={s.id}
+                          onClick={() => {
+                            setSelectedSessionId(s.id);
+                            setIsDropdownOpen(false);
+                          }}
+                          className={`p-2.5 rounded-xl cursor-pointer transition-all border flex items-center justify-between ${
+                            isSelected
+                              ? 'bg-indigo-950/70 border-indigo-500/70 text-white shadow-md'
+                              : 'bg-slate-900/50 border-slate-800 hover:bg-slate-800/70 text-slate-300'
+                          }`}
+                        >
+                          <div className="min-w-0 pr-2">
+                            <div className="font-bold text-xs text-slate-200 truncate flex items-center gap-1.5">
+                              <span>{s.name}</span>
+                            </div>
+                            <div className="text-[10px] text-slate-400 font-mono mt-0.5 flex items-center gap-2">
+                              <span className="text-indigo-300 font-bold">{s.symbol}</span>
+                              <span>•</span>
+                              <span>{s.timeframe}</span>
+                              <span>•</span>
+                              <span>{s._count?.trades || 0} lệnh</span>
+                            </div>
+                          </div>
+
+                          <div className="text-right shrink-0 font-mono">
+                            <div className={`font-bold text-xs ${isProfit ? 'text-teal-400' : 'text-rose-400'}`}>
+                              {isProfit ? '+' : ''}${pnl.toFixed(2)}
+                            </div>
+                            {isSelected && <Check className="w-3.5 h-3.5 text-indigo-400 ml-auto mt-0.5" />}
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* RIGHT: NAVIGATION TABS */}
+          <div className="flex items-center gap-1.5 overflow-x-auto font-mono">
             <button
               onClick={() => setActiveTab('overview')}
-              className={`px-3 py-1 rounded font-medium flex items-center gap-1.5 transition-colors ${
-                activeTab === 'overview' ? 'bg-indigo-600 text-white font-semibold' : 'text-slate-400 hover:text-slate-200'
+              className={`px-3 py-1.5 rounded-lg font-medium flex items-center gap-1.5 transition-all ${
+                activeTab === 'overview' ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/30' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
               }`}
             >
               <Activity className="w-3.5 h-3.5" />
@@ -451,8 +591,8 @@ export const AnalyticsDashboardModal: React.FC = () => {
 
             <button
               onClick={() => setActiveTab('montecarlo')}
-              className={`px-3 py-1 rounded font-medium flex items-center gap-1.5 transition-colors ${
-                activeTab === 'montecarlo' ? 'bg-indigo-600 text-white font-semibold' : 'text-slate-400 hover:text-slate-200'
+              className={`px-3 py-1.5 rounded-lg font-medium flex items-center gap-1.5 transition-all ${
+                activeTab === 'montecarlo' ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/30' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
               }`}
             >
               <Dice5 className="w-3.5 h-3.5 text-purple-400" />
@@ -461,8 +601,8 @@ export const AnalyticsDashboardModal: React.FC = () => {
 
             <button
               onClick={() => setActiveTab('heatmap')}
-              className={`px-3 py-1 rounded font-medium flex items-center gap-1.5 transition-colors ${
-                activeTab === 'heatmap' ? 'bg-indigo-600 text-white font-semibold' : 'text-slate-400 hover:text-slate-200'
+              className={`px-3 py-1.5 rounded-lg font-medium flex items-center gap-1.5 transition-all ${
+                activeTab === 'heatmap' ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/30' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
               }`}
             >
               <Grid className="w-3.5 h-3.5 text-amber-400" />
@@ -474,8 +614,8 @@ export const AnalyticsDashboardModal: React.FC = () => {
                 setActiveTab('comparison');
                 fetchComparisonDetails(comparisonSessionIds);
               }}
-              className={`px-3 py-1 rounded font-medium flex items-center gap-1.5 transition-colors ${
-                activeTab === 'comparison' ? 'bg-indigo-600 text-white font-semibold' : 'text-slate-400 hover:text-slate-200'
+              className={`px-3 py-1.5 rounded-lg font-medium flex items-center gap-1.5 transition-all ${
+                activeTab === 'comparison' ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/30' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
               }`}
             >
               <GitCompare className="w-3.5 h-3.5 text-indigo-400" />
@@ -487,26 +627,21 @@ export const AnalyticsDashboardModal: React.FC = () => {
                 setActiveTab('database');
                 fetchPortfolio();
               }}
-              className={`px-3 py-1 rounded font-medium flex items-center gap-1.5 transition-colors ${
-                activeTab === 'database' ? 'bg-indigo-600 text-white font-semibold' : 'text-slate-400 hover:text-slate-200'
+              className={`px-3 py-1.5 rounded-lg font-medium flex items-center gap-1.5 transition-all ${
+                activeTab === 'database' ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/30' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
               }`}
             >
               <Database className="w-3.5 h-3.5 text-emerald-400" />
               <span>{t.portfolioTab}</span>
             </button>
           </div>
-
-          <div className="flex items-center gap-2 text-[10px] text-slate-400">
-            <span className="w-2 h-2 rounded-full bg-emerald-400" />
-            <span>Mã: <strong className="text-slate-200">{currentSymbolName}</strong></span>
-          </div>
         </div>
 
         {/* MODAL BODY */}
-        <div className="flex-1 p-5 overflow-y-auto space-y-4 font-mono">
+        <div className="flex-1 p-6 overflow-y-auto space-y-4 font-mono">
           {isLoadingSession ? (
             <div className="py-20 text-center text-slate-500 text-xs">
-              <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 opacity-40" />
+              <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 opacity-40 text-indigo-400" />
               Đang tải dữ liệu báo cáo của phiên đã chọn...
             </div>
           ) : (
@@ -516,84 +651,89 @@ export const AnalyticsDashboardModal: React.FC = () => {
                 <div className="space-y-4">
                   {/* EQUITY CURVE GRAPH */}
                   <div>
-                    <h4 className="font-bold text-slate-300 text-xs mb-2">{t.equityGrowth}:</h4>
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-bold text-slate-300 text-xs">{t.equityGrowth}:</h4>
+                      <span className="text-[11px] text-slate-400">
+                        Phiên: <strong className="text-slate-200">{currentSessionTitle}</strong> ({currentSymbolName})
+                      </span>
+                    </div>
                     {renderEquityChart()}
                   </div>
 
                   {/* KEY METRICS GRID */}
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    <div className="bg-slate-900 border border-slate-800 p-3 rounded-lg">
+                    <div className="bg-slate-900 border border-slate-800 p-3.5 rounded-xl shadow-xs">
                       <div className="text-slate-400 text-[11px]">{t.netProfit}:</div>
-                      <div className={`text-lg font-bold mt-1 ${report.netProfit >= 0 ? 'text-teal-400' : 'text-rose-400'}`}>
+                      <div className={`text-xl font-bold mt-1 ${report.netProfit >= 0 ? 'text-teal-400' : 'text-rose-400'}`}>
                         {report.netProfit >= 0 ? '+' : ''}${report.netProfit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </div>
                     </div>
 
-                    <div className="bg-slate-900 border border-slate-800 p-3 rounded-lg">
+                    <div className="bg-slate-900 border border-slate-800 p-3.5 rounded-xl shadow-xs">
                       <div className="text-slate-400 text-[11px]">{t.winRate}:</div>
-                      <div className="text-lg font-bold text-indigo-300 mt-1">{report.winRate}%</div>
+                      <div className="text-xl font-bold text-indigo-300 mt-1">{report.winRate}%</div>
                       <div className="text-[10px] text-slate-500 mt-0.5">{report.winTrades} W / {report.lossTrades} L</div>
                     </div>
 
-                    <div className="bg-slate-900 border border-slate-800 p-3 rounded-lg">
+                    <div className="bg-slate-900 border border-slate-800 p-3.5 rounded-xl shadow-xs">
                       <div className="text-slate-400 text-[11px]">{t.profitFactor}:</div>
-                      <div className={`text-lg font-bold mt-1 ${report.profitFactor >= 1.5 ? 'text-teal-400' : report.profitFactor >= 1.0 ? 'text-slate-200' : 'text-rose-400'}`}>
+                      <div className={`text-xl font-bold mt-1 ${report.profitFactor >= 1.5 ? 'text-teal-400' : report.profitFactor >= 1.0 ? 'text-slate-200' : 'text-rose-400'}`}>
                         {report.profitFactor > 99 ? '99+' : report.profitFactor.toFixed(2)}
                       </div>
                     </div>
 
-                    <div className="bg-slate-900 border border-slate-800 p-3 rounded-lg">
+                    <div className="bg-slate-900 border border-slate-800 p-3.5 rounded-xl shadow-xs">
                       <div className="text-slate-400 text-[11px]">{t.maxDrawdown}:</div>
-                      <div className="text-lg font-bold text-rose-400 mt-1">{report.maxDrawdownPercent.toFixed(2)}%</div>
+                      <div className="text-xl font-bold text-rose-400 mt-1">{report.maxDrawdownPercent.toFixed(2)}%</div>
                       <div className="text-[10px] text-slate-500 mt-0.5">-${report.maxDrawdownAmount.toFixed(2)}</div>
                     </div>
                   </div>
 
                   {/* DETAILED STATS TABLE */}
-                  <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-4 grid grid-cols-2 md:grid-cols-4 gap-y-3 gap-x-6 text-xs">
+                  <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-4 grid grid-cols-2 md:grid-cols-4 gap-y-3.5 gap-x-6 text-xs">
                     <div>
                       <span className="text-slate-400">{t.totalTrades}:</span>
-                      <div className="font-bold text-slate-200">{report.totalTrades}</div>
+                      <div className="font-bold text-slate-200 mt-0.5">{report.totalTrades}</div>
                     </div>
                     <div>
                       <span className="text-slate-400">{t.grossProfit}:</span>
-                      <div className="font-bold text-teal-400">+${report.grossProfit.toFixed(2)}</div>
+                      <div className="font-bold text-teal-400 mt-0.5">+${report.grossProfit.toFixed(2)}</div>
                     </div>
                     <div>
                       <span className="text-slate-400">{t.grossLoss}:</span>
-                      <div className="font-bold text-rose-400">-${Math.abs(report.grossLoss).toFixed(2)}</div>
+                      <div className="font-bold text-rose-400 mt-0.5">-${Math.abs(report.grossLoss).toFixed(2)}</div>
                     </div>
                     <div>
                       <span className="text-slate-400">{t.avgWin}:</span>
-                      <div className="font-bold text-teal-400">+${report.avgWin.toFixed(2)}</div>
+                      <div className="font-bold text-teal-400 mt-0.5">+${report.avgWin.toFixed(2)}</div>
                     </div>
                     <div>
                       <span className="text-slate-400">{t.avgLoss}:</span>
-                      <div className="font-bold text-rose-400">-${Math.abs(report.avgLoss).toFixed(2)}</div>
+                      <div className="font-bold text-rose-400 mt-0.5">-${Math.abs(report.avgLoss).toFixed(2)}</div>
                     </div>
                     <div>
                       <span className="text-slate-400">{t.riskReward}:</span>
-                      <div className="font-bold text-indigo-300">1 : {report.riskRewardRatio.toFixed(2)}</div>
+                      <div className="font-bold text-indigo-300 mt-0.5">1 : {report.riskRewardRatio.toFixed(2)}</div>
                     </div>
                     <div>
                       <span className="text-slate-400">{t.sharpeRatio}:</span>
-                      <div className="font-bold text-slate-200">{report.sharpeRatio.toFixed(2)}</div>
+                      <div className="font-bold text-slate-200 mt-0.5">{report.sharpeRatio.toFixed(2)}</div>
                     </div>
                     <div>
                       <span className="text-slate-400">{t.sortinoRatio}:</span>
-                      <div className="font-bold text-slate-200">{report.sortinoRatio.toFixed(2)}</div>
+                      <div className="font-bold text-slate-200 mt-0.5">{report.sortinoRatio.toFixed(2)}</div>
                     </div>
                     <div>
                       <span className="text-slate-400">{t.consecutiveWins}:</span>
-                      <div className="font-bold text-teal-400">{report.consecutiveWins}</div>
+                      <div className="font-bold text-teal-400 mt-0.5">{report.consecutiveWins}</div>
                     </div>
                     <div>
                       <span className="text-slate-400">{t.consecutiveLosses}:</span>
-                      <div className="font-bold text-rose-400">{report.consecutiveLosses}</div>
+                      <div className="font-bold text-rose-400 mt-0.5">{report.consecutiveLosses}</div>
                     </div>
                     <div>
                       <span className="text-slate-400">{t.expectedPayoff}:</span>
-                      <div className="font-bold text-slate-200">${report.expectedPayoff.toFixed(2)}</div>
+                      <div className="font-bold text-slate-200 mt-0.5">${report.expectedPayoff.toFixed(2)}</div>
                     </div>
                   </div>
                 </div>
@@ -703,7 +843,7 @@ export const AnalyticsDashboardModal: React.FC = () => {
                   <div className="flex items-center gap-2 flex-wrap bg-slate-900/80 p-3 rounded-xl border border-slate-800">
                     <button
                       onClick={() => toggleComparisonSession('ACTIVE_SESSION')}
-                      className={`px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all ${
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all ${
                         comparisonSessionIds.includes('ACTIVE_SESSION')
                           ? 'bg-indigo-600 text-white shadow-md'
                           : 'bg-slate-950 text-slate-400 border border-slate-800'
@@ -717,7 +857,7 @@ export const AnalyticsDashboardModal: React.FC = () => {
                       <button
                         key={s.id}
                         onClick={() => toggleComparisonSession(s.id)}
-                        className={`px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all ${
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all ${
                           comparisonSessionIds.includes(s.id)
                             ? 'bg-indigo-600 text-white shadow-md'
                             : 'bg-slate-950 text-slate-400 border border-slate-800'
@@ -732,7 +872,7 @@ export const AnalyticsDashboardModal: React.FC = () => {
                   {/* Comparison Matrix Table */}
                   {isLoadingComparison ? (
                     <div className="py-16 text-center text-slate-500 text-xs">
-                      <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 opacity-40" />
+                      <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 opacity-40 text-indigo-400" />
                       Đang tổng hợp dữ liệu so sánh...
                     </div>
                   ) : comparisonData.length === 0 ? (
@@ -746,7 +886,7 @@ export const AnalyticsDashboardModal: React.FC = () => {
                           <tr className="border-b border-slate-800 bg-slate-900/80">
                             <th className="p-3 text-slate-400 font-bold">Chỉ Số / Tiêu Chí</th>
                             {comparisonData.map((c) => (
-                              <th key={c.id} className="p-3 font-bold text-slate-200 border-l border-slate-800 min-w-[140px]">
+                              <th key={c.id} className="p-3 font-bold text-slate-200 border-l border-slate-800 min-w-[150px]">
                                 <div className="truncate">{c.name}</div>
                                 <div className="text-[10px] text-slate-500 font-normal">{c.symbol} • {c.timeframe}</div>
                               </th>
@@ -849,7 +989,7 @@ export const AnalyticsDashboardModal: React.FC = () => {
 
                   {isLoadingDB ? (
                     <div className="py-16 text-center text-slate-500 text-xs">
-                      <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 opacity-40" />
+                      <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 opacity-40 text-indigo-400" />
                       Đang truy vấn dữ liệu báo cáo từ SQLite Database...
                     </div>
                   ) : portfolioData ? (
@@ -930,7 +1070,7 @@ export const AnalyticsDashboardModal: React.FC = () => {
         </div>
 
         {/* FOOTER */}
-        <div className="h-10 bg-slate-900 border-t border-slate-800 px-4 flex items-center justify-between text-slate-500 text-[11px] font-mono">
+        <div className="h-10 bg-[#0b0e17] border-t border-slate-800 px-6 flex items-center justify-between text-slate-500 text-[11px] font-mono">
           <span>Quant Backtest Pro Institutional Analytics & Comparison Matrix</span>
           <span>{report.totalTrades} Trades Evaluated</span>
         </div>
