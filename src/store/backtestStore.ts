@@ -279,14 +279,18 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
     strategyRunner: initialStrategyRunner,
     indicatorCalculator: initialIndicatorCalculator,
 
-    setInstrument: (symbol) => {
+    setInstrument: async (symbol: string) => {
+      // 1. Flush & Save current active session before switching symbol
+      syncCurrentSessionToStorage(get);
+
       const spec = INSTRUMENTS[symbol] || DEFAULT_INSTRUMENT;
-      get().pause();
-      
       let startPrice = 1.0850;
       if (symbol === 'XAUUSD') startPrice = 2650.0;
       if (symbol === 'BTCUSD') startPrice = 68500.0;
       if (symbol === 'USDJPY') startPrice = 155.0;
+      if (symbol === 'GBPUSD') startPrice = 1.2950;
+      if (symbol === 'US30') startPrice = 43500.0;
+      if (symbol === 'ETHUSD') startPrice = 2600.0;
       if (symbol === 'DXY') startPrice = 104.5;
 
       const newM1 = generateRealisticCandles(symbol, startPrice, 2500, 5);
@@ -296,7 +300,21 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
       engine.setConfig(spec);
       engine.reset();
 
+      // Create or start a new session for this symbol
+      let newSessionId: string | null = null;
+      if (get().isServerOnline) {
+        try {
+          const session = await sessionsApi.create({
+            symbol,
+            timeframe: get().timeframe,
+            initialBalance: engine.initialBalance
+          });
+          newSessionId = session.id;
+        } catch (e) {}
+      }
+
       set({
+        activeSessionId: newSessionId || 'sess_' + Date.now(),
         instrument: spec,
         rawM1Candles: newM1,
         candles: resampled,
@@ -307,8 +325,12 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
         openPositions: [],
         closedPositions: [],
         markers: [],
+        drawings: [],
         equityCurve: [{ timestamp: resampled[0]?.timestamp || 0, balance: engine.initialBalance, equity: engine.initialBalance }]
       });
+
+      syncCurrentSessionToStorage(get);
+      get().addStrategyLog('INFO', `Đã chuyển sang mã giao dịch ${symbol} — Bắt đầu phiên mới`);
     },
 
     setTimeframe: (tf) => {
