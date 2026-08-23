@@ -652,7 +652,10 @@ export const AnalyticsDashboardModal: React.FC = () => {
                   {/* EQUITY CURVE GRAPH */}
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-bold text-slate-300 text-xs">{t.equityGrowth}:</h4>
+                      <h4 className="font-bold text-slate-300 text-xs flex items-center gap-1.5">
+                        <TrendingUp className="w-4 h-4 text-emerald-400" />
+                        <span>{t.equityGrowth}:</span>
+                      </h4>
                       <span className="text-[11px] text-slate-400">
                         Phiên: <strong className="text-slate-200">{currentSessionTitle}</strong> ({currentSymbolName})
                       </span>
@@ -662,78 +665,181 @@ export const AnalyticsDashboardModal: React.FC = () => {
 
                   {/* KEY METRICS GRID */}
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    <div className="bg-slate-900 border border-slate-800 p-3.5 rounded-xl shadow-xs">
-                      <div className="text-slate-400 text-[11px]">{t.netProfit}:</div>
+                    <div className="bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-800 p-3.5 rounded-xl shadow-md">
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-400 text-[11px] font-medium">{t.netProfit}</span>
+                        <DollarSign className="w-3.5 h-3.5 text-emerald-400" />
+                      </div>
                       <div className={`text-xl font-bold mt-1 ${report.netProfit >= 0 ? 'text-teal-400' : 'text-rose-400'}`}>
                         {report.netProfit >= 0 ? '+' : ''}${report.netProfit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </div>
-                    </div>
-
-                    <div className="bg-slate-900 border border-slate-800 p-3.5 rounded-xl shadow-xs">
-                      <div className="text-slate-400 text-[11px]">{t.winRate}:</div>
-                      <div className="text-xl font-bold text-indigo-300 mt-1">{report.winRate}%</div>
-                      <div className="text-[10px] text-slate-500 mt-0.5">{report.winTrades} W / {report.lossTrades} L</div>
-                    </div>
-
-                    <div className="bg-slate-900 border border-slate-800 p-3.5 rounded-xl shadow-xs">
-                      <div className="text-slate-400 text-[11px]">{t.profitFactor}:</div>
-                      <div className={`text-xl font-bold mt-1 ${report.profitFactor >= 1.5 ? 'text-teal-400' : report.profitFactor >= 1.0 ? 'text-slate-200' : 'text-rose-400'}`}>
-                        {report.profitFactor > 99 ? '99+' : report.profitFactor.toFixed(2)}
+                      <div className="text-[10px] text-slate-500 mt-0.5">
+                        {report.netProfit >= 0 ? '🟢 Lợi nhuận ròng' : '🔴 Lỗ ròng'}
                       </div>
                     </div>
 
-                    <div className="bg-slate-900 border border-slate-800 p-3.5 rounded-xl shadow-xs">
-                      <div className="text-slate-400 text-[11px]">{t.maxDrawdown}:</div>
+                    <div className="bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-800 p-3.5 rounded-xl shadow-md">
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-400 text-[11px] font-medium">{t.winRate}</span>
+                        <Percent className="w-3.5 h-3.5 text-indigo-400" />
+                      </div>
+                      <div className="text-xl font-bold text-indigo-300 mt-1">{report.winRate}%</div>
+                      <div className="text-[10px] text-slate-500 mt-0.5">{report.winTrades} Thắng / {report.lossTrades} Thua</div>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-800 p-3.5 rounded-xl shadow-md">
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-400 text-[11px] font-medium">{t.profitFactor}</span>
+                        <Award className="w-3.5 h-3.5 text-amber-400" />
+                      </div>
+                      <div className={`text-xl font-bold mt-1 ${report.profitFactor >= 1.5 ? 'text-teal-400' : report.profitFactor >= 1.0 ? 'text-slate-200' : 'text-rose-400'}`}>
+                        {report.profitFactor > 99 ? '99+' : report.profitFactor.toFixed(2)}
+                      </div>
+                      <div className="text-[10px] text-slate-500 mt-0.5">
+                        {report.profitFactor >= 1.5 ? '⭐ Xuất sắc' : report.profitFactor >= 1.0 ? '⚖️ Cân bằng' : '⚠️ Cần tối ưu'}
+                      </div>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-800 p-3.5 rounded-xl shadow-md">
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-400 text-[11px] font-medium">{t.maxDrawdown}</span>
+                        <AlertTriangle className="w-3.5 h-3.5 text-rose-400" />
+                      </div>
                       <div className="text-xl font-bold text-rose-400 mt-1">{report.maxDrawdownPercent.toFixed(2)}%</div>
-                      <div className="text-[10px] text-slate-500 mt-0.5">-${report.maxDrawdownAmount.toFixed(2)}</div>
+                      <div className="text-[10px] text-slate-500 mt-0.5">-${report.maxDrawdownAmount.toFixed(2)} USD</div>
                     </div>
                   </div>
 
-                  {/* DETAILED STATS TABLE */}
-                  <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-4 grid grid-cols-2 md:grid-cols-4 gap-y-3.5 gap-x-6 text-xs">
-                    <div>
-                      <span className="text-slate-400">{t.totalTrades}:</span>
-                      <div className="font-bold text-slate-200 mt-0.5">{report.totalTrades}</div>
+                  {/* WIN / LOSS PROGRESS BAR */}
+                  {report.totalTrades > 0 && (
+                    <div className="bg-slate-900/60 border border-slate-800 p-3 rounded-xl space-y-1.5">
+                      <div className="flex items-center justify-between text-[11px] font-medium">
+                        <span className="text-emerald-400 flex items-center gap-1">
+                          <CheckCircle2 className="w-3 h-3" />
+                          <span>Thắng: {report.winTrades} lệnh ({report.winRate}%)</span>
+                        </span>
+                        <span className="text-rose-400 flex items-center gap-1">
+                          <XCircle className="w-3 h-3" />
+                          <span>Thua: {report.lossTrades} lệnh ({(100 - report.winRate).toFixed(1)}%)</span>
+                        </span>
+                      </div>
+                      <div className="w-full h-2.5 bg-slate-950 rounded-full overflow-hidden flex">
+                        <div
+                          className="h-full bg-gradient-to-r from-emerald-600 to-teal-400 transition-all"
+                          style={{ width: `${report.winRate}%` }}
+                        />
+                        <div
+                          className="h-full bg-gradient-to-r from-rose-500 to-rose-700 transition-all"
+                          style={{ width: `${100 - report.winRate}%` }}
+                        />
+                      </div>
                     </div>
-                    <div>
-                      <span className="text-slate-400">{t.grossProfit}:</span>
-                      <div className="font-bold text-teal-400 mt-0.5">+${report.grossProfit.toFixed(2)}</div>
+                  )}
+
+                  {/* CATEGORIZED DETAILED STATS TABLE */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+                    {/* Card 1: Profitability */}
+                    <div className="bg-slate-900/70 border border-slate-800/90 rounded-xl p-3.5 space-y-2.5">
+                      <div className="font-bold text-emerald-400 text-[11px] uppercase tracking-wider flex items-center gap-1.5 pb-1 border-b border-slate-800">
+                        <DollarSign className="w-3.5 h-3.5" />
+                        <span>Hiệu Quả Lợi Nhuận</span>
+                      </div>
+                      <div className="space-y-1.5">
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">{t.grossProfit}:</span>
+                          <span className="font-bold text-teal-400">+${report.grossProfit.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">{t.grossLoss}:</span>
+                          <span className="font-bold text-rose-400">-${Math.abs(report.grossLoss).toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">{t.profitFactor}:</span>
+                          <span className="font-bold text-slate-200">{report.profitFactor.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">{t.expectedPayoff}:</span>
+                          <span className="font-bold text-indigo-300">${report.expectedPayoff.toFixed(2)}</span>
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <span className="text-slate-400">{t.grossLoss}:</span>
-                      <div className="font-bold text-rose-400 mt-0.5">-${Math.abs(report.grossLoss).toFixed(2)}</div>
+
+                    {/* Card 2: Precision & Sizing */}
+                    <div className="bg-slate-900/70 border border-slate-800/90 rounded-xl p-3.5 space-y-2.5">
+                      <div className="font-bold text-indigo-400 text-[11px] uppercase tracking-wider flex items-center gap-1.5 pb-1 border-b border-slate-800">
+                        <Percent className="w-3.5 h-3.5" />
+                        <span>Tỷ Lệ & Khối Lượng</span>
+                      </div>
+                      <div className="space-y-1.5">
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">{t.totalTrades}:</span>
+                          <span className="font-bold text-slate-200">{report.totalTrades}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">{t.avgWin}:</span>
+                          <span className="font-bold text-teal-400">+${report.avgWin.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">{t.avgLoss}:</span>
+                          <span className="font-bold text-rose-400">-${Math.abs(report.avgLoss).toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">{t.riskReward}:</span>
+                          <span className="font-bold text-indigo-300">1 : {report.riskRewardRatio.toFixed(2)}</span>
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <span className="text-slate-400">{t.avgWin}:</span>
-                      <div className="font-bold text-teal-400 mt-0.5">+${report.avgWin.toFixed(2)}</div>
+
+                    {/* Card 3: Streaks & Consistency */}
+                    <div className="bg-slate-900/70 border border-slate-800/90 rounded-xl p-3.5 space-y-2.5">
+                      <div className="font-bold text-amber-400 text-[11px] uppercase tracking-wider flex items-center gap-1.5 pb-1 border-b border-slate-800">
+                        <Award className="w-3.5 h-3.5" />
+                        <span>Chuỗi Thắng / Thua</span>
+                      </div>
+                      <div className="space-y-1.5">
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">{t.consecutiveWins}:</span>
+                          <span className="font-bold text-teal-400">{report.consecutiveWins} chuỗi</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">{t.consecutiveLosses}:</span>
+                          <span className="font-bold text-rose-400">{report.consecutiveLosses} chuỗi</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">Tỷ lệ Lệnh Thắng:</span>
+                          <span className="font-bold text-slate-200">{report.winRate}%</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">Tỷ lệ Lệnh Thua:</span>
+                          <span className="font-bold text-slate-200">{(100 - report.winRate).toFixed(2)}%</span>
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <span className="text-slate-400">{t.avgLoss}:</span>
-                      <div className="font-bold text-rose-400 mt-0.5">-${Math.abs(report.avgLoss).toFixed(2)}</div>
-                    </div>
-                    <div>
-                      <span className="text-slate-400">{t.riskReward}:</span>
-                      <div className="font-bold text-indigo-300 mt-0.5">1 : {report.riskRewardRatio.toFixed(2)}</div>
-                    </div>
-                    <div>
-                      <span className="text-slate-400">{t.sharpeRatio}:</span>
-                      <div className="font-bold text-slate-200 mt-0.5">{report.sharpeRatio.toFixed(2)}</div>
-                    </div>
-                    <div>
-                      <span className="text-slate-400">{t.sortinoRatio}:</span>
-                      <div className="font-bold text-slate-200 mt-0.5">{report.sortinoRatio.toFixed(2)}</div>
-                    </div>
-                    <div>
-                      <span className="text-slate-400">{t.consecutiveWins}:</span>
-                      <div className="font-bold text-teal-400 mt-0.5">{report.consecutiveWins}</div>
-                    </div>
-                    <div>
-                      <span className="text-slate-400">{t.consecutiveLosses}:</span>
-                      <div className="font-bold text-rose-400 mt-0.5">{report.consecutiveLosses}</div>
-                    </div>
-                    <div>
-                      <span className="text-slate-400">{t.expectedPayoff}:</span>
-                      <div className="font-bold text-slate-200 mt-0.5">${report.expectedPayoff.toFixed(2)}</div>
+
+                    {/* Card 4: Institutional Risk */}
+                    <div className="bg-slate-900/70 border border-slate-800/90 rounded-xl p-3.5 space-y-2.5">
+                      <div className="font-bold text-purple-400 text-[11px] uppercase tracking-wider flex items-center gap-1.5 pb-1 border-b border-slate-800">
+                        <Activity className="w-3.5 h-3.5" />
+                        <span>Chỉ Số Quỹ (Risk)</span>
+                      </div>
+                      <div className="space-y-1.5">
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">{t.sharpeRatio}:</span>
+                          <span className="font-bold text-slate-200">{report.sharpeRatio.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">{t.sortinoRatio}:</span>
+                          <span className="font-bold text-slate-200">{report.sortinoRatio.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">{t.maxDrawdown}:</span>
+                          <span className="font-bold text-rose-400">{report.maxDrawdownPercent.toFixed(2)}%</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">Sụt giảm tối đa $:</span>
+                          <span className="font-bold text-rose-400">-${report.maxDrawdownAmount.toFixed(2)}</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -742,80 +848,251 @@ export const AnalyticsDashboardModal: React.FC = () => {
               {/* TAB 2: MONTE CARLO */}
               {activeTab === 'montecarlo' && (
                 <div className="space-y-4">
-                  <p className="text-slate-400 text-xs leading-relaxed">
-                    {t.monteCarloDesc}
-                  </p>
+                  <div className="flex items-center justify-between">
+                    <p className="text-slate-400 text-xs leading-relaxed max-w-2xl">
+                      {t.monteCarloDesc}
+                    </p>
+                    <div className={`px-3 py-1 rounded-full text-xs font-bold border flex items-center gap-1.5 ${
+                      monteCarlo.riskOfRuinPercent === 0
+                        ? 'bg-emerald-950/80 border-emerald-500/40 text-emerald-300'
+                        : monteCarlo.riskOfRuinPercent < 5
+                        ? 'bg-amber-950/80 border-amber-500/40 text-amber-300'
+                        : 'bg-rose-950/80 border-rose-500/40 text-rose-300'
+                    }`}>
+                      <Dice5 className="w-3.5 h-3.5" />
+                      <span>{monteCarlo.riskOfRuinPercent === 0 ? '🛡️ Risk of Ruin: 0% (An toàn cao)' : `Xác suất rủi ro: ${monteCarlo.riskOfRuinPercent}%`}</span>
+                    </div>
+                  </div>
 
                   {renderMonteCarloChart()}
 
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    <div className="bg-slate-900 border border-slate-800 p-3 rounded-lg">
+                    <div className="bg-slate-900 border border-slate-800 p-3.5 rounded-xl">
                       <div className="text-slate-400 text-[11px]">{t.medianProfit}:</div>
-                      <div className="text-base font-bold text-teal-400 mt-1">${monteCarlo.medianProfit.toFixed(2)}</div>
+                      <div className="text-lg font-bold text-teal-400 mt-1">${monteCarlo.medianProfit.toFixed(2)}</div>
+                      <div className="text-[10px] text-slate-500 mt-0.5">Lợi nhuận trung vị 50th</div>
                     </div>
 
-                    <div className="bg-slate-900 border border-slate-800 p-3 rounded-lg">
+                    <div className="bg-slate-900 border border-slate-800 p-3.5 rounded-xl">
                       <div className="text-slate-400 text-[11px]">{t.worstCaseDD}:</div>
-                      <div className="text-base font-bold text-rose-400 mt-1">{monteCarlo.worstCaseDrawdown.toFixed(2)}%</div>
+                      <div className="text-lg font-bold text-rose-400 mt-1">{monteCarlo.worstCaseDrawdown.toFixed(2)}%</div>
+                      <div className="text-[10px] text-slate-500 mt-0.5">Sụt giảm xấu nhất 1,000 runs</div>
                     </div>
 
-                    <div className="bg-slate-900 border border-slate-800 p-3 rounded-lg">
+                    <div className="bg-slate-900 border border-slate-800 p-3.5 rounded-xl">
                       <div className="text-slate-400 text-[11px]">{t.percentile95DD}:</div>
-                      <div className="text-base font-bold text-amber-400 mt-1">{monteCarlo.percentile95Drawdown.toFixed(2)}%</div>
+                      <div className="text-lg font-bold text-amber-400 mt-1">{monteCarlo.percentile95Drawdown.toFixed(2)}%</div>
+                      <div className="text-[10px] text-slate-500 mt-0.5">Khoảng tin cậy 95% DD</div>
                     </div>
 
-                    <div className="bg-slate-900 border border-slate-800 p-3 rounded-lg">
+                    <div className="bg-slate-900 border border-slate-800 p-3.5 rounded-xl">
                       <div className="text-slate-400 text-[11px]">{t.riskOfRuin}:</div>
-                      <div className="text-base font-bold text-purple-300 mt-1">{monteCarlo.riskOfRuinPercent.toFixed(1)}%</div>
+                      <div className="text-lg font-bold text-purple-300 mt-1">{monteCarlo.riskOfRuinPercent.toFixed(1)}%</div>
+                      <div className="text-[10px] text-slate-500 mt-0.5">Nguy cơ sụt giảm &gt; 50%</div>
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* TAB 3: HEATMAP */}
-              {activeTab === 'heatmap' && (
-                <div className="space-y-4">
-                  <p className="text-slate-400 text-xs">
-                    {t.heatmapDesc}
-                  </p>
+              {/* TAB 3: HEATMAP (INSTITUTIONAL GRADE) */}
+              {activeTab === 'heatmap' && (() => {
+                const hours = [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22];
+                const dayLabels = language === 'vi' 
+                  ? ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6']
+                  : language === 'ja'
+                  ? ['月曜', '火曜', '水曜', '木曜', '金曜']
+                  : language === 'zh'
+                  ? ['周一', '周二', '周三', '周四', '周五']
+                  : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
 
-                  <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 overflow-x-auto">
-                    <div className="grid grid-cols-13 gap-1 min-w-[600px] text-center text-[10px]">
-                      <div className="font-bold text-slate-500 py-1">Thứ / Giờ</div>
-                      {[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22].map(h => (
-                        <div key={h} className="font-mono text-slate-400 py-1">{h}h</div>
-                      ))}
+                // Insights calculation
+                const activeCells = heatmapData.filter(c => c.tradesCount > 0);
+                const bestCell = activeCells.length > 0 ? [...activeCells].sort((a, b) => b.pnl - a.pnl)[0] : null;
+                const worstCell = activeCells.length > 0 ? [...activeCells].sort((a, b) => a.pnl - b.pnl)[0] : null;
 
-                      {['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6'].map((day, dIdx) => (
-                        <React.Fragment key={day}>
-                          <div className="text-slate-400 text-left py-1.5 font-bold flex items-center">{day}</div>
-                          {[0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22].map(h => {
-                            const cell = heatmapData.find(c => c.day === dIdx + 1 && Math.abs(c.hour - h) < 2);
-                            const pnl = cell ? cell.pnl : 0;
-                            const count = cell ? cell.tradesCount : 0;
+                // Day aggregations
+                const dayPnL: Record<number, { pnl: number; count: number }> = {};
+                for (let d = 1; d <= 5; d++) dayPnL[d] = { pnl: 0, count: 0 };
+                heatmapData.forEach(c => {
+                  if (dayPnL[c.day]) {
+                    dayPnL[c.day].pnl += c.pnl;
+                    dayPnL[c.day].count += c.tradesCount;
+                  }
+                });
+                const bestDayIdx = Object.keys(dayPnL).map(Number).sort((a, b) => dayPnL[b].pnl - dayPnL[a].pnl)[0] || 1;
 
-                            let bg = 'bg-slate-900/60 border-slate-800/40 text-slate-600';
-                            if (count > 0) {
-                              if (pnl > 0) bg = 'bg-emerald-950 border-emerald-500/30 text-emerald-300 font-bold';
-                              else if (pnl < 0) bg = 'bg-rose-950 border-rose-500/30 text-rose-300 font-bold';
-                            }
+                return (
+                  <div className="space-y-4">
+                    {/* TOP INSIGHT CARDS */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      <div className="bg-slate-900/80 border border-slate-800 p-3 rounded-xl">
+                        <div className="text-[10px] text-slate-400 uppercase font-sans font-bold flex items-center gap-1 text-emerald-400">
+                          <Sparkles className="w-3 h-3" />
+                          <span>Khung Giờ Tốt Nhất</span>
+                        </div>
+                        <div className="text-sm font-bold text-slate-100 mt-1 truncate">
+                          {bestCell ? `${dayLabels[bestCell.day - 1]} @ ${bestCell.hour}:00` : 'Chưa đủ dữ liệu'}
+                        </div>
+                        <div className="text-[11px] font-bold text-teal-400 mt-0.5">
+                          {bestCell ? `+$${bestCell.pnl.toFixed(2)} (${bestCell.tradesCount} lệnh)` : '-'}
+                        </div>
+                      </div>
 
-                            return (
-                              <div
-                                key={h}
-                                className={`p-1.5 rounded border flex flex-col items-center justify-center transition-all ${bg}`}
-                                title={`${day} lúc ${h}:00 — ${count} lệnh (PnL: $${pnl.toFixed(2)})`}
-                              >
-                                <span>{count > 0 ? (pnl >= 0 ? `+$${pnl.toFixed(0)}` : `-$${Math.abs(pnl).toFixed(0)}`) : '-'}</span>
-                              </div>
-                            );
-                          })}
-                        </React.Fragment>
-                      ))}
+                      <div className="bg-slate-900/80 border border-slate-800 p-3 rounded-xl">
+                        <div className="text-[10px] text-slate-400 uppercase font-sans font-bold flex items-center gap-1 text-rose-400">
+                          <AlertTriangle className="w-3 h-3" />
+                          <span>Khung Giờ Kém Nhất</span>
+                        </div>
+                        <div className="text-sm font-bold text-slate-100 mt-1 truncate">
+                          {worstCell && worstCell.pnl < 0 ? `${dayLabels[worstCell.day - 1]} @ ${worstCell.hour}:00` : 'Không có lỗ lớn'}
+                        </div>
+                        <div className="text-[11px] font-bold text-rose-400 mt-0.5">
+                          {worstCell && worstCell.pnl < 0 ? `-$${Math.abs(worstCell.pnl).toFixed(2)} (${worstCell.tradesCount} lệnh)` : '-'}
+                        </div>
+                      </div>
+
+                      <div className="bg-slate-900/80 border border-slate-800 p-3 rounded-xl">
+                        <div className="text-[10px] text-slate-400 uppercase font-sans font-bold flex items-center gap-1 text-indigo-400">
+                          <Calendar className="w-3 h-3" />
+                          <span>Ngày Hiệu Quả Nhất</span>
+                        </div>
+                        <div className="text-sm font-bold text-slate-100 mt-1">
+                          {dayLabels[bestDayIdx - 1]}
+                        </div>
+                        <div className="text-[11px] font-bold text-indigo-300 mt-0.5">
+                          {dayPnL[bestDayIdx]?.pnl >= 0 ? '+' : ''}${dayPnL[bestDayIdx]?.pnl.toFixed(2)} ({dayPnL[bestDayIdx]?.count} lệnh)
+                        </div>
+                      </div>
+
+                      <div className="bg-slate-900/80 border border-slate-800 p-3 rounded-xl">
+                        <div className="text-[10px] text-slate-400 uppercase font-sans font-bold flex items-center gap-1 text-amber-400">
+                          <Activity className="w-3 h-3" />
+                          <span>Tổng Số Lệnh Khớp</span>
+                        </div>
+                        <div className="text-sm font-bold text-slate-100 mt-1">
+                          {report.totalTrades} Lệnh đã đóng
+                        </div>
+                        <div className="text-[11px] text-slate-400 mt-0.5">
+                          Winrate: <strong className="text-teal-400">{report.winRate}%</strong>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* GLOBAL SESSION COLOR LEGEND */}
+                    <div className="bg-slate-900/50 border border-slate-800/80 px-3.5 py-2 rounded-xl flex items-center justify-between text-[11px] flex-wrap gap-2">
+                      <span className="text-slate-400 font-sans font-medium">Phiên giao dịch thế giới:</span>
+                      <div className="flex items-center gap-3 text-[10px] font-sans">
+                        <span className="flex items-center gap-1">
+                          <span className="w-2 h-2 rounded-full bg-blue-500" />
+                          <span className="text-slate-300">🌏 Á (00-08h)</span>
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <span className="w-2 h-2 rounded-full bg-amber-500" />
+                          <span className="text-slate-300">🇬🇧 Âu (08-16h)</span>
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <span className="w-2 h-2 rounded-full bg-purple-500" />
+                          <span className="text-slate-300">🇺🇸 Mỹ (13-21h)</span>
+                        </span>
+                        <span className="flex items-center gap-1 bg-amber-950/60 border border-amber-500/40 px-1.5 py-0.5 rounded text-amber-300 font-bold">
+                          🔥 Trùng Âu/Mỹ (13-16h)
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* 2D HEATMAP MATRIX TABLE */}
+                    <div className="bg-[#0b0e17] p-4 rounded-2xl border border-slate-800/90 overflow-x-auto shadow-inner">
+                      <div
+                        style={{
+                          display: 'grid',
+                          gridTemplateColumns: '95px repeat(12, minmax(62px, 1fr))',
+                          gap: '6px'
+                        }}
+                        className="min-w-[840px] text-center text-xs"
+                      >
+                        {/* Header Cell: Day / Hour */}
+                        <div className="font-bold text-slate-500 p-2 bg-slate-900/80 border border-slate-800 rounded-lg flex items-center justify-center text-[10px] uppercase font-sans">
+                          {language === 'vi' ? 'Thứ \\ Giờ' : 'Day \\ UTC'}
+                        </div>
+
+                        {/* Hour Column Headers */}
+                        {hours.map(h => {
+                          let sessionBadge = 'text-slate-400 border-slate-800';
+                          if (h >= 13 && h <= 15) sessionBadge = 'text-amber-300 bg-amber-950/40 border-amber-500/30';
+                          else if (h >= 8 && h < 16) sessionBadge = 'text-amber-400 bg-slate-900 border-slate-800';
+                          else if (h >= 0 && h < 8) sessionBadge = 'text-blue-400 bg-slate-900 border-slate-800';
+                          else sessionBadge = 'text-purple-400 bg-slate-900 border-slate-800';
+
+                          return (
+                            <div
+                              key={h}
+                              className={`p-1.5 rounded-lg border font-mono font-bold text-[11px] flex flex-col items-center justify-center ${sessionBadge}`}
+                              title={`Khung giờ ${h}:00 - ${h + 1}:59 UTC`}
+                            >
+                              <span>{h < 10 ? `0${h}` : h}:00</span>
+                            </div>
+                          );
+                        })}
+
+                        {/* 5 Day Rows (Mon - Fri) */}
+                        {dayLabels.map((dayName, dIdx) => (
+                          <React.Fragment key={dayName}>
+                            {/* Day Label with Day Total PnL */}
+                            <div className="bg-slate-900/90 border border-slate-800 rounded-lg p-2 flex flex-col justify-center items-start text-left">
+                              <span className="text-slate-200 font-bold text-xs">{dayName}</span>
+                              <span className={`text-[10px] font-mono font-semibold ${dayPnL[dIdx + 1]?.pnl >= 0 ? 'text-teal-400' : 'text-rose-400'}`}>
+                                {dayPnL[dIdx + 1]?.count > 0 
+                                  ? (dayPnL[dIdx + 1].pnl >= 0 ? `+$${dayPnL[dIdx + 1].pnl.toFixed(0)}` : `-$${Math.abs(dayPnL[dIdx + 1].pnl).toFixed(0)}`)
+                                  : '-'}
+                              </span>
+                            </div>
+
+                            {/* 12 Hour Cells */}
+                            {hours.map(h => {
+                              const cell = heatmapData.find(c => c.day === dIdx + 1 && Math.abs(c.hour - h) < 2);
+                              const pnl = cell ? cell.pnl : 0;
+                              const count = cell ? cell.tradesCount : 0;
+                              const winRate = cell ? cell.winRate : 0;
+
+                              let cellStyle = 'bg-slate-950/40 border-slate-800/40 text-slate-600 hover:border-slate-700';
+                              if (count > 0) {
+                                if (pnl > 0) {
+                                  cellStyle = 'bg-emerald-950/70 border-emerald-500/50 text-emerald-300 shadow-xs hover:border-emerald-400 hover:scale-105';
+                                } else if (pnl < 0) {
+                                  cellStyle = 'bg-rose-950/70 border-rose-500/50 text-rose-300 shadow-xs hover:border-rose-400 hover:scale-105';
+                                } else {
+                                  cellStyle = 'bg-slate-900 border-slate-700 text-slate-300 hover:scale-105';
+                                }
+                              }
+
+                              return (
+                                <div
+                                  key={h}
+                                  className={`p-1.5 min-h-[46px] rounded-lg border flex flex-col items-center justify-center transition-all cursor-default select-none ${cellStyle}`}
+                                  title={`${dayName} lúc ${h}:00 UTC — ${count} lệnh | PnL: $${pnl.toFixed(2)} | Thắng: ${winRate}%`}
+                                >
+                                  {count > 0 ? (
+                                    <>
+                                      <span className="font-bold text-[11px] font-mono leading-tight">
+                                        {pnl >= 0 ? `+$${pnl.toFixed(0)}` : `-$${Math.abs(pnl).toFixed(0)}`}
+                                      </span>
+                                      <span className="text-[9px] opacity-80 font-sans mt-0.5">
+                                        {count}t • {winRate}%
+                                      </span>
+                                    </>
+                                  ) : (
+                                    <span className="text-slate-700 font-mono text-xs">·</span>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </React.Fragment>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
+                );
+              })()}
 
               {/* TAB 4: SESSION COMPARISON */}
               {activeTab === 'comparison' && (

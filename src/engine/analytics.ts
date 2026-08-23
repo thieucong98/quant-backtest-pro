@@ -258,7 +258,8 @@ export class AnalyticsEngine {
 
     for (const trade of closedPositions) {
       if (!trade.openTime) continue;
-      const date = new Date(trade.openTime * 1000);
+      const tMs = trade.openTime > 1e11 ? trade.openTime : trade.openTime * 1000;
+      const date = new Date(tMs);
       const day = date.getUTCDay();
       const hour = date.getUTCHours();
       const key = `${day}_${hour}`;
