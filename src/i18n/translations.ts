@@ -177,6 +177,12 @@ export interface TranslationDict {
   tradesCountLabel: string;
   drawingsCountLabel: string;
   noSessionsFound: string;
+  selectAll: string;
+  deleteSelected: string;
+  clearAllSessions: string;
+  confirmClearAll: string;
+  resetActiveSessionBtn: string;
+  guestTradeLimitExceeded: string;
 
   // Prop Firm Shield
   propFirmShieldTitle: string;
@@ -415,6 +421,12 @@ export const translations: Record<Language, TranslationDict> = {
     tradesCountLabel: 'lệnh',
     drawingsCountLabel: 'bản vẽ',
     noSessionsFound: 'Chưa có phiên backtest nào được lưu trong Database. Bấm "+ Tạo phiên mới" để bắt đầu!',
+    selectAll: 'Chọn tất cả',
+    deleteSelected: 'Xóa mục đã chọn',
+    clearAllSessions: 'Xóa toàn bộ phiên',
+    confirmClearAll: 'Bạn có chắc chắn muốn xóa TOÀN BỘ các phiên backtest? Hành động này không thể hoàn tác!',
+    resetActiveSessionBtn: 'Reset phiên hiện tại',
+    guestTradeLimitExceeded: 'Bạn đã đạt giới hạn 3 lệnh dùng thử cho Khách. Vui lòng đăng nhập để mở khóa không giới hạn!',
 
     propFirmShieldTitle: 'Prop Firm Shield',
     dailyLossLabel: 'Sụt giảm ngày',
@@ -648,6 +660,12 @@ export const translations: Record<Language, TranslationDict> = {
     tradesCountLabel: 'trades',
     drawingsCountLabel: 'drawings',
     noSessionsFound: 'No backtest sessions found in the database. Click "+ Create New Session" to begin!',
+    selectAll: 'Select All',
+    deleteSelected: 'Delete Selected',
+    clearAllSessions: 'Clear All Sessions',
+    confirmClearAll: 'Are you sure you want to delete ALL backtest sessions? This action cannot be undone!',
+    resetActiveSessionBtn: 'Reset Current Session',
+    guestTradeLimitExceeded: 'You have reached the 3 demo trade limit for Guests. Please sign in to unlock unlimited backtesting!',
 
     propFirmShieldTitle: 'Prop Firm Shield',
     dailyLossLabel: 'Daily Loss Limit',
@@ -881,6 +899,12 @@ export const translations: Record<Language, TranslationDict> = {
     tradesCountLabel: '件の取引',
     drawingsCountLabel: '個の描画',
     noSessionsFound: 'データベースに保存されたセッションはありません。新規作成してください。',
+    selectAll: 'すべて選択',
+    deleteSelected: '選択した項目を削除',
+    clearAllSessions: '全セッションをクリア',
+    confirmClearAll: 'すべてのセッションを削除してもよろしいですか？この操作は取り消せません。',
+    resetActiveSessionBtn: '現在のセッションをリセット',
+    guestTradeLimitExceeded: 'ゲストのお試し上限（3回）に達しました。無制限で利用するにはログインしてください。',
 
     propFirmShieldTitle: 'プロップシールド',
     dailyLossLabel: '日次ドローダウン',
@@ -1114,6 +1138,12 @@ export const translations: Record<Language, TranslationDict> = {
     tradesCountLabel: '笔交易',
     drawingsCountLabel: '个标注',
     noSessionsFound: '数据库中尚无回测会话记录。点击“+ 创建新会话”开始！',
+    selectAll: '全选',
+    deleteSelected: '删除所选会话',
+    clearAllSessions: '清空全部会话',
+    confirmClearAll: '您确定要清空全部回测会话吗？此操作无法撤销！',
+    resetActiveSessionBtn: '重置当前会话',
+    guestTradeLimitExceeded: '您已达到访客3笔体验交易上限。请登录解锁无限量化回测！',
 
     propFirmShieldTitle: '自营交易风控盾',
     dailyLossLabel: '当日亏损限额',

@@ -33,6 +33,7 @@ import { translations } from '../../i18n/translations';
 import { AIStrategyDefinition } from '../../types/strategy';
 import { strategiesApi } from '../../api';
 import { ExportStrategyModal } from './ExportStrategyModal';
+import { useAuthStore } from '../../store/authStore';
 
 const LLM_STORAGE_KEY = 'quant_llm_config';
 
@@ -127,6 +128,18 @@ export const AIStrategyModal: React.FC = () => {
 
   const handleGenerateWithAI = async () => {
     if (!prompt.trim()) return;
+
+    // Tier Guard: AI Strategy Copilot requires PRO/INSTITUTIONAL account
+    const { isAuthenticated, setAuthModalOpen } = useAuthStore.getState();
+    if (!isAuthenticated) {
+      setCompileStatus('ERROR');
+      setErrorMessage(language === 'vi'
+        ? '🔒 Tính năng AI Strategy Copilot & Auto-Trading yêu cầu tài khoản PRO / INSTITUTIONAL. Vui lòng Đăng nhập để sử dụng!'
+        : '🔒 AI Strategy Copilot requires PRO / INSTITUTIONAL account. Please sign in to unlock!');
+      setAuthModalOpen(true, 'login');
+      return;
+    }
+
     setIsGenerating(true);
     setCompileStatus('IDLE');
     setErrorMessage('');
@@ -193,6 +206,14 @@ export const AIStrategyModal: React.FC = () => {
   };
 
   const handleSaveToDatabase = async () => {
+    const { isAuthenticated, setAuthModalOpen } = useAuthStore.getState();
+    if (!isAuthenticated) {
+      setDbSaveMessage('🔒 Vui lòng đăng nhập để lưu trữ chiến lược vào SQLite');
+      setAuthModalOpen(true, 'login');
+      setTimeout(() => setDbSaveMessage(null), 3000);
+      return;
+    }
+
     setIsSavingDB(true);
     setDbSaveMessage(null);
     try {

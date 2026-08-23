@@ -14,6 +14,7 @@ import { tradesApi } from '../api/trades';
 import { checkServerHealth } from '../api/client';
 import { AnalyticsEngine } from '../engine/analytics';
 import { soundFx } from '../engine/audioEngine';
+import { useAuthStore } from './authStore';
 
 interface BacktestStore {
   // Session Persistence
@@ -114,11 +115,16 @@ interface BacktestStore {
   setLLMSettings: (provider: 'openai' | 'claude' | 'gemini' | 'ollama', apiKey: string) => void;
 
   // Session Persistence Actions
+  guestTradeCount: number;
   initSession: () => Promise<void>;
   loadSessionById: (sessionId: string) => Promise<boolean>;
   createNewSession: (name?: string, symbol?: string, timeframe?: Timeframe, initialBalance?: number) => Promise<string>;
   completeCurrentSession: () => Promise<void>;
   deleteSessionById: (sessionId: string) => Promise<boolean>;
+  deleteBulkSessions: (ids: string[]) => Promise<boolean>;
+  clearAllSessions: () => Promise<boolean>;
+  resetActiveSession: () => Promise<void>;
+  resetToDefaultWorkspace: (initialBalance?: number) => void;
   setSessionManagerOpen: (open: boolean) => void;
 
   // Modal & Lang Toggles
@@ -233,6 +239,7 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
     activeSessionId: cachedInit?.activeSessionId || null,
     isServerOnline: false,
     isSessionManagerOpen: false,
+    guestTradeCount: 0,
 
     // Prop Firm Simulator Mode
     isPropFirmMode: true,
@@ -594,6 +601,19 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
 
     // --- TRADING ACTIONS ---
     executeMarketOrder: (side, lotSize, sl, tp, trailingStop) => {
+      // Guest Tier Guard: Limit to 3 demo trades for unauthenticated users
+      const auth = useAuthStore.getState();
+      if (!auth.isAuthenticated) {
+        const count = get().guestTradeCount || 0;
+        if (count >= 3) {
+          soundFx.playPropAlert();
+          get().addStrategyLog('ERROR', '🔒 Bạn đã đạt giới hạn 3 lệnh dùng thử cho Khách. Vui lòng Đăng nhập để mở khóa giao dịch không giới hạn!');
+          auth.setAuthModalOpen(true, 'login');
+          return false;
+        }
+        set({ guestTradeCount: count + 1 });
+      }
+
       const { matchingEngine, candles, currentIndex } = get();
       const currentCandle = candles[currentIndex];
       if (!currentCandle) return false;
@@ -631,6 +651,18 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
     },
 
     placePendingOrder: (side, type, lotSize, price, sl, tp, trailingStop) => {
+      const auth = useAuthStore.getState();
+      if (!auth.isAuthenticated) {
+        const count = get().guestTradeCount || 0;
+        if (count >= 3) {
+          soundFx.playPropAlert();
+          get().addStrategyLog('ERROR', '🔒 Bạn đã đạt giới hạn 3 lệnh dùng thử cho Khách. Vui lòng Đăng nhập để mở khóa giao dịch không giới hạn!');
+          auth.setAuthModalOpen(true, 'login');
+          return false;
+        }
+        set({ guestTradeCount: count + 1 });
+      }
+
       const { matchingEngine } = get();
       matchingEngine.placePendingOrder({
         side,
@@ -1096,6 +1128,81 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
         console.error('[Delete Session Error]', err);
         return false;
       }
+    },
+
+    deleteBulkSessions: async (ids: string[]) => {
+      try {
+        await sessionsApi.bulkDelete(ids);
+        get().addStrategyLog('INFO', `Đã xóa ${ids.length} phiên giao dịch khỏi cơ sở dữ liệu`);
+
+        if (get().activeSessionId && ids.includes(get().activeSessionId!)) {
+          await get().createNewSession();
+        }
+        return true;
+      } catch (err: any) {
+        console.error('[Bulk Delete Error]', err);
+        return false;
+      }
+    },
+
+    clearAllSessions: async () => {
+      try {
+        await sessionsApi.clearAll();
+        get().addStrategyLog('INFO', 'Đã xóa toàn bộ tất cả các phiên giao dịch');
+        await get().createNewSession();
+        return true;
+      } catch (err: any) {
+        console.error('[Clear All Sessions Error]', err);
+        return false;
+      }
+    },
+
+    resetActiveSession: async () => {
+      const sid = get().activeSessionId;
+      if (!sid) {
+        get().resetToDefaultWorkspace();
+        return;
+      }
+      try {
+        await sessionsApi.reset(sid);
+        const { matchingEngine, candles, account } = get();
+        matchingEngine.reset(account.initialBalance);
+        set({
+          account: matchingEngine.getAccountState(),
+          pendingOrders: [],
+          openPositions: [],
+          closedPositions: [],
+          drawings: [],
+          markers: [],
+          equityCurve: [{ timestamp: candles[0]?.timestamp || 0, balance: account.initialBalance, equity: account.initialBalance }]
+        });
+        localStorage.removeItem('quant_backtest_active_session');
+        get().addStrategyLog('INFO', `Đã đặt lại phiên #${sid.substring(0, 8)} về trạng thái ban đầu`);
+      } catch (err: any) {
+        console.error('[Reset Active Session Error]', err);
+      }
+    },
+
+    resetToDefaultWorkspace: (initialBalance = 10000) => {
+      get().pause();
+      const { matchingEngine, candles } = get();
+      matchingEngine.reset(initialBalance);
+      const acc = matchingEngine.getAccountState();
+
+      set({
+        activeSessionId: null,
+        currentIndex: Math.min(100, candles.length - 1),
+        account: acc,
+        pendingOrders: [],
+        openPositions: [],
+        closedPositions: [],
+        drawings: [],
+        markers: [],
+        guestTradeCount: 0,
+        equityCurve: [{ timestamp: candles[0]?.timestamp || 0, balance: initialBalance, equity: initialBalance }]
+      });
+      localStorage.removeItem('quant_backtest_active_session');
+      get().addStrategyLog('INFO', `Đã dọn sạch không gian làm việc về số dư ban đầu $${initialBalance.toLocaleString()}`);
     },
 
     setSessionManagerOpen: (open) => set({ isSessionManagerOpen: open }),
