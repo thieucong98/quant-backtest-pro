@@ -69,7 +69,10 @@ export interface TranslationDict {
   overviewTab: string;
   monteCarloTab: string;
   heatmapTab: string;
+  portfolioTab: string;
   exportCSV: string;
+  saveSnapshot: string;
+  snapshotSaved: string;
   equityGrowth: string;
   netProfit: string;
   winRate: string;
@@ -102,6 +105,12 @@ export interface TranslationDict {
   copilotTips: string;
   parameters: string;
   codeEditor: string;
+  myStrategiesTab: string;
+  templatesTab: string;
+  llmConfigTab: string;
+  saveToDB: string;
+  savedToDBSuccess: string;
+  activateAndResume: string;
 
   // Session Manager
   sessions: string;
@@ -120,6 +129,17 @@ export interface TranslationDict {
   completedStatus: string;
   totalSessions: string;
   confirmDeleteSession: string;
+  tradesCountLabel: string;
+  drawingsCountLabel: string;
+  noSessionsFound: string;
+
+  // Prop Firm Shield
+  propFirmShieldTitle: string;
+  dailyLossLabel: string;
+  maxDrawdownLabel: string;
+  profitTargetLabel: string;
+  passChallengeBadge: string;
+  violatedBadge: string;
 
   // Auth Modal
   signInTitle: string;
@@ -203,7 +223,10 @@ export const translations: Record<Language, TranslationDict> = {
     overviewTab: 'Tổng quan & Chỉ số',
     monteCarloTab: 'Mô phỏng Monte Carlo (1,000 lần)',
     heatmapTab: 'Ma trận Khung Giờ & Thứ',
+    portfolioTab: 'Danh Mục Đa Phiên (DB)',
     exportCSV: 'Xuất file CSV',
+    saveSnapshot: 'Lưu Snapshot',
+    snapshotSaved: 'Đã lưu DB ✓',
     equityGrowth: 'Đường cong Tăng trưởng Vốn (Equity Curve)',
     netProfit: 'Lợi nhuận ròng',
     winRate: 'Tỷ lệ Thắng (Win Rate)',
@@ -235,6 +258,12 @@ export const translations: Record<Language, TranslationDict> = {
     copilotTips: 'AI Copilot Audit Tips',
     parameters: 'Tham số Chiến lược',
     codeEditor: 'Mã nguồn Thuật toán (JavaScript Sandbox)',
+    myStrategiesTab: 'Chiến Lược Của Tôi (DB)',
+    templatesTab: 'Mẫu Thuật Toán',
+    llmConfigTab: 'Cấu Hình LLM',
+    saveToDB: 'Lưu vào DB',
+    savedToDBSuccess: 'Đã lưu vào DB thành công!',
+    activateAndResume: 'Kích Hoạt & Chạy Tiếp',
 
     sessions: 'Phiên giao dịch',
     sessionManagerTitle: 'Quản Lý Phiên Backtest (Database Sessions)',
@@ -252,6 +281,16 @@ export const translations: Record<Language, TranslationDict> = {
     completedStatus: 'ĐÃ HOÀN THÀNH',
     totalSessions: 'Tổng số phiên',
     confirmDeleteSession: 'Bạn có chắc chắn muốn xóa phiên backtest này khỏi cơ sở dữ liệu?',
+    tradesCountLabel: 'lệnh',
+    drawingsCountLabel: 'bản vẽ',
+    noSessionsFound: 'Chưa có phiên backtest nào được lưu trong Database. Bấm "+ Tạo phiên mới" để bắt đầu!',
+
+    propFirmShieldTitle: 'Prop Firm Shield',
+    dailyLossLabel: 'Sụt giảm ngày',
+    maxDrawdownLabel: 'Sụt giảm tối đa',
+    profitTargetLabel: 'Mục tiêu lợi nhuận',
+    passChallengeBadge: 'PASS CHALLENGE 🎉',
+    violatedBadge: 'VIOLATED ⛔',
 
     signInTitle: 'Đăng nhập Tài khoản',
     signUpTitle: 'Tạo Tài khoản Mới',
@@ -332,7 +371,10 @@ export const translations: Record<Language, TranslationDict> = {
     overviewTab: 'Overview & Key Metrics',
     monteCarloTab: 'Monte Carlo Stress Test (1,000 runs)',
     heatmapTab: 'Day & Hour PnL Heatmap',
+    portfolioTab: 'Database Portfolio',
     exportCSV: 'Export CSV History',
+    saveSnapshot: 'Save Snapshot',
+    snapshotSaved: 'Saved to DB ✓',
     equityGrowth: 'Equity & Balance Growth Curve',
     netProfit: 'Net Profit',
     winRate: 'Win Rate',
@@ -364,6 +406,12 @@ export const translations: Record<Language, TranslationDict> = {
     copilotTips: 'AI Copilot Audit Tips',
     parameters: 'Strategy Parameters',
     codeEditor: 'Algorithm Code (JavaScript Sandbox)',
+    myStrategiesTab: 'My Strategies (DB)',
+    templatesTab: 'Strategy Templates',
+    llmConfigTab: 'LLM Config',
+    saveToDB: 'Save to DB',
+    savedToDBSuccess: 'Saved to DB successfully!',
+    activateAndResume: 'Activate & Run',
 
     sessions: 'Sessions',
     sessionManagerTitle: 'Backtest Session Manager (Database)',
@@ -381,6 +429,16 @@ export const translations: Record<Language, TranslationDict> = {
     completedStatus: 'COMPLETED',
     totalSessions: 'Total Sessions',
     confirmDeleteSession: 'Are you sure you want to delete this backtest session from database?',
+    tradesCountLabel: 'trades',
+    drawingsCountLabel: 'drawings',
+    noSessionsFound: 'No backtest sessions saved in database yet. Click "+ New Session" to begin!',
+
+    propFirmShieldTitle: 'Prop Firm Shield',
+    dailyLossLabel: 'Daily Loss',
+    maxDrawdownLabel: 'Max Drawdown',
+    profitTargetLabel: 'Profit Target',
+    passChallengeBadge: 'PASS CHALLENGE 🎉',
+    violatedBadge: 'VIOLATED ⛔',
 
     signInTitle: 'Sign In to Account',
     signUpTitle: 'Create New Account',
@@ -461,7 +519,10 @@ export const translations: Record<Language, TranslationDict> = {
     overviewTab: '概要・主要指標',
     monteCarloTab: 'モンテカルロ分析 (1,000回試行)',
     heatmapTab: '曜日・時間帯別損益ヒートマップ',
+    portfolioTab: 'DBポートフォリオ',
     exportCSV: 'CSVエクスポート',
+    saveSnapshot: 'スナップショット保存',
+    snapshotSaved: 'DB保存完了 ✓',
     equityGrowth: '資産推移曲線 (Equity / Balance)',
     netProfit: '純利益',
     winRate: '勝率',
@@ -493,6 +554,12 @@ export const translations: Record<Language, TranslationDict> = {
     copilotTips: 'AIコパイロット診断',
     parameters: '戦略パラメータ',
     codeEditor: 'アルゴリズムコード (JavaScript)',
+    myStrategiesTab: 'マイスストラテジー (DB)',
+    templatesTab: 'テンプレート',
+    llmConfigTab: 'LLM設定',
+    saveToDB: 'DBに保存',
+    savedToDBSuccess: 'DBに正常に保存されました！',
+    activateAndResume: '有効化＆実行',
 
     sessions: 'セッション',
     sessionManagerTitle: 'バックテストセッション管理 (Database)',
@@ -510,6 +577,16 @@ export const translations: Record<Language, TranslationDict> = {
     completedStatus: '完了済み',
     totalSessions: '総セッション数',
     confirmDeleteSession: 'このバックテストセッションをデータベースから削除してもよろしいですか？',
+    tradesCountLabel: '件の取引',
+    drawingsCountLabel: '個の描画',
+    noSessionsFound: 'データベースに保存されたセッションはありません。新規作成してください。',
+
+    propFirmShieldTitle: 'プロップシールド',
+    dailyLossLabel: '日次ドローダウン',
+    maxDrawdownLabel: '最大ドローダウン',
+    profitTargetLabel: '目標利益',
+    passChallengeBadge: '合格 🎉',
+    violatedBadge: '失格 ⛔',
 
     signInTitle: 'アカウントログイン',
     signUpTitle: '新規アカウント作成',
@@ -590,7 +667,10 @@ export const translations: Record<Language, TranslationDict> = {
     overviewTab: '概览与核心指标',
     monteCarloTab: '蒙特卡洛模拟 (1,000次随机迭代)',
     heatmapTab: '时段与星期盈亏热力图',
+    portfolioTab: '多会话总投资组合 (DB)',
     exportCSV: '导出历史 CSV',
+    saveSnapshot: '保存快照',
+    snapshotSaved: '已保存至DB ✓',
     equityGrowth: '资金增长曲线 (Equity / Balance Growth)',
     netProfit: '净利润',
     winRate: '胜率 (Win Rate)',
@@ -622,6 +702,12 @@ export const translations: Record<Language, TranslationDict> = {
     copilotTips: 'AI Copilot 智能诊断建议',
     parameters: '策略参数调整',
     codeEditor: '算法源代码 (JavaScript 沙盒)',
+    myStrategiesTab: '我的策略库 (DB)',
+    templatesTab: '策略模板',
+    llmConfigTab: '大模型配置',
+    saveToDB: '保存到DB',
+    savedToDBSuccess: '已成功保存到数据库！',
+    activateAndResume: '激活并运行',
 
     sessions: '交易会话',
     sessionManagerTitle: '回测会话管理 (Database)',
@@ -639,6 +725,16 @@ export const translations: Record<Language, TranslationDict> = {
     completedStatus: '已完成',
     totalSessions: '总会话数',
     confirmDeleteSession: '您确定要从数据库中删除此回测会话吗？',
+    tradesCountLabel: '笔交易',
+    drawingsCountLabel: '个标注',
+    noSessionsFound: '数据库中尚无回测会话记录。点击“+ 创建新会话”开始！',
+
+    propFirmShieldTitle: '自营交易风控盾',
+    dailyLossLabel: '当日亏损限额',
+    maxDrawdownLabel: '最大回撤限额',
+    profitTargetLabel: '目标盈利',
+    passChallengeBadge: '考核通过 🎉',
+    violatedBadge: '触及风控 ⛔',
 
     signInTitle: '账户登录',
     signUpTitle: '创建新账户',

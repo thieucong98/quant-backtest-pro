@@ -33,7 +33,7 @@ export const SessionManagerModal: React.FC = () => {
     language
   } = useBacktestStore();
 
-  const t = translations[language] || translations.vi;
+  const t = translations[language] || translations.en;
 
   const [sessions, setSessions] = useState<SessionListItem[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -79,10 +79,6 @@ export const SessionManagerModal: React.FC = () => {
   };
 
   const handleSelectSession = async (id: string) => {
-    if (id === activeSessionId) {
-      setSessionManagerOpen(false);
-      return;
-    }
     const success = await loadSessionById(id);
     if (success) {
       setSessionManagerOpen(false);
@@ -159,31 +155,31 @@ export const SessionManagerModal: React.FC = () => {
         {/* Content Body */}
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
           {isCreating ? (
-            /* CREATE NEW SESSION FORM */
-            <form onSubmit={handleCreate} className="max-w-xl mx-auto space-y-4 bg-slate-900/60 p-6 rounded-xl border border-slate-800">
-              <h3 className="text-sm font-bold text-slate-200 flex items-center gap-2">
+            /* CREATE SESSION FORM */
+            <form onSubmit={handleCreate} className="max-w-xl mx-auto space-y-4 bg-slate-900/60 border border-slate-800 p-6 rounded-2xl">
+              <h3 className="font-bold text-sm text-slate-100 flex items-center gap-2">
                 <PlusCircle className="w-4 h-4 text-indigo-400" />
-                Thiết Lập Phiên Backtest Mới
+                {t.createNewSession}
               </h3>
 
               <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1.5">Tên phiên (tùy chọn):</label>
+                <label className="block text-xs font-medium text-slate-400 mb-1.5">{t.sessionName}:</label>
                 <input
                   type="text"
+                  placeholder={`VD: ${newSymbol} Scalping Session`}
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
-                  placeholder={`Ví dụ: ${newSymbol} EMA Crossover Test`}
-                  className="w-full bg-slate-950 border border-slate-700/80 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500"
+                  className="w-full bg-slate-950 border border-slate-700/80 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-slate-400 mb-1.5">Mã tài sản (Symbol):</label>
+                  <label className="block text-xs font-medium text-slate-400 mb-1.5">{t.symbol}:</label>
                   <select
                     value={newSymbol}
                     onChange={(e) => setNewSymbol(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-700/80 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500 font-mono"
+                    className="w-full bg-slate-950 border border-slate-700/80 rounded-lg px-3 py-2 text-sm text-slate-100 font-mono focus:outline-none focus:border-indigo-500"
                   >
                     {Object.keys(INSTRUMENTS).map(sym => (
                       <option key={sym} value={sym}>{sym} - {INSTRUMENTS[sym].name}</option>
@@ -192,11 +188,11 @@ export const SessionManagerModal: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-slate-400 mb-1.5">Khung thời gian (Timeframe):</label>
+                  <label className="block text-xs font-medium text-slate-400 mb-1.5">{t.timeframe}:</label>
                   <select
                     value={newTimeframe}
                     onChange={(e) => setNewTimeframe(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-700/80 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500 font-mono"
+                    className="w-full bg-slate-950 border border-slate-700/80 rounded-lg px-3 py-2 text-sm text-slate-100 font-mono focus:outline-none focus:border-indigo-500"
                   >
                     {['M1', 'M5', 'M15', 'M30', 'H1', 'H4', 'D1'].map(tf => (
                       <option key={tf} value={tf}>{tf}</option>
@@ -206,7 +202,7 @@ export const SessionManagerModal: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1.5">Số vốn ban đầu (Initial Balance USD):</label>
+                <label className="block text-xs font-medium text-slate-400 mb-1.5">{t.initialBalance} (USD):</label>
                 <div className="grid grid-cols-4 gap-2 mb-2">
                   {[1000, 5000, 10000, 50000].map(amt => (
                     <button
@@ -237,13 +233,13 @@ export const SessionManagerModal: React.FC = () => {
                   onClick={() => setIsCreating(false)}
                   className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold transition-colors"
                 >
-                  Hủy
+                  {t.cancel}
                 </button>
                 <button
                   type="submit"
                   className="px-5 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-lg text-xs font-bold shadow-md shadow-emerald-600/30 transition-all active:scale-95"
                 >
-                  Khởi Tạo Phiên Mới
+                  {t.createNewSession}
                 </button>
               </div>
             </form>
@@ -253,7 +249,7 @@ export const SessionManagerModal: React.FC = () => {
               {sessions.length === 0 ? (
                 <div className="text-center py-12 text-slate-500 font-mono text-xs">
                   <Database className="w-10 h-10 mx-auto mb-3 opacity-30" />
-                  Chưa có phiên backtest nào được lưu trong Database. Bấm "+ Tạo phiên mới" để bắt đầu!
+                  {t.noSessionsFound}
                 </div>
               ) : (
                 sessions.map((s) => {
@@ -280,7 +276,7 @@ export const SessionManagerModal: React.FC = () => {
                           </span>
                           {isActive && (
                             <span className="px-2 py-0.5 rounded-md bg-emerald-950/80 text-emerald-400 border border-emerald-500/30 font-mono text-[10px] font-bold">
-                              ĐANG CHẠY
+                              {t.runningStatus}
                             </span>
                           )}
                           <span className="px-2 py-0.5 rounded-md bg-slate-800 text-slate-300 font-mono text-[10px] font-bold">
@@ -291,18 +287,18 @@ export const SessionManagerModal: React.FC = () => {
                               ? 'bg-purple-950/80 text-purple-300 border border-purple-500/30'
                               : 'bg-blue-950/80 text-blue-300 border border-blue-500/30'
                           }`}>
-                            {s.status}
+                            {s.status === 'COMPLETED' ? t.completedStatus : t.runningStatus}
                           </span>
                         </div>
 
                         <div className="flex items-center gap-4 text-xs font-mono text-slate-400 flex-wrap">
                           <span className="flex items-center gap-1">
                             <Calendar className="w-3.5 h-3.5 text-slate-500" />
-                            {new Date(s.createdAt).toLocaleDateString('vi-VN')} {new Date(s.createdAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+                            {new Date(s.createdAt).toLocaleDateString(language === 'vi' ? 'vi-VN' : 'en-US')} {new Date(s.createdAt).toLocaleTimeString(language === 'vi' ? 'vi-VN' : 'en-US', { hour: '2-digit', minute: '2-digit' })}
                           </span>
                           <span className="flex items-center gap-1">
                             <Layers className="w-3.5 h-3.5 text-slate-500" />
-                            {s._count.trades} lệnh ({s._count.drawings} bản vẽ)
+                            {s._count.trades} {t.tradesCountLabel} ({s._count.drawings} {t.drawingsCountLabel})
                           </span>
                         </div>
                       </div>
@@ -312,7 +308,7 @@ export const SessionManagerModal: React.FC = () => {
                         {/* Financial Stats */}
                         <div className="text-right">
                           <div className="text-xs text-slate-400">
-                            Vốn: ${s.initialBalance.toLocaleString()} → <span className="font-bold text-slate-200">${s.finalEquity.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                            {t.initialBalance}: ${s.initialBalance.toLocaleString()} → <span className="font-bold text-slate-200">${s.finalEquity.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                           </div>
                           <div className={`text-xs font-bold flex items-center justify-end gap-1 ${isProfit ? 'text-teal-400' : 'text-rose-400'}`}>
                             {isProfit ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
@@ -326,9 +322,9 @@ export const SessionManagerModal: React.FC = () => {
                             <button
                               onClick={handleCompleteActive}
                               className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold border border-slate-700 transition-colors"
-                              title="Đánh dấu hoàn thành phiên này"
+                              title="Mark session as completed"
                             >
-                              Hoàn thành
+                              {t.completeSession}
                             </button>
                           ) : (
                             <button
@@ -336,14 +332,14 @@ export const SessionManagerModal: React.FC = () => {
                               className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold flex items-center gap-1 transition-colors shadow-xs"
                             >
                               <Play className="w-3 h-3 fill-current" />
-                              <span>Tiếp tục</span>
+                              <span>{t.resumeSession}</span>
                             </button>
                           )}
 
                           <button
                             onClick={(e) => handleDelete(s.id, e)}
                             className="p-1.5 text-slate-500 hover:text-rose-400 hover:bg-rose-950/40 rounded-lg transition-colors"
-                            title="Xóa phiên"
+                            title={t.deleteSession}
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -359,7 +355,7 @@ export const SessionManagerModal: React.FC = () => {
 
         {/* Footer info */}
         <div className="px-6 py-3 border-t border-slate-800/80 bg-[#0d111a] flex items-center justify-between text-xs text-slate-400 font-mono">
-          <span>Tổng số phiên: {sessions.length}</span>
+          <span>{t.totalSessions}: {sessions.length}</span>
           <span>Quant Backtest Pro Database Engine</span>
         </div>
       </div>

@@ -9,6 +9,11 @@ import { analyticsRouter } from './routes/analytics.js';
 import { usersRouter } from './routes/users.js';
 import { drawingsRouter } from './routes/drawings.js';
 
+// Polyfill BigInt JSON serialization for Prisma
+(BigInt.prototype as any).toJSON = function () {
+  return Number(this);
+};
+
 export const prisma = new PrismaClient();
 
 const app = express();

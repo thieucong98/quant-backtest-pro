@@ -938,6 +938,13 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
           equityCurve
         });
 
+        // Resume session to ACTIVE state in database if it was COMPLETED
+        if (session.status === 'COMPLETED') {
+          sessionsApi.update(session.id, { status: 'ACTIVE' }).catch(() => {});
+        }
+
+        syncCurrentSessionToStorage(get);
+
         get().addStrategyLog('INFO', `Đã tải phiên "${session.name}" — ${openPositions.length} vị thế mở, ${closedPositions.length} vị thế đã đóng`);
         return true;
       } catch (err: any) {
