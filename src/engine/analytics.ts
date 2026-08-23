@@ -40,6 +40,36 @@ export interface DayHourHeatmapCell {
   winRate: number;
 }
 
+export interface DailyCalendarCell {
+  dateStr: string; // '2026-08-15'
+  year: number;
+  month: number; // 1-12
+  day: number; // 1-31
+  dayOfWeek: number; // 0 = Sun, 1 = Mon ... 6 = Sat
+  pnl: number;
+  tradesCount: number;
+  winTrades: number;
+  lossTrades: number;
+  winRate: number;
+}
+
+export interface MonthlyCalendarGroup {
+  monthKey: string; // '2026-08'
+  monthLabel: string;
+  year: number;
+  month: number;
+  totalPnL: number;
+  totalTrades: number;
+  winTrades: number;
+  lossTrades: number;
+  winRate: number;
+  profitableDaysCount: number;
+  lossDaysCount: number;
+  bestDay: { dateStr: string; pnl: number } | null;
+  worstDay: { dateStr: string; pnl: number } | null;
+  days: Record<string, DailyCalendarCell>;
+}
+
 export class AnalyticsEngine {
   public static calculateReport(
     initialBalance: number,
@@ -279,5 +309,120 @@ export class AnalyticsEngine {
       tradesCount: cell.count,
       winRate: cell.count > 0 ? Number(((cell.wins / cell.count) * 100).toFixed(0)) : 0
     }));
+  }
+
+  /**
+   * Tính toán Lịch PnL theo Ngày & Tháng Cụ Thể (Calendar Heatmap)
+   */
+  public static calculateMonthlyCalendars(closedPositions: Position[]): MonthlyCalendarGroup[] {
+    const monthsMap: Record<string, {
+      year: number;
+      month: number;
+      days: Record<string, DailyCalendarCell>;
+    }> = {};
+
+    for (const trade of closedPositions) {
+      if (!trade.openTime) continue;
+      const tMs = trade.openTime > 1e11 ? trade.openTime : trade.openTime * 1000;
+      const date = new Date(tMs);
+      const year = date.getUTCFullYear();
+      const month = date.getUTCMonth() + 1; // 1-12
+      const day = date.getUTCDate();
+      const dayOfWeek = date.getUTCDay(); // 0 = Sun, 1 = Mon ... 6 = Sat
+      
+      const monthKey = `${year}-${month < 10 ? '0' + month : month}`;
+      const dateStr = `${monthKey}-${day < 10 ? '0' + day : day}`;
+
+      if (!monthsMap[monthKey]) {
+        monthsMap[monthKey] = {
+          year,
+          month,
+          days: {}
+        };
+      }
+
+      if (!monthsMap[monthKey].days[dateStr]) {
+        monthsMap[monthKey].days[dateStr] = {
+          dateStr,
+          year,
+          month,
+          day,
+          dayOfWeek,
+          pnl: 0,
+          tradesCount: 0,
+          winTrades: 0,
+          lossTrades: 0,
+          winRate: 0
+        };
+      }
+
+      const cell = monthsMap[monthKey].days[dateStr];
+      cell.pnl += trade.realizedPnL;
+      cell.tradesCount++;
+      if (trade.realizedPnL > 0) cell.winTrades++;
+      else if (trade.realizedPnL < 0) cell.lossTrades++;
+      cell.winRate = cell.tradesCount > 0 ? Number(((cell.winTrades / cell.tradesCount) * 100).toFixed(0)) : 0;
+      cell.pnl = Number(cell.pnl.toFixed(2));
+    }
+
+    const monthKeys = Object.keys(monthsMap).sort();
+    if (monthKeys.length === 0) {
+      const now = new Date();
+      const year = now.getUTCFullYear();
+      const month = now.getUTCMonth() + 1;
+      const monthKey = `${year}-${month < 10 ? '0' + month : month}`;
+      return [{
+        monthKey,
+        monthLabel: `Tháng ${month < 10 ? '0' + month : month} / ${year}`,
+        year,
+        month,
+        totalPnL: 0,
+        totalTrades: 0,
+        winTrades: 0,
+        lossTrades: 0,
+        winRate: 0,
+        profitableDaysCount: 0,
+        lossDaysCount: 0,
+        bestDay: null,
+        worstDay: null,
+        days: {}
+      }];
+    }
+
+    return monthKeys.map(mKey => {
+      const g = monthsMap[mKey];
+      const dayValues = Object.values(g.days);
+      const totalPnL = Number(dayValues.reduce((sum, d) => sum + d.pnl, 0).toFixed(2));
+      const totalTrades = dayValues.reduce((sum, d) => sum + d.tradesCount, 0);
+      const winTrades = dayValues.reduce((sum, d) => sum + d.winTrades, 0);
+      const lossTrades = dayValues.reduce((sum, d) => sum + d.lossTrades, 0);
+      const winRate = totalTrades > 0 ? Number(((winTrades / totalTrades) * 100).toFixed(1)) : 0;
+      
+      const profitableDaysCount = dayValues.filter(d => d.pnl > 0).length;
+      const lossDaysCount = dayValues.filter(d => d.pnl < 0).length;
+      
+      const sortedByPnL = [...dayValues].sort((a, b) => b.pnl - a.pnl);
+      const bestDay = sortedByPnL.length > 0 && sortedByPnL[0].pnl > 0 ? { dateStr: sortedByPnL[0].dateStr, pnl: sortedByPnL[0].pnl } : null;
+      const worstDay = sortedByPnL.length > 0 && sortedByPnL[sortedByPnL.length - 1].pnl < 0 
+        ? { dateStr: sortedByPnL[sortedByPnL.length - 1].dateStr, pnl: sortedByPnL[sortedByPnL.length - 1].pnl } 
+        : null;
+
+      return {
+        monthKey: mKey,
+        monthLabel: `Tháng ${g.month < 10 ? '0' + g.month : g.month} / ${g.year}`,
+        year: g.year,
+        month: g.month,
+        totalPnL,
+        totalTrades,
+        winTrades,
+        lossTrades,
+        winRate,
+        profitableDaysCount,
+        lossDaysCount,
+        bestDay,
+        worstDay,
+        days: g.days
+      };
+    });
   }
 }

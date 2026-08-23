@@ -101,6 +101,13 @@ export interface TranslationDict {
   percentile95DD: string;
   riskOfRuin: string;
   heatmapDesc: string;
+  calendarViewTab: string;
+  hourlyMatrixTab: string;
+  monthlyProfit: string;
+  winningDays: string;
+  bestTradingDay: string;
+  tradesInMonth: string;
+  weekTotal: string;
 
   // AI Strategy Modal
   aiStudioTitle: string;
@@ -337,6 +344,13 @@ export const translations: Record<Language, TranslationDict> = {
     percentile95DD: '95% Phân vị Max DD',
     riskOfRuin: 'Xác suất Cháy vốn (>50% DD)',
     heatmapDesc: 'Phân bố Lợi nhuận và Hiệu suất theo Khung Giờ (UTC) & Ngày trong tuần:',
+    calendarViewTab: '📅 Lịch Ngày & Tháng',
+    hourlyMatrixTab: '⏱️ Ma Trận Khung Giờ & Thứ',
+    monthlyProfit: 'Lợi nhuận Tháng',
+    winningDays: 'Số ngày Lãi / Lỗ',
+    bestTradingDay: 'Ngày Lãi Đậm Nhất',
+    tradesInMonth: 'Lệnh trong tháng',
+    weekTotal: 'Tổng Tuần',
 
     aiStudioTitle: 'AI Strategy Studio & Sandbox Runner',
     studioAndSandboxTab: 'Studio & Sandbox',
@@ -563,6 +577,13 @@ export const translations: Record<Language, TranslationDict> = {
     percentile95DD: '95th Percentile Max DD',
     riskOfRuin: 'Risk of Ruin (>50% DD)',
     heatmapDesc: 'PnL and Win Rate distribution across Trading Hours (UTC) & Days of Week:',
+    calendarViewTab: '📅 Monthly Calendar',
+    hourlyMatrixTab: '⏱️ Day & Hour Matrix',
+    monthlyProfit: 'Monthly Net PnL',
+    winningDays: 'Winning / Losing Days',
+    bestTradingDay: 'Best Trading Day',
+    tradesInMonth: 'Trades in Month',
+    weekTotal: 'Week Total',
 
     aiStudioTitle: 'AI Strategy Studio & Sandbox Runner',
     studioAndSandboxTab: 'Studio & Sandbox',
@@ -788,7 +809,14 @@ export const translations: Record<Language, TranslationDict> = {
     worstCaseDD: '最悪シナリオ最大DD',
     percentile95DD: '95%信頼区間最大DD',
     riskOfRuin: '破産確率 (>50% DD)',
-    heatmapDesc: '時間帯 (UTC) および曜日別の損益・勝率分布:',
+    heatmapDesc: '取引時間帯（UTC）および曜日ごとの損益・勝率分布：',
+    calendarViewTab: '📅 カレンダー表示',
+    hourlyMatrixTab: '⏱️ 曜日・時間帯マトリクス',
+    monthlyProfit: '月間純損益',
+    winningDays: '勝ち・負け日数',
+    bestTradingDay: '最高利益日',
+    tradesInMonth: '月間取引数',
+    weekTotal: '週間合計',
 
     aiStudioTitle: 'AI戦略スタジオ＆実行サンドボックス',
     studioAndSandboxTab: 'スタジオ＆サンドボックス',
@@ -1014,7 +1042,14 @@ export const translations: Record<Language, TranslationDict> = {
     worstCaseDD: '最差情景最大回撤',
     percentile95DD: '95%置信度最大回撤',
     riskOfRuin: '爆仓风险概率 (>50% DD)',
-    heatmapDesc: '交易时段 (UTC) 与星期维度的盈亏与胜率分布:',
+    heatmapDesc: '交易时段（UTC）及周中各天的盈亏与胜率分布：',
+    calendarViewTab: '📅 月度日历视图',
+    hourlyMatrixTab: '⏱️ 星期与时段矩阵',
+    monthlyProfit: '月度净盈亏',
+    winningDays: '盈利/亏损天数',
+    bestTradingDay: '最佳交易日',
+    tradesInMonth: '当月交易笔数',
+    weekTotal: '周总计',
 
     aiStudioTitle: 'AI策略工作室与沙盒执行引擎',
     studioAndSandboxTab: '工作室与沙盒',

@@ -25,18 +25,24 @@ import {
   Trophy,
   SlidersHorizontal,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Search,
   Check,
   FolderKanban,
-  Sparkles
+  Sparkles,
+  Clock,
+  CalendarDays
 } from 'lucide-react';
-import { AnalyticsEngine, MonteCarloResult, DayHourHeatmapCell, PerformanceReport } from '../../engine/analytics';
+import { AnalyticsEngine, MonteCarloResult, DayHourHeatmapCell, MonthlyCalendarGroup, DailyCalendarCell, PerformanceReport } from '../../engine/analytics';
 import { useBacktestStore } from '../../store/backtestStore';
 import { translations } from '../../i18n/translations';
 import { analyticsApi, sessionsApi } from '../../api';
 
 export const AnalyticsDashboardModal: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'overview' | 'montecarlo' | 'heatmap' | 'comparison' | 'database'>('overview');
+  const [heatmapViewMode, setHeatmapViewMode] = useState<'calendar_view' | 'hourly_matrix'>('calendar_view');
+  const [selectedMonthIdx, setSelectedMonthIdx] = useState<number>(0);
   const [sessionList, setSessionList] = useState<any[]>([]);
   const [selectedSessionId, setSelectedSessionId] = useState<string>('ACTIVE_SESSION');
   const [selectedSessionDetail, setSelectedSessionDetail] = useState<any>(null);
@@ -195,6 +201,7 @@ export const AnalyticsDashboardModal: React.FC = () => {
   let report: PerformanceReport;
   let monteCarlo: MonteCarloResult;
   let heatmapData: DayHourHeatmapCell[];
+  let monthlyCalendars: MonthlyCalendarGroup[];
   let targetEquityCurve: any[];
   let currentSymbolName = instrument.symbol;
   let currentSessionTitle = t.currentActiveSessionLabel;
@@ -216,6 +223,7 @@ export const AnalyticsDashboardModal: React.FC = () => {
     report = AnalyticsEngine.calculateReport(s.initialBalance, closedTrades);
     monteCarlo = AnalyticsEngine.runMonteCarlo(s.initialBalance, closedTrades, 1000);
     heatmapData = AnalyticsEngine.calculateHeatmap(closedTrades);
+    monthlyCalendars = AnalyticsEngine.calculateMonthlyCalendars(closedTrades);
     targetEquityCurve = (s.equityPoints && s.equityPoints.length > 0)
       ? s.equityPoints.map((ep: any) => ({ timestamp: Number(ep.timestamp), balance: ep.balance, equity: ep.equity }))
       : [{ timestamp: 0, balance: s.initialBalance, equity: s.finalEquity }];
@@ -224,6 +232,7 @@ export const AnalyticsDashboardModal: React.FC = () => {
     report = AnalyticsEngine.calculateReport(account.initialBalance, closedPositions);
     monteCarlo = AnalyticsEngine.runMonteCarlo(account.initialBalance, closedPositions, 1000);
     heatmapData = AnalyticsEngine.calculateHeatmap(closedPositions);
+    monthlyCalendars = AnalyticsEngine.calculateMonthlyCalendars(closedPositions);
     targetEquityCurve = equityCurve;
   }
 
@@ -894,7 +903,7 @@ export const AnalyticsDashboardModal: React.FC = () => {
                 </div>
               )}
 
-              {/* TAB 3: HEATMAP (INSTITUTIONAL GRADE) */}
+              {/* TAB 3: HEATMAP (INSTITUTIONAL DUAL-MODE: CALENDAR VIEW + HOURLY MATRIX) */}
               {activeTab === 'heatmap' && (() => {
                 const hours = [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22];
                 const dayLabels = language === 'vi' 
@@ -905,12 +914,23 @@ export const AnalyticsDashboardModal: React.FC = () => {
                   ? ['周一', '周二', '周三', '周四', '周五']
                   : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
 
-                // Insights calculation
+                const calendarWeekHeaders = language === 'vi'
+                  ? ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'CN', 'Tổng Tuần']
+                  : language === 'ja'
+                  ? ['月', '火', '水', '木', '金', '土', '日', '週間計']
+                  : language === 'zh'
+                  ? ['一', '二', '三', '四', '五', '六', '日', '周总计']
+                  : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun', 'Week Total'];
+
+                // Current selected calendar month
+                const validMonthIdx = Math.max(0, Math.min(selectedMonthIdx, monthlyCalendars.length - 1));
+                const currentMonth = monthlyCalendars[validMonthIdx] || monthlyCalendars[0];
+
+                // Hourly matrix insights
                 const activeCells = heatmapData.filter(c => c.tradesCount > 0);
                 const bestCell = activeCells.length > 0 ? [...activeCells].sort((a, b) => b.pnl - a.pnl)[0] : null;
                 const worstCell = activeCells.length > 0 ? [...activeCells].sort((a, b) => a.pnl - b.pnl)[0] : null;
 
-                // Day aggregations
                 const dayPnL: Record<number, { pnl: number; count: number }> = {};
                 for (let d = 1; d <= 5; d++) dayPnL[d] = { pnl: 0, count: 0 };
                 heatmapData.forEach(c => {
@@ -923,173 +943,435 @@ export const AnalyticsDashboardModal: React.FC = () => {
 
                 return (
                   <div className="space-y-4">
-                    {/* TOP INSIGHT CARDS */}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                      <div className="bg-slate-900/80 border border-slate-800 p-3 rounded-xl">
-                        <div className="text-[10px] text-slate-400 uppercase font-sans font-bold flex items-center gap-1 text-emerald-400">
-                          <Sparkles className="w-3 h-3" />
-                          <span>Khung Giờ Tốt Nhất</span>
-                        </div>
-                        <div className="text-sm font-bold text-slate-100 mt-1 truncate">
-                          {bestCell ? `${dayLabels[bestCell.day - 1]} @ ${bestCell.hour}:00` : 'Chưa đủ dữ liệu'}
-                        </div>
-                        <div className="text-[11px] font-bold text-teal-400 mt-0.5">
-                          {bestCell ? `+$${bestCell.pnl.toFixed(2)} (${bestCell.tradesCount} lệnh)` : '-'}
-                        </div>
-                      </div>
-
-                      <div className="bg-slate-900/80 border border-slate-800 p-3 rounded-xl">
-                        <div className="text-[10px] text-slate-400 uppercase font-sans font-bold flex items-center gap-1 text-rose-400">
-                          <AlertTriangle className="w-3 h-3" />
-                          <span>Khung Giờ Kém Nhất</span>
-                        </div>
-                        <div className="text-sm font-bold text-slate-100 mt-1 truncate">
-                          {worstCell && worstCell.pnl < 0 ? `${dayLabels[worstCell.day - 1]} @ ${worstCell.hour}:00` : 'Không có lỗ lớn'}
-                        </div>
-                        <div className="text-[11px] font-bold text-rose-400 mt-0.5">
-                          {worstCell && worstCell.pnl < 0 ? `-$${Math.abs(worstCell.pnl).toFixed(2)} (${worstCell.tradesCount} lệnh)` : '-'}
-                        </div>
-                      </div>
-
-                      <div className="bg-slate-900/80 border border-slate-800 p-3 rounded-xl">
-                        <div className="text-[10px] text-slate-400 uppercase font-sans font-bold flex items-center gap-1 text-indigo-400">
-                          <Calendar className="w-3 h-3" />
-                          <span>Ngày Hiệu Quả Nhất</span>
-                        </div>
-                        <div className="text-sm font-bold text-slate-100 mt-1">
-                          {dayLabels[bestDayIdx - 1]}
-                        </div>
-                        <div className="text-[11px] font-bold text-indigo-300 mt-0.5">
-                          {dayPnL[bestDayIdx]?.pnl >= 0 ? '+' : ''}${dayPnL[bestDayIdx]?.pnl.toFixed(2)} ({dayPnL[bestDayIdx]?.count} lệnh)
+                    {/* VIEW MODE SELECTOR BAR */}
+                    <div className="bg-[#0b0e17] p-2 rounded-xl border border-slate-800 flex items-center justify-between flex-wrap gap-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-slate-400 text-[11px] font-sans font-medium">Chế độ phân tích:</span>
+                        <div className="flex items-center bg-slate-950 p-1 rounded-lg border border-slate-800/80">
+                          <button
+                            type="button"
+                            onClick={() => setHeatmapViewMode('calendar_view')}
+                            className={`px-3 py-1 rounded-md text-xs font-bold transition-all flex items-center gap-1.5 ${
+                              heatmapViewMode === 'calendar_view'
+                                ? 'bg-indigo-600 text-white shadow-sm'
+                                : 'text-slate-400 hover:text-slate-200'
+                            }`}
+                          >
+                            <CalendarDays className="w-3.5 h-3.5" />
+                            <span>{t.calendarViewTab}</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setHeatmapViewMode('hourly_matrix')}
+                            className={`px-3 py-1 rounded-md text-xs font-bold transition-all flex items-center gap-1.5 ${
+                              heatmapViewMode === 'hourly_matrix'
+                                ? 'bg-indigo-600 text-white shadow-sm'
+                                : 'text-slate-400 hover:text-slate-200'
+                            }`}
+                          >
+                            <Clock className="w-3.5 h-3.5" />
+                            <span>{t.hourlyMatrixTab}</span>
+                          </button>
                         </div>
                       </div>
 
-                      <div className="bg-slate-900/80 border border-slate-800 p-3 rounded-xl">
-                        <div className="text-[10px] text-slate-400 uppercase font-sans font-bold flex items-center gap-1 text-amber-400">
-                          <Activity className="w-3 h-3" />
-                          <span>Tổng Số Lệnh Khớp</span>
+                      {/* Month Navigator if in Calendar View */}
+                      {heatmapViewMode === 'calendar_view' && monthlyCalendars.length > 0 && (
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            disabled={validMonthIdx <= 0}
+                            onClick={() => setSelectedMonthIdx(validMonthIdx - 1)}
+                            className="p-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                            title="Tháng trước"
+                          >
+                            <ChevronLeft className="w-4 h-4" />
+                          </button>
+                          <span className="px-3 py-1 bg-slate-900 border border-slate-800 rounded-lg text-xs font-bold text-slate-100 font-mono">
+                            {currentMonth?.monthLabel || 'Tháng'}
+                          </span>
+                          <button
+                            type="button"
+                            disabled={validMonthIdx >= monthlyCalendars.length - 1}
+                            onClick={() => setSelectedMonthIdx(validMonthIdx + 1)}
+                            className="p-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                            title="Tháng sau"
+                          >
+                            <ChevronRight className="w-4 h-4" />
+                          </button>
                         </div>
-                        <div className="text-sm font-bold text-slate-100 mt-1">
-                          {report.totalTrades} Lệnh đã đóng
-                        </div>
-                        <div className="text-[11px] text-slate-400 mt-0.5">
-                          Winrate: <strong className="text-teal-400">{report.winRate}%</strong>
-                        </div>
-                      </div>
+                      )}
                     </div>
 
-                    {/* GLOBAL SESSION COLOR LEGEND */}
-                    <div className="bg-slate-900/50 border border-slate-800/80 px-3.5 py-2 rounded-xl flex items-center justify-between text-[11px] flex-wrap gap-2">
-                      <span className="text-slate-400 font-sans font-medium">Phiên giao dịch thế giới:</span>
-                      <div className="flex items-center gap-3 text-[10px] font-sans">
-                        <span className="flex items-center gap-1">
-                          <span className="w-2 h-2 rounded-full bg-blue-500" />
-                          <span className="text-slate-300">🌏 Á (00-08h)</span>
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <span className="w-2 h-2 rounded-full bg-amber-500" />
-                          <span className="text-slate-300">🇬🇧 Âu (08-16h)</span>
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <span className="w-2 h-2 rounded-full bg-purple-500" />
-                          <span className="text-slate-300">🇺🇸 Mỹ (13-21h)</span>
-                        </span>
-                        <span className="flex items-center gap-1 bg-amber-950/60 border border-amber-500/40 px-1.5 py-0.5 rounded text-amber-300 font-bold">
-                          🔥 Trùng Âu/Mỹ (13-16h)
-                        </span>
-                      </div>
-                    </div>
+                    {/* ------------------------------------------------------------- */}
+                    {/* MODE 1: MONTHLY CALENDAR VIEW (DAY-BY-DAY HEATMAP)           */}
+                    {/* ------------------------------------------------------------- */}
+                    {heatmapViewMode === 'calendar_view' && (() => {
+                      if (!currentMonth) return null;
 
-                    {/* 2D HEATMAP MATRIX TABLE */}
-                    <div className="bg-[#0b0e17] p-4 rounded-2xl border border-slate-800/90 overflow-x-auto shadow-inner">
-                      <div
-                        style={{
-                          display: 'grid',
-                          gridTemplateColumns: '95px repeat(12, minmax(62px, 1fr))',
-                          gap: '6px'
-                        }}
-                        className="min-w-[840px] text-center text-xs"
-                      >
-                        {/* Header Cell: Day / Hour */}
-                        <div className="font-bold text-slate-500 p-2 bg-slate-900/80 border border-slate-800 rounded-lg flex items-center justify-center text-[10px] uppercase font-sans">
-                          {language === 'vi' ? 'Thứ \\ Giờ' : 'Day \\ UTC'}
-                        </div>
+                      const daysInMonth = new Date(currentMonth.year, currentMonth.month, 0).getDate();
+                      const firstDayDow = new Date(Date.UTC(currentMonth.year, currentMonth.month - 1, 1)).getUTCDay();
+                      const startOffset = (firstDayDow + 6) % 7; // Mon=0, Sun=6
+                      const totalCells = Math.ceil((startOffset + daysInMonth) / 7) * 7;
+                      const weeksCount = totalCells / 7;
 
-                        {/* Hour Column Headers */}
-                        {hours.map(h => {
-                          let sessionBadge = 'text-slate-400 border-slate-800';
-                          if (h >= 13 && h <= 15) sessionBadge = 'text-amber-300 bg-amber-950/40 border-amber-500/30';
-                          else if (h >= 8 && h < 16) sessionBadge = 'text-amber-400 bg-slate-900 border-slate-800';
-                          else if (h >= 0 && h < 8) sessionBadge = 'text-blue-400 bg-slate-900 border-slate-800';
-                          else sessionBadge = 'text-purple-400 bg-slate-900 border-slate-800';
+                      return (
+                        <div className="space-y-4">
+                          {/* MONTHLY SUMMARY METRICS CARDS */}
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            <div className="bg-slate-900/80 border border-slate-800 p-3 rounded-xl">
+                              <div className="text-[10px] text-slate-400 uppercase font-sans font-bold flex items-center gap-1 text-emerald-400">
+                                <DollarSign className="w-3 h-3" />
+                                <span>{t.monthlyProfit}</span>
+                              </div>
+                              <div className={`text-base font-bold mt-1 font-mono ${currentMonth.totalPnL >= 0 ? 'text-teal-400' : 'text-rose-400'}`}>
+                                {currentMonth.totalPnL >= 0 ? '+' : ''}${currentMonth.totalPnL.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              </div>
+                              <div className="text-[10px] text-slate-500 mt-0.5">
+                                {currentMonth.totalPnL >= 0 ? '🟢 Lợi nhuận ròng' : '🔴 Lỗ trong tháng'}
+                              </div>
+                            </div>
 
-                          return (
+                            <div className="bg-slate-900/80 border border-slate-800 p-3 rounded-xl">
+                              <div className="text-[10px] text-slate-400 uppercase font-sans font-bold flex items-center gap-1 text-indigo-400">
+                                <Calendar className="w-3 h-3" />
+                                <span>{t.winningDays}</span>
+                              </div>
+                              <div className="text-base font-bold text-slate-100 mt-1 font-mono">
+                                <span className="text-teal-400">{currentMonth.profitableDaysCount} Thắng</span> / <span className="text-rose-400">{currentMonth.lossDaysCount} Thua</span>
+                              </div>
+                              <div className="text-[10px] text-slate-400 mt-0.5">
+                                Tỷ lệ ngày thắng: <strong className="text-indigo-300">{currentMonth.profitableDaysCount + currentMonth.lossDaysCount > 0 ? ((currentMonth.profitableDaysCount / (currentMonth.profitableDaysCount + currentMonth.lossDaysCount)) * 100).toFixed(0) : 0}%</strong>
+                              </div>
+                            </div>
+
+                            <div className="bg-slate-900/80 border border-slate-800 p-3 rounded-xl">
+                              <div className="text-[10px] text-slate-400 uppercase font-sans font-bold flex items-center gap-1 text-amber-400">
+                                <Sparkles className="w-3 h-3" />
+                                <span>{t.bestTradingDay}</span>
+                              </div>
+                              <div className="text-sm font-bold text-slate-100 mt-1 truncate">
+                                {currentMonth.bestDay ? currentMonth.bestDay.dateStr : 'Không có lãi'}
+                              </div>
+                              <div className="text-[11px] font-bold text-teal-400 mt-0.5">
+                                {currentMonth.bestDay ? `+$${currentMonth.bestDay.pnl.toFixed(2)}` : '-'}
+                              </div>
+                            </div>
+
+                            <div className="bg-slate-900/80 border border-slate-800 p-3 rounded-xl">
+                              <div className="text-[10px] text-slate-400 uppercase font-sans font-bold flex items-center gap-1 text-purple-400">
+                                <Activity className="w-3 h-3" />
+                                <span>{t.tradesInMonth}</span>
+                              </div>
+                              <div className="text-base font-bold text-slate-100 mt-1 font-mono">
+                                {currentMonth.totalTrades} Lệnh
+                              </div>
+                              <div className="text-[10px] text-slate-400 mt-0.5">
+                                Winrate tháng: <strong className="text-teal-400">{currentMonth.winRate}%</strong>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* CALENDAR GRID TABLE (7 DAYS + 1 WEEKLY TOTAL COLUMN) */}
+                          <div className="bg-[#0b0e17] p-4 rounded-2xl border border-slate-800/90 overflow-x-auto shadow-inner">
                             <div
-                              key={h}
-                              className={`p-1.5 rounded-lg border font-mono font-bold text-[11px] flex flex-col items-center justify-center ${sessionBadge}`}
-                              title={`Khung giờ ${h}:00 - ${h + 1}:59 UTC`}
+                              style={{
+                                display: 'grid',
+                                gridTemplateColumns: 'repeat(7, minmax(80px, 1fr)) 110px',
+                                gap: '6px'
+                              }}
+                              className="min-w-[760px] text-center text-xs"
                             >
-                              <span>{h < 10 ? `0${h}` : h}:00</span>
-                            </div>
-                          );
-                        })}
+                              {/* Headers: Mon..Sun + Week Total */}
+                              {calendarWeekHeaders.map((header, hIdx) => (
+                                <div
+                                  key={header}
+                                  className={`p-2 rounded-lg border text-[11px] font-bold font-sans ${
+                                    hIdx === 7
+                                      ? 'bg-indigo-950/40 border-indigo-500/30 text-indigo-300 uppercase'
+                                      : hIdx >= 5
+                                      ? 'bg-slate-900/60 border-slate-800/80 text-slate-400'
+                                      : 'bg-slate-900/90 border-slate-800 text-slate-200'
+                                  }`}
+                                >
+                                  {header}
+                                </div>
+                              ))}
 
-                        {/* 5 Day Rows (Mon - Fri) */}
-                        {dayLabels.map((dayName, dIdx) => (
-                          <React.Fragment key={dayName}>
-                            {/* Day Label with Day Total PnL */}
-                            <div className="bg-slate-900/90 border border-slate-800 rounded-lg p-2 flex flex-col justify-center items-start text-left">
-                              <span className="text-slate-200 font-bold text-xs">{dayName}</span>
-                              <span className={`text-[10px] font-mono font-semibold ${dayPnL[dIdx + 1]?.pnl >= 0 ? 'text-teal-400' : 'text-rose-400'}`}>
-                                {dayPnL[dIdx + 1]?.count > 0 
-                                  ? (dayPnL[dIdx + 1].pnl >= 0 ? `+$${dayPnL[dIdx + 1].pnl.toFixed(0)}` : `-$${Math.abs(dayPnL[dIdx + 1].pnl).toFixed(0)}`)
-                                  : '-'}
-                              </span>
+                              {/* Rows of Weeks */}
+                              {Array.from({ length: weeksCount }).map((_, wIdx) => {
+                                let weekTotalPnL = 0;
+                                let weekTradesCount = 0;
+
+                                const dayCells = Array.from({ length: 7 }).map((_, dIdx) => {
+                                  const cellIndex = wIdx * 7 + dIdx;
+                                  const dayNum = cellIndex - startOffset + 1;
+
+                                  if (dayNum < 1 || dayNum > daysInMonth) {
+                                    return (
+                                      <div
+                                        key={dIdx}
+                                        className="min-h-[64px] bg-slate-950/20 border border-slate-900/40 rounded-lg"
+                                      />
+                                    );
+                                  }
+
+                                  const dateStr = `${currentMonth.monthKey}-${dayNum < 10 ? '0' + dayNum : dayNum}`;
+                                  const cellData = currentMonth.days[dateStr];
+
+                                  if (cellData) {
+                                    weekTotalPnL += cellData.pnl;
+                                    weekTradesCount += cellData.tradesCount;
+                                  }
+
+                                  const hasTrades = cellData && cellData.tradesCount > 0;
+                                  const isProfit = cellData && cellData.pnl > 0;
+                                  const isLoss = cellData && cellData.pnl < 0;
+
+                                  let cellBg = 'bg-slate-950/60 border-slate-800/40 text-slate-500 hover:border-slate-700';
+                                  if (hasTrades) {
+                                    if (isProfit) cellBg = 'bg-emerald-950/70 border-emerald-500/50 text-emerald-300 shadow-xs hover:border-emerald-400 hover:scale-105';
+                                    else if (isLoss) cellBg = 'bg-rose-950/70 border-rose-500/50 text-rose-300 shadow-xs hover:border-rose-400 hover:scale-105';
+                                    else cellBg = 'bg-slate-900 border-slate-700 text-slate-300 hover:scale-105';
+                                  }
+
+                                  return (
+                                    <div
+                                      key={dIdx}
+                                      className={`min-h-[64px] p-2 rounded-lg border flex flex-col justify-between transition-all select-none ${cellBg}`}
+                                      title={hasTrades ? `${dateStr}: ${cellData.tradesCount} lệnh (PnL: $${cellData.pnl.toFixed(2)})` : dateStr}
+                                    >
+                                      <div className="flex items-center justify-between text-[10px]">
+                                        <span className={`font-bold ${hasTrades ? 'text-slate-100' : 'text-slate-600'}`}>{dayNum}</span>
+                                        {hasTrades && (
+                                          <span className="text-[9px] opacity-75 font-sans">
+                                            {cellData.tradesCount}t
+                                          </span>
+                                        )}
+                                      </div>
+
+                                      {hasTrades ? (
+                                        <div className="text-center my-auto">
+                                          <div className="font-bold text-xs font-mono leading-tight">
+                                            {cellData.pnl >= 0 ? `+$${cellData.pnl.toFixed(0)}` : `-$${Math.abs(cellData.pnl).toFixed(0)}`}
+                                          </div>
+                                          <div className="text-[9px] opacity-80 font-sans mt-0.5">
+                                            {cellData.winRate}% win
+                                          </div>
+                                        </div>
+                                      ) : (
+                                        <div className="text-center text-slate-800 text-xs font-mono">·</div>
+                                      )}
+                                    </div>
+                                  );
+                                });
+
+                                return (
+                                  <React.Fragment key={wIdx}>
+                                    {dayCells}
+                                    {/* Week Summary Cell */}
+                                    <div
+                                      className={`min-h-[64px] p-2 rounded-lg border flex flex-col items-center justify-center font-mono ${
+                                        weekTradesCount > 0
+                                          ? weekTotalPnL >= 0
+                                            ? 'bg-emerald-950/40 border-emerald-500/30 text-teal-300'
+                                            : 'bg-rose-950/40 border-rose-500/30 text-rose-300'
+                                          : 'bg-slate-950/40 border-slate-900/60 text-slate-600'
+                                      }`}
+                                    >
+                                      <span className="text-[10px] font-sans text-slate-400 font-medium uppercase">Tuần {wIdx + 1}</span>
+                                      <span className="font-bold text-xs mt-0.5">
+                                        {weekTradesCount > 0
+                                          ? (weekTotalPnL >= 0 ? `+$${weekTotalPnL.toFixed(0)}` : `-$${Math.abs(weekTotalPnL).toFixed(0)}`)
+                                          : '-'}
+                                      </span>
+                                      {weekTradesCount > 0 && (
+                                        <span className="text-[9px] opacity-75 font-sans mt-0.5">{weekTradesCount} lệnh</span>
+                                      )}
+                                    </div>
+                                  </React.Fragment>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })()}
+
+                    {/* ------------------------------------------------------------- */}
+                    {/* MODE 2: 2D DAY & HOUR MATRIX (INTRADAY & SESSION HEATMAP)     */}
+                    {/* ------------------------------------------------------------- */}
+                    {heatmapViewMode === 'hourly_matrix' && (
+                      <div className="space-y-4">
+                        {/* TOP INSIGHT CARDS */}
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                          <div className="bg-slate-900/80 border border-slate-800 p-3 rounded-xl">
+                            <div className="text-[10px] text-slate-400 uppercase font-sans font-bold flex items-center gap-1 text-emerald-400">
+                              <Sparkles className="w-3 h-3" />
+                              <span>Khung Giờ Tốt Nhất</span>
+                            </div>
+                            <div className="text-sm font-bold text-slate-100 mt-1 truncate">
+                              {bestCell ? `${dayLabels[bestCell.day - 1]} @ ${bestCell.hour}:00` : 'Chưa đủ dữ liệu'}
+                            </div>
+                            <div className="text-[11px] font-bold text-teal-400 mt-0.5">
+                              {bestCell ? `+$${bestCell.pnl.toFixed(2)} (${bestCell.tradesCount} lệnh)` : '-'}
+                            </div>
+                          </div>
+
+                          <div className="bg-slate-900/80 border border-slate-800 p-3 rounded-xl">
+                            <div className="text-[10px] text-slate-400 uppercase font-sans font-bold flex items-center gap-1 text-rose-400">
+                              <AlertTriangle className="w-3 h-3" />
+                              <span>Khung Giờ Kém Nhất</span>
+                            </div>
+                            <div className="text-sm font-bold text-slate-100 mt-1 truncate">
+                              {worstCell && worstCell.pnl < 0 ? `${dayLabels[worstCell.day - 1]} @ ${worstCell.hour}:00` : 'Không có lỗ lớn'}
+                            </div>
+                            <div className="text-[11px] font-bold text-rose-400 mt-0.5">
+                              {worstCell && worstCell.pnl < 0 ? `-$${Math.abs(worstCell.pnl).toFixed(2)} (${worstCell.tradesCount} lệnh)` : '-'}
+                            </div>
+                          </div>
+
+                          <div className="bg-slate-900/80 border border-slate-800 p-3 rounded-xl">
+                            <div className="text-[10px] text-slate-400 uppercase font-sans font-bold flex items-center gap-1 text-indigo-400">
+                              <Calendar className="w-3 h-3" />
+                              <span>Ngày Hiệu Quả Nhất</span>
+                            </div>
+                            <div className="text-sm font-bold text-slate-100 mt-1">
+                              {dayLabels[bestDayIdx - 1]}
+                            </div>
+                            <div className="text-[11px] font-bold text-indigo-300 mt-0.5">
+                              {dayPnL[bestDayIdx]?.pnl >= 0 ? '+' : ''}${dayPnL[bestDayIdx]?.pnl.toFixed(2)} ({dayPnL[bestDayIdx]?.count} lệnh)
+                            </div>
+                          </div>
+
+                          <div className="bg-slate-900/80 border border-slate-800 p-3 rounded-xl">
+                            <div className="text-[10px] text-slate-400 uppercase font-sans font-bold flex items-center gap-1 text-amber-400">
+                              <Activity className="w-3 h-3" />
+                              <span>Tổng Số Lệnh Khớp</span>
+                            </div>
+                            <div className="text-sm font-bold text-slate-100 mt-1">
+                              {report.totalTrades} Lệnh đã đóng
+                            </div>
+                            <div className="text-[11px] text-slate-400 mt-0.5">
+                              Winrate: <strong className="text-teal-400">{report.winRate}%</strong>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* GLOBAL SESSION COLOR LEGEND */}
+                        <div className="bg-slate-900/50 border border-slate-800/80 px-3.5 py-2 rounded-xl flex items-center justify-between text-[11px] flex-wrap gap-2">
+                          <span className="text-slate-400 font-sans font-medium">Phiên giao dịch thế giới:</span>
+                          <div className="flex items-center gap-3 text-[10px] font-sans">
+                            <span className="flex items-center gap-1">
+                              <span className="w-2 h-2 rounded-full bg-blue-500" />
+                              <span className="text-slate-300">🌏 Á (00-08h)</span>
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <span className="w-2 h-2 rounded-full bg-amber-500" />
+                              <span className="text-slate-300">🇬🇧 Âu (08-16h)</span>
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <span className="w-2 h-2 rounded-full bg-purple-500" />
+                              <span className="text-slate-300">🇺🇸 Mỹ (13-21h)</span>
+                            </span>
+                            <span className="flex items-center gap-1 bg-amber-950/60 border border-amber-500/40 px-1.5 py-0.5 rounded text-amber-300 font-bold">
+                              🔥 Trùng Âu/Mỹ (13-16h)
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* 2D HEATMAP MATRIX TABLE */}
+                        <div className="bg-[#0b0e17] p-4 rounded-2xl border border-slate-800/90 overflow-x-auto shadow-inner">
+                          <div
+                            style={{
+                              display: 'grid',
+                              gridTemplateColumns: '95px repeat(12, minmax(62px, 1fr))',
+                              gap: '6px'
+                            }}
+                            className="min-w-[840px] text-center text-xs"
+                          >
+                            {/* Header Cell: Day / Hour */}
+                            <div className="font-bold text-slate-500 p-2 bg-slate-900/80 border border-slate-800 rounded-lg flex items-center justify-center text-[10px] uppercase font-sans">
+                              {language === 'vi' ? 'Thứ \\ Giờ' : 'Day \\ UTC'}
                             </div>
 
-                            {/* 12 Hour Cells */}
+                            {/* Hour Column Headers */}
                             {hours.map(h => {
-                              const cell = heatmapData.find(c => c.day === dIdx + 1 && Math.abs(c.hour - h) < 2);
-                              const pnl = cell ? cell.pnl : 0;
-                              const count = cell ? cell.tradesCount : 0;
-                              const winRate = cell ? cell.winRate : 0;
-
-                              let cellStyle = 'bg-slate-950/40 border-slate-800/40 text-slate-600 hover:border-slate-700';
-                              if (count > 0) {
-                                if (pnl > 0) {
-                                  cellStyle = 'bg-emerald-950/70 border-emerald-500/50 text-emerald-300 shadow-xs hover:border-emerald-400 hover:scale-105';
-                                } else if (pnl < 0) {
-                                  cellStyle = 'bg-rose-950/70 border-rose-500/50 text-rose-300 shadow-xs hover:border-rose-400 hover:scale-105';
-                                } else {
-                                  cellStyle = 'bg-slate-900 border-slate-700 text-slate-300 hover:scale-105';
-                                }
-                              }
+                              let sessionBadge = 'text-slate-400 border-slate-800';
+                              if (h >= 13 && h <= 15) sessionBadge = 'text-amber-300 bg-amber-950/40 border-amber-500/30';
+                              else if (h >= 8 && h < 16) sessionBadge = 'text-amber-400 bg-slate-900 border-slate-800';
+                              else if (h >= 0 && h < 8) sessionBadge = 'text-blue-400 bg-slate-900 border-slate-800';
+                              else sessionBadge = 'text-purple-400 bg-slate-900 border-slate-800';
 
                               return (
                                 <div
                                   key={h}
-                                  className={`p-1.5 min-h-[46px] rounded-lg border flex flex-col items-center justify-center transition-all cursor-default select-none ${cellStyle}`}
-                                  title={`${dayName} lúc ${h}:00 UTC — ${count} lệnh | PnL: $${pnl.toFixed(2)} | Thắng: ${winRate}%`}
+                                  className={`p-1.5 rounded-lg border font-mono font-bold text-[11px] flex flex-col items-center justify-center ${sessionBadge}`}
+                                  title={`Khung giờ ${h}:00 - ${h + 1}:59 UTC`}
                                 >
-                                  {count > 0 ? (
-                                    <>
-                                      <span className="font-bold text-[11px] font-mono leading-tight">
-                                        {pnl >= 0 ? `+$${pnl.toFixed(0)}` : `-$${Math.abs(pnl).toFixed(0)}`}
-                                      </span>
-                                      <span className="text-[9px] opacity-80 font-sans mt-0.5">
-                                        {count}t • {winRate}%
-                                      </span>
-                                    </>
-                                  ) : (
-                                    <span className="text-slate-700 font-mono text-xs">·</span>
-                                  )}
+                                  <span>{h < 10 ? `0${h}` : h}:00</span>
                                 </div>
                               );
                             })}
-                          </React.Fragment>
-                        ))}
+
+                            {/* 5 Day Rows (Mon - Fri) */}
+                            {dayLabels.map((dayName, dIdx) => (
+                              <React.Fragment key={dayName}>
+                                {/* Day Label with Day Total PnL */}
+                                <div className="bg-slate-900/90 border border-slate-800 rounded-lg p-2 flex flex-col justify-center items-start text-left">
+                                  <span className="text-slate-200 font-bold text-xs">{dayName}</span>
+                                  <span className={`text-[10px] font-mono font-semibold ${dayPnL[dIdx + 1]?.pnl >= 0 ? 'text-teal-400' : 'text-rose-400'}`}>
+                                    {dayPnL[dIdx + 1]?.count > 0 
+                                      ? (dayPnL[dIdx + 1].pnl >= 0 ? `+$${dayPnL[dIdx + 1].pnl.toFixed(0)}` : `-$${Math.abs(dayPnL[dIdx + 1].pnl).toFixed(0)}`)
+                                      : '-'}
+                                  </span>
+                                </div>
+
+                                {/* 12 Hour Cells */}
+                                {hours.map(h => {
+                                  const cell = heatmapData.find(c => c.day === dIdx + 1 && Math.abs(c.hour - h) < 2);
+                                  const pnl = cell ? cell.pnl : 0;
+                                  const count = cell ? cell.tradesCount : 0;
+                                  const winRate = cell ? cell.winRate : 0;
+
+                                  let cellStyle = 'bg-slate-950/40 border-slate-800/40 text-slate-600 hover:border-slate-700';
+                                  if (count > 0) {
+                                    if (pnl > 0) {
+                                      cellStyle = 'bg-emerald-950/70 border-emerald-500/50 text-emerald-300 shadow-xs hover:border-emerald-400 hover:scale-105';
+                                    } else if (pnl < 0) {
+                                      cellStyle = 'bg-rose-950/70 border-rose-500/50 text-rose-300 shadow-xs hover:border-rose-400 hover:scale-105';
+                                    } else {
+                                      cellStyle = 'bg-slate-900 border-slate-700 text-slate-300 hover:scale-105';
+                                    }
+                                  }
+
+                                  return (
+                                    <div
+                                      key={h}
+                                      className={`p-1.5 min-h-[46px] rounded-lg border flex flex-col items-center justify-center transition-all cursor-default select-none ${cellStyle}`}
+                                      title={`${dayName} lúc ${h}:00 UTC — ${count} lệnh | PnL: $${pnl.toFixed(2)} | Thắng: ${winRate}%`}
+                                    >
+                                      {count > 0 ? (
+                                        <>
+                                          <span className="font-bold text-[11px] font-mono leading-tight">
+                                            {pnl >= 0 ? `+$${pnl.toFixed(0)}` : `-$${Math.abs(pnl).toFixed(0)}`}
+                                          </span>
+                                          <span className="text-[9px] opacity-80 font-sans mt-0.5">
+                                            {count}t • {winRate}%
+                                          </span>
+                                        </>
+                                      ) : (
+                                        <span className="text-slate-700 font-mono text-xs">·</span>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </React.Fragment>
+                            ))}
+                          </div>
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 );
               })()}
