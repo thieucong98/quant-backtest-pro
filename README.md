@@ -5,6 +5,7 @@
 [![Language: English](https://img.shields.io/badge/Language-English-blue.svg)](#)
 [![Language: Tiếng Việt](https://img.shields.io/badge/Ngôn%20ngữ-Tiếng%20Việt-red.svg)](README.vi.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-emerald.svg)](LICENSE)
+[![CI](https://github.com/thieucong98/quant-backtest-pro/actions/workflows/ci.yml/badge.svg)](https://github.com/thieucong98/quant-backtest-pro/actions/workflows/ci.yml)
 [![Sponsor](https://img.shields.io/badge/Sponsor-💖-ff69b4.svg)](#-sponsorship--support)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue.svg)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-19.0-cyan.svg)](https://react.dev/)
