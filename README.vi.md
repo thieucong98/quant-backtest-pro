@@ -5,6 +5,7 @@
 [![Language: English](https://img.shields.io/badge/Language-English-blue.svg)](README.md)
 [![Language: Tiếng Việt](https://img.shields.io/badge/Ngôn%20ngữ-Tiếng%20Việt-red.svg)](#)
 [![License: MIT](https://img.shields.io/badge/License-MIT-emerald.svg)](LICENSE)
+[![Sponsor](https://img.shields.io/badge/Sponsor-💖-ff69b4.svg)](#-tài-trợ--ủng-hộ-dự-án-sponsorship)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue.svg)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-19.0-cyan.svg)](https://react.dev/)
 [![Vite](https://img.shields.io/badge/Vite-6.4-purple.svg)](https://vitejs.dev/)
@@ -185,6 +186,16 @@ Chúng tôi rất hoan nghênh những đóng góp từ cộng đồng! Vui lòn
 ## 🛡️ Bảo Mật (Security)
 
 Mọi báo cáo về lỗ hổng bảo mật vui lòng tham khảo [Chính sách bảo mật (Security Policy)](SECURITY.md).
+
+---
+
+## 💖 Tài Trợ & Ủng Hộ Dự Án (Sponsorship)
+
+Nếu bạn thấy **Quant Backtest Pro** hữu ích cho việc nghiên cứu giao dịch hoặc phát triển Bot thuật toán của bạn, hãy cân nhắc ủng hộ và đồng hành cùng dự án:
+
+- 🌟 **Tặng 1 Star** cho repository trên GitHub để lan tỏa dự án đến nhiều Trader hơn.
+- 💖 **[GitHub Sponsors](https://github.com/sponsors/thieucong98)**: Tài trợ trực tiếp cho tác giả để duy trì máy chủ, nghiên cứu thuật toán mới và cập nhật tính năng.
+- ☕ **Ủng hộ qua Buy Me A Coffee / Crypto / Chuyển khoản**: Mỗi tách cà phê là nguồn động lực to lớn cho mã nguồn mở!
 
 ---
 

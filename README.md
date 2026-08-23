@@ -5,6 +5,7 @@
 [![Language: English](https://img.shields.io/badge/Language-English-blue.svg)](#)
 [![Language: Tiếng Việt](https://img.shields.io/badge/Ngôn%20ngữ-Tiếng%20Việt-red.svg)](README.vi.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-emerald.svg)](LICENSE)
+[![Sponsor](https://img.shields.io/badge/Sponsor-💖-ff69b4.svg)](#-sponsorship--support)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue.svg)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-19.0-cyan.svg)](https://react.dev/)
 [![Vite](https://img.shields.io/badge/Vite-6.4-purple.svg)](https://vitejs.dev/)
@@ -194,6 +195,16 @@ For vulnerability disclosure and security reporting, please refer to our [Securi
 
 ---
 
+## 💖 Sponsorship & Support
+
+If you find **Quant Backtest Pro** valuable for your trading research or algo-trading bot development, please consider sponsoring or supporting our open-source journey:
+
+- 🌟 **Star this repository** on GitHub to help more traders discover the project.
+- 💖 **[GitHub Sponsors](https://github.com/sponsors/thieucong98)**: Support continuous maintenance, new indicator algorithms, and server infrastructure.
+- ☕ **Buy Me A Coffee / Crypto**: Every cup of coffee fuels more open-source development!
+
+---
+
 ## 📄 License
 
 Distributed under the **MIT License**. See [LICENSE](LICENSE) for more information.
@@ -203,3 +214,4 @@ Distributed under the **MIT License**. See [LICENSE](LICENSE) for more informati
 <p align="center">
   <b>Quant Backtest Pro</b> • Built with ❤️ for Quantitative Traders Worldwide.
 </p>
+
