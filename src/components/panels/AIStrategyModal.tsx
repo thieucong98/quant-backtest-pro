@@ -43,7 +43,9 @@ export const AIStrategyModal: React.FC = () => {
     toggleAutoTrading,
     addStrategyLog,
     instrument,
-    language
+    language,
+    play,
+    strategyRunner
   } = useBacktestStore();
 
   const t = translations[language] || translations.vi;
@@ -140,7 +142,7 @@ export const AIStrategyModal: React.FC = () => {
 
       setActiveStrategy(newStrat);
       setCompileStatus('SUCCESS');
-      addStrategyLog('SIGNAL', `[AI Copilot] Đã tạo và kích hoạt chiến lược: "${result.name}"`);
+      addStrategyLog('SIGNAL', `[AI Copilot] Đã tạo và nạp chiến lược: "${result.name}"`);
     } catch (err: any) {
       setCompileStatus('ERROR');
       setErrorMessage(err.message || 'Lỗi khi sinh chiến lược.');
@@ -152,6 +154,13 @@ export const AIStrategyModal: React.FC = () => {
 
   const handleApplyStrategy = () => {
     try {
+      const compileRes = strategyRunner.compile(strategyCode, activeStrategy?.parameters || {});
+      if (!compileRes.success) {
+        setCompileStatus('ERROR');
+        setErrorMessage(compileRes.error || 'Lỗi cú pháp chiến lược.');
+        return;
+      }
+
       const newStrat: AIStrategyDefinition = {
         id: activeStrategy?.id || 'strat_' + Date.now(),
         name: strategyName,
@@ -163,9 +172,12 @@ export const AIStrategyModal: React.FC = () => {
       };
 
       setActiveStrategy(newStrat);
+      toggleAutoTrading(true);
       setCompileStatus('SUCCESS');
       setErrorMessage('');
-      addStrategyLog('INFO', `Đã kích hoạt & biên dịch chiến lược: "${strategyName}"`);
+      addStrategyLog('SIGNAL', `[AI Copilot] Kích hoạt & chạy chiến lược: "${strategyName}" (Auto-Trading: BẬT)`);
+      setAIModalOpen(false);
+      play();
     } catch (err: any) {
       setCompileStatus('ERROR');
       setErrorMessage(err.message || 'Lỗi cú pháp chiến lược.');
@@ -183,7 +195,7 @@ export const AIStrategyModal: React.FC = () => {
         parameters: {},
         enabled: true
       });
-      setDbSaveMessage('Đã lưu vào DB thành công!');
+      setDbSaveMessage(t.savedToDBSuccess || 'Đã lưu vào DB thành công!');
       setTimeout(() => setDbSaveMessage(null), 3000);
       addStrategyLog('INFO', `Đã lưu chiến lược "${strategyName}" vào cơ sở dữ liệu`);
     } catch (err: any) {
@@ -218,9 +230,11 @@ export const AIStrategyModal: React.FC = () => {
     setStrategyDesc(loaded.description);
     setStrategyCode(loaded.code);
     setActiveStrategy(loaded);
-    setActiveTab('studio');
+    toggleAutoTrading(true);
     setCompileStatus('SUCCESS');
-    addStrategyLog('INFO', `Đã nạp & kích hoạt chiến lược từ DB: "${loaded.name}"`);
+    addStrategyLog('SIGNAL', `[AI Copilot] Đã nạp & chạy chiến lược từ DB: "${loaded.name}" (Auto-Trading: BẬT)`);
+    setAIModalOpen(false);
+    play();
   };
 
   const handleDeleteCustomStrategy = async (id: string, e: React.MouseEvent) => {
