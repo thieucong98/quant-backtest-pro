@@ -237,16 +237,32 @@ export const AIStrategyModal: React.FC = () => {
 
   const handleTestConnection = async () => {
     setTestStatus('TESTING');
-    setTestMessage('Đang kết nối tới API...');
+    setTestMessage(t.processingBtn);
 
     try {
-      await AIService.generateStrategy('Test connection strategy', llmConfig, 'EURUSD');
+      const res = await AIService.testConnection(llmConfig);
       setTestStatus('SUCCESS');
-      setTestMessage(`Kết nối thành công tới ${AI_PROVIDER_MODELS[llmConfig.provider].name}!`);
+      setTestMessage(`🟢 ${res.message} • Model: ${res.model}`);
     } catch (err: any) {
       setTestStatus('ERROR');
-      setTestMessage(err.message || 'Không thể kết nối tới nhà cung cấp.');
+      setTestMessage(`🔴 ${err.message || 'Không thể kết nối tới nhà cung cấp.'}`);
     }
+  };
+
+  const handleApplyUserPreset = () => {
+    const customConfig: LLMConfig = {
+      provider: 'custom',
+      baseUrl: 'https://r5yym74.abc-tunnel.us/v1',
+      apiKey: 'sk-bd86ea7ea3f6f5b9-6fcxtf-3941c578',
+      model: 'ag/gemini-pro-agent',
+      temperature: 0.2
+    };
+    setLlmConfig(customConfig);
+    try {
+      localStorage.setItem(LLM_STORAGE_KEY, JSON.stringify(customConfig));
+    } catch (e) {}
+    setTestStatus('IDLE');
+    setTestMessage('');
   };
 
   const handleCopyCode = () => {
@@ -258,34 +274,38 @@ export const AIStrategyModal: React.FC = () => {
   const promptSuggestions = [
     { label: 'EMA 9/21 Scalper', text: 'Chiến lược lướt sóng nhanh: Mua khi EMA 9 cắt lên EMA 21, Bán khi EMA 9 cắt xuống EMA 21 kèm SL 15pips, TP 30pips' },
     { label: 'RSI 30/70 Pullback', text: 'Mua khi RSI 14 quá bán dưới 30 và nến xanh xuất hiện; Bán khi RSI 14 quá mua trên 70 và nến đỏ xuất hiện' },
-    { label: 'Bollinger Rejection', text: 'Bắt đảo chiều khi nến đâm thủng Lower Bollinger Bands rồi đóng cửa quay lại vào trong dải' },
-    { label: 'MACD Momentum', text: 'Vào lệnh Mua khi MACD Histogram chuyển từ âm sang dương và MACD > Signal line' }
+    { label: 'Bollinger Band Squeeze', text: 'Chiến lược phá vỡ dải Bollinger Bands khi thị trường bung nén với dải mở rộng' },
+    { label: 'MACD Zero Crossover', text: 'Giao dịch theo đà xu hướng khi đường MACD cắt qua mức 0 kết hợp bộ lọc EMA 50' }
   ];
 
   return (
-    <div className="fixed inset-0 bg-black/75 backdrop-blur-xs flex items-center justify-center z-50 animate-in fade-in select-none p-3">
-      <div className="bg-[#111622] border border-slate-700/80 rounded-xl w-full max-w-4xl h-[670px] shadow-2xl flex flex-col overflow-hidden text-xs">
-        {/* MODAL HEADER */}
-        <div className="h-12 bg-slate-900/95 border-b border-slate-800 px-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded bg-purple-600/30 border border-purple-500/40 flex items-center justify-center">
-              <BrainCircuit className="w-3.5 h-3.5 text-purple-400" />
+    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 select-none animate-in fade-in">
+      <div className="bg-[#10141f] border border-slate-700/80 rounded-2xl w-full max-w-5xl h-[90vh] max-h-[820px] flex flex-col shadow-2xl overflow-hidden font-sans">
+        {/* HEADER */}
+        <div className="h-14 bg-slate-900 border-b border-slate-800 px-4 flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-purple-600/30">
+              <BrainCircuit className="w-4 h-4" />
             </div>
-            <span className="font-bold text-sm text-slate-100">{t.aiStudioTitle}</span>
-            <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-950 text-purple-300 border border-purple-500/30 font-mono">
-              {AI_PROVIDER_MODELS[llmConfig.provider].name.split('(')[0].trim()}
-            </span>
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="font-bold text-sm text-slate-100">{t.aiStudioTitle}</h2>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-950/80 border border-purple-500/40 text-purple-300 font-mono">
+                  {AI_PROVIDER_MODELS[llmConfig.provider]?.name.split(' ')[0]} • {llmConfig.model}
+                </span>
+              </div>
+            </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            {/* Auto Trading Toggle Pill */}
-            <div className="flex items-center gap-2 bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800">
-              <span className="text-slate-400 text-[11px]">{t.autoTrading}:</span>
+          <div className="flex items-center gap-2">
+            {/* Auto Trading Switch */}
+            <div className="flex items-center gap-2 bg-slate-950 border border-slate-800 px-3 py-1 rounded-lg">
+              <span className="text-[11px] text-slate-400 font-medium">{t.autoTrading}:</span>
               <button
                 onClick={() => toggleAutoTrading()}
-                className={`px-2.5 py-0.5 rounded text-[10px] font-bold transition-all ${
+                className={`px-2 py-0.5 rounded text-[10px] font-bold transition-colors ${
                   autoTradingEnabled
-                    ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/30 animate-pulse'
+                    ? 'bg-emerald-600 text-white shadow-xs'
                     : 'bg-slate-800 text-slate-400 hover:text-slate-200'
                 }`}
               >
@@ -295,220 +315,253 @@ export const AIStrategyModal: React.FC = () => {
 
             <button
               onClick={() => setAIModalOpen(false)}
-              className="p-1 hover:bg-slate-800 text-slate-400 hover:text-slate-200 rounded transition-colors"
+              className="p-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-lg transition-colors"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
         </div>
 
-        {/* SUB TABS NAVIGATION */}
-        <div className="h-10 bg-slate-900 border-b border-slate-800 px-4 flex items-center justify-between text-xs font-mono">
-          <div className="flex items-center gap-1.5">
+        {/* TABS NAVIGATION */}
+        <div className="flex items-center justify-between px-4 bg-slate-950 border-b border-slate-800 text-xs shrink-0">
+          <div className="flex items-center gap-1">
             <button
               onClick={() => setActiveTab('studio')}
-              className={`px-3 py-1 rounded font-medium flex items-center gap-1.5 transition-colors ${
-                activeTab === 'studio' ? 'bg-indigo-600 text-white font-semibold' : 'text-slate-400 hover:text-slate-200'
+              className={`px-4 py-2.5 font-bold transition-all border-b-2 flex items-center gap-2 ${
+                activeTab === 'studio'
+                  ? 'border-purple-500 text-purple-400 bg-purple-950/20'
+                  : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/50'
               }`}
             >
-              <Sparkles className="w-3.5 h-3.5 text-purple-300" />
+              <Sparkles className="w-3.5 h-3.5" />
               <span>{t.studioAndSandboxTab}</span>
             </button>
 
             <button
-              onClick={() => {
-                setActiveTab('my-strategies');
-                fetchMyStrategies();
-              }}
-              className={`px-3 py-1 rounded font-medium flex items-center gap-1.5 transition-colors ${
-                activeTab === 'my-strategies' ? 'bg-indigo-600 text-white font-semibold' : 'text-slate-400 hover:text-slate-200'
+              onClick={() => setActiveTab('my-strategies')}
+              className={`px-4 py-2.5 font-bold transition-all border-b-2 flex items-center gap-2 ${
+                activeTab === 'my-strategies'
+                  ? 'border-amber-500 text-amber-400 bg-amber-950/20'
+                  : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/50'
               }`}
             >
-              <FolderOpen className="w-3.5 h-3.5 text-amber-300" />
+              <FolderOpen className="w-3.5 h-3.5" />
               <span>{t.myStrategiesTab}</span>
             </button>
 
             <button
               onClick={() => setActiveTab('templates')}
-              className={`px-3 py-1 rounded font-medium flex items-center gap-1.5 transition-colors ${
-                activeTab === 'templates' ? 'bg-indigo-600 text-white font-semibold' : 'text-slate-400 hover:text-slate-200'
+              className={`px-4 py-2.5 font-bold transition-all border-b-2 flex items-center gap-2 ${
+                activeTab === 'templates'
+                  ? 'border-teal-500 text-teal-400 bg-teal-950/20'
+                  : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/50'
               }`}
             >
-              <BookOpen className="w-3.5 h-3.5 text-teal-300" />
+              <BookOpen className="w-3.5 h-3.5" />
               <span>{t.templatesTab}</span>
             </button>
 
             <button
               onClick={() => setActiveTab('settings')}
-              className={`px-3 py-1 rounded font-medium flex items-center gap-1.5 transition-colors ${
-                activeTab === 'settings' ? 'bg-indigo-600 text-white font-semibold' : 'text-slate-400 hover:text-slate-200'
+              className={`px-4 py-2.5 font-bold transition-all border-b-2 flex items-center gap-2 ${
+                activeTab === 'settings'
+                  ? 'border-indigo-500 text-indigo-400 bg-indigo-950/20'
+                  : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/50'
               }`}
             >
-              <Settings2 className="w-3.5 h-3.5 text-slate-300" />
+              <Sliders className="w-3.5 h-3.5" />
               <span>{t.llmConfigTab}</span>
             </button>
           </div>
 
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] text-slate-500 font-mono">
-              {t.selectedLabel}: <span className="font-bold text-slate-300">{strategyName}</span>
-            </span>
+          <div className="text-[11px] text-slate-500 font-mono hidden md:block">
+            {t.selectedLabel}: <span className="text-slate-300 font-bold">{strategyName}</span>
           </div>
         </div>
 
-        {/* MODAL BODY */}
-        <div className="flex-1 p-4 overflow-y-auto space-y-4 font-mono">
-          {/* TAB 1: STUDIO & SANDBOX */}
+        {/* TAB CONTENTS */}
+        <div className="flex-1 overflow-y-auto p-4">
+          {/* TAB 1: STUDIO */}
           {activeTab === 'studio' && (
-            <div className="space-y-4">
-              {/* Natural Language Prompt Input */}
-              <div className="bg-slate-900/80 border border-slate-800 p-3 rounded-xl space-y-2">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-bold text-slate-200 flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 text-purple-400" />
-                    {t.describeStrategyLabel}
-                  </span>
-                  <span className="text-[10px] text-slate-500">
-                    Model: {AI_PROVIDER_MODELS[llmConfig.provider].models[0]}
-                  </span>
-                </div>
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 h-full">
+              {/* LEFT COLUMN: PROMPT GENERATOR */}
+              <div className="lg:col-span-5 flex flex-col gap-3">
+                <div className="bg-slate-900/60 border border-slate-800 p-3.5 rounded-xl space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+                      <span>{t.describeStrategyLabel}</span>
+                    </label>
+                    <span className="text-[10px] text-slate-500 font-mono">{instrument.symbol}</span>
+                  </div>
 
-                <div className="flex gap-2">
-                  <input
-                    type="text"
+                  <textarea
+                    rows={4}
                     value={prompt}
                     onChange={(e) => setPrompt(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleGenerateWithAI()}
                     placeholder={t.promptPlaceholder}
-                    className="flex-1 bg-slate-950 border border-slate-700/80 rounded-lg px-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-purple-500 font-sans"
+                    className="w-full bg-slate-950 border border-slate-700/80 rounded-lg p-2.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-purple-500 font-mono resize-none"
                   />
+
+                  {/* PROMPT SUGGESTIONS */}
+                  <div className="space-y-1.5">
+                    <div className="text-[10px] text-slate-500 flex items-center gap-1">
+                      <Lightbulb className="w-3 h-3 text-amber-400" />
+                      <span>{t.quickPromptsLabel}</span>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {promptSuggestions.map((sug, i) => (
+                        <button
+                          key={i}
+                          onClick={() => setPrompt(sug.text)}
+                          className="px-2 py-0.5 rounded-md bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-slate-100 text-[10px] font-mono transition-colors border border-slate-700/50"
+                        >
+                          {sug.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* GENERATE BUTTON */}
                   <button
                     onClick={handleGenerateWithAI}
                     disabled={isGenerating || !prompt.trim()}
-                    className="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 disabled:opacity-50 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-md transition-all active:scale-95 whitespace-nowrap"
+                    className="w-full py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 disabled:opacity-50 text-white rounded-lg text-xs font-bold flex items-center justify-center gap-2 shadow-lg shadow-purple-600/30 active:scale-98 transition-all"
                   >
-                    <Sparkles className={`w-3.5 h-3.5 ${isGenerating ? 'animate-spin' : ''}`} />
-                    <span>{isGenerating ? t.generating : t.generateStrategy}</span>
+                    {isGenerating ? (
+                      <>
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                        <span>{t.generating}</span>
+                      </>
+                    ) : (
+                      <>
+                        <Zap className="w-3.5 h-3.5" />
+                        <span>{t.generateStrategy}</span>
+                      </>
+                    )}
                   </button>
                 </div>
 
-                {/* Quick Prompts */}
-                <div className="flex items-center gap-1.5 flex-wrap pt-1">
-                  <span className="text-[10px] text-slate-500">{t.quickPromptsLabel}</span>
-                  {promptSuggestions.map((s, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => setPrompt(s.text)}
-                      className="px-2 py-0.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-purple-300 rounded text-[10px] transition-colors"
-                    >
-                      {s.label}
-                    </button>
-                  ))}
+                {/* COPILOT ADVICE / STATUS */}
+                <div className="bg-slate-900/40 border border-slate-800/80 p-3 rounded-xl space-y-1.5 text-xs">
+                  <div className="font-bold text-slate-300 flex items-center gap-1.5">
+                    <Code2 className="w-3.5 h-3.5 text-teal-400" />
+                    <span>{t.copilotTips}</span>
+                  </div>
+                  <ul className="text-[11px] text-slate-400 space-y-1 list-disc list-inside">
+                    <li>Hỗ trợ tính toán đa chỉ báo: SMA, EMA, RSI, MACD, Bollinger Bands, ATR.</li>
+                    <li>Sử dụng <code className="text-purple-300 bg-slate-950 px-1 rounded">api.buy()</code> và <code className="text-purple-300 bg-slate-950 px-1 rounded">api.sell()</code> để mở vị thế.</li>
+                    <li>Sandbox chạy an toàn trong môi trường Web Worker cô lập.</li>
+                  </ul>
                 </div>
               </div>
 
-              {/* Code Editor & Strategy Meta */}
-              <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-3 space-y-3">
-                <div className="flex items-center justify-between flex-wrap gap-2">
-                  <div className="flex items-center gap-2">
-                    <Code2 className="w-4 h-4 text-indigo-400" />
-                    <input
-                      type="text"
-                      value={strategyName}
-                      onChange={(e) => setStrategyName(e.target.value)}
-                      className="bg-slate-950 border border-slate-800 rounded px-2 py-1 text-xs font-bold text-slate-200 focus:outline-none focus:border-indigo-500 w-64"
-                      placeholder={t.strategyNamePlaceholder}
+              {/* RIGHT COLUMN: CODE EDITOR & SANDBOX */}
+              <div className="lg:col-span-7 flex flex-col gap-3">
+                <div className="bg-slate-900/60 border border-slate-800 p-3 rounded-xl flex-1 flex flex-col space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 flex-1 mr-2">
+                      <FileCode className="w-4 h-4 text-indigo-400 shrink-0" />
+                      <input
+                        type="text"
+                        value={strategyName}
+                        onChange={(e) => setStrategyName(e.target.value)}
+                        placeholder={t.strategyNamePlaceholder}
+                        className="bg-transparent font-bold text-xs text-slate-100 focus:outline-none border-b border-transparent focus:border-indigo-500 w-full"
+                      />
+                    </div>
+
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={handleCopyCode}
+                        className="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-[10px] flex items-center gap-1 transition-colors"
+                        title="Copy Code"
+                      >
+                        {isCopied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                        <span>{isCopied ? 'Copied' : 'Copy'}</span>
+                      </button>
+
+                      <button
+                        onClick={handleSaveToDatabase}
+                        disabled={isSavingDB}
+                        className="px-2.5 py-1 bg-amber-600/90 hover:bg-amber-500 text-white rounded text-[10px] font-bold flex items-center gap-1 transition-colors shadow-xs"
+                      >
+                        <Save className="w-3 h-3" />
+                        <span>{isSavingDB ? t.processingBtn : t.saveToDB}</span>
+                      </button>
+
+                      <button
+                        onClick={handleApplyStrategy}
+                        className="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-[10px] font-bold flex items-center gap-1 transition-colors shadow-md shadow-emerald-600/30"
+                      >
+                        <Play className="w-3 h-3 fill-current" />
+                        <span>{t.activateAndResume}</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {dbSaveMessage && (
+                    <div className="text-[11px] text-amber-400 font-mono bg-amber-950/40 border border-amber-500/30 px-2.5 py-1 rounded">
+                      {dbSaveMessage}
+                    </div>
+                  )}
+
+                  {/* CODE EDITOR TEXTAREA */}
+                  <div className="flex-1 min-h-[260px] relative">
+                    <textarea
+                      value={strategyCode}
+                      onChange={(e) => {
+                        setStrategyCode(e.target.value);
+                        setCompileStatus('IDLE');
+                      }}
+                      spellCheck={false}
+                      className="w-full h-full bg-[#0d1117] border border-slate-800 rounded-lg p-3 text-[11px] font-mono text-emerald-400 focus:outline-none focus:border-indigo-500 resize-none leading-relaxed"
                     />
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    {dbSaveMessage && (
-                      <span className="text-[10px] text-emerald-400 font-bold">{dbSaveMessage}</span>
-                    )}
-
-                    <button
-                      onClick={handleSaveToDatabase}
-                      disabled={isSavingDB}
-                      className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-xs font-semibold flex items-center gap-1 border border-slate-700 transition-colors"
-                      title="Lưu chiến lược này vào database"
-                    >
-                      <Save className="w-3.5 h-3.5 text-amber-400" />
-                      <span>{t.saveToDB}</span>
-                    </button>
-
-                    <button
-                      onClick={handleCopyCode}
-                      className="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-xs transition-colors"
-                      title="Copy code"
-                    >
-                      {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                    </button>
-
-                    <button
-                      onClick={handleApplyStrategy}
-                      className="px-3 py-1 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded text-xs font-bold flex items-center gap-1.5 shadow-xs transition-all active:scale-95"
-                    >
-                      <Play className="w-3 h-3 fill-current" />
-                      <span>{t.activateAndResume}</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Strategy Codearea */}
-                <div className="relative">
-                  <textarea
-                    value={strategyCode}
-                    onChange={(e) => setStrategyCode(e.target.value)}
-                    rows={12}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-xs font-mono text-emerald-300/90 leading-relaxed focus:outline-none focus:border-indigo-500 resize-none selection:bg-indigo-900"
-                    spellCheck={false}
-                  />
+                  {/* COMPILATION STATUS */}
                   {compileStatus === 'SUCCESS' && (
-                    <span className="absolute bottom-3 right-3 flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-950/80 border border-emerald-500/40 text-emerald-400 text-[10px]">
-                      <CheckCircle className="w-3 h-3" /> Đã biên dịch & Sẵn sàng chạy
-                    </span>
+                    <div className="flex items-center gap-1.5 text-[11px] text-emerald-400 bg-emerald-950/30 border border-emerald-500/30 px-2.5 py-1 rounded">
+                      <CheckCircle className="w-3.5 h-3.5 shrink-0" />
+                      <span>{t.savedToDBSuccess || 'Chiến lược đã được biên dịch và kích hoạt thành công!'}</span>
+                    </div>
                   )}
                   {compileStatus === 'ERROR' && (
-                    <span className="absolute bottom-3 right-3 flex items-center gap-1 px-2 py-0.5 rounded bg-rose-950/80 border border-rose-500/40 text-rose-400 text-[10px]">
-                      <AlertTriangle className="w-3 h-3" /> {errorMessage}
-                    </span>
+                    <div className="flex items-center gap-1.5 text-[11px] text-rose-400 bg-rose-950/30 border border-rose-500/30 px-2.5 py-1 rounded">
+                      <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                      <span>{errorMessage}</span>
+                    </div>
                   )}
                 </div>
               </div>
             </div>
           )}
 
-          {/* TAB 2: MY STRATEGIES (DATABASE LIBRARY) */}
+          {/* TAB 2: MY STRATEGIES (DB) */}
           {activeTab === 'my-strategies' && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-bold text-sm text-slate-100 flex items-center gap-2">
-                    <FolderOpen className="w-4 h-4 text-amber-400" />
-                    Thư Viện Chiến Lược Của Tôi (Database)
-                  </h3>
-                  <p className="text-slate-400 text-[11px] mt-0.5">
-                    Các chiến lược AI và thuật toán tùy chỉnh đã được lưu vĩnh viễn trong cơ sở dữ liệu.
-                  </p>
-                </div>
+                <p className="text-slate-400 text-xs">
+                  Danh sách các chiến lược định lượng đã lưu trong cơ sở dữ liệu SQLite:
+                </p>
                 <button
                   onClick={fetchMyStrategies}
-                  className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors"
+                  className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-xs flex items-center gap-1 transition-colors"
                 >
-                  <RefreshCw className={`w-3.5 h-3.5 ${isLoadingMyStrats ? 'animate-spin' : ''}`} />
-                  <span>Làm mới</span>
+                  <RefreshCw className={`w-3 h-3 ${isLoadingMyStrats ? 'animate-spin' : ''}`} />
+                  <span>{t.refreshBtn}</span>
                 </button>
               </div>
 
               {isLoadingMyStrats ? (
                 <div className="py-16 text-center text-slate-500 text-xs">
                   <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 opacity-40" />
-                  Đang tải danh sách chiến lược từ Database...
+                  {t.processingBtn}
                 </div>
               ) : myStrategies.length === 0 ? (
                 <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-8 text-center text-slate-500 text-xs">
                   <FolderOpen className="w-10 h-10 mx-auto mb-3 opacity-30" />
-                  Chưa có chiến lược nào được lưu trong Database. Hãy tạo và bấm "Lưu vào DB" ở tab Studio!
+                  Chưa có chiến lược nào được lưu trong Database. Hãy tạo và bấm "{t.saveToDB}" ở tab Studio!
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -521,7 +574,7 @@ export const AIStrategyModal: React.FC = () => {
                         <div className="flex items-center justify-between">
                           <span className="font-bold text-slate-200 text-xs">{strat.name}</span>
                           <span className="text-[10px] text-slate-500">
-                            {new Date(strat.createdAt).toLocaleDateString('vi-VN')}
+                            {new Date(strat.createdAt).toLocaleDateString(language === 'vi' ? 'vi-VN' : 'en-US')}
                           </span>
                         </div>
                         <p className="text-slate-400 text-[11px] line-clamp-2 mt-1">
@@ -542,7 +595,7 @@ export const AIStrategyModal: React.FC = () => {
                           className="px-3 py-1 bg-indigo-600 hover:bg-indigo-500 text-white rounded text-xs font-bold flex items-center gap-1 transition-colors shadow-xs"
                         >
                           <Play className="w-3 h-3 fill-current" />
-                          <span>Kích Hoạt & Tiếp Tục</span>
+                          <span>{t.activateAndResume}</span>
                         </button>
                       </div>
                     </div>
@@ -587,17 +640,39 @@ export const AIStrategyModal: React.FC = () => {
 
           {/* TAB 4: LLM SETTINGS */}
           {activeTab === 'settings' && (
-            <div className="max-w-xl mx-auto space-y-4 bg-slate-900/60 border border-slate-800 p-6 rounded-xl">
-              <h3 className="font-bold text-sm text-slate-100 flex items-center gap-2">
-                <Settings2 className="w-4 h-4 text-purple-400" />
-                Cấu Hình Nhà Cung Cấp Trí Tuệ Nhân Tạo (Multi-LLM)
-              </h3>
+            <div className="max-w-2xl mx-auto space-y-4 bg-slate-900/60 border border-slate-800 p-6 rounded-xl">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h3 className="font-bold text-sm text-slate-100 flex items-center gap-2">
+                  <Settings2 className="w-4 h-4 text-purple-400" />
+                  {t.llmConfigTitle}
+                </h3>
 
+                <button
+                  type="button"
+                  onClick={handleApplyUserPreset}
+                  className="px-2.5 py-1 bg-gradient-to-r from-purple-600/80 to-indigo-600/80 hover:from-purple-500 hover:to-indigo-500 text-white text-[10px] font-bold rounded-lg transition-all flex items-center gap-1.5 shadow-xs"
+                >
+                  <Zap className="w-3 h-3 text-amber-300" />
+                  <span>{t.quickFillCustomBtn}</span>
+                </button>
+              </div>
+
+              {/* Provider Selection */}
               <div>
-                <label className="block text-xs text-slate-400 mb-1">AI Provider:</label>
+                <label className="block text-xs text-slate-400 mb-1">{t.llmProviderLabel}</label>
                 <select
                   value={llmConfig.provider}
-                  onChange={(e) => handleUpdateLLMConfig({ provider: e.target.value as AIProvider })}
+                  onChange={(e) => {
+                    const newProv = e.target.value as AIProvider;
+                    const def = AI_PROVIDER_MODELS[newProv];
+                    handleUpdateLLMConfig({
+                      provider: newProv,
+                      baseUrl: def.defaultBaseUrl || '',
+                      model: def.models[0] || 'ag/gemini-pro-agent'
+                    });
+                    setTestStatus('IDLE');
+                    setTestMessage('');
+                  }}
                   className="w-full bg-slate-950 border border-slate-700/80 rounded-lg px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-purple-500 font-mono"
                 >
                   {(Object.keys(AI_PROVIDER_MODELS) as AIProvider[]).map((prov) => (
@@ -606,43 +681,142 @@ export const AIStrategyModal: React.FC = () => {
                     </option>
                   ))}
                 </select>
+                <p className="text-[10px] text-slate-500 mt-1">{t.llmCustomEndpointDesc}</p>
               </div>
 
-              <div>
-                <label className="block text-xs text-slate-400 mb-1">API Key ({llmConfig.provider}):</label>
-                <div className="relative">
+              {/* Base URL (for custom / openai / deepseek / claude / ollama) */}
+              {llmConfig.provider !== 'builtin' && (
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-xs text-slate-400">{t.llmBaseUrlLabel}</label>
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => handleUpdateLLMConfig({ baseUrl: 'https://r5yym74.abc-tunnel.us/v1' })}
+                        className="text-[9px] px-1.5 py-0.5 rounded bg-purple-950/80 border border-purple-500/40 text-purple-300 hover:bg-purple-900"
+                      >
+                        abc-tunnel
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleUpdateLLMConfig({ baseUrl: 'https://api.openai.com/v1' })}
+                        className="text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 hover:bg-slate-700"
+                      >
+                        OpenAI
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleUpdateLLMConfig({ baseUrl: 'https://openrouter.ai/api/v1' })}
+                        className="text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 hover:bg-slate-700"
+                      >
+                        OpenRouter
+                      </button>
+                    </div>
+                  </div>
                   <input
-                    type={showApiKey ? 'text' : 'password'}
-                    value={llmConfig.apiKey || ''}
-                    onChange={(e) => handleUpdateLLMConfig({ apiKey: e.target.value })}
-                    placeholder={`Nhập API Key cho ${llmConfig.provider}...`}
-                    className="w-full bg-slate-950 border border-slate-700/80 rounded-lg px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-purple-500 font-mono pr-16"
+                    type="text"
+                    value={llmConfig.baseUrl || ''}
+                    onChange={(e) => handleUpdateLLMConfig({ baseUrl: e.target.value })}
+                    placeholder="https://r5yym74.abc-tunnel.us/v1"
+                    className="w-full bg-slate-950 border border-slate-700/80 rounded-lg px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-purple-500 font-mono"
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowApiKey(!showApiKey)}
-                    className="absolute right-2 top-2 text-[10px] text-slate-400 hover:text-slate-200"
-                  >
-                    {showApiKey ? 'Ẩn' : 'Hiện'}
-                  </button>
                 </div>
+              )}
+
+              {/* Model ID / Name */}
+              {llmConfig.provider !== 'builtin' && (
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-xs text-slate-400">{t.llmModelLabel}</label>
+                    <div className="flex items-center gap-1">
+                      {AI_PROVIDER_MODELS[llmConfig.provider]?.models.slice(0, 3).map((m) => (
+                        <button
+                          key={m}
+                          type="button"
+                          onClick={() => handleUpdateLLMConfig({ model: m })}
+                          className={`text-[9px] px-1.5 py-0.5 rounded transition-colors ${
+                            llmConfig.model === m
+                              ? 'bg-purple-600 text-white font-bold'
+                              : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                          }`}
+                        >
+                          {m}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <input
+                    type="text"
+                    value={llmConfig.model || ''}
+                    onChange={(e) => handleUpdateLLMConfig({ model: e.target.value })}
+                    placeholder={t.customModelInputPlaceholder}
+                    className="w-full bg-slate-950 border border-slate-700/80 rounded-lg px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-purple-500 font-mono"
+                  />
+                </div>
+              )}
+
+              {/* API Key */}
+              {llmConfig.provider !== 'builtin' && llmConfig.provider !== 'ollama' && (
+                <div>
+                  <label className="block text-xs text-slate-400 mb-1">{t.llmApiKeyLabel}</label>
+                  <div className="relative">
+                    <input
+                      type={showApiKey ? 'text' : 'password'}
+                      value={llmConfig.apiKey || ''}
+                      onChange={(e) => handleUpdateLLMConfig({ apiKey: e.target.value })}
+                      placeholder="sk-..."
+                      className="w-full bg-slate-950 border border-slate-700/80 rounded-lg px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-purple-500 font-mono pr-16"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowApiKey(!showApiKey)}
+                      className="absolute right-2 top-2 text-[10px] text-slate-400 hover:text-slate-200"
+                    >
+                      {showApiKey ? (language === 'vi' ? 'Ẩn' : 'Hide') : (language === 'vi' ? 'Hiện' : 'Show')}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Temperature Slider */}
+              <div>
+                <div className="flex items-center justify-between text-xs text-slate-400 mb-1">
+                  <span>{t.llmTemperatureLabel}</span>
+                  <span className="font-mono text-purple-300 font-bold">{llmConfig.temperature ?? 0.2}</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.05"
+                  value={llmConfig.temperature ?? 0.2}
+                  onChange={(e) => handleUpdateLLMConfig({ temperature: parseFloat(e.target.value) })}
+                  className="w-full accent-purple-500 cursor-pointer"
+                />
               </div>
 
-              <div className="pt-2 flex items-center justify-between">
+              {/* Test Connection Footer */}
+              <div className="pt-3 border-t border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                 <button
                   type="button"
                   onClick={handleTestConnection}
                   disabled={testStatus === 'TESTING'}
-                  className="px-4 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors"
+                  className="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 disabled:opacity-50 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all shadow-md shadow-purple-600/30"
                 >
                   <RefreshCw className={`w-3.5 h-3.5 ${testStatus === 'TESTING' ? 'animate-spin' : ''}`} />
-                  <span>Kiểm Tra Kết Nối</span>
+                  <span>{testStatus === 'TESTING' ? t.processingBtn : t.llmTestConnectionBtn}</span>
                 </button>
 
                 {testMessage && (
-                  <span className={`text-xs ${testStatus === 'SUCCESS' ? 'text-emerald-400' : testStatus === 'ERROR' ? 'text-rose-400' : 'text-slate-400'}`}>
+                  <div className={`text-xs font-mono p-2 rounded-lg border max-w-full truncate ${
+                    testStatus === 'SUCCESS'
+                      ? 'bg-emerald-950/40 border-emerald-500/40 text-emerald-300'
+                      : testStatus === 'ERROR'
+                      ? 'bg-rose-950/40 border-rose-500/40 text-rose-300'
+                      : 'bg-slate-950 border-slate-800 text-slate-400'
+                  }`}>
                     {testMessage}
-                  </span>
+                  </div>
                 )}
               </div>
             </div>

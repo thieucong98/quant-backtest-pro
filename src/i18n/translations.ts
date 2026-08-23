@@ -224,6 +224,16 @@ export interface TranslationDict {
   selectAtLeastOneSession: string;
   metricCriteriaHeader: string;
   closedTradesCount: string;
+  llmConfigTitle: string;
+  llmProviderLabel: string;
+  llmBaseUrlLabel: string;
+  llmModelLabel: string;
+  llmApiKeyLabel: string;
+  llmTestConnectionBtn: string;
+  llmCustomEndpointDesc: string;
+  llmTemperatureLabel: string;
+  quickFillCustomBtn: string;
+  customModelInputPlaceholder: string;
 }
 
 export const translations: Record<Language, TranslationDict> = {
@@ -436,7 +446,17 @@ export const translations: Record<Language, TranslationDict> = {
     searchSessionsPlaceholder: 'Tìm kiếm phiên theo tên hoặc mã...',
     selectAtLeastOneSession: 'Chọn ít nhất 1 phiên ở trên để xem bảng so sánh chi tiết.',
     metricCriteriaHeader: 'Chỉ Số / Tiêu Chí Đánh Giá',
-    closedTradesCount: 'lệnh đã chốt'
+    closedTradesCount: 'lệnh đã chốt',
+    llmConfigTitle: 'Cấu Hình Nhà Cung Cấp Trí Tuệ Nhân Tạo (Multi-LLM)',
+    llmProviderLabel: 'Nhà cung cấp AI:',
+    llmBaseUrlLabel: 'Base URL (API Endpoint):',
+    llmModelLabel: 'Mã Model / ID:',
+    llmApiKeyLabel: 'API Key:',
+    llmTestConnectionBtn: 'Kiểm Tra Kết Nối',
+    llmCustomEndpointDesc: 'Hỗ trợ OpenAI format, Proxy Tunnel, OpenRouter, Groq, LiteLLM, vLLM...',
+    llmTemperatureLabel: 'Độ sáng tạo (Temperature):',
+    quickFillCustomBtn: 'Điền cấu hình mẫu của bạn (Tunnel & Gemini Agent)',
+    customModelInputPlaceholder: 'Nhập hoặc chọn mã model (ví dụ: ag/gemini-pro-agent, gpt-4o...)'
   },
   en: {
     appTitle: 'Quant Backtest Pro',
@@ -647,7 +667,17 @@ export const translations: Record<Language, TranslationDict> = {
     searchSessionsPlaceholder: 'Search sessions by name or symbol...',
     selectAtLeastOneSession: 'Select at least 1 session above to view the detailed comparison matrix.',
     metricCriteriaHeader: 'Metric / Evaluation Criterion',
-    closedTradesCount: 'closed trades'
+    closedTradesCount: 'closed trades',
+    llmConfigTitle: 'Artificial Intelligence Provider Configuration (Multi-LLM)',
+    llmProviderLabel: 'AI Provider:',
+    llmBaseUrlLabel: 'Base URL (API Endpoint):',
+    llmModelLabel: 'Model ID / Name:',
+    llmApiKeyLabel: 'API Key:',
+    llmTestConnectionBtn: 'Test Connection',
+    llmCustomEndpointDesc: 'Supports OpenAI format, Reverse Proxies, OpenRouter, Groq, LiteLLM, vLLM...',
+    llmTemperatureLabel: 'Temperature (Creativity):',
+    quickFillCustomBtn: 'Quick Fill My Preset (Tunnel & Gemini Agent)',
+    customModelInputPlaceholder: 'Enter or choose model ID (e.g. ag/gemini-pro-agent, gpt-4o...)'
   },
   ja: {
     appTitle: 'Quant Backtest Pro',
@@ -858,7 +888,17 @@ export const translations: Record<Language, TranslationDict> = {
     searchSessionsPlaceholder: 'セッション名または銘柄で検索...',
     selectAtLeastOneSession: '詳細な比較マトリクスを表示するには、上記から1つ以上のセッションを選択してください。',
     metricCriteriaHeader: '評価指標 / 項目',
-    closedTradesCount: '件の決済済み取引'
+    closedTradesCount: '件の決済済み取引',
+    llmConfigTitle: 'AIプロバイダー設定 (Multi-LLM)',
+    llmProviderLabel: 'AIプロバイダー:',
+    llmBaseUrlLabel: 'Base URL (API エンドポイント):',
+    llmModelLabel: 'モデルID / モデル名:',
+    llmApiKeyLabel: 'APIキー:',
+    llmTestConnectionBtn: '接続テスト',
+    llmCustomEndpointDesc: 'OpenAI形式、プロキシトンネル、OpenRouter、Groq、LiteLLMに対応...',
+    llmTemperatureLabel: 'Temperature (創造性):',
+    quickFillCustomBtn: 'カスタムプリセットを自動入力 (Tunnel & Gemini Agent)',
+    customModelInputPlaceholder: 'モデルIDを入力または選択 (例: ag/gemini-pro-agent, gpt-4o...)'
   },
   zh: {
     appTitle: 'Quant Backtest Pro',
@@ -1069,6 +1109,16 @@ export const translations: Record<Language, TranslationDict> = {
     searchSessionsPlaceholder: '按名称或品种搜索会话...',
     selectAtLeastOneSession: '请在上方选择至少1个会话以查看详细对比矩阵。',
     metricCriteriaHeader: '评估指标 / 维度',
-    closedTradesCount: '笔已平仓交易'
+    closedTradesCount: '笔已平仓交易',
+    llmConfigTitle: '人工智能提供商配置 (Multi-LLM)',
+    llmProviderLabel: 'AI 提供商:',
+    llmBaseUrlLabel: 'Base URL (API 端点):',
+    llmModelLabel: '模型 ID / 名称:',
+    llmApiKeyLabel: 'API Key:',
+    llmTestConnectionBtn: '测试连接',
+    llmCustomEndpointDesc: '支持 OpenAI 兼容格式、代理隧道、OpenRouter、Groq、LiteLLM 等...',
+    llmTemperatureLabel: '采样温度 (Temperature):',
+    quickFillCustomBtn: '一键填入您的预设 (Tunnel & Gemini Agent)',
+    customModelInputPlaceholder: '输入或选择模型 ID (例如: ag/gemini-pro-agent, gpt-4o...)'
   }
 };

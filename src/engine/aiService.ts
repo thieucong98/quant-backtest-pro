@@ -1,7 +1,7 @@
 import { Candle } from '../types/market';
 import { IndicatorLibrary } from '../types/strategy';
 
-export type AIProvider = 'gemini' | 'openai' | 'claude' | 'deepseek' | 'ollama' | 'builtin';
+export type AIProvider = 'custom' | 'openai' | 'gemini' | 'deepseek' | 'claude' | 'ollama' | 'builtin';
 
 export interface LLMConfig {
   provider: AIProvider;
@@ -12,34 +12,36 @@ export interface LLMConfig {
 }
 
 export const DEFAULT_LLM_CONFIG: LLMConfig = {
-  provider: 'builtin',
-  apiKey: '',
-  model: 'gemini-1.5-flash',
-  baseUrl: '',
+  provider: 'custom',
+  apiKey: 'sk-bd86ea7ea3f6f5b9-6fcxtf-3941c578',
+  model: 'ag/gemini-pro-agent',
+  baseUrl: 'https://r5yym74.abc-tunnel.us/v1',
   temperature: 0.2
 };
 
-export const AI_PROVIDER_MODELS: Record<AIProvider, { name: string; models: string[]; defaultBaseUrl?: string }> = {
-  builtin: {
-    name: 'Built-in Quant AI Synthesizer (Offline - Miễn phí)',
-    models: ['quant-rule-engine-v2']
-  },
-  gemini: {
-    name: 'Google Gemini AI',
-    models: ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-2.0-flash-exp']
+export const AI_PROVIDER_MODELS: Record<AIProvider, { name: string; models: string[]; defaultBaseUrl?: string; placeholder?: string }> = {
+  custom: {
+    name: 'Custom OpenAI-Compatible API / Reverse Proxy Tunnel',
+    models: ['ag/gemini-pro-agent', 'gpt-4o', 'claude-3-5-sonnet', 'deepseek-chat', 'gemini-1.5-pro'],
+    defaultBaseUrl: 'https://r5yym74.abc-tunnel.us/v1',
+    placeholder: 'e.g. ag/gemini-pro-agent'
   },
   openai: {
     name: 'OpenAI / OpenRouter / Groq',
-    models: ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'o1-mini'],
+    models: ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'o1-mini', 'meta-llama/llama-3.3-70b-instruct'],
     defaultBaseUrl: 'https://api.openai.com/v1'
   },
+  gemini: {
+    name: 'Google Gemini Official API',
+    models: ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-2.0-flash-exp']
+  },
   deepseek: {
-    name: 'DeepSeek AI',
+    name: 'DeepSeek Official AI',
     models: ['deepseek-chat', 'deepseek-coder'],
     defaultBaseUrl: 'https://api.deepseek.com/v1'
   },
   claude: {
-    name: 'Anthropic Claude',
+    name: 'Anthropic Claude Official',
     models: ['claude-3-5-sonnet-20241022', 'claude-3-5-haiku-20241022'],
     defaultBaseUrl: 'https://api.anthropic.com/v1'
   },
@@ -47,6 +49,10 @@ export const AI_PROVIDER_MODELS: Record<AIProvider, { name: string; models: stri
     name: 'Ollama Local LLM (Chạy trên máy tính cá nhân)',
     models: ['llama3.2', 'deepseek-coder-v2', 'qwen2.5-coder', 'mistral'],
     defaultBaseUrl: 'http://localhost:11434'
+  },
+  builtin: {
+    name: 'Built-in Quant AI Synthesizer (Offline - Miễn phí)',
+    models: ['quant-rule-engine-v2']
   }
 };
 
@@ -96,6 +102,172 @@ QUY TẮC BẮT BUỘC:
 
 export class AIService {
   /**
+   * Kiểm tra kết nối tới nhà cung cấp LLM với latency thực tế
+   */
+  public static async testConnection(config: LLMConfig): Promise<{
+    success: boolean;
+    latencyMs: number;
+    message: string;
+    model: string;
+  }> {
+    if (config.provider === 'builtin') {
+      return {
+        success: true,
+        latencyMs: 1,
+        message: 'Built-in Offline Synthesizer đang sẵn sàng.',
+        model: 'quant-rule-engine-v2'
+      };
+    }
+
+    if (!config.apiKey?.trim() && config.provider !== 'ollama') {
+      throw new Error('Vui lòng nhập API Key trước khi kiểm tra kết nối.');
+    }
+
+    const startTime = Date.now();
+
+    // 1. Custom / OpenAI / DeepSeek Compatible
+    if (config.provider === 'custom' || config.provider === 'openai' || config.provider === 'deepseek') {
+      const baseUrl = config.baseUrl || AI_PROVIDER_MODELS[config.provider]?.defaultBaseUrl || 'https://api.openai.com/v1';
+      const url = `${baseUrl.replace(/\/+$/, '')}/chat/completions`;
+
+      let res: Response;
+      try {
+        res = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${config.apiKey.trim()}`
+          },
+          body: JSON.stringify({
+            model: config.model || 'ag/gemini-pro-agent',
+            messages: [{ role: 'user', content: 'Ping. Reply OK in 1 word.' }],
+            max_tokens: 100,
+            stream: false
+          })
+        });
+      } catch (networkErr: any) {
+        throw new Error(`Không thể kết nối tới ${url}. Chi tiết: ${networkErr.message}`);
+      }
+
+      const latencyMs = Date.now() - startTime;
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        const msg = err?.error?.message || err?.message || `HTTP ${res.status}: ${res.statusText}`;
+        throw new Error(`Lỗi từ máy chủ (${res.status}): ${msg}`);
+      }
+
+      const data = await res.json();
+      return {
+        success: true,
+        latencyMs,
+        message: `Kết nối thành công tới ${config.model || data?.model} (${latencyMs}ms)`,
+        model: data?.model || config.model
+      };
+    }
+
+    // 2. Google Gemini API
+    if (config.provider === 'gemini') {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${config.model || 'gemini-1.5-flash'}:generateContent?key=${config.apiKey.trim()}`;
+      let res: Response;
+      try {
+        res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: 'Ping. Reply OK in 1 word.' }] }],
+            generationConfig: { maxOutputTokens: 10 }
+          })
+        });
+      } catch (networkErr: any) {
+        throw new Error(`Không thể kết nối Gemini API. Chi tiết: ${networkErr.message}`);
+      }
+
+      const latencyMs = Date.now() - startTime;
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(`Lỗi Gemini (${res.status}): ${err?.error?.message || res.statusText}`);
+      }
+
+      return {
+        success: true,
+        latencyMs,
+        message: `Kết nối thành công tới ${config.model} (${latencyMs}ms)`,
+        model: config.model
+      };
+    }
+
+    // 3. Anthropic Claude API
+    if (config.provider === 'claude') {
+      const baseUrl = config.baseUrl || 'https://api.anthropic.com/v1';
+      const url = `${baseUrl.replace(/\/+$/, '')}/messages`;
+      let res: Response;
+      try {
+        res = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': config.apiKey.trim(),
+            'anthropic-version': '2023-06-01',
+            'dangerously-allow-browser': 'true'
+          },
+          body: JSON.stringify({
+            model: config.model || 'claude-3-5-haiku-20241022',
+            messages: [{ role: 'user', content: 'Ping' }],
+            max_tokens: 10
+          })
+        });
+      } catch (networkErr: any) {
+        throw new Error(`Không thể kết nối Claude API. Chi tiết: ${networkErr.message}`);
+      }
+
+      const latencyMs = Date.now() - startTime;
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(`Lỗi Claude (${res.status}): ${err?.error?.message || res.statusText}`);
+      }
+
+      return {
+        success: true,
+        latencyMs,
+        message: `Kết nối thành công tới ${config.model} (${latencyMs}ms)`,
+        model: config.model
+      };
+    }
+
+    // 4. Ollama Local
+    if (config.provider === 'ollama') {
+      const baseUrl = config.baseUrl || 'http://localhost:11434';
+      const url = `${baseUrl.replace(/\/+$/, '')}/api/tags`;
+      let res: Response;
+      try {
+        res = await fetch(url);
+      } catch (networkErr: any) {
+        throw new Error(`Không thể kết nối tới Ollama tại ${baseUrl}. Vui lòng chạy 'ollama serve'.`);
+      }
+
+      const latencyMs = Date.now() - startTime;
+      if (!res.ok) {
+        throw new Error(`Ollama trả về mã lỗi HTTP ${res.status}`);
+      }
+
+      return {
+        success: true,
+        latencyMs,
+        message: `Kết nối thành công tới Ollama Local (${latencyMs}ms)`,
+        model: config.model || 'llama3.2'
+      };
+    }
+
+    return {
+      success: true,
+      latencyMs: 1,
+      message: 'Offline synthesizer ready',
+      model: 'builtin'
+    };
+  }
+
+  /**
    * Gọi LLM API hoặc Built-in Rule Engine để sinh code chiến lược
    */
   public static async generateStrategy(
@@ -107,9 +279,14 @@ export class AIService {
       throw new Error('Vui lòng nhập mô tả chiến lược.');
     }
 
-    // 1. Nếu sử dụng Built-in Offline Synthesizer hoặc chưa có API Key
-    if (config.provider === 'builtin' || (!config.apiKey && config.provider !== 'ollama')) {
+    // 1. Built-in Offline Synthesizer
+    if (config.provider === 'builtin') {
       return this.synthesizeBuiltIn(prompt, symbol);
+    }
+
+    // Yêu cầu API Key nếu không phải Ollama hoặc Builtin
+    if (!config.apiKey?.trim() && config.provider !== 'ollama') {
+      throw new Error(`Bạn chưa nhập API Key cho ${AI_PROVIDER_MODELS[config.provider]?.name || config.provider}. Vui lòng vào tab "Cấu Hình LLM" để nhập.`);
     }
 
     // 2. Google Gemini API
@@ -117,8 +294,8 @@ export class AIService {
       return this.callGemini(prompt, config, symbol);
     }
 
-    // 3. OpenAI / DeepSeek / Custom Compatible
-    if (config.provider === 'openai' || config.provider === 'deepseek') {
+    // 3. Custom / OpenAI / DeepSeek / Compatible
+    if (config.provider === 'custom' || config.provider === 'openai' || config.provider === 'deepseek') {
       return this.callOpenAICompatible(prompt, config, symbol);
     }
 
@@ -218,7 +395,7 @@ export class AIService {
    * Gọi Google Gemini API
    */
   private static async callGemini(prompt: string, config: LLMConfig, symbol: string) {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${config.model}:generateContent?key=${config.apiKey}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${config.model || 'gemini-1.5-flash'}:generateContent?key=${config.apiKey.trim()}`;
     const fullUserPrompt = `${SYSTEM_PROMPT}\n\nTài sản giao dịch: ${symbol}\nYêu cầu chiến lược của Trader: "${prompt}"`;
 
     const res = await fetch(url, {
@@ -249,31 +426,33 @@ export class AIService {
   }
 
   /**
-   * Gọi OpenAI / DeepSeek / Compatible REST API
+   * Gọi OpenAI / Custom / DeepSeek / Compatible REST API
    */
   private static async callOpenAICompatible(prompt: string, config: LLMConfig, symbol: string) {
-    const baseUrl = config.baseUrl || AI_PROVIDER_MODELS[config.provider].defaultBaseUrl || 'https://api.openai.com/v1';
+    const baseUrl = config.baseUrl || AI_PROVIDER_MODELS[config.provider]?.defaultBaseUrl || 'https://api.openai.com/v1';
     const url = `${baseUrl.replace(/\/+$/, '')}/chat/completions`;
 
     const res = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${config.apiKey}`
+        'Authorization': `Bearer ${config.apiKey.trim()}`
       },
       body: JSON.stringify({
-        model: config.model,
+        model: config.model || 'ag/gemini-pro-agent',
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
           { role: 'user', content: `Tài sản: ${symbol}\nMô tả chiến lược: ${prompt}` }
         ],
+        stream: false,
+        max_tokens: 3000,
         temperature: config.temperature || 0.2
       })
     });
 
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      throw new Error(err?.error?.message || `Lỗi API (${res.status} ${res.statusText})`);
+      throw new Error(err?.error?.message || err?.message || `Lỗi API (${res.status} ${res.statusText})`);
     }
 
     const data = await res.json();
@@ -298,15 +477,15 @@ export class AIService {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': config.apiKey,
+        'x-api-key': config.apiKey.trim(),
         'anthropic-version': '2023-06-01',
         'dangerously-allow-browser': 'true'
       },
       body: JSON.stringify({
-        model: config.model,
+        model: config.model || 'claude-3-5-sonnet-20241022',
         system: SYSTEM_PROMPT,
         messages: [{ role: 'user', content: `Tài sản: ${symbol}\nYêu cầu: ${prompt}` }],
-        max_tokens: 2000,
+        max_tokens: 3000,
         temperature: config.temperature || 0.2
       })
     });
