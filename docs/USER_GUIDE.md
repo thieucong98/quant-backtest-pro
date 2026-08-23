@@ -1,207 +1,92 @@
-# HƯỚNG DẪN SỬ DỤNG CHI TIẾT (USER GUIDE)
-## NỀN TẢNG QUANT BACKTEST PRO
+# User Guide
+## Quant Backtest Pro Platform (English)
 
-Chào mừng bạn đến với **Quant Backtest Pro** — Nền tảng Replay, Kiểm thử Giao dịch Thủ công & Phát triển Thuật toán AI Đa Tài sản (Forex, Vàng XAUUSD, Bạc XAGUSD, Crypto BTC/ETH và Chỉ số DXY/US30) chạy trực tiếp trên nền tảng Web với hiệu năng 60 FPS mượt mà.
-
----
-
-## MỤC LỤC
-1. [Khởi động & Giao diện Tổng quan](#1-khởi-động--giao-diện-tổng-quan)
-2. [Quản lý Dữ liệu Lịch sử & Chọn Tài sản](#2-quản-lý-dữ-liệu-lịch-sử--chọn-tài-sản)
-3. [Điều khiển Replay Nến & Đa Khung Thời Gian](#3-điều-khiển-replay-nến--đa-khung-thời-gian)
-4. [Thao tác Vào lệnh & Quản lý Vị thế Nâng cao](#4-thao-tác-vào-lệnh--quản-lý-vị-thế-nâng-cao)
-   - One-Click Quick Trade Dock
-   - Cửa sổ Lệnh Chuyên sâu (Order Ticket Modal)
-   - Tính năng Set Breakeven (Hòa vốn)
-   - Tính năng Cắt 50% Lot (Partial Close)
-   - Quản trị Trailing Stop động
-5. [Công cụ Vẽ Kỹ thuật & Phân tích Đồ thị](#5-công-cụ-vẽ-kỹ-thuật--phân-tích-đồ-thị)
-6. [Theo dõi Sự kiện Tin tức Kinh tế Lịch sử](#6-theo-dõi-sự-kiện-tin-tức-kinh-tế-lịch-sử)
-7. [AI Strategy Studio & Tự Động Giao Dịch](#7-ai-strategy-studio--tự-động-giao-dịch)
-8. [Đọc Báo cáo Định lượng, Monte Carlo & Heatmap](#8-đọc-báo-cáo-định-lượng-monte-carlo--heatmap)
-9. [Đăng ký, Đăng nhập SSO & Hồ sơ Cá nhân](#9-đăng-ký-đăng-nhập-sso--hồ-sơ-cá-nhân)
-10. [Bảng Phím tắt Toàn cục (Keyboard Shortcuts)](#10-bảng-phím-tắt-toàn-cục-keyboard-shortcuts)
+Welcome to **Quant Backtest Pro** — the institutional-grade quantitative backtesting, market replay, and algorithmic bot deployment platform.
 
 ---
 
-## 1. KHỞI ĐỘNG & GIAO DIỆN TỔNG QUAN
+## 1. Main Workspace & Replay Navigation
 
-Giao diện của Quant Backtest Pro được thiết kế theo phong cách Dark Mode hiện đại, chia thành 4 khu vực chính:
-1. **Thanh Header (Phía trên cùng)**:
-   - Logo & Tên nền tảng.
-   - Bộ chọn Tài sản (Symbol Selector).
-   - Bộ chọn Khung thời gian (`M1`, `M5`, `M15`, `M30`, `H1`, `H4`, `D1`).
-   - Thanh công cụ vẽ nhanh (Trendline, Horizontal Ray, Fibonacci, Supply/Demand Box, Measure).
-   - Thông số tài khoản thời gian thực (`Balance`, `Equity`, `Floating PnL`).
-   - Các nút chức năng chính: **Vào lệnh**, **AI Studio**, **Báo cáo**, **Data**, **Phím tắt**, **Đổi ngôn ngữ (VI/EN/JA/ZH)** và **Hồ sơ/Đăng nhập SSO**.
-2. **Khu vực Biểu đồ Chính (Trung tâm)**:
-   - Đồ thị nến Nhật (Candlestick) & Khối lượng (Volume) của TradingView Lightweight Charts.
-   - Thanh đặt lệnh nhanh **One-Click Quick Trading Dock** (góc trên bên trái biểu đồ).
-   - Các đường giá động: Giá Vào Lệnh (Xanh/Đỏ nét liền), Stop Loss (Đỏ nét đứt), Take Profit (Xanh nét đứt).
-3. **Thanh Điều khiển Tua Nến Replay (Phía dưới biểu đồ)**:
-   - Các nút: `Step -1` (Lùi nến), `Play / Pause`, `Step +1` (Tới nến), `Reset` (Làm mới).
-   - Bộ điều tốc Replay từ `1x` (1 nến/giây) đến `100x (Max Speed)`.
-   - Thanh trượt tiến trình (Timeline Scrubber) và Đồng hồ thời gian UTC.
-4. **Bảng Quản lý Lệnh & Nhật ký Giao dịch (Dưới cùng)**:
-   - Tab **Vị thế mở (Open Positions)**: Quản lý lệnh đang chạy, nút `Set BE`, nút `Cắt 50%`, sửa SL/TP và đóng lệnh.
-   - Tab **Lệnh chờ (Pending Orders)**: Quản lý các lệnh Limit / Stop.
-   - Tab **Lịch sử (Trade History)**: Xem toàn bộ các lệnh đã đóng kèm lý do thoát lệnh (SL, TP, Manual).
-   - Tab **AI Strategy Logs**: Nhật ký tín hiệu vào/ra lệnh của bot AI.
+```
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ [EURUSD] [M15] | [Replay: Play/Pause/Speed] | Balance: $10,000 | [AI Studio] │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│                         TRADINGVIEW CANDLESTICK CHART                        │
+│                         (Draw: Trendline, Fibo, Box, Measure)                │
+│                                                                              │
+├──────────────────────────────────────────────────────────────────────────────┤
+│ [Dock: Open Positions (0)] [Trade History (12)] [AI Logs] | [Actions: BE]    │
+└──────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 1.1. Replay Toolbar
+- **Play / Pause (Hotkey: Space)**: Starts or pauses historical bar-by-bar playback.
+- **Step Forward (Hotkey: Right Arrow $\rightarrow$)**: Advances historical playback by exactly one candle.
+- **Speed Slider**: Fine-tune playback speed from `0.1x` (slow motion) up to `50x` (rapid backtest).
+- **Timeframe Selector**: Dynamically resamples candles to M1, M5, M15, M30, H1, H4, D1, W1, and MN.
 
 ---
 
-## 2. QUẢN LÝ DỮ LIỆU LỊCH SỬ & CHỌN TÀI SẢN
+## 2. Order Execution & Risk Management
 
-### 2.1. Đổi Tài sản Giao dịch
-- Bấm vào tên tài sản trên Header (Mặc định: `XAUUSD`).
-- Modal danh mục tài sản sẽ mở ra với 4 phân khúc:
-  - 🪙 **GOLD / METALS**: `XAUUSD` (Vàng 100oz), `XAGUSD` (Bạc 5,000oz).
-  - 💱 **FOREX**: `EURUSD`, `GBPUSD`, `USDJPY`, `GBPJPY`, `AUDUSD`.
-  - ⚡ **CRYPTO**: `BTCUSD`, `ETHUSD`.
-  - 📈 **INDICES**: `DXY` (Chỉ số Dollar Index), `US30` (Dow Jones).
-- Hệ thống tự động thiết lập Contract Size, Pip Size, Leverage và Spread tương ứng chính xác với từng loại tài sản.
+### 2.1. One-Click Trading Dock
+- Click **BUY** or **SELL** buttons on the quick trading dock at the bottom of the screen.
+- Configurable preset Lot size, Stop Loss pips, and Take Profit pips.
 
-### 2.2. Nạp Dữ liệu Lịch sử & Tự Động Crawl Trực Tuyến
-Bấm nút **"Data"** trên Header để mở trình quản lý dữ liệu với 3 lựa chọn:
-1. **🌐 Tự động Crawl Trực tuyến (Online Live REST API)**:
-   - Chọn cặp tiền (ví dụ: `BTCUSDT`, `ETHUSDT`, `SOLUSDT`, `XRPUSDT`).
-   - Chọn khung thời gian (`1m`, `5m`, `15m`, `1h`, `4h`, `1d`) và số lượng nến (500 hoặc 1,000 nến).
-   - Bấm **"Bắt đầu Crawl & Nạp vào Chart"**: Hệ thống tự động gọi Binance Public API kéo dữ liệu thực tế về và lưu vào IndexedDB.
-2. **📁 Nạp File CSV / TXT từ Broker**:
-   - Kéo thả file CSV được xuất từ **MetaTrader 4**, **MetaTrader 5**, **TradingView**, **Dukascopy** hoặc **Binance**.
-   - Hệ thống tự động nhận diện định dạng nến (`Timestamp, Open, High, Low, Close, Volume`) và lưu cục bộ vào cơ sở dữ liệu **IndexedDB** trên trình duyệt của bạn (không tốn băng thông tải lại).
-3. **✨ Dữ liệu Mẫu Chân Thực (Geometric Brownian Motion Presets)**:
-   - 1 click nạp ngay 3,000 nến mẫu chất lượng cao cho `XAUUSD`, `BTCUSD`, `EURUSD`, `DXY`.
+### 2.2. Advanced Order Entry Modal
+- Press **"New Order"** in the top navigation bar (Hotkey: `O`).
+- Supported order types:
+  - **Market Order**: Immediate execution at current Ask/Bid price with slippage simulation.
+  - **Limit Order**: Buy Limit (below current price), Sell Limit (above current price).
+  - **Stop Order**: Buy Stop, Sell Stop.
+  - **Risk Configuration**: Dynamic R:R ratio calculation, Trailing Stop in pips, and order comments.
+
+### 2.3. Prop Firm Challenge Shield
+- Ideal for funded trader evaluations (FTMO, MFF, The Funded Trader, Funding Pips):
+  - **Max Daily Loss Limit**: e.g., 5% of daily starting equity.
+  - **Max Total Drawdown**: e.g., 10% of high-water mark equity.
+- Automatically triggers visual and audio circuit breakers, freezing order entry if risk thresholds are breached.
 
 ---
 
-## 3. ĐIỀU KHIỂN REPLAY NẾN & ĐA KHUNG THỜI GIAN
+## 3. AI Strategy Studio & Auto-Trading
 
-### 3.1. Thao tác Tua Nến
-- **Phát / Dừng (Play / Pause)**: Bấm nút `Play` hoặc nhấn phím **`Space`** trên bàn phím.
-- **Tới 1 nến (Step Forward +1)**: Bấm nút `Step +1` hoặc nhấn phím **`F`**.
-- **Lùi 1 nến (Step Backward -1)**: Bấm nút `Step -1` hoặc nhấn tổ hợp phím **`Ctrl + Z`** (hoặc `Cmd + Z` trên Mac).
-- **Tua nhanh đến một thời điểm**: Kéo thanh trượt tiến trình (Scrubber Slider) đến vị trí bạn muốn.
+### 3.1. Multi-LLM Provider Configuration
+1. Click the **AI Studio** button in the header.
+2. Select the **LLM Config** tab.
+3. Choose your preferred AI provider:
+   - **Custom OpenAI-Compatible API / Proxy Tunnel**: Enter your custom Base URL, Model ID, and API Key.
+   - **OpenAI / OpenRouter / Groq / Google Gemini / Anthropic Claude / DeepSeek / Local Ollama**.
+4. Click **"Test Connection"** to measure live endpoint latency (in milliseconds) and verify key validity.
 
-### 3.2. Chuyển Đổi Khung Thời Gian (Multi-Timeframe)
-- Bấm chọn các nút `M1`, `M5`, `M15`, `M30`, `H1`, `H4`, `D1` trên thanh Header.
-- Động cơ **Timeframe Resampler** sẽ tức thời tổng hợp lại các cây nến từ dữ liệu gốc M1 mà vẫn giữ nguyên chính xác vị trí mốc thời gian bạn đang kiểm thử.
-
----
-
-## 4. THAO TÁC VÀO LỆNH & QUẢN LÝ VỊ THẾ NÂNG CAO
-
-### 4.1. One-Click Quick Trading Dock (Đặt lệnh Nhanh trên Chart)
-- Nằm ở góc trên bên trái biểu đồ.
-- **Vào lệnh BUY thị trường**: Bấm nút **BUY** (Xanh ngọc).
-- **Vào lệnh SELL thị trường**: Bấm nút **SELL** (Đỏ hồng).
-- **Chỉnh khối lượng Lot**: Nhập số lot vào ô giữa (ví dụ: `0.10`, `0.50`, `1.00`).
-- **Tự động gắn SL / TP**:
-  - Tích chọn checkbox `SL` và nhập khoảng cách pips (ví dụ: `20p`).
-  - Tích chọn checkbox `TP` và nhập khoảng cách pips (ví dụ: `40p`).
-  - Lệnh được mở sẽ tự động có sẵn đường Stop Loss và Take Profit trên chart.
-
-### 4.2. Tính Năng "Set BE" (Dời Stop Loss về Hòa Vốn)
-- Khi giá đã đi đúng hướng và có lợi nhuận, vào bảng **"Vị thế mở"** ở dưới cùng.
-- Bấm nút **"Set BE"** trong cột *Pro Actions*.
-- Hệ thống sẽ tự động điều chỉnh giá Stop Loss về đúng `Entry Price + 1 pip spread` để loại bỏ hoàn toàn rủi ro thua lỗ cho lệnh.
-
-### 4.3. Tính Năng "Cắt 50%" (Partial Close)
-- Khi giá đạt 1R hoặc 2R, bấm nút **"Cắt 50%"** trên hàng của vị thế tương ứng.
-- Hệ thống sẽ:
-  1. Đóng 50% khối lượng lot của lệnh và chốt lợi nhuận trực tiếp vào số dư **Balance**.
-  2. Giữ nguyên 50% khối lượng lot còn lại để tiếp tục gồng lãi.
+### 3.2. Natural Language Strategy Synthesis
+1. In the **Studio & Sandbox** tab, type your strategy requirements. For example:
+   > *"Fast EMA 9 crosses above Slow EMA 21, Buy with SL 15 pips, TP 30 pips. Sell when EMA 9 crosses below EMA 21."*
+2. Click **"Generate AI Strategy"** $\rightarrow$ Sandbox JavaScript code is generated.
+3. Click **"Activate & Run"** $\rightarrow$ The engine compiles the algorithm, turns Auto-Trading ON, closes the modal, and resumes replay automatically.
 
 ---
 
-## 5. CÔNG CỤ VẼ KỸ THUẬT & PHÂN TÍCH ĐỒ THỊ
+## 4. Multi-Platform Strategy Bot Exporter
 
-Quant Backtest Pro tích hợp Canvas Overlay trong suốt hỗ trợ đầy đủ các công cụ vẽ:
-- ↖ **Cursor**: Chế độ con trỏ chuột bình thường.
-- ╱ **Trendline (Đường xu hướng)**: Click 2 điểm để vẽ đường xu hướng kèm 2 chấm neo (anchor dots).
-- ➖ **Horizontal Ray (Đường ngang)**: Click 1 điểm để bắn đường hỗ trợ/kháng cự sang phải kèm nhãn mức giá.
-- **Fib** **Fibonacci Retracement**: Kéo từ Đáy lên Đỉnh (hoặc ngược lại), hiển thị đầy đủ 7 mức thoái lui (`0.0`, `0.236`, `0.382`, `0.5`, `0.618 Golden Pocket`, `0.786`, `1.0`) kèm dải màu trực quan.
-- ⛶ **Supply / Demand Box**: Kéo thả để tạo vùng cản Khối Cung (Màu đỏ) hoặc Khối Cầu (Màu xanh).
-- 📏 **Measure (Thước đo)**: Kéo để đo chính xác số lượng Pips và số lượng Nến (Bars) giữa 2 mốc giá.
-- 🗑️ **Trash**: Xóa toàn bộ các bản vẽ trên màn hình.
-
----
-
-## 6. THEO DÕI SỰ KIỆN TIN TỨC KINH TẾ LỊCH SỬ
-
-- Trên đồ thị, các cây nến rơi vào thời điểm phát hành tin tức kinh tế quan trọng (như **Non-Farm Payrolls - NFP**, **US Core CPI**, **Lãi suất FED/FOMC**, **Lãi suất ECB**) sẽ có **🔴 Icon Chấm Đỏ** nổi bật.
-- Giúp bạn rèn luyện phản xạ né tin hoặc luyện chiến thuật giao dịch breakout theo tin tức.
+Click **"Export Bot"** in AI Studio or from your saved strategies list:
+- 🌲 **TradingView (Pine Script v5)**: Copy and paste into TradingView Pine Editor; includes ready-to-use Webhook Alert JSON payloads.
+- 📈 **MetaTrader 5 (MQL5 EA)**: Download `.mq5` Expert Advisor file with `CTrade` and pips-based SL/TP; press F7 in MetaEditor to compile.
+- 📊 **MetaTrader 4 (MQL4 EA)**: Download `.mq4` Expert Advisor file with `OrderSend()` and Magic Number management.
+- 🐍 **Python Bot (CCXT)**: Download `.py` script for 24/7 autonomous trading on Binance, Bybit, or OKX.
+- ⚡ **cTrader (C# cBot)**: Download `.cs` robot file for cTrader Automate.
+- 📦 **Universal JSON Package**: Export/Import strategy files (`.json` / `.js`) to backup and share.
 
 ---
 
-## 7. AI STRATEGY STUDIO & TỰ ĐỘNG GIAO DỊCH (MULTI-LLM COPILOT)
+## 5. Session Management & Institutional Analytics
 
-Bấm nút **"AI Studio"** trên Header để mở trung tâm phát triển thuật toán gồm 3 Tab:
+### 5.1. SQLite Session Persistence
+- Every trade, equity curve data point, and drawing is stored automatically in local SQLite (`server/backtest.db`).
+- **Session Comparison Matrix**: Select multiple saved sessions to view a side-by-side performance matrix (Win Rate, Profit Factor, Max Drawdown, Sharpe Ratio, Expectancy).
 
-### 7.1. Tab 1: AI Copilot Studio
-- **Nhập mô tả chiến lược bằng ngôn ngữ tự nhiên** vào ô Prompt (Ví dụ: *"Chiến lược EMA 9 cắt EMA 21 kết hợp RSI quá bán dưới 35 kèm SL 15pips, TP 30pips"*).
-- Bấm **"Tạo Chiến Lược AI"** -> AI Copilot sẽ tự động viết mã JavaScript Sandbox với cấu trúc `onCandle(candle, indicators, account, api)`.
-- Bấm **"Áp dụng & Kích hoạt"** để nạp chiến lược vào hệ thống.
-- Bật công tắc **"Tự động giao dịch (Replay)"**:
-  - Khi tua nến, bot AI sẽ tự động tính toán chỉ báo và bắn lệnh BUY/SELL tự động.
-
-### 7.2. Tab 2: Thư viện Mẫu Chiến Lược (Preset Templates)
-- Nạp nhanh 4 chiến lược chuẩn hóa: **EMA 9/21 Fast Scalper**, **RSI Dynamic Oversold/Overbought**, **Bollinger Bands Rejection**, **MACD Momentum Crossover**.
-
-### 7.3. Tab 3: Cấu Hình AI Provider & LLM Models
-- Hỗ trợ kết nối linh hoạt với **6 nhà cung cấp AI**:
-  1. **Built-in Quant AI Synthesizer**: Trình sinh mã thông minh tích hợp sẵn, hoàn toàn miễn phí, hoạt động offline không cần API Key.
-  2. **Google Gemini**: Hỗ trợ `gemini-1.5-flash`, `gemini-1.5-pro`, `gemini-2.0-flash`.
-  3. **OpenAI**: Hỗ trợ `gpt-4o`, `gpt-4o-mini`, `o1-mini`.
-  4. **DeepSeek**: Hỗ trợ `deepseek-chat`, `deepseek-coder`.
-  5. **Anthropic Claude**: Hỗ trợ `claude-3-5-sonnet`, `claude-3-5-haiku`.
-  6. **Local Ollama**: Chạy LLM riêng tư trực tiếp trên máy tính (`http://localhost:11434` với `llama3.2`, `deepseek-coder-v2`).
-- Nút **"Kiểm tra kết nối API"**: Thử nghiệm kết nối trước khi sử dụng.
-
----
-
-## 8. ĐỌC BÁO CÁO ĐỊNH LƯỢNG, MONTE CARLO & HEATMAP
-
-Bấm nút **"Báo cáo"** trên thanh Header để mở Dashboard phân tích chuyên sâu gồm 3 Tab:
-
-### 8.1. Tab 1: Tổng quan & Chỉ số Hiệu suất
-- **Biểu đồ Tăng trưởng Vốn (Equity vs Balance Curve)** bằng đồ thị SVG trực quan.
-- **Lợi nhuận ròng (Net Profit)**, **Tỷ lệ Thắng (Win Rate %)**, **Profit Factor**, **Sụt giảm tối đa (Max Drawdown % & $)**.
-- **Tỷ lệ R:R trung bình**, **Expected Payoff**, **Sharpe Ratio**, **Sortino Ratio**, **Chuỗi thắng/thua dài nhất**.
-- Nút **"Xuất CSV Lịch sử"**: Tải toàn bộ bảng kê lệnh về máy để lưu trữ hoặc nhập vào Excel.
-
-### 8.2. Tab 2: Mô phỏng Monte Carlo (1,000 Chu kỳ)
-- Xáo trộn ngẫu nhiên thứ tự các lệnh đã giao dịch **1,000 lần**.
-- Cho biết:
-  - **Lợi nhuận Trung vị (Median Profit)** bạn có thể kỳ vọng trong tương lai.
-  - **Mức sụt giảm Max Drawdown trong kịch bản xấu nhất (Worst-Case DD)**.
-  - **Xác suất Cháy vốn (Risk of Ruin %)**: Tỷ lệ tài khoản bị sụt giảm > 50%.
-
-### 8.3. Tab 3: Heatmap Lợi nhuận theo Thứ & Khung Giờ
-- Ma trận nhiệt phân tích hiệu suất theo 24 giờ trong ngày (00h - 23h UTC) và các thứ trong tuần (Thứ 2 đến Thứ 6).
-- Giúp bạn nhận diện khung giờ "vàng" kiếm được nhiều tiền nhất và khung giờ thường xuyên bị thua lỗ để né tránh.
-
----
-
-## 9. ĐĂNG KÝ, ĐĂNG NHẬP SSO & HỒ SƠ CÁ NHÂN
-
-- Bấm nút **"Đăng nhập"** trên Header:
-  - Đăng nhập 1 click qua **Google SSO**, **GitHub SSO**, hoặc **Apple ID**.
-  - Hoặc đăng ký bằng **Email & Mật khẩu**.
-- Sau khi đăng nhập, bấm vào Avatar góc trên cùng bên phải để mở **User Profile Modal**:
-  - Xem số dư vốn Demo, số phiên Backtest đã hoàn thành, số lượng Chiến lược AI đã lưu.
-  - Xem các đặc quyền của gói tài khoản (`PRO VIP` / `INSTITUTIONAL`).
-  - Nút **Đăng xuất (Log Out)**.
-
----
-
-## 10. BẢNG PHÍM TẮT TOÀN CỤC (KEYBOARD SHORTCUTS)
-
-| Phím tắt | Chức năng |
-| :--- | :--- |
-| **`Space`** | Phát hoặc Tạm dừng Replay tua nến (**Play / Pause**) |
-| **`F`** | Tới 1 cây nến tiếp theo (**Step Forward +1**) |
-| **`Ctrl + Z`** / **`Cmd + Z`** | Lùi lại 1 cây nến trong quá khứ (**Step Backward -1**) |
-| **`B`** | Mở nhanh cửa sổ Đặt lệnh chuyên sâu (**Order Ticket**) |
-| **`Escape`** | Đóng tất cả các cửa sổ Modal / Popup đang mở |
-| **`1, 2, 3, 4`** | Chuyển nhanh Khung thời gian (`M1`, `M5`, `H1`, `D1`) |
+### 5.2. Analytics Dashboard
+- **Equity & Balance Curve**: Track growth and peak-to-trough drawdowns.
+- **Monte Carlo Simulation (500 iterations)**: Assess risk-of-ruin probability and confidence intervals.
+- **PnL Calendar Heatmap**: Inspect daily, weekly, and monthly profitability distributions.

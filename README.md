@@ -1,123 +1,167 @@
-# ⚡ QUANT BACKTEST PRO
-### Nền Tảng Web Replay, Kiểm Thử Giao Dịch Đa Tài Sản & Phát Triển Chiến Lược AI Định Lượng
+# Quant Backtest Pro 🚀
 
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue.svg?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
-[![React](https://img.shields.io/badge/React-18.x-61DAFB.svg?style=flat-square&logo=react)](https://react.dev/)
-[![Vite](https://img.shields.io/badge/Vite-6.x-646CFF.svg?style=flat-square&logo=vite)](https://vitejs.dev/)
-[![TailwindCSS](https://img.shields.io/badge/Tailwind-3.x-38B2AC.svg?style=flat-square&logo=tailwind-css)](https://tailwindcss.com/)
-[![TradingView Charts](https://img.shields.io/badge/Lightweight%20Charts-v4.x-131722.svg?style=flat-square)](https://tradingview.github.io/lightweight-charts/)
-[![Build Status](https://img.shields.io/badge/Build-Passing-22c55e.svg?style=flat-square)]()
-[![License](https://img.shields.io/badge/License-MIT-purple.svg?style=flat-square)]()
+> **Institutional-Grade Web-based Multi-Asset Replay, AI Strategy Generation & Trading Bot Deployment Platform**
 
----
-
-## 🌟 GIỚI THIỆU TỔNG QUAN
-
-**Quant Backtest Pro** là một nền tảng Backtesting & Trading Simulation thế hệ mới chạy hoàn toàn trên trình duyệt Web. Nền tảng kết hợp sự mượt mà của **TradingView**, sức mạnh mô phỏng lệnh chuyên nghiệp của **Soft4FX / Forex Tester**, hệ thống nhật ký giao dịch của **TradeZella**, cùng với năng lực sinh mã thuật toán tự động của **Trí tuệ nhân tạo (AI Copilot & Sandbox)**.
-
-Ứng dụng hỗ trợ giao dịch kiểm thử đa tài sản bao gồm: **Forex** (`EURUSD`, `GBPUSD`, `USDJPY`, `GBPJPY`, `AUDUSD`), **Kim loại quý** (`XAUUSD`, `XAGUSD`), **Crypto** (`BTCUSD`, `ETHUSD`) và **Chỉ số** (`DXY`, `US30`).
+[![Language: English](https://img.shields.io/badge/Language-English-blue.svg)](#)
+[![Language: Tiếng Việt](https://img.shields.io/badge/Ngôn%20ngữ-Tiếng%20Việt-red.svg)](README.vi.md)
+[![License: MIT](https://img.shields.io/badge/License-MIT-emerald.svg)](LICENSE)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue.svg)](https://www.typescriptlang.org/)
+[![React](https://img.shields.io/badge/React-19.0-cyan.svg)](https://react.dev/)
+[![Vite](https://img.shields.io/badge/Vite-6.4-purple.svg)](https://vitejs.dev/)
+[![Tailwind CSS](https://img.shields.io/badge/TailwindCSS-3.4-38bdf8.svg)](https://tailwindcss.com/)
+[![SQLite](https://img.shields.io/badge/Storage-SQLite-003B57.svg)](https://www.sqlite.org/)
 
 ---
 
-## 🚀 TÍNH NĂNG NỔI BẬT
-
-### 1. 📊 Charting Engine & Drawing Canvas Siêu Mượt (60 FPS)
-- Tích hợp **TradingView Lightweight Charts v4.x** với nến Nhật và Volume Histogram.
-- Lớp Canvas trong suốt hỗ trợ đầy đủ công cụ vẽ kỹ thuật: **Trendline**, **Horizontal Ray**, **Fibonacci Retracement (7 mức)**, **Supply/Demand Box**, **Measure khoảng cách Pips/Bars**.
-- Tự động vẽ đường giá **Entry**, **Stop Loss (Nét đứt đỏ)**, **Take Profit (Nét đứt xanh)** cho từng vị thế.
-
-### 2. ⚡ One-Click Quick Trading Dock & Pro Actions
-- Ghim thanh đặt lệnh nhanh ngay trên biểu đồ: Nút **BUY**, **SELL**, ô nhập Lot, tùy chọn `Auto SL` và `Auto TP` tính theo pips.
-- Nút **"Set BE" (Hòa vốn)**: 1 click dời Stop Loss về đúng giá Entry + spread để khóa an toàn.
-- Nút **"Cắt 50%" (Partial Close)**: Đóng 1/2 khối lượng lệnh để chốt lời vào Balance và thả trôi phần còn lại.
-- Quản lý **Trailing Stop** tự động bám theo đỉnh/đáy nến mới.
-
-### 3. ⏪ Điều Khiển Replay & Đa Khung Thời Gian (Multi-Timeframe)
-- Tua nến từ tốc độ `1x` đến `100x (Max Speed)`.
-- Nút **Step +1 (Tới nến)** và **Step -1 (Lùi nến)**.
-- Động cơ **Timeframe Resampler** chuyển đổi tức thời giữa các khung thời gian `M1`, `M5`, `M15`, `M30`, `H1`, `H4`, `D1`.
-
-### 4. 🔴 Lịch Tin Tức Kinh Tế Lịch Sử (Historical Economic News Markers)
-- Tự động quét và đánh dấu các mốc tin tức mạnh (**Non-Farm Payrolls, CPI, Lãi suất FED/FOMC, ECB**) bằng icon **🔴 Chấm Đỏ** ngay trên nến.
-
-### 5. 🤖 AI Strategy Studio & Copilot Runner
-- **Tạo chiến lược bằng Prompt tự nhiên**: Nhập mô tả chiến lược (ví dụ: *"EMA 20 cắt EMA 50 kết hợp RSI < 35"*), AI sẽ tự động sinh mã JavaScript Sandbox.
-- **Tự động giao dịch (Auto-Trading)**: Bot tự động quét nến, tính chỉ báo và thực thi lệnh kèm mũi tên tín hiệu BUY/SELL trên chart.
-
-### 6. 📈 Báo Cáo Định Lượng & Mô Phỏng Monte Carlo (1,000 Chu kỳ)
-- Đồ thị SVG tăng trưởng vốn **Equity & Balance Curve**.
-- Thống kê toàn diện: **Win Rate %, Profit Factor, Max Drawdown %, Sharpe Ratio, Sortino Ratio, Risk:Reward, Consecutive Wins/Losses**.
-- **Mô phỏng Monte Carlo 1,000 chu kỳ**: Dự báo xác suất sụt giảm vốn kịch bản xấu nhất và tỷ lệ Cháy tài khoản (**Risk of Ruin %**).
-- **Trading Heatmap Matrix**: Phân tích hiệu suất theo 24 khung giờ và 5 ngày trong tuần.
-- Xuất toàn bộ lịch sử lệnh ra file **CSV** chuẩn.
-
-### 7. 🌐 Đa Ngôn Ngữ & Xác Thực SSO Toàn Diện
-- Hỗ trợ 4 ngôn ngữ: 🇻🇳 **Tiếng Việt**, 🇺🇸 **English**, 🇯🇵 **日本語**, 🇨🇳 **中文**.
-- Đăng nhập 1 click qua **Google SSO**, **GitHub SSO**, **Apple ID** hoặc Email/Password.
-- Quản lý hồ sơ cá nhân, gói hạng thành viên (`FREE`, `PRO VIP`, `INSTITUTIONAL`).
+## 🌐 Language Navigation / Chuyển đổi ngôn ngữ
+* 🇺🇸 **[English (Current)](README.md)**
+* 🇻🇳 **[Tiếng Việt](README.vi.md)**
 
 ---
 
-## 🏆 MA TRẬN SO SÁNH VỚI CÁC CÔNG CỤ TRÊN THỊ TRƯỜNG
+## 📖 Overview
 
-| Tính năng | TradingView Replay | Soft4FX / FXReplay | Forex Tester 6 | TradeZella | ⭐ **Quant Backtest Pro** |
-| :--- | :---: | :---: | :---: | :---: | :---: |
-| **Nền tảng** | Web Cloud | MT4 / Web | Windows Desktop | Web Cloud | 🟢 **Web Hiện đại (React + TS)** |
-| **Giao diện & Độ mượt** | ⭐⭐⭐⭐⭐ | ⭐⭐ / ⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ | 🟢 **⭐⭐⭐⭐⭐ (Glassmorphism Dark)** |
-| **OMS Quản lý lệnh** | ❌ Sơ sài | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ❌ | 🟢 **⭐⭐⭐⭐⭐ (One-Click, BE, Partial Close)** |
-| **Replay Điều tốc & Step -1** | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ❌ | 🟢 **⭐⭐⭐⭐⭐ (1x-100x, Step +1 & -1)** |
-| **Tích hợp AI Strategy** | ❌ | ❌ | ❌ | ❌ | 🟢 **⭐⭐⭐⭐⭐ (Prompt-to-Code & Auto-trade)** |
-| **Mô phỏng Monte Carlo** | ❌ | ❌ | ⭐⭐⭐ | ❌ | 🟢 **⭐⭐⭐⭐⭐ (1,000 runs SVG)** |
-| **Tin tức Kinh tế Lịch sử** | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ❌ | 🟢 **⭐⭐⭐⭐⭐ (News Markers trên nến)** |
-| **Đa ngôn ngữ & SSO** | ⭐⭐⭐ | ⭐⭐ | ⭐⭐ | ⭐⭐⭐⭐ | 🟢 **⭐⭐⭐⭐⭐ (VI, EN, JA, ZH + SSO)** |
+**Quant Backtest Pro** is a modern, high-performance, open-source trading simulation and backtesting platform built for quantitative traders, manual price-action traders, and algorithmic developers. It brings together ultra-smooth candlestick/tick replay, realistic order execution matching, AI-powered strategy creation, backtest session persistence, and instant multi-platform trading bot exportation.
 
 ---
 
-## ⌨️ BẢNG PHÍM TẮT THỰC CHIẾN
+## ✨ Key Features
 
-| Phím | Tác vụ |
-| :--- | :--- |
-| **`Space`** | **Play / Pause** vòng lặp phát nến |
-| **`F`** | **Step Forward +1** nến tiếp theo |
-| **`Ctrl + Z`** / **`Cmd + Z`** | **Step Backward -1** lùi nến trong quá khứ |
-| **`B`** | Mở nhanh bảng **Đặt lệnh (Order Ticket)** |
-| **`Escape`** | Đóng tất cả các bảng Modal / Popup |
-| **`1, 2, 3, 4`** | Chuyển nhanh Khung thời gian (`M1`, `M5`, `H1`, `D1`) |
+```
+                                  QUANT BACKTEST PRO
+ ┌────────────────────────────────────────────────────────────────────────────────────────┐
+ │                                                                                        │
+ │   ┌───────────────────────┐   ┌───────────────────────┐   ┌────────────────────────┐   │
+ │   │  Replay Engine        │   │  AI Strategy Studio   │   │  Bot Exporter Hub      │   │
+ │   │  - Tick / Candle Play │   │  - Multi-LLM Support  │   │  - MT5 / MT4 (MQL)     │   │
+ │   │  - Realistic Slippage │   │  - Custom Proxies     │   │  - Pine Script v5      │   │
+ │   │  - M1 to Monthly      │   │  - Live Latency Ping  │   │  - Python CCXT / cBot  │   │
+ │   └───────────────────────┘   └───────────────────────┘   └────────────────────────┘   │
+ │                                                                                        │
+ │   ┌───────────────────────┐   ┌───────────────────────┐   ┌────────────────────────┐   │
+ │   │  SQLite Persistence   │   │  Quant Analytics      │   │  Prop Firm Shield      │   │
+ │   │  - Multi-Session Save │   │  - Monte Carlo Test   │   │  - Daily Max Loss      │   │
+ │   │  - Strategy DB        │   │  - PnL Heatmap        │   │  - Max Drawdown Guard  │   │
+ │   │  - Session Comparison │   │  - Equity Curves      │   │  - Pass / Fail Alerts  │   │
+ │   └───────────────────────┘   └───────────────────────┘   └────────────────────────┘   │
+ │                                                                                        │
+ └────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 1. ⚡ High-Speed Historical Replay Engine
+- **Bar-by-Bar Playback**: Step forward, step backward, or auto-play at speeds ranging from `0.1x` to `50x`.
+- **Multi-Timeframe Resampling**: Real-time resampling from M1 raw data to M5, M15, M30, H1, H4, D1, W1, and MN.
+- **Economic Calendar Overlay**: Live indicators for FOMC, CPI, NFP, and central bank interest rate decisions.
+
+### 2. 🛡️ Realistic Order Matching & Risk Management
+- **Execution Simulation**: Supports Market Orders, Limit Orders, Stop Orders, with customizable Spreads, Commissions, and Slippage.
+- **Dynamic Risk Rules**: Automatic SL/TP calculation in Pips or Price, Trailing Stop, Break-Even, and One-Click Partial Close.
+- **Prop Firm Shield**: Set Max Daily Loss (e.g. 5%) and Max Total Drawdown (e.g. 10%) with real-time audio and visual violation alerts.
+
+### 3. 🧠 AI Strategy Studio & Multi-LLM Copilot
+- **Natural Language to Code**: Type *"Fast EMA 9 crosses above EMA 21 with RSI < 70 filter, SL 15 pips, TP 30 pips"* and receive executable sandbox code instantly.
+- **Multi-Provider Support**: Connects to OpenAI, Google Gemini, Anthropic Claude, DeepSeek, Local Ollama, and **Custom OpenAI-compatible Reverse Proxy Tunnels**.
+- **Real-Time Latency Testing**: Live endpoint ping with millisecond response measurement and strict key validation.
+- **1-Click Activate & Run**: Compiles code, turns on auto-trading, resumes replay, and executes signals automatically on each incoming candle.
+
+### 4. 🤖 Multi-Platform Strategy Bot Exporter & Deployment Hub
+Export any backtested strategy to production-ready bot code in seconds:
+- **TradingView (Pine Script v5)**: Ready to paste into Pine Editor with Webhook Alert JSON payloads for 3Commas, Bybit, Binance, and PineConnector.
+- **MetaTrader 5 (MQL5 EA)**: Complete `.mq5` Expert Advisor using `CTrade` and pips risk management, ready to compile in MetaEditor (F7).
+- **MetaTrader 4 (MQL4 EA)**: Classic `.mq4` Expert Advisor with `OrderSend()` and Magic Number management.
+- **Python Bot (CCXT + Pandas-TA)**: Standalone 24/7 Python 3 script for Binance, Bybit, and OKX.
+- **cTrader (C# cBot)**: High-speed `.cs` robot for cTrader Automate.
+- **Universal JSON Package**: Export/Import strategy files (`.json` / `.js`) to backup and share.
+
+### 5. 📊 Institutional Analytics & Session Management
+- **Persistent Sessions**: All backtest history, equity points, open/closed trades, and drawings are automatically stored in local SQLite (`server/backtest.db`).
+- **Session Comparison Matrix**: Inspect and compare side-by-side performance (Win Rate, Profit Factor, Max Drawdown, Sharpe Ratio, Expectancy) across multiple sessions.
+- **Monte Carlo Simulation**: 500-iteration stress testing to compute risk-of-ruin probability and confidence intervals.
+- **PnL Calendar Heatmap**: Visual breakdown of daily, weekly, and monthly performance.
+
+### 6. 🌍 Full Multi-Language Localization (i18n)
+- Seamless real-time switching between **English (`en`)**, **Tiếng Việt (`vi`)**, **日本語 (`ja`)**, and **中文 (`zh`)**.
 
 ---
 
-## 🛠️ HƯỚNG DẪN CÀI ĐẶT & CHẠY DỰ ÁN
+## 🚀 Quickstart
 
-### Yêu cầu hệ thống
-- **Node.js**: Phiên bản `>= 18.x`
-- **NPM** hoặc **Yarn / PNPM**
+### Prerequisites
+- [Node.js](https://nodejs.org/) (version 18.0.0 or higher)
+- [npm](https://www.npmjs.com/) (or `pnpm` / `yarn`)
 
-### 1. Cài đặt Dependencies
+### 1. Clone the repository
 ```bash
 git clone https://github.com/your-username/quant-backtest-pro.git
 cd quant-backtest-pro
+```
+
+### 2. Install dependencies
+```bash
 npm install
 ```
 
-### 2. Chạy Môi trường Phát triển (Development Server)
+### 3. Start development server
 ```bash
 npm run dev
 ```
-Mở trình duyệt truy cập: `http://localhost:5173/`
 
-### 3. Đóng gói Bản Production
-```bash
-npm run build
-```
+Open your browser at:
+- **Frontend App**: `http://localhost:5173/`
+- **Backend API**: `http://localhost:3001/api/health`
 
 ---
 
-## 📚 TÀI LIỆU CHI TIẾT
-- 📖 [Hướng dẫn Sử dụng A-Z (User Guide)](file:///d:/Project/Backtest/docs/USER_GUIDE.md)
-- 🛠️ [Đặc tả Kỹ thuật & Phát triển (Developer Guide)](file:///d:/Project/Backtest/docs/DEVELOPER_GUIDE.md)
-- 🏛️ [Tài liệu Kiến trúc Hệ thống (Architecture Specification)](file:///d:/Project/Backtest/docs/ARCHITECTURE.md)
+## 🏗️ Architecture & Technology Stack
+
+| Layer | Technology | Description |
+| :--- | :--- | :--- |
+| **Frontend UI** | React 19, TypeScript 5.8 | High-performance, strictly typed UI components |
+| **Styling** | Tailwind CSS 3.4, Lucide Icons | Responsive modern dark-theme interface |
+| **Charts** | Lightweight Charts v4 | TradingView's high-speed canvas charting library |
+| **State** | Zustand 5 | Low-overhead reactive state management |
+| **Backend & Storage**| Node.js Express + SQLite (`better-sqlite3`) | Local file persistence for sessions and custom strategies |
+| **Math & Engines** | Custom TypeScript Quant Engines | Order matching, resampler, technical indicators, Monte Carlo |
+| **AI Integration** | Fetch API + OpenAI-compatible standard | Multi-LLM strategy generator and code transpilers |
 
 ---
 
-## 📄 GIẤY PHÉP (LICENSE)
-Dự án được phân phối dưới giấy phép **MIT License**.
+## 📚 Documentation Index
+
+| English Documentation | Vietnamese Documentation (Tiếng Việt) |
+| :--- | :--- |
+| 📘 [User Guide](docs/USER_GUIDE.md) | 📘 [Hướng dẫn sử dụng](docs/vi/USER_GUIDE.md) |
+| 🛠️ [Developer Guide](docs/DEVELOPER_GUIDE.md) | 🛠️ [Tài liệu lập trình viên](docs/vi/DEVELOPER_GUIDE.md) |
+| 🏛️ [System Architecture](docs/ARCHITECTURE.md) | 🏛️ [Kiến trúc hệ thống](docs/vi/ARCHITECTURE.md) |
+| 🤖 [Strategy Bot Exporter Guide](docs/STRATEGY_BOT_EXPORTER.md) | 🤖 [Hướng dẫn xuất Bot giao dịch](docs/vi/STRATEGY_BOT_EXPORTER.md) |
+| 🔌 [API Reference](docs/API_REFERENCE.md) | 🔌 [Tài liệu API RESTful](docs/vi/API_REFERENCE.md) |
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions from the community! Please read our [Contributing Guide](CONTRIBUTING.md) and [Code of Conduct](CODE_OF_CONDUCT.md) before submitting pull requests.
+
+1. Fork the Project.
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`).
+3. Commit your Changes (`git commit -m 'feat: add some amazing feature'`).
+4. Push to the Branch (`git push origin feature/AmazingFeature`).
+5. Open a Pull Request.
+
+---
+
+## 🛡️ Security
+
+For vulnerability disclosure and security reporting, please refer to our [Security Policy](SECURITY.md).
+
+---
+
+## 📄 License
+
+Distributed under the **MIT License**. See [LICENSE](LICENSE) for more information.
+
+---
+
+<p align="center">
+  <b>Quant Backtest Pro</b> • Built with ❤️ for Quantitative Traders Worldwide.
+</p>

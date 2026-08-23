@@ -333,7 +333,7 @@ export const AIStrategyModal: React.FC = () => {
     const customConfig: LLMConfig = {
       provider: 'custom',
       baseUrl: 'https://r5yym74.abc-tunnel.us/v1',
-      apiKey: 'sk-bd86ea7ea3f6f5b9-6fcxtf-3941c578',
+      apiKey: llmConfig.apiKey || '',
       model: 'ag/gemini-pro-agent',
       temperature: 0.2
     };

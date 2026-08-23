@@ -13,7 +13,7 @@ export interface LLMConfig {
 
 export const DEFAULT_LLM_CONFIG: LLMConfig = {
   provider: 'custom',
-  apiKey: 'sk-bd86ea7ea3f6f5b9-6fcxtf-3941c578',
+  apiKey: '',
   model: 'ag/gemini-pro-agent',
   baseUrl: 'https://r5yym74.abc-tunnel.us/v1',
   temperature: 0.2
