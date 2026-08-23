@@ -104,6 +104,11 @@ export interface TranslationDict {
 
   // AI Strategy Modal
   aiStudioTitle: string;
+  studioAndSandboxTab: string;
+  describeStrategyLabel: string;
+  quickPromptsLabel: string;
+  selectedLabel: string;
+  strategyNamePlaceholder: string;
   promptPlaceholder: string;
   generateStrategy: string;
   generating: string;
@@ -117,6 +122,33 @@ export interface TranslationDict {
   saveToDB: string;
   savedToDBSuccess: string;
   activateAndResume: string;
+
+  // Order Entry Modal
+  activationPrice: string;
+  riskSL: string;
+  rewardTP: string;
+  expectedFillPrice: string;
+  marginRequired: string;
+  trailingStopLabel: string;
+  enterPips: string;
+  enterPrice: string;
+
+  // Data Manager Modal
+  dataManagerTitle: string;
+  autoCrawlTab: string;
+  uploadFileTab: string;
+  sampleDataTab: string;
+  autoCrawlDesc: string;
+  intervalLabel: string;
+  startCrawlBtn: string;
+  crawlingBtn: string;
+  dragDropCSV: string;
+  parsingFile: string;
+  supportedFormat: string;
+
+  // Shortcuts Modal
+  keyboardShortcutsTitle: string;
+  keyboardShortcutsDesc: string;
 
   // Session Manager
   sessions: string;
@@ -263,6 +295,11 @@ export const translations: Record<Language, TranslationDict> = {
     heatmapDesc: 'Phân bố Lợi nhuận và Hiệu suất theo Khung Giờ (UTC) & Ngày trong tuần:',
 
     aiStudioTitle: 'AI Strategy Studio & Sandbox Runner',
+    studioAndSandboxTab: 'Studio & Sandbox',
+    describeStrategyLabel: 'Mô tả chiến lược bằng ngôn ngữ tự nhiên:',
+    quickPromptsLabel: 'Gợi ý nhanh:',
+    selectedLabel: 'Đang chọn',
+    strategyNamePlaceholder: 'Tên chiến lược',
     promptPlaceholder: 'Mô tả chiến lược của bạn (VD: Chiến lược EMA 20 cắt EMA 50 kết hợp RSI < 35)...',
     generateStrategy: 'Tạo Chiến Lược AI',
     generating: 'Đang khởi tạo thuật toán...',
@@ -277,7 +314,31 @@ export const translations: Record<Language, TranslationDict> = {
     savedToDBSuccess: 'Đã lưu vào DB thành công!',
     activateAndResume: 'Kích Hoạt & Chạy Tiếp',
 
-    sessions: 'Phiên giao dịch',
+    activationPrice: 'Giá kích hoạt',
+    riskSL: 'Rủi ro (Risk SL)',
+    rewardTP: 'Lợi nhuận (Reward TP)',
+    expectedFillPrice: 'Giá khớp dự kiến',
+    marginRequired: 'Ký quỹ (Margin)',
+    trailingStopLabel: 'Trailing Stop (Pips)',
+    enterPips: 'Nhập Pips',
+    enterPrice: 'Nhập Giá',
+
+    dataManagerTitle: 'Quản lý, Import & Tự động Crawl Dữ liệu Lịch sử',
+    autoCrawlTab: 'Tự động Crawl Online (Live REST API)',
+    uploadFileTab: 'Nạp File CSV / TXT',
+    sampleDataTab: 'Dữ liệu Mẫu (GBM Presets)',
+    autoCrawlDesc: '🌐 Hệ thống Tự động Crawl Dữ liệu Trực tuyến cho phép kéo trực tiếp hàng ngàn nến lịch sử thực tế từ các sàn giao dịch hàng đầu thế giới (Binance REST API) mà không cần bất kỳ API key nào!',
+    intervalLabel: 'Khung Nến (Interval)',
+    startCrawlBtn: 'Bắt đầu Crawl & Nạp vào Chart',
+    crawlingBtn: 'Đang Crawl Dữ liệu...',
+    dragDropCSV: 'Kéo thả file CSV vào đây hoặc click để chọn file',
+    parsingFile: 'Đang đọc và phân tích file...',
+    supportedFormat: 'Hỗ trợ định dạng: Date, Time, Open, High, Low, Close, Volume (Tự động nhận diện)',
+
+    keyboardShortcutsTitle: 'Phím Tắt Thao Tác Nhanh (Keyboard Shortcuts)',
+    keyboardShortcutsDesc: 'Nhấn bất kỳ phím nào để tương tác trực tiếp trên giao diện Backtest.',
+
+    sessions: 'Phiên',
     sessionManagerTitle: 'Quản Lý Phiên Backtest (Database Sessions)',
     sessionManagerDesc: 'Dữ liệu phiên, lịch sử lệnh, bản vẽ và thống kê được lưu vĩnh viễn trong Database.',
     createNewSession: 'Tạo phiên mới',
@@ -328,7 +389,7 @@ export const translations: Record<Language, TranslationDict> = {
     replay: 'Replay',
     
     orderEntry: 'New Order',
-    aiStudio: 'AI Strategy Studio',
+    aiStudio: 'AI Studio',
     analytics: 'Analytics & Reports',
     dataImport: 'Data Manager',
     shortcuts: 'Shortcuts',
@@ -417,6 +478,11 @@ export const translations: Record<Language, TranslationDict> = {
     heatmapDesc: 'PnL and Win Rate distribution across Trading Hours (UTC) & Days of Week:',
 
     aiStudioTitle: 'AI Strategy Studio & Sandbox Runner',
+    studioAndSandboxTab: 'Studio & Sandbox',
+    describeStrategyLabel: 'Describe strategy in natural language:',
+    quickPromptsLabel: 'Quick Prompts:',
+    selectedLabel: 'Selected',
+    strategyNamePlaceholder: 'Strategy Name',
     promptPlaceholder: 'Describe your trading strategy (e.g. EMA 20 crossing EMA 50 with RSI < 35 pullback)...',
     generateStrategy: 'Generate AI Strategy',
     generating: 'Synthesizing algorithm...',
@@ -431,10 +497,34 @@ export const translations: Record<Language, TranslationDict> = {
     savedToDBSuccess: 'Saved to DB successfully!',
     activateAndResume: 'Activate & Run',
 
+    activationPrice: 'Trigger Price',
+    riskSL: 'Risk (SL)',
+    rewardTP: 'Reward (TP)',
+    expectedFillPrice: 'Expected Fill Price',
+    marginRequired: 'Margin Required',
+    trailingStopLabel: 'Trailing Stop (Pips)',
+    enterPips: 'Enter Pips',
+    enterPrice: 'Enter Price',
+
+    dataManagerTitle: 'Historical Data Manager, Import & Online Crawler',
+    autoCrawlTab: 'Auto Crawl Online (Live REST API)',
+    uploadFileTab: 'Upload CSV / TXT File',
+    sampleDataTab: 'Sample Data (GBM Presets)',
+    autoCrawlDesc: '🌐 Automated Online Data Crawler pulls thousands of real historical candles directly from world-class exchanges (Binance REST API) without requiring any API key!',
+    intervalLabel: 'Candle Interval',
+    startCrawlBtn: 'Start Crawl & Load into Chart',
+    crawlingBtn: 'Crawling Live Data...',
+    dragDropCSV: 'Drag & drop CSV file here or click to browse',
+    parsingFile: 'Parsing and validating file...',
+    supportedFormat: 'Supported format: Date, Time, Open, High, Low, Close, Volume (Auto-detected)',
+
+    keyboardShortcutsTitle: 'Quick Keyboard Shortcuts',
+    keyboardShortcutsDesc: 'Press any key to interact directly with the Backtest platform.',
+
     sessions: 'Sessions',
     sessionManagerTitle: 'Backtest Session Manager (Database)',
-    sessionManagerDesc: 'Session progress, trade history, drawings, and analytics are permanently saved in Database.',
-    createNewSession: 'New Session',
+    sessionManagerDesc: 'Session progress, trade history, drawings, and analytics are permanently persisted in the SQLite Database.',
+    createNewSession: 'Create New Session',
     sessionList: 'Session List',
     sessionName: 'Session Name',
     initialBalance: 'Initial Balance',
@@ -446,14 +536,14 @@ export const translations: Record<Language, TranslationDict> = {
     runningStatus: 'ACTIVE',
     completedStatus: 'COMPLETED',
     totalSessions: 'Total Sessions',
-    confirmDeleteSession: 'Are you sure you want to delete this backtest session from database?',
+    confirmDeleteSession: 'Are you sure you want to delete this backtest session from the database?',
     tradesCountLabel: 'trades',
     drawingsCountLabel: 'drawings',
-    noSessionsFound: 'No backtest sessions saved in database yet. Click "+ New Session" to begin!',
+    noSessionsFound: 'No backtest sessions found in the database. Click "+ Create New Session" to begin!',
 
     propFirmShieldTitle: 'Prop Firm Shield',
-    dailyLossLabel: 'Daily Loss',
-    maxDrawdownLabel: 'Max Drawdown',
+    dailyLossLabel: 'Daily Loss Limit',
+    maxDrawdownLabel: 'Max Drawdown Limit',
     profitTargetLabel: 'Profit Target',
     passChallengeBadge: 'PASS CHALLENGE 🎉',
     violatedBadge: 'VIOLATED ⛔',
@@ -571,6 +661,11 @@ export const translations: Record<Language, TranslationDict> = {
     heatmapDesc: '時間帯 (UTC) および曜日別の損益・勝率分布:',
 
     aiStudioTitle: 'AI戦略スタジオ＆実行サンドボックス',
+    studioAndSandboxTab: 'スタジオ＆サンドボックス',
+    describeStrategyLabel: '自然言語で戦略を記述:',
+    quickPromptsLabel: 'クイック提案:',
+    selectedLabel: '選択中',
+    strategyNamePlaceholder: '戦略名',
     promptPlaceholder: '取引戦略を自然言語で記述してください (例: EMA20とEMA50のゴールデンクロス、RSI 35以下の押し目買い)...',
     generateStrategy: 'AI戦略コード生成',
     generating: 'アルゴリズム生成中...',
@@ -578,12 +673,36 @@ export const translations: Record<Language, TranslationDict> = {
     copilotTips: 'AIコパイロット診断',
     parameters: '戦略パラメータ',
     codeEditor: 'アルゴリズムコード (JavaScript)',
-    myStrategiesTab: 'マイスストラテジー (DB)',
+    myStrategiesTab: 'マイストラテジー (DB)',
     templatesTab: 'テンプレート',
     llmConfigTab: 'LLM設定',
     saveToDB: 'DBに保存',
     savedToDBSuccess: 'DBに正常に保存されました！',
     activateAndResume: '有効化＆実行',
+
+    activationPrice: '発注トリガー価格',
+    riskSL: 'リスク (SL)',
+    rewardTP: 'リワード (TP)',
+    expectedFillPrice: '予想約定価格',
+    marginRequired: '必要証拠金',
+    trailingStopLabel: 'トレーリングストップ (Pips)',
+    enterPips: 'Pips入力',
+    enterPrice: '価格入力',
+
+    dataManagerTitle: 'ヒストリカルデータ管理・CSVインポート＆自動クローラー',
+    autoCrawlTab: 'オンライン自動クロール (Binance API)',
+    uploadFileTab: 'CSV / TXT ファイルインポート',
+    sampleDataTab: 'サンプルデータ (GBM)',
+    autoCrawlDesc: '🌐 オンライン自動クローラーにより、APIキーなしでBinance等の取引所から実際の過去ティック・K線データを直接取得できます。',
+    intervalLabel: '時間軸 (Interval)',
+    startCrawlBtn: 'クロール開始＆チャートに適用',
+    crawlingBtn: 'データ取得中...',
+    dragDropCSV: 'CSVファイルをここにドラッグ＆ドロップ',
+    parsingFile: 'ファイルを解析中...',
+    supportedFormat: '対応形式: Date, Time, Open, High, Low, Close, Volume (自動判定)',
+
+    keyboardShortcutsTitle: 'キーボードショートカット',
+    keyboardShortcutsDesc: 'ショートカットキーで快適なバックテスト操作が可能です。',
 
     sessions: 'セッション',
     sessionManagerTitle: 'バックテストセッション管理 (Database)',
@@ -636,7 +755,7 @@ export const translations: Record<Language, TranslationDict> = {
     replay: 'K线回放',
     
     orderEntry: '开仓下单',
-    aiStudio: 'AI量化策略工作室',
+    aiStudio: 'AI Studio',
     analytics: '量化分析报告',
     dataImport: '数据管理',
     shortcuts: '快捷键',
@@ -725,6 +844,11 @@ export const translations: Record<Language, TranslationDict> = {
     heatmapDesc: '交易时段 (UTC) 与星期维度的盈亏与胜率分布:',
 
     aiStudioTitle: 'AI策略工作室与沙盒执行引擎',
+    studioAndSandboxTab: '工作室与沙盒',
+    describeStrategyLabel: '用自然语言描述您的策略:',
+    quickPromptsLabel: '快捷提示词:',
+    selectedLabel: '当前选择',
+    strategyNamePlaceholder: '策略名称',
     promptPlaceholder: '用自然语言描述您的交易策略 (例如：EMA 20 上穿 EMA 50 结合 RSI < 35 回踩进场)...',
     generateStrategy: '生成 AI 策略',
     generating: '正在生成算法代码...',
@@ -739,7 +863,31 @@ export const translations: Record<Language, TranslationDict> = {
     savedToDBSuccess: '已成功保存到数据库！',
     activateAndResume: '激活并运行',
 
-    sessions: '交易会话',
+    activationPrice: '触发挂单价',
+    riskSL: '止损风险 (Risk SL)',
+    rewardTP: '止盈回报 (Reward TP)',
+    expectedFillPrice: '预计成交价',
+    marginRequired: '所需保证金',
+    trailingStopLabel: '追踪止损 (Pips)',
+    enterPips: '输入点数',
+    enterPrice: '输入价格',
+
+    dataManagerTitle: '历史数据管理、导入与在线爬虫',
+    autoCrawlTab: '在线自动抓取 (Binance REST API)',
+    uploadFileTab: '上传 CSV / TXT 文件',
+    sampleDataTab: '示例数据 (GBM Presets)',
+    autoCrawlDesc: '🌐 在线自动抓取系统无需任何 API Key，即可直接从全球顶级交易所拉取数千根真实历史K线！',
+    intervalLabel: 'K线周期 (Interval)',
+    startCrawlBtn: '开始抓取并载入图表',
+    crawlingBtn: '正在抓取数据...',
+    dragDropCSV: '拖拽 CSV 文件至此处，或点击浏览',
+    parsingFile: '正在解析文件...',
+    supportedFormat: '支持格式: Date, Time, Open, High, Low, Close, Volume (自动识别)',
+
+    keyboardShortcutsTitle: '常用快捷键指南',
+    keyboardShortcutsDesc: '按任意键即可在回测界面上直接进行实时交互。',
+
+    sessions: '会话',
     sessionManagerTitle: '回测会话管理 (Database)',
     sessionManagerDesc: '会话进度、交易历史、图表标注和量化分析均永久保存在数据库中。',
     createNewSession: '创建新会话',

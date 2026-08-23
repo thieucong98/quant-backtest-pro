@@ -18,6 +18,7 @@ import { CSVDataParser } from '../../engine/csvParser';
 import { DataCrawler } from '../../engine/dataCrawler';
 import { datasetsApi } from '../../api';
 import { useBacktestStore } from '../../store/backtestStore';
+import { translations } from '../../i18n/translations';
 
 export const DataImportModal: React.FC = () => {
   const {
@@ -25,8 +26,11 @@ export const DataImportModal: React.FC = () => {
     setDataModalOpen,
     loadCandles,
     setInstrument,
-    instrument
+    instrument,
+    language
   } = useBacktestStore();
+
+  const t = translations[language] || translations.en;
 
   const [activeTab, setActiveTab] = useState<'csv' | 'crawler' | 'presets'>('crawler');
   const [isParsing, setIsParsing] = useState(false);
@@ -134,7 +138,7 @@ export const DataImportModal: React.FC = () => {
             <div className="w-6 h-6 rounded bg-sky-600/30 border border-sky-500/40 flex items-center justify-center">
               <Database className="w-3.5 h-3.5 text-sky-400" />
             </div>
-            <span className="font-bold text-sm text-slate-100">Quản lý, Import & Tự động Crawl Dữ liệu Lịch sử</span>
+            <span className="font-bold text-sm text-slate-100">{t.dataManagerTitle}</span>
           </div>
 
           <button
@@ -154,7 +158,7 @@ export const DataImportModal: React.FC = () => {
             }`}
           >
             <Globe className="w-3.5 h-3.5 text-sky-300" />
-            <span>Tự động Crawl Online (Live REST API)</span>
+            <span>{t.autoCrawlTab}</span>
           </button>
 
           <button
@@ -164,7 +168,7 @@ export const DataImportModal: React.FC = () => {
             }`}
           >
             <Upload className="w-3.5 h-3.5" />
-            <span>Nạp File CSV / TXT</span>
+            <span>{t.uploadFileTab}</span>
           </button>
 
           <button
@@ -174,7 +178,7 @@ export const DataImportModal: React.FC = () => {
             }`}
           >
             <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-            <span>Dữ liệu Mẫu (GBM Presets)</span>
+            <span>{t.sampleDataTab}</span>
           </button>
         </div>
 
@@ -184,13 +188,13 @@ export const DataImportModal: React.FC = () => {
           {activeTab === 'crawler' && (
             <div className="space-y-4">
               <div className="bg-sky-950/40 border border-sky-500/30 p-3 rounded-lg text-xs leading-relaxed text-sky-200">
-                🌐 <b>Hệ thống Tự động Crawl Dữ liệu Trực tuyến</b> cho phép kéo trực tiếp hàng ngàn nến lịch sử thực tế từ các sàn giao dịch hàng đầu thế giới (Binance REST API) mà không cần bất kỳ API key nào!
+                {t.autoCrawlDesc}
               </div>
 
               <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl space-y-3.5">
                 <div className="grid grid-cols-3 gap-3">
                   <div>
-                    <label className="block text-slate-400 mb-1">Cặp Tiền (Symbol):</label>
+                    <label className="block text-slate-400 mb-1">{t.symbol}:</label>
                     <select
                       value={crawlSymbol}
                       onChange={(e) => setCrawlSymbol(e.target.value)}
@@ -206,30 +210,30 @@ export const DataImportModal: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-slate-400 mb-1">Khung Nến (Interval):</label>
+                    <label className="block text-slate-400 mb-1">{t.intervalLabel}:</label>
                     <select
                       value={crawlInterval}
                       onChange={(e) => setCrawlInterval(e.target.value)}
                       className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-slate-200 focus:outline-none"
                     >
-                      <option value="1m">1m (1 Phút)</option>
-                      <option value="5m">5m (5 Phút)</option>
-                      <option value="15m">15m (15 Phút)</option>
-                      <option value="1h">1h (1 Giờ)</option>
-                      <option value="4h">4h (4 Giờ)</option>
-                      <option value="1d">1d (1 Ngày)</option>
+                      <option value="1m">1m (1 Min)</option>
+                      <option value="5m">5m (5 Min)</option>
+                      <option value="15m">15m (15 Min)</option>
+                      <option value="1h">1h (1 Hour)</option>
+                      <option value="4h">4h (4 Hour)</option>
+                      <option value="1d">1d (1 Day)</option>
                     </select>
                   </div>
 
                   <div>
-                    <label className="block text-slate-400 mb-1">Số lượng Nến:</label>
+                    <label className="block text-slate-400 mb-1">{t.candlesCount}:</label>
                     <select
                       value={crawlLimit}
                       onChange={(e) => setCrawlLimit(Number(e.target.value))}
                       className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-slate-200 focus:outline-none"
                     >
-                      <option value={500}>500 nến</option>
-                      <option value={1000}>1,000 nến (Tối đa 1 request)</option>
+                      <option value={500}>500 {t.candlesCount}</option>
+                      <option value={1000}>1,000 {t.candlesCount}</option>
                     </select>
                   </div>
                 </div>
@@ -241,7 +245,7 @@ export const DataImportModal: React.FC = () => {
                     className="px-4 py-2 bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white font-bold rounded-lg flex items-center gap-2 shadow-lg shadow-sky-600/30 transition-all active:scale-95"
                   >
                     <ArrowDownToLine className={`w-4 h-4 ${isCrawling ? 'animate-bounce' : ''}`} />
-                    <span>{isCrawling ? 'Đang Crawl Dữ liệu...' : 'Bắt đầu Crawl & Nạp vào Chart'}</span>
+                    <span>{isCrawling ? t.crawlingBtn : t.startCrawlBtn}</span>
                   </button>
                 </div>
               </div>
@@ -254,15 +258,15 @@ export const DataImportModal: React.FC = () => {
               <div>
                 <h4 className="font-bold text-slate-300 text-xs mb-2 flex items-center gap-1.5">
                   <Upload className="w-3.5 h-3.5 text-indigo-400" />
-                  Nạp file CSV / TXT từ Broker (MT4, MT5, Dukascopy, TradingView):
+                  {t.uploadFileTab}:
                 </h4>
                 <label className="border-2 border-dashed border-slate-700 hover:border-indigo-500/70 bg-slate-950/60 rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer transition-colors group">
                   <FileSpreadsheet className="w-10 h-10 text-slate-500 group-hover:text-indigo-400 transition-colors mb-2" />
                   <span className="font-semibold text-slate-200 text-xs">
-                    {isParsing ? 'Đang đọc và phân tích file...' : 'Kéo thả file CSV vào đây hoặc click để chọn file'}
+                    {isParsing ? t.parsingFile : t.dragDropCSV}
                   </span>
                   <span className="text-[10px] text-slate-500 mt-1">
-                    Hỗ trợ định dạng: Date, Time, Open, High, Low, Close, Volume (Tự động nhận diện)
+                    {t.supportedFormat}
                   </span>
                   <input
                     type="file"

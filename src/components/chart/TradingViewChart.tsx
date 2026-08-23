@@ -469,7 +469,7 @@ export const TradingViewChart: React.FC = () => {
               {/* Metric 1: Daily Loss Limit */}
               <div className="space-y-1">
                 <div className="flex items-center justify-between text-[10px]">
-                  <span className="text-slate-400">Daily Loss (Max {propFirmDailyLossLimit}%):</span>
+                  <span className="text-slate-400">{t.dailyLossLabel} ({propFirmDailyLossLimit}%):</span>
                   <span className={`font-bold ${dailyLossPercent >= 4.0 ? 'text-rose-400' : 'text-slate-300'}`}>
                     ${currentDailyLoss.toFixed(1)} / ${dailyLossMax.toFixed(0)} ({dailyLossPercent.toFixed(1)}%)
                   </span>
@@ -485,7 +485,7 @@ export const TradingViewChart: React.FC = () => {
               {/* Metric 2: Max Drawdown Limit */}
               <div className="space-y-1">
                 <div className="flex items-center justify-between text-[10px]">
-                  <span className="text-slate-400">Max DD (Max {propFirmMaxDrawdownLimit}%):</span>
+                  <span className="text-slate-400">{t.maxDrawdownLabel} ({propFirmMaxDrawdownLimit}%):</span>
                   <span className={`font-bold ${maxDDPercent >= 8.0 ? 'text-rose-400' : 'text-slate-300'}`}>
                     ${currentMaxDD.toFixed(1)} / ${maxDDMax.toFixed(0)} ({maxDDPercent.toFixed(1)}%)
                   </span>
@@ -501,7 +501,7 @@ export const TradingViewChart: React.FC = () => {
               {/* Metric 3: Target Profit Progress */}
               <div className="space-y-1">
                 <div className="flex items-center justify-between text-[10px]">
-                  <span className="text-slate-400">Mục tiêu (+{propFirmProfitTarget}%):</span>
+                  <span className="text-slate-400">{t.profitTargetLabel} (+{propFirmProfitTarget}%):</span>
                   <span className="font-bold text-emerald-400">
                     +${currentProfit.toFixed(1)} / ${profitTargetMax.toFixed(0)} ({profitProgressPercent.toFixed(0)}%)
                   </span>

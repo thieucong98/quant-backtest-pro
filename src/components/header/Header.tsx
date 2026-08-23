@@ -229,10 +229,10 @@ export const Header: React.FC = () => {
           <button
             onClick={() => setSessionManagerOpen(true)}
             className="p-1.5 sm:px-2.5 sm:py-1.5 bg-slate-900/90 hover:bg-slate-800 text-slate-300 border border-slate-700/80 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors"
-            title="Quản lý Phiên Backtest (Database Sessions)"
+            title={t.sessionManagerTitle}
           >
             <FolderOpen className="w-3.5 h-3.5 text-indigo-400" />
-            <span className="hidden xl:inline">Phiên</span>
+            <span className="hidden xl:inline">{t.sessions}</span>
           </button>
 
           {/* Analytics Report Button */}

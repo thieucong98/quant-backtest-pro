@@ -289,7 +289,7 @@ export const AIStrategyModal: React.FC = () => {
                     : 'bg-slate-800 text-slate-400 hover:text-slate-200'
                 }`}
               >
-                {autoTradingEnabled ? 'BẬT' : 'TẮT'}
+                {autoTradingEnabled ? (language === 'vi' ? 'BẬT' : 'ON') : (language === 'vi' ? 'TẮT' : 'OFF')}
               </button>
             </div>
 
@@ -312,7 +312,7 @@ export const AIStrategyModal: React.FC = () => {
               }`}
             >
               <Sparkles className="w-3.5 h-3.5 text-purple-300" />
-              <span>Studio & Sandbox</span>
+              <span>{t.studioAndSandboxTab}</span>
             </button>
 
             <button
@@ -325,7 +325,7 @@ export const AIStrategyModal: React.FC = () => {
               }`}
             >
               <FolderOpen className="w-3.5 h-3.5 text-amber-300" />
-              <span>Chiến Lược Của Tôi (DB)</span>
+              <span>{t.myStrategiesTab}</span>
             </button>
 
             <button
@@ -335,7 +335,7 @@ export const AIStrategyModal: React.FC = () => {
               }`}
             >
               <BookOpen className="w-3.5 h-3.5 text-teal-300" />
-              <span>Mẫu Thuật Toán</span>
+              <span>{t.templatesTab}</span>
             </button>
 
             <button
@@ -345,13 +345,13 @@ export const AIStrategyModal: React.FC = () => {
               }`}
             >
               <Settings2 className="w-3.5 h-3.5 text-slate-300" />
-              <span>Cấu Hình LLM</span>
+              <span>{t.llmConfigTab}</span>
             </button>
           </div>
 
           <div className="flex items-center gap-2">
             <span className="text-[10px] text-slate-500 font-mono">
-              Đang chọn: <span className="font-bold text-slate-300">{strategyName}</span>
+              {t.selectedLabel}: <span className="font-bold text-slate-300">{strategyName}</span>
             </span>
           </div>
         </div>
@@ -366,7 +366,7 @@ export const AIStrategyModal: React.FC = () => {
                 <div className="flex items-center justify-between text-xs">
                   <span className="font-bold text-slate-200 flex items-center gap-1.5">
                     <Sparkles className="w-3.5 h-3.5 text-purple-400" />
-                    Mô tả chiến lược bằng ngôn ngữ tự nhiên:
+                    {t.describeStrategyLabel}
                   </span>
                   <span className="text-[10px] text-slate-500">
                     Model: {AI_PROVIDER_MODELS[llmConfig.provider].models[0]}
@@ -394,7 +394,7 @@ export const AIStrategyModal: React.FC = () => {
 
                 {/* Quick Prompts */}
                 <div className="flex items-center gap-1.5 flex-wrap pt-1">
-                  <span className="text-[10px] text-slate-500">Gợi ý nhanh:</span>
+                  <span className="text-[10px] text-slate-500">{t.quickPromptsLabel}</span>
                   {promptSuggestions.map((s, idx) => (
                     <button
                       key={idx}
@@ -417,7 +417,7 @@ export const AIStrategyModal: React.FC = () => {
                       value={strategyName}
                       onChange={(e) => setStrategyName(e.target.value)}
                       className="bg-slate-950 border border-slate-800 rounded px-2 py-1 text-xs font-bold text-slate-200 focus:outline-none focus:border-indigo-500 w-64"
-                      placeholder="Tên chiến lược"
+                      placeholder={t.strategyNamePlaceholder}
                     />
                   </div>
 
@@ -433,13 +433,13 @@ export const AIStrategyModal: React.FC = () => {
                       title="Lưu chiến lược này vào database"
                     >
                       <Save className="w-3.5 h-3.5 text-amber-400" />
-                      <span>Lưu vào DB</span>
+                      <span>{t.saveToDB}</span>
                     </button>
 
                     <button
                       onClick={handleCopyCode}
                       className="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-xs transition-colors"
-                      title="Copy mã nguồn"
+                      title="Copy code"
                     >
                       {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                     </button>
@@ -449,7 +449,7 @@ export const AIStrategyModal: React.FC = () => {
                       className="px-3 py-1 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded text-xs font-bold flex items-center gap-1.5 shadow-xs transition-all active:scale-95"
                     >
                       <Play className="w-3 h-3 fill-current" />
-                      <span>Kích Hoạt & Chạy Tiếp</span>
+                      <span>{t.activateAndResume}</span>
                     </button>
                   </div>
                 </div>

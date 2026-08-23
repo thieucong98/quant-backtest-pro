@@ -187,7 +187,7 @@ export const OrderEntryModal: React.FC = () => {
           {/* Pending Price Input (If Limit/Stop) */}
           {orderType !== 'MARKET' && (
             <div>
-              <label className="block text-slate-400 mb-1">Giá kích hoạt ({orderType}):</label>
+              <label className="block text-slate-400 mb-1">{t.activationPrice} ({orderType}):</label>
               <input
                 type="number"
                 step="any"
@@ -202,7 +202,7 @@ export const OrderEntryModal: React.FC = () => {
           {/* Volume / Lot Size */}
           <div>
             <div className="flex items-center justify-between mb-1">
-              <label className="text-slate-400 font-medium">Khối lượng (Lot):</label>
+              <label className="text-slate-400 font-medium">{t.lotSize} ({t.lot}):</label>
               <div className="flex gap-1">
                 {[1, 2, 5].map(pct => (
                   <button
@@ -238,7 +238,7 @@ export const OrderEntryModal: React.FC = () => {
                   onClick={() => setSlMode(slMode === 'pips' ? 'price' : 'pips')}
                   className="text-[10px] text-slate-500 hover:text-slate-300 underline"
                 >
-                  {slMode === 'pips' ? 'Nhập Pips' : 'Nhập Giá'}
+                  {slMode === 'pips' ? t.enterPips : t.enterPrice}
                 </button>
               </div>
               <input
@@ -246,7 +246,7 @@ export const OrderEntryModal: React.FC = () => {
                 step="any"
                 value={slValue}
                 onChange={(e) => setSlValue(e.target.value)}
-                placeholder={slMode === 'pips' ? 'Ví dụ: 20 pips' : 'Giá SL'}
+                placeholder={slMode === 'pips' ? '20 pips' : 'SL Price'}
                 className="w-full bg-slate-900 border border-rose-900/50 rounded-lg p-2 text-slate-100 font-mono focus:outline-none focus:border-rose-500"
               />
             </div>
@@ -255,14 +255,14 @@ export const OrderEntryModal: React.FC = () => {
             <div>
               <div className="flex justify-between items-center mb-1">
                 <label className="text-teal-400 font-medium">Take Profit:</label>
-                <span className="text-[10px] text-slate-500">{slMode === 'pips' ? 'Pips' : 'Giá'}</span>
+                <span className="text-[10px] text-slate-500">{slMode === 'pips' ? 'Pips' : (language === 'vi' ? 'Giá' : 'Price')}</span>
               </div>
               <input
                 type="number"
                 step="any"
                 value={tpValue}
                 onChange={(e) => setTpValue(e.target.value)}
-                placeholder={slMode === 'pips' ? 'Ví dụ: 40 pips' : 'Giá TP'}
+                placeholder={slMode === 'pips' ? '40 pips' : 'TP Price'}
                 className="w-full bg-slate-900 border border-teal-900/50 rounded-lg p-2 text-slate-100 font-mono focus:outline-none focus:border-teal-500"
               />
             </div>
@@ -270,13 +270,13 @@ export const OrderEntryModal: React.FC = () => {
 
           {/* Trailing Stop Input */}
           <div>
-            <label className="block text-slate-400 mb-1">Trailing Stop (Pips - Bỏ trống nếu không dùng):</label>
+            <label className="block text-slate-400 mb-1">{t.trailingStopLabel}:</label>
             <input
               type="number"
               step="1"
               value={trailingStop}
               onChange={(e) => setTrailingStop(e.target.value)}
-              placeholder="VD: 15 pips"
+              placeholder="15 pips"
               className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-100 font-mono focus:outline-none focus:border-indigo-500"
             />
           </div>
@@ -284,27 +284,27 @@ export const OrderEntryModal: React.FC = () => {
           {/* SUMMARY RISK / REWARD BOX */}
           <div className="bg-slate-950 p-3 rounded-lg border border-slate-800 space-y-1.5 font-mono text-[11px]">
             <div className="flex justify-between">
-              <span className="text-slate-400">Giá khớp dự kiến:</span>
+              <span className="text-slate-400">{t.expectedFillPrice}:</span>
               <span className="font-semibold text-slate-200">{executionPrice.toFixed(instrument.digits)}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-400">Rủi ro (Risk SL):</span>
+              <span className="text-slate-400">{t.riskSL}:</span>
               <span className="font-semibold text-rose-400">
                 -${estimatedRiskUSD.toFixed(2)} ({slPips.toFixed(1)} pips)
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-400">Lợi nhuận (Reward TP):</span>
+              <span className="text-slate-400">{t.rewardTP}:</span>
               <span className="font-semibold text-teal-400">
                 +${estimatedRewardUSD.toFixed(2)} ({tpPips.toFixed(1)} pips)
               </span>
             </div>
             <div className="flex justify-between pt-1 border-t border-slate-900">
-              <span className="text-slate-400">Tỷ lệ Risk:Reward:</span>
+              <span className="text-slate-400">{t.riskReward}:</span>
               <span className="font-bold text-indigo-400">1 : {riskReward}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-400">Ký quỹ (Margin):</span>
+              <span className="text-slate-400">{t.marginRequired}:</span>
               <span className="text-slate-300">${requiredMargin.toFixed(2)}</span>
             </div>
           </div>
@@ -318,7 +318,7 @@ export const OrderEntryModal: React.FC = () => {
                 : 'bg-rose-600 hover:bg-rose-500 shadow-rose-600/30'
             }`}
           >
-            {orderType === 'MARKET' ? `VÀO LỆNH ${side} ${lotSize} LOT` : `ĐẶT LỆNH ${orderType} ${side}`}
+            {orderType === 'MARKET' ? `${t.buy}/${t.sell} ${side} ${lotSize} LOT` : `${side} ${orderType}`}
           </button>
         </form>
       </div>
