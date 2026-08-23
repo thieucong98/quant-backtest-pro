@@ -43,8 +43,9 @@ sessionsRouter.get('/', async (req: Request, res: Response) => {
 // GET /api/sessions/:id — Full session detail
 sessionsRouter.get('/:id', async (req: Request, res: Response) => {
   try {
+    const { id } = req.params as { id: string };
     const session = await prisma.session.findUnique({
-      where: { id: req.params.id },
+      where: { id },
       include: {
         trades: { orderBy: { openTime: 'asc' } },
         drawings: true,
@@ -93,10 +94,11 @@ sessionsRouter.post('/', async (req: Request, res: Response) => {
 // PUT /api/sessions/:id — Update session (auto-save)
 sessionsRouter.put('/:id', async (req: Request, res: Response) => {
   try {
+    const { id } = req.params as { id: string };
     const { finalBalance, finalEquity, currentIndex, status, name, symbol, timeframe, strategyId } = req.body;
 
     const session = await prisma.session.update({
-      where: { id: req.params.id },
+      where: { id },
       data: {
         ...(finalBalance !== undefined && { finalBalance }),
         ...(finalEquity !== undefined && { finalEquity }),
@@ -118,10 +120,11 @@ sessionsRouter.put('/:id', async (req: Request, res: Response) => {
 // PUT /api/sessions/:id/complete — Mark completed + create analytics snapshot
 sessionsRouter.put('/:id/complete', async (req: Request, res: Response) => {
   try {
+    const { id } = req.params as { id: string };
     const { analyticsSnapshot, finalBalance, finalEquity } = req.body;
 
     const session = await prisma.session.update({
-      where: { id: req.params.id },
+      where: { id },
       data: {
         status: 'COMPLETED',
         finalBalance: finalBalance || undefined,
@@ -131,8 +134,8 @@ sessionsRouter.put('/:id/complete', async (req: Request, res: Response) => {
 
     if (analyticsSnapshot) {
       await prisma.analyticsSnapshot.upsert({
-        where: { sessionId: req.params.id },
-        create: { sessionId: req.params.id, ...analyticsSnapshot },
+        where: { sessionId: id },
+        create: { sessionId: id, ...analyticsSnapshot },
         update: analyticsSnapshot
       });
     }
@@ -146,7 +149,8 @@ sessionsRouter.put('/:id/complete', async (req: Request, res: Response) => {
 // DELETE /api/sessions/:id
 sessionsRouter.delete('/:id', async (req: Request, res: Response) => {
   try {
-    await prisma.session.delete({ where: { id: req.params.id } });
+    const { id } = req.params as { id: string };
+    await prisma.session.delete({ where: { id } });
     res.json({ success: true });
   } catch (err: any) {
     res.status(500).json({ error: err.message });

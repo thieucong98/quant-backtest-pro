@@ -42,8 +42,9 @@ tradesRouter.get('/history', async (req: Request, res: Response) => {
 // GET /api/sessions/:sessionId/trades — Trades within a session
 tradesRouter.get('/session/:sessionId', async (req: Request, res: Response) => {
   try {
+    const { sessionId } = req.params as { sessionId: string };
     const trades = await prisma.trade.findMany({
-      where: { sessionId: req.params.sessionId },
+      where: { sessionId },
       orderBy: { openTime: 'asc' }
     });
     res.json(trades);
@@ -112,13 +113,14 @@ tradesRouter.post('/bulk', async (req: Request, res: Response) => {
 // PUT /api/trades/:id — Update a trade
 tradesRouter.put('/:id', async (req: Request, res: Response) => {
   try {
+    const { id } = req.params as { id: string };
     const data: any = { ...req.body };
     if (data.openTime) data.openTime = BigInt(data.openTime);
     if (data.closeTime) data.closeTime = BigInt(data.closeTime);
     if (data.tags && Array.isArray(data.tags)) data.tags = JSON.stringify(data.tags);
 
     const trade = await prisma.trade.update({
-      where: { id: req.params.id },
+      where: { id },
       data
     });
     res.json(trade);
@@ -130,7 +132,8 @@ tradesRouter.put('/:id', async (req: Request, res: Response) => {
 // DELETE /api/trades/:id
 tradesRouter.delete('/:id', async (req: Request, res: Response) => {
   try {
-    await prisma.trade.delete({ where: { id: req.params.id } });
+    const { id } = req.params as { id: string };
+    await prisma.trade.delete({ where: { id } });
     res.json({ success: true });
   } catch (err: any) {
     res.status(500).json({ error: err.message });

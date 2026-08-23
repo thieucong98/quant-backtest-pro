@@ -46,8 +46,9 @@ datasetsRouter.get('/', async (req: Request, res: Response) => {
 // GET /api/datasets/:id — Full dataset with candles
 datasetsRouter.get('/:id', async (req: Request, res: Response) => {
   try {
+    const { id } = req.params as { id: string };
     const dataset = await prisma.dataset.findUnique({
-      where: { id: req.params.id }
+      where: { id }
     });
 
     if (!dataset) {
@@ -68,12 +69,13 @@ datasetsRouter.get('/:id', async (req: Request, res: Response) => {
 datasetsRouter.get('/find/:symbol/:timeframe', async (req: Request, res: Response) => {
   try {
     const userId = await getUserId(req);
+    const { symbol, timeframe } = req.params as { symbol: string; timeframe: string };
     const dataset = await prisma.dataset.findUnique({
       where: {
         userId_symbol_timeframe: {
           userId,
-          symbol: req.params.symbol,
-          timeframe: req.params.timeframe
+          symbol,
+          timeframe
         }
       }
     });
@@ -140,7 +142,8 @@ datasetsRouter.post('/', async (req: Request, res: Response) => {
 // DELETE /api/datasets/:id
 datasetsRouter.delete('/:id', async (req: Request, res: Response) => {
   try {
-    await prisma.dataset.delete({ where: { id: req.params.id } });
+    const { id } = req.params as { id: string };
+    await prisma.dataset.delete({ where: { id } });
     res.json({ success: true });
   } catch (err: any) {
     res.status(500).json({ error: err.message });

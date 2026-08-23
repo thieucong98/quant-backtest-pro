@@ -115,8 +115,9 @@ analyticsRouter.get('/dashboard', async (req: Request, res: Response) => {
 // GET /api/analytics/sessions/:id — Analytics for a single session
 analyticsRouter.get('/sessions/:id', async (req: Request, res: Response) => {
   try {
+    const { id } = req.params as { id: string };
     const snapshot = await prisma.analyticsSnapshot.findUnique({
-      where: { sessionId: req.params.id }
+      where: { sessionId: id }
     });
 
     if (!snapshot) {
@@ -137,6 +138,7 @@ analyticsRouter.get('/sessions/:id', async (req: Request, res: Response) => {
 // POST /api/analytics/sessions/:id — Save/update analytics snapshot
 analyticsRouter.post('/sessions/:id', async (req: Request, res: Response) => {
   try {
+    const { id } = req.params as { id: string };
     const data: any = { ...req.body };
 
     // Serialize JSON fields
@@ -148,8 +150,8 @@ analyticsRouter.post('/sessions/:id', async (req: Request, res: Response) => {
     }
 
     const snapshot = await prisma.analyticsSnapshot.upsert({
-      where: { sessionId: req.params.id },
-      create: { sessionId: req.params.id, ...data },
+      where: { sessionId: id },
+      create: { sessionId: id, ...data },
       update: data
     });
 

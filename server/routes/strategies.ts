@@ -38,8 +38,9 @@ strategiesRouter.get('/', async (req: Request, res: Response) => {
 // GET /api/strategies/:id
 strategiesRouter.get('/:id', async (req: Request, res: Response) => {
   try {
+    const { id } = req.params as { id: string };
     const strategy = await prisma.strategy.findUnique({
-      where: { id: req.params.id }
+      where: { id }
     });
 
     if (!strategy) {
@@ -79,13 +80,14 @@ strategiesRouter.post('/', async (req: Request, res: Response) => {
 // PUT /api/strategies/:id
 strategiesRouter.put('/:id', async (req: Request, res: Response) => {
   try {
+    const { id } = req.params as { id: string };
     const data: any = { ...req.body };
     if (data.parameters && typeof data.parameters === 'object') {
       data.parameters = JSON.stringify(data.parameters);
     }
 
     const strategy = await prisma.strategy.update({
-      where: { id: req.params.id },
+      where: { id },
       data
     });
 
@@ -98,7 +100,8 @@ strategiesRouter.put('/:id', async (req: Request, res: Response) => {
 // DELETE /api/strategies/:id
 strategiesRouter.delete('/:id', async (req: Request, res: Response) => {
   try {
-    await prisma.strategy.delete({ where: { id: req.params.id } });
+    const { id } = req.params as { id: string };
+    await prisma.strategy.delete({ where: { id } });
     res.json({ success: true });
   } catch (err: any) {
     res.status(500).json({ error: err.message });

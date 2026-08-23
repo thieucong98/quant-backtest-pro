@@ -40,8 +40,9 @@ drawingsRouter.post('/sync', async (req: Request, res: Response) => {
 // GET /api/drawings/session/:sessionId — Get drawings for a session
 drawingsRouter.get('/session/:sessionId', async (req: Request, res: Response) => {
   try {
+    const { sessionId } = req.params as { sessionId: string };
     const drawings = await prisma.drawing.findMany({
-      where: { sessionId: req.params.sessionId },
+      where: { sessionId },
       orderBy: { createdAt: 'asc' }
     });
 
