@@ -1,0 +1,60 @@
+name: 🐛 Bug Report
+description: Create a report to help us improve Quant Backtest Pro
+title: "[BUG]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug! Please fill out the form below with as much detail as possible.
+  - type: input
+    id: version
+    attributes:
+      label: Quant Backtest Pro Version
+      description: What version or commit hash are you running?
+      placeholder: e.g., v1.0.0 or commit b8d51eb
+    validations:
+      required: true
+  - type: dropdown
+    id: browser
+    attributes:
+      label: Browser & OS
+      description: Which browser and operating system were you using?
+      options:
+        - Chrome / Edge on Windows
+        - Chrome / Brave / Safari on macOS
+        - Chrome / Firefox on Linux
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: Describe the Bug
+      description: A clear and concise description of what the bug is.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: How can we reproduce the issue?
+      placeholder: |
+        1. Open 'Analytics Dashboard'
+        2. Click on 'Day & Hour PnL Heatmap'
+        3. Switch to 'Calendar View'
+        4. See error...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen instead?
+    validations:
+      required: true
+  - type: textarea
+    id: logs-screenshots
+    attributes:
+      label: Console Logs / Screenshots
+      description: Drag and drop screenshots or paste browser devtools console error logs here.
