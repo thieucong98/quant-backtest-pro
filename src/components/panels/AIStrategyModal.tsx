@@ -332,7 +332,7 @@ export const AIStrategyModal: React.FC = () => {
   const handleApplyUserPreset = () => {
     const customConfig: LLMConfig = {
       provider: 'custom',
-      baseUrl: 'https://r5yym74.abc-tunnel.us/v1',
+      baseUrl: llmConfig.baseUrl || 'https://api.openai.com/v1',
       apiKey: llmConfig.apiKey || '',
       model: 'ag/gemini-pro-agent',
       temperature: 0.2
@@ -814,15 +814,8 @@ export const AIStrategyModal: React.FC = () => {
                     <div className="flex items-center gap-1">
                       <button
                         type="button"
-                        onClick={() => handleUpdateLLMConfig({ baseUrl: 'https://r5yym74.abc-tunnel.us/v1' })}
-                        className="text-[9px] px-1.5 py-0.5 rounded bg-purple-950/80 border border-purple-500/40 text-purple-300 hover:bg-purple-900"
-                      >
-                        abc-tunnel
-                      </button>
-                      <button
-                        type="button"
                         onClick={() => handleUpdateLLMConfig({ baseUrl: 'https://api.openai.com/v1' })}
-                        className="text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 hover:bg-slate-700"
+                        className="text-[9px] px-1.5 py-0.5 rounded bg-purple-950/80 border border-purple-500/40 text-purple-300 hover:bg-purple-900"
                       >
                         OpenAI
                       </button>
@@ -833,13 +826,20 @@ export const AIStrategyModal: React.FC = () => {
                       >
                         OpenRouter
                       </button>
+                      <button
+                        type="button"
+                        onClick={() => handleUpdateLLMConfig({ baseUrl: 'https://api.groq.com/openai/v1' })}
+                        className="text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 hover:bg-slate-700"
+                      >
+                        Groq
+                      </button>
                     </div>
                   </div>
                   <input
                     type="text"
                     value={llmConfig.baseUrl || ''}
                     onChange={(e) => handleUpdateLLMConfig({ baseUrl: e.target.value })}
-                    placeholder="https://r5yym74.abc-tunnel.us/v1"
+                    placeholder="https://api.openai.com/v1"
                     className="w-full bg-slate-950 border border-slate-700/80 rounded-lg px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-purple-500 font-mono"
                   />
                 </div>

@@ -15,7 +15,7 @@ export const DEFAULT_LLM_CONFIG: LLMConfig = {
   provider: 'custom',
   apiKey: '',
   model: 'ag/gemini-pro-agent',
-  baseUrl: 'https://r5yym74.abc-tunnel.us/v1',
+  baseUrl: 'https://api.openai.com/v1',
   temperature: 0.2
 };
 
@@ -23,7 +23,7 @@ export const AI_PROVIDER_MODELS: Record<AIProvider, { name: string; models: stri
   custom: {
     name: 'Custom OpenAI-Compatible API / Reverse Proxy Tunnel',
     models: ['ag/gemini-pro-agent', 'gpt-4o', 'claude-3-5-sonnet', 'deepseek-chat', 'gemini-1.5-pro'],
-    defaultBaseUrl: 'https://r5yym74.abc-tunnel.us/v1',
+    defaultBaseUrl: 'https://api.openai.com/v1',
     placeholder: 'e.g. ag/gemini-pro-agent'
   },
   openai: {
