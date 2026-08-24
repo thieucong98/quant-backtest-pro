@@ -464,102 +464,102 @@ export const TradingViewChart: React.FC = () => {
             <span>{t.quickTrade}</span>
           </button>
         )}
+
+        {/* 2. PROP FIRM CHALLENGE SHIELD (DOCK ON TOP-LEFT ALONGSIDE QUICK TRADE) */}
+        {isPropFirmMode && (
+          <div className="font-mono text-xs animate-in fade-in">
+            {isShieldExpanded ? (
+              <div className="bg-[#111622]/95 border border-slate-700/90 backdrop-blur-md p-3 rounded-xl shadow-2xl w-64 space-y-2">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-1.5">
+                  <div className="flex items-center gap-1.5">
+                    <Shield className="w-4 h-4 text-emerald-400" />
+                    <span className="font-bold text-slate-200 text-[11px]">Prop Firm Shield</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    {isPassed ? (
+                      <span className="px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-500/40 text-[9px] font-bold">
+                        PASS CHALLENGE 🎉
+                      </span>
+                    ) : isDailyBreached || isMaxDDBreached ? (
+                      <span className="px-1.5 py-0.5 rounded bg-rose-950 text-rose-300 border border-rose-500/40 text-[9px] font-bold">
+                        VIOLATED ⛔
+                      </span>
+                    ) : (
+                      <span className="px-1.5 py-0.5 rounded bg-indigo-950 text-indigo-300 border border-indigo-500/40 text-[9px] font-bold">
+                        ACTIVE
+                      </span>
+                    )}
+                    <button
+                      onClick={() => setIsShieldExpanded(false)}
+                      className="text-slate-500 hover:text-slate-300 p-0.5"
+                    >
+                      <ChevronUp className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Metric 1: Daily Loss Limit */}
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between text-[10px]">
+                    <span className="text-slate-400">{t.dailyLossLabel} ({propFirmDailyLossLimit}%):</span>
+                    <span className={`font-bold ${dailyLossPercent >= 4.0 ? 'text-rose-400' : 'text-slate-300'}`}>
+                      ${currentDailyLoss.toFixed(1)} / ${dailyLossMax.toFixed(0)} ({dailyLossPercent.toFixed(1)}%)
+                    </span>
+                  </div>
+                  <div className="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full transition-all duration-300 ${dailyLossPercent >= 4.0 ? 'bg-rose-500' : 'bg-amber-500'}`}
+                      style={{ width: `${Math.min(100, (dailyLossPercent / propFirmDailyLossLimit) * 100)}%` }}
+                    />
+                  </div>
+                </div>
+
+                {/* Metric 2: Max Drawdown Limit */}
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between text-[10px]">
+                    <span className="text-slate-400">{t.maxDrawdownLabel} ({propFirmMaxDrawdownLimit}%):</span>
+                    <span className={`font-bold ${maxDDPercent >= 8.0 ? 'text-rose-400' : 'text-slate-300'}`}>
+                      ${currentMaxDD.toFixed(1)} / ${maxDDMax.toFixed(0)} ({maxDDPercent.toFixed(1)}%)
+                    </span>
+                  </div>
+                  <div className="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full transition-all duration-300 ${maxDDPercent >= 8.0 ? 'bg-rose-500' : 'bg-indigo-500'}`}
+                      style={{ width: `${Math.min(100, (maxDDPercent / propFirmMaxDrawdownLimit) * 100)}%` }}
+                    />
+                  </div>
+                </div>
+
+                {/* Metric 3: Target Profit Progress */}
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between text-[10px]">
+                    <span className="text-slate-400">{t.profitTargetLabel} (+{propFirmProfitTarget}%):</span>
+                    <span className="font-bold text-emerald-400">
+                      +${currentProfit.toFixed(1)} / ${profitTargetMax.toFixed(0)} ({profitProgressPercent.toFixed(0)}%)
+                    </span>
+                  </div>
+                  <div className="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-emerald-500 transition-all duration-300"
+                      style={{ width: `${profitProgressPercent}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={() => setIsShieldExpanded(true)}
+                className="bg-[#111622]/95 border border-slate-700/90 px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 shadow-xl backdrop-blur-md hover:bg-slate-800 text-[11px] font-bold text-slate-300"
+                title="Mở rộng Prop Firm Shield"
+              >
+                <Shield className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Shield: {isDailyBreached || isMaxDDBreached ? '⛔' : `${dailyLossPercent.toFixed(1)}% / 5%`}</span>
+                <ChevronDown className="w-3 h-3 text-slate-400" />
+              </button>
+            )}
+          </div>
+        )}
       </div>
-
-      {/* 2. PROP FIRM CHALLENGE SHIELD (TOP-RIGHT OVERLAY) */}
-      {isPropFirmMode && (
-        <div className="absolute top-3 right-3 z-20 font-mono text-xs animate-in fade-in">
-          {isShieldExpanded ? (
-            <div className="bg-[#111622]/95 border border-slate-700/90 backdrop-blur-md p-3 rounded-xl shadow-2xl w-64 space-y-2">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-1.5">
-                <div className="flex items-center gap-1.5">
-                  <Shield className="w-4 h-4 text-emerald-400" />
-                  <span className="font-bold text-slate-200 text-[11px]">Prop Firm Shield</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  {isPassed ? (
-                    <span className="px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-500/40 text-[9px] font-bold">
-                      PASS CHALLENGE 🎉
-                    </span>
-                  ) : isDailyBreached || isMaxDDBreached ? (
-                    <span className="px-1.5 py-0.5 rounded bg-rose-950 text-rose-300 border border-rose-500/40 text-[9px] font-bold">
-                      VIOLATED ⛔
-                    </span>
-                  ) : (
-                    <span className="px-1.5 py-0.5 rounded bg-indigo-950 text-indigo-300 border border-indigo-500/40 text-[9px] font-bold">
-                      ACTIVE
-                    </span>
-                  )}
-                  <button
-                    onClick={() => setIsShieldExpanded(false)}
-                    className="text-slate-500 hover:text-slate-300 p-0.5"
-                  >
-                    <ChevronUp className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Metric 1: Daily Loss Limit */}
-              <div className="space-y-1">
-                <div className="flex items-center justify-between text-[10px]">
-                  <span className="text-slate-400">{t.dailyLossLabel} ({propFirmDailyLossLimit}%):</span>
-                  <span className={`font-bold ${dailyLossPercent >= 4.0 ? 'text-rose-400' : 'text-slate-300'}`}>
-                    ${currentDailyLoss.toFixed(1)} / ${dailyLossMax.toFixed(0)} ({dailyLossPercent.toFixed(1)}%)
-                  </span>
-                </div>
-                <div className="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden">
-                  <div
-                    className={`h-full transition-all duration-300 ${dailyLossPercent >= 4.0 ? 'bg-rose-500' : 'bg-amber-500'}`}
-                    style={{ width: `${Math.min(100, (dailyLossPercent / propFirmDailyLossLimit) * 100)}%` }}
-                  />
-                </div>
-              </div>
-
-              {/* Metric 2: Max Drawdown Limit */}
-              <div className="space-y-1">
-                <div className="flex items-center justify-between text-[10px]">
-                  <span className="text-slate-400">{t.maxDrawdownLabel} ({propFirmMaxDrawdownLimit}%):</span>
-                  <span className={`font-bold ${maxDDPercent >= 8.0 ? 'text-rose-400' : 'text-slate-300'}`}>
-                    ${currentMaxDD.toFixed(1)} / ${maxDDMax.toFixed(0)} ({maxDDPercent.toFixed(1)}%)
-                  </span>
-                </div>
-                <div className="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden">
-                  <div
-                    className={`h-full transition-all duration-300 ${maxDDPercent >= 8.0 ? 'bg-rose-500' : 'bg-indigo-500'}`}
-                    style={{ width: `${Math.min(100, (maxDDPercent / propFirmMaxDrawdownLimit) * 100)}%` }}
-                  />
-                </div>
-              </div>
-
-              {/* Metric 3: Target Profit Progress */}
-              <div className="space-y-1">
-                <div className="flex items-center justify-between text-[10px]">
-                  <span className="text-slate-400">{t.profitTargetLabel} (+{propFirmProfitTarget}%):</span>
-                  <span className="font-bold text-emerald-400">
-                    +${currentProfit.toFixed(1)} / ${profitTargetMax.toFixed(0)} ({profitProgressPercent.toFixed(0)}%)
-                  </span>
-                </div>
-                <div className="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-emerald-500 transition-all duration-300"
-                    style={{ width: `${profitProgressPercent}%` }}
-                  />
-                </div>
-              </div>
-            </div>
-          ) : (
-            <button
-              onClick={() => setIsShieldExpanded(true)}
-              className="bg-[#111622]/95 border border-slate-700/90 px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 shadow-xl backdrop-blur-md hover:bg-slate-800 text-[11px] font-bold text-slate-300"
-              title="Mở rộng Prop Firm Shield"
-            >
-              <Shield className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Shield: {isDailyBreached || isMaxDDBreached ? '⛔' : `${dailyLossPercent.toFixed(1)}% / 5%`}</span>
-              <ChevronDown className="w-3 h-3 text-slate-400" />
-            </button>
-          )}
-        </div>
-      )}
 
       {/* Chart Canvas */}
       <div ref={chartContainerRef} className="w-full h-full relative" />

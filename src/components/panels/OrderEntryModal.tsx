@@ -318,7 +318,9 @@ export const OrderEntryModal: React.FC = () => {
                 : 'bg-rose-600 hover:bg-rose-500 shadow-rose-600/30'
             }`}
           >
-            {orderType === 'MARKET' ? `${t.buy}/${t.sell} ${side} ${lotSize} LOT` : `${side} ${orderType}`}
+            {orderType === 'MARKET'
+              ? `${side === 'BUY' ? t.buy : t.sell} ${lotSize} LOT`
+              : `${side} ${orderType} ${lotSize} LOT`}
           </button>
         </form>
       </div>

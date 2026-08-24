@@ -32,8 +32,12 @@ export class MultiAssetMathEngine {
         } else if (spec.symbol.startsWith('USD')) {
           // USDJPY: (lot * 100,000 * 0.01) / currentPrice
           return (lotSize * spec.contractSize * spec.pipSize) / currentPrice;
+        } else if (spec.symbol.endsWith('JPY')) {
+          // GBPJPY, EURJPY: convert JPY pip value to USD (default approx USDJPY = 150)
+          const usdjpyRate = 150.0;
+          return (lotSize * spec.contractSize * spec.pipSize) / usdjpyRate;
         } else {
-          // Cross currency
+          // General Cross currency
           return lotSize * spec.contractSize * spec.pipSize;
         }
     }
@@ -63,6 +67,9 @@ export class MultiAssetMathEngine {
           return lotSize * spec.contractSize * priceDiff;
         } else if (spec.symbol.startsWith('USD')) {
           return (lotSize * spec.contractSize * priceDiff) / (currentPrice || 1);
+        } else if (spec.symbol.endsWith('JPY')) {
+          const usdjpyRate = 150.0;
+          return (lotSize * spec.contractSize * priceDiff) / usdjpyRate;
         } else {
           return lotSize * spec.contractSize * priceDiff;
         }

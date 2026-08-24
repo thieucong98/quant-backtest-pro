@@ -14,6 +14,7 @@ import {
   Tag,
   BookOpen
 } from 'lucide-react';
+import { INSTRUMENTS } from '../../config/instruments';
 import { useBacktestStore } from '../../store/backtestStore';
 import { translations } from '../../i18n/translations';
 import { Position } from '../../types/order';
@@ -46,6 +47,12 @@ export const PositionsTable: React.FC = () => {
   const t = translations[language] || translations.vi;
   const currentCandle = candles[currentIndex];
 
+  const formatPrice = (symbol: string, price?: number) => {
+    if (price === undefined || price === null || isNaN(price)) return '---';
+    const digits = INSTRUMENTS[symbol]?.digits ?? instrument.digits;
+    return price.toFixed(digits);
+  };
+
   const handleOpenEdit = (pos: Position) => {
     setEditingPosition(pos);
     setEditSL(pos.stopLoss ? pos.stopLoss.toString() : '');
@@ -56,9 +63,11 @@ export const PositionsTable: React.FC = () => {
 
   const handleSaveEdit = () => {
     if (!editingPosition) return;
-    const sl = editSL ? parseFloat(editSL) : undefined;
-    const tp = editTP ? parseFloat(editTP) : undefined;
-    modifyPositionSLTP(editingPosition.id, sl, tp);
+    if (editingPosition.status === 'OPEN') {
+      const sl = editSL ? parseFloat(editSL) : undefined;
+      const tp = editTP ? parseFloat(editTP) : undefined;
+      modifyPositionSLTP(editingPosition.id, sl, tp);
+    }
     updatePositionTags(editingPosition.id, [selectedTag], noteText);
     setEditingPosition(null);
   };
@@ -297,12 +306,13 @@ export const PositionsTable: React.FC = () => {
                 <th className="py-1.5 px-2">Reason</th>
                 <th className="py-1.5 px-2">Tag / Note</th>
                 <th className="py-1.5 px-3 text-right">{t.realizedPnL}</th>
+                <th className="py-1.5 px-3 text-center">{t.actions}</th>
               </tr>
             </thead>
             <tbody>
               {closedPositions.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="text-center py-8 text-slate-500">
+                  <td colSpan={9} className="text-center py-8 text-slate-500">
                     {t.noHistory}
                   </td>
                 </tr>
@@ -318,20 +328,29 @@ export const PositionsTable: React.FC = () => {
                     </td>
                     <td className="py-1.5 px-2 text-slate-300">{trade.lotSize}</td>
                     <td className="py-1.5 px-2 text-slate-300">
-                      <div>{trade.entryPrice.toFixed(instrument.digits)}</div>
-                      <div className="text-slate-500 text-[10px]">↳ {trade.closePrice?.toFixed(instrument.digits)}</div>
+                      <div>{formatPrice(trade.symbol, trade.entryPrice)}</div>
+                      <div className="text-slate-500 text-[10px]">↳ {formatPrice(trade.symbol, trade.closePrice)}</div>
                     </td>
                     <td className="py-1.5 px-2">
                       <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${trade.closeReason === 'TP' ? 'bg-teal-900/60 text-teal-300' : trade.closeReason === 'SL' ? 'bg-rose-900/60 text-rose-300' : 'bg-slate-800 text-slate-400'}`}>
                         {trade.closeReason}
                       </span>
                     </td>
-                    <td className="py-1.5 px-2 text-[10px] text-slate-400">
-                      {trade.tags?.[0] ? <span className="px-1 py-0.2 bg-slate-800 text-indigo-300 rounded mr-1">{trade.tags[0]}</span> : null}
-                      <span>{trade.comment || ''}</span>
+                    <td className="py-1.5 px-2 text-[10px] text-slate-400 max-w-[150px] truncate">
+                      {trade.tags?.[0] ? <span className="px-1 py-0.2 bg-slate-800 text-indigo-300 rounded mr-1 font-semibold">{trade.tags[0]}</span> : null}
+                      <span>{trade.note || trade.comment || ''}</span>
                     </td>
                     <td className={`py-1.5 px-3 text-right font-bold ${trade.realizedPnL >= 0 ? 'text-teal-400' : 'text-rose-400'}`}>
                       {trade.realizedPnL >= 0 ? '+' : ''}${trade.realizedPnL.toFixed(2)}
+                    </td>
+                    <td className="py-1.5 px-3 text-center">
+                      <button
+                        onClick={() => handleOpenEdit(trade)}
+                        className="p-1 hover:bg-slate-700 rounded text-slate-400 hover:text-indigo-300 transition-colors"
+                        title="Ghi chú & Gắn Tag Nhật Ký"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </button>
                     </td>
                   </tr>
                 ))
@@ -360,37 +379,46 @@ export const PositionsTable: React.FC = () => {
       {editingPosition && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 animate-in fade-in">
           <div className="bg-slate-900 border border-slate-700 p-5 rounded-lg w-84 shadow-2xl space-y-3.5 text-xs">
-            <h3 className="font-bold text-sm text-slate-200">{t.editSLTP} & {t.tagStrategy}</h3>
+            <h3 className="font-bold text-sm text-slate-200">
+              {editingPosition.status === 'CLOSED'
+                ? `${t.tagStrategy} & ${t.psychologyNote}`
+                : `${t.editSLTP} & ${t.tagStrategy}`}
+            </h3>
             
             <div className="space-y-2.5">
-              <div>
-                <label className="block text-slate-400 mb-1">Stop Loss ({instrument.symbol}):</label>
-                <input
-                  type="number"
-                  step="any"
-                  value={editSL}
-                  onChange={(e) => setEditSL(e.target.value)}
-                  placeholder="None"
-                  className="w-full bg-slate-800 border border-slate-700 rounded p-2 text-slate-200 focus:outline-none focus:border-indigo-500"
-                />
-              </div>
-              <div>
-                <label className="block text-slate-400 mb-1">Take Profit ({instrument.symbol}):</label>
-                <input
-                  type="number"
-                  step="any"
-                  value={editTP}
-                  onChange={(e) => setEditTP(e.target.value)}
-                  placeholder="None"
-                  className="w-full bg-slate-800 border border-slate-700 rounded p-2 text-slate-200 focus:outline-none focus:border-indigo-500"
-                />
-              </div>
+              {editingPosition.status === 'OPEN' && (
+                <>
+                  <div>
+                    <label className="block text-slate-400 mb-1">Stop Loss ({editingPosition.symbol || instrument.symbol}):</label>
+                    <input
+                      type="number"
+                      step="any"
+                      value={editSL}
+                      onChange={(e) => setEditSL(e.target.value)}
+                      placeholder="None"
+                      className="w-full bg-slate-800 border border-slate-700 rounded p-2 text-slate-200 focus:outline-none focus:border-indigo-500 font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-400 mb-1">Take Profit ({editingPosition.symbol || instrument.symbol}):</label>
+                    <input
+                      type="number"
+                      step="any"
+                      value={editTP}
+                      onChange={(e) => setEditTP(e.target.value)}
+                      placeholder="None"
+                      className="w-full bg-slate-800 border border-slate-700 rounded p-2 text-slate-200 focus:outline-none focus:border-indigo-500 font-mono"
+                    />
+                  </div>
+                </>
+              )}
+
               <div>
                 <label className="block text-slate-400 mb-1">{t.tagStrategy}:</label>
                 <select
                   value={selectedTag}
                   onChange={(e) => setSelectedTag(e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-700 rounded p-2 text-indigo-300 focus:outline-none"
+                  className="w-full bg-slate-800 border border-slate-700 rounded p-2 text-indigo-300 focus:outline-none font-semibold"
                 >
                   <option value="SMC Order Block">SMC Order Block & FVG</option>
                   <option value="Trend Pullback">Trend Pullback</option>

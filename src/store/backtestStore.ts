@@ -81,7 +81,7 @@ interface BacktestStore {
   // Actions
   setInstrument: (symbol: string) => void;
   setTimeframe: (tf: Timeframe) => void;
-  loadCandles: (candles: Candle[]) => void;
+  loadCandles: (candles: Candle[], startIndex?: number) => void;
   
   // Replay Actions
   play: () => void;
@@ -387,17 +387,19 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
       });
     },
 
-    loadCandles: (newCandles) => {
+    loadCandles: (newCandles, startIndex = 0) => {
       get().pause();
       const { timeframe, matchingEngine } = get();
       const resampled = TimeframeResampler.resample(newCandles, timeframe);
       const news = generateNewsForCandles(newCandles);
       matchingEngine.reset();
 
+      const initialIdx = Math.max(0, Math.min(startIndex, resampled.length - 1));
+
       set({
         rawM1Candles: newCandles,
         candles: resampled,
-        currentIndex: Math.min(150, resampled.length - 1),
+        currentIndex: initialIdx,
         economicNews: news,
         account: matchingEngine.getAccountState(),
         pendingOrders: [],
@@ -604,10 +606,33 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
 
     jumpToDate: (targetTimestamp) => {
       const { candles } = get();
-      const idx = candles.findIndex(c => c.timestamp >= targetTimestamp);
-      if (idx !== -1) {
-        get().jumpToIndex(idx);
+      if (!candles || candles.length === 0) return;
+
+      // Binary search closest candle timestamp
+      let low = 0;
+      let high = candles.length - 1;
+      let closestIdx = 0;
+      let minDiff = Math.abs(candles[0].timestamp - targetTimestamp);
+
+      while (low <= high) {
+        const mid = Math.floor((low + high) / 2);
+        const diff = Math.abs(candles[mid].timestamp - targetTimestamp);
+        if (diff < minDiff) {
+          minDiff = diff;
+          closestIdx = mid;
+        }
+
+        if (candles[mid].timestamp === targetTimestamp) {
+          closestIdx = mid;
+          break;
+        } else if (candles[mid].timestamp < targetTimestamp) {
+          low = mid + 1;
+        } else {
+          high = mid - 1;
+        }
       }
+
+      get().jumpToIndex(closestIdx);
     },
 
     resetSimulation: () => {
@@ -617,7 +642,7 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
       const acc = matchingEngine.getAccountState();
 
       set({
-        currentIndex: Math.min(100, candles.length - 1),
+        currentIndex: 0,
         account: acc,
         pendingOrders: [],
         openPositions: [],

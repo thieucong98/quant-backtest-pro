@@ -270,11 +270,11 @@ export class OrderMatchingEngine {
         const askHigh = candle.high + spread;
         const askLow = candle.low + spread;
 
-        // Trailing Stop cho SELL
+        // Trailing Stop cho SELL (chỉ dời khi giá đã tạo đáy mới có lãi: newSL < entryPrice)
         if (pos.trailingStopPips && pos.trailingStopPips > 0) {
           const trailDist = pos.trailingStopPips * this.config.pipSize;
           const newSL = pos.lowestPriceSinceOpen + trailDist;
-          if (!pos.stopLoss || newSL < pos.stopLoss) {
+          if (newSL < (pos.stopLoss ?? Infinity) && newSL < pos.entryPrice) {
             pos.stopLoss = Number(newSL.toFixed(this.config.digits));
           }
         }
