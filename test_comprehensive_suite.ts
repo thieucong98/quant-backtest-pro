@@ -211,6 +211,18 @@ async function runComprehensiveTests() {
   });
   assert(oversizedPos === null || oversizedPos !== undefined, 'OrderMatching', 'Margin check handling on extreme size');
 
+  // Test 2.7: Dynamic Slippage Execution
+  engine.reset(10000);
+  engine.setSlippagePips(2.0); // 2 pips slippage
+  const slippagePos = engine.executeMarketOrder({
+    side: 'BUY',
+    lotSize: 1.0,
+    candle: { timestamp: 1700000000, open: 2600.0, high: 2605.0, low: 2595.0, close: 2600.0, volume: 100 }
+  });
+  // Expected price = 2600.0 + spread (0.3) + slippage (0.2) = 2600.5
+  assert(slippagePos !== null && slippagePos.entryPrice > 2600.3, 'OrderMatching', 'Market order applied dynamic slippage pips', { entryPrice: slippagePos?.entryPrice });
+
+
 
   // =========================================================================
   // 3. INDICATOR CALCULATOR TESTS
@@ -309,6 +321,12 @@ async function runComprehensiveTests() {
   assert(report.avgWin === 175.0, 'Analytics', 'Avg win == $175.00');
   assert(report.avgLoss === 50.0, 'Analytics', 'Avg loss == $50.00');
   assert(report.riskRewardRatio === 3.5, 'Analytics', 'Risk Reward Ratio == 3.50');
+  assert(!isNaN(report.sortinoRatio), 'Analytics', 'Sortino Ratio calculated valid number', { sortino: report.sortinoRatio });
+  assert(!isNaN(report.calmarRatio) && report.calmarRatio >= 0, 'Analytics', 'Calmar Ratio calculated valid number', { calmar: report.calmarRatio });
+  assert(!isNaN(report.systemQualityNumber), 'Analytics', 'System Quality Number (SQN) calculated valid number', { sqn: report.systemQualityNumber });
+  assert(typeof report.sqnRating === 'string' && report.sqnRating.length > 0, 'Analytics', 'SQN Rating assigned valid qualitative label', { rating: report.sqnRating });
+  assert(report.avgHoldingTimeMinutes > 0, 'Analytics', 'Average holding time computed in minutes', { avgHoldingTime: report.avgHoldingTimeMinutes });
+
 
   // Monte Carlo Simulation Test (1,000 iterations)
   const mc = AnalyticsEngine.runMonteCarlo(10000, mockTrades, 1000);
@@ -396,6 +414,24 @@ async function runComprehensiveTests() {
   assert(optSummary.rankedResults.length === 4, 'Optimizer', 'Ranked results length == 4');
   assert(optSummary.bestItem !== null, 'Optimizer', 'Best performing combination identified', { best: optSummary.bestItem?.id });
   assert(optSummary.heatmap.cells.length === 2, 'Optimizer', 'Heatmap matrix generated 2x2 rows');
+
+  // Test 7.2: In-Sample / Out-of-Sample Validation Split (70/30)
+  const oosOptSummary = await StrategyOptimizerEngine.runBatchOptimization(
+    PREBUILT_STRATEGIES[0].code,
+    PREBUILT_STRATEGIES[0].parameters,
+    sampleCandles.slice(0, 100),
+    xauusd,
+    {
+      ...optConfig,
+      splitRatio: 0.70
+    }
+  );
+
+  assert(oosOptSummary.isSplitApplied === true, 'Optimizer', 'In-Sample / Out-of-Sample split flag active');
+  assert(oosOptSummary.inSampleCandlesCount === 70, 'Optimizer', '70% candles allocated to In-Sample (70 bars)');
+  assert(oosOptSummary.outOfSampleCandlesCount === 30, 'Optimizer', '30% candles allocated to Out-of-Sample (30 bars)');
+  assert(oosOptSummary.bestItem?.oosReport !== undefined, 'Optimizer', 'Out-of-Sample forward performance report computed');
+  assert(typeof oosOptSummary.bestItem?.efficiencyIndex === 'number', 'Optimizer', 'Efficiency index calculated');
 
   // Test Code Parameter Replacement
   const replacedCode = StrategyOptimizerEngine.replaceSLTPInCode(PREBUILT_STRATEGIES[0].code, 55, 110);

@@ -15,6 +15,7 @@ export interface OptimizationConfig {
   lotSize?: number;
   initialBalance?: number;
   metricSortBy?: 'netProfit' | 'profitFactor' | 'winRate' | 'sharpeRatio' | 'riskRewardRatio';
+  splitRatio?: number; // 0.70 for 70% In-Sample (training) / 30% Out-of-Sample (forward test)
 }
 
 export interface OptimizationResultItem {
@@ -25,6 +26,9 @@ export interface OptimizationResultItem {
   report: PerformanceReport;
   score: number;
   sparkline: number[];
+  oosReport?: PerformanceReport;
+  efficiencyIndex?: number; // OOS WinRate / IS WinRate %
+  robustnessRating?: 'Robust ⭐' | 'Moderate' | 'Overfitted ⚠️';
   isBestOverall?: boolean;
   isBestWinRate?: boolean;
   isLowestDrawdown?: boolean;
@@ -39,6 +43,8 @@ export interface HeatmapCell {
   totalTrades: number;
   profitFactor: number;
   maxDrawdownPercent: number;
+  oosNetProfit?: number;
+  oosWinRate?: number;
 }
 
 export interface HeatmapMatrix {
@@ -53,6 +59,9 @@ export interface OptimizationSummary {
   symbol: string;
   totalCombinations: number;
   executionTimeMs: number;
+  isSplitApplied?: boolean;
+  inSampleCandlesCount?: number;
+  outOfSampleCandlesCount?: number;
   bestItem: OptimizationResultItem | null;
   bestWinRateItem: OptimizationResultItem | null;
   bestSharpeItem: OptimizationResultItem | null;
@@ -195,9 +204,17 @@ export class StrategyOptimizerEngine {
       functionBody = `return (${rawCode});`;
     }
 
+    const isSplitApplied = Boolean(config.splitRatio && config.splitRatio >= 0.3 && config.splitRatio < 1.0);
+    const splitIdx = isSplitApplied ? Math.floor(candles.length * (config.splitRatio || 0.7)) : candles.length;
+    const isCandles = candles.slice(0, splitIdx);
+    const oosCandles = isSplitApplied ? candles.slice(splitIdx) : [];
+
     // Pre-calculate indicator library once per candle series
-    const indicatorCalc = new IndicatorCalculator(candles);
+    const indicatorCalc = new IndicatorCalculator(isCandles);
     const indicatorLib = indicatorCalc.createLibrary();
+
+    const oosIndicatorCalc = oosCandles.length > 5 ? new IndicatorCalculator(oosCandles) : null;
+    const oosIndicatorLib = oosIndicatorCalc ? oosIndicatorCalc.createLibrary() : null;
 
     const results: OptimizationResultItem[] = [];
     const heatmapCells: HeatmapCell[][] = [];
@@ -219,11 +236,11 @@ export class StrategyOptimizerEngine {
           await new Promise((resolve) => setTimeout(resolve, 0));
         }
 
-        // Chạy backtest đơn lẻ cho tổ hợp (slPips, tpPips)
+        // Chạy backtest đơn lẻ cho tổ hợp (slPips, tpPips) trên In-Sample
         const simResult = this.simulateSingleRun(
           functionBody,
           baseParameters,
-          candles,
+          isCandles,
           instrument,
           initialBalance,
           lotSize,
@@ -236,17 +253,52 @@ export class StrategyOptimizerEngine {
         const report = simResult.report;
         const sparkline = simResult.sparkline;
 
+        // Chạy backtest trên Out-of-Sample nếu có
+        let oosReport: PerformanceReport | undefined;
+        let efficiencyIndex: number | undefined;
+        let robustnessRating: 'Robust ⭐' | 'Moderate' | 'Overfitted ⚠️' | undefined;
+
+        if (oosIndicatorCalc && oosIndicatorLib && oosCandles.length > 5) {
+          const oosSimResult = this.simulateSingleRun(
+            functionBody,
+            baseParameters,
+            oosCandles,
+            instrument,
+            initialBalance,
+            lotSize,
+            slPips,
+            tpPips,
+            oosIndicatorCalc,
+            oosIndicatorLib
+          );
+          oosReport = oosSimResult.report;
+          
+          if (report.winRate > 0) {
+            efficiencyIndex = Math.round((oosReport.winRate / report.winRate) * 100);
+          } else {
+            efficiencyIndex = oosReport.winRate > 0 ? 100 : 0;
+          }
+
+          if (efficiencyIndex >= 80 && oosReport.netProfit > 0) {
+            robustnessRating = 'Robust ⭐';
+          } else if (efficiencyIndex >= 50) {
+            robustnessRating = 'Moderate';
+          } else {
+            robustnessRating = 'Overfitted ⚠️';
+          }
+        }
+
         const netProfit = report.netProfit;
         if (netProfit < minProfit) minProfit = netProfit;
         if (netProfit > maxProfit) maxProfit = netProfit;
 
         // Tính điểm tổng hợp (Composite Score)
-        // Ưu tiên Net Profit, Profit Factor > 1.2, Winrate > 40%, phạt nặng Drawdown lớn
         const pfBonus = report.profitFactor > 1.5 ? 20 : (report.profitFactor > 1.0 ? 10 : -10);
         const wrBonus = report.winRate >= 50 ? 15 : 0;
         const ddPenalty = report.maxDrawdownPercent > 20 ? -30 : (report.maxDrawdownPercent > 10 ? -10 : 0);
         const tradeCountBonus = report.totalTrades >= 5 ? 10 : (report.totalTrades === 0 ? -100 : -20);
-        const score = report.netProfit + (pfBonus * 10) + (wrBonus * 5) + ddPenalty + tradeCountBonus;
+        const oosBonus = robustnessRating === 'Robust ⭐' ? 30 : (robustnessRating === 'Overfitted ⚠️' ? -30 : 0);
+        const score = report.netProfit + (pfBonus * 10) + (wrBonus * 5) + ddPenalty + tradeCountBonus + oosBonus;
 
         const rrRatio = Math.round((tpPips / (slPips || 1)) * 100) / 100;
 
@@ -257,7 +309,10 @@ export class StrategyOptimizerEngine {
           riskRewardRatio: rrRatio,
           report,
           score,
-          sparkline
+          sparkline,
+          oosReport,
+          efficiencyIndex,
+          robustnessRating
         };
 
         results.push(item);
@@ -269,7 +324,9 @@ export class StrategyOptimizerEngine {
           winRate: report.winRate,
           totalTrades: report.totalTrades,
           profitFactor: report.profitFactor,
-          maxDrawdownPercent: report.maxDrawdownPercent
+          maxDrawdownPercent: report.maxDrawdownPercent,
+          oosNetProfit: oosReport?.netProfit,
+          oosWinRate: oosReport?.winRate
         });
 
         completedCount++;
@@ -333,6 +390,9 @@ export class StrategyOptimizerEngine {
       symbol: instrument.symbol,
       totalCombinations,
       executionTimeMs,
+      isSplitApplied,
+      inSampleCandlesCount: isCandles.length,
+      outOfSampleCandlesCount: oosCandles.length,
       bestItem,
       bestWinRateItem,
       bestSharpeItem,

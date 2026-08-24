@@ -19,6 +19,10 @@ export interface PerformanceReport {
   consecutiveLosses: number;
   sharpeRatio: number;
   sortinoRatio: number;
+  calmarRatio: number;
+  systemQualityNumber: number;
+  sqnRating: string;
+  avgHoldingTimeMinutes: number;
 }
 
 export interface MonteCarloResult {
@@ -94,7 +98,11 @@ export class AnalyticsEngine {
         consecutiveWins: 0,
         consecutiveLosses: 0,
         sharpeRatio: 0,
-        sortinoRatio: 0
+        sortinoRatio: 0,
+        calmarRatio: 0,
+        systemQualityNumber: 0,
+        sqnRating: 'N/A',
+        avgHoldingTimeMinutes: 0
       };
     }
 
@@ -108,17 +116,24 @@ export class AnalyticsEngine {
     let currentConsecutiveLosses = 0;
     let maxConsecutiveLosses = 0;
 
+    let totalHoldingTimeMs = 0;
     let currentBalance = initialBalance;
     let peakBalance = initialBalance;
     let maxDrawdownAmount = 0;
     let maxDrawdownPercent = 0;
 
     const returns: number[] = [];
+    const pnls: number[] = [];
 
     for (const trade of closedPositions) {
       const pnl = trade.realizedPnL;
       const tradeReturn = pnl / currentBalance;
       returns.push(tradeReturn);
+      pnls.push(pnl);
+
+      if (trade.openTime && trade.closeTime) {
+        totalHoldingTimeMs += (trade.closeTime - trade.openTime);
+      }
 
       currentBalance += pnl;
       if (currentBalance > peakBalance) {
@@ -170,6 +185,32 @@ export class AnalyticsEngine {
     const sharpeRatio = stdDev > 0 ? Number(((avgReturn / stdDev) * Math.sqrt(252)).toFixed(2)) : 0;
     const sortinoRatio = downsideStdDev > 0 ? Number(((avgReturn / downsideStdDev) * Math.sqrt(252)).toFixed(2)) : 0;
 
+    // Calmar Ratio = Annualized Net Return / Max Drawdown %
+    const totalReturnPercent = (netProfit / initialBalance) * 100;
+    const calmarRatio = maxDrawdownPercent > 0 
+      ? Number((totalReturnPercent / maxDrawdownPercent).toFixed(2))
+      : (totalReturnPercent > 0 ? 99.0 : 0);
+
+    // System Quality Number (SQN) by Van Tharp: SQN = sqrt(N) * (mean PnL / stdDev PnL)
+    const meanPnl = netProfit / totalTrades;
+    const pnlVariance = pnls.reduce((sum, p) => sum + Math.pow(p - meanPnl, 2), 0) / totalTrades;
+    const pnlStdDev = Math.sqrt(pnlVariance);
+    const systemQualityNumber = pnlStdDev > 0 
+      ? Number((Math.sqrt(totalTrades) * (meanPnl / pnlStdDev)).toFixed(2))
+      : 0;
+
+    let sqnRating = 'Below Average';
+    if (systemQualityNumber >= 5.0) sqnRating = 'Holy Grail 🏆';
+    else if (systemQualityNumber >= 3.0) sqnRating = 'Excellent ⭐';
+    else if (systemQualityNumber >= 2.5) sqnRating = 'Good 👍';
+    else if (systemQualityNumber >= 2.0) sqnRating = 'Average';
+    else if (systemQualityNumber >= 1.6) sqnRating = 'Below Average';
+    else sqnRating = 'Poor ⚠️';
+
+    const avgHoldingTimeMinutes = totalTrades > 0 && totalHoldingTimeMs > 0
+      ? Math.round(totalHoldingTimeMs / (totalTrades * 60))
+      : 0;
+
     return {
       totalTrades,
       winTrades,
@@ -188,7 +229,11 @@ export class AnalyticsEngine {
       consecutiveWins: maxConsecutiveWins,
       consecutiveLosses: maxConsecutiveLosses,
       sharpeRatio,
-      sortinoRatio
+      sortinoRatio,
+      calmarRatio,
+      systemQualityNumber,
+      sqnRating,
+      avgHoldingTimeMinutes
     };
   }
 

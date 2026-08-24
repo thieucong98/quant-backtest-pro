@@ -26,10 +26,14 @@ jobs:
       - name: Build & TypeScript Verification
         run: npm run build
 
+      - name: Run Automated Comprehensive Test Suite
+        run: npm test
+
       - name: Verify Server Build
         working-directory: ./server
         run: |
           npm install
           npx prisma generate
           npm run build
+
 

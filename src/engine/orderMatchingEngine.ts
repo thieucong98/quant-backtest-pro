@@ -21,6 +21,8 @@ export class OrderMatchingEngine {
   public usedMargin: number = 0;
   public freeMargin: number = 0;
   public marginLevel: number = 0;
+  public slippagePips: number = 0;
+  public lastProcessedTimestamp: number = 0;
 
   public events: MatchingEvents = {};
 
@@ -43,10 +45,15 @@ export class OrderMatchingEngine {
     this.pendingOrders = [];
     this.openPositions = [];
     this.closedPositions = [];
+    this.lastProcessedTimestamp = 0;
   }
 
   public setConfig(config: InstrumentSpec) {
     this.config = config;
+  }
+
+  public setSlippagePips(pips: number) {
+    this.slippagePips = Math.max(0, pips);
   }
 
   /**
@@ -63,7 +70,10 @@ export class OrderMatchingEngine {
   }): Position | null {
     const { side, lotSize, candle, stopLoss, takeProfit, trailingStopPips, comment } = params;
     const spread = this.config.defaultSpreadPips * this.config.pipSize;
-    const executionPrice = side === 'BUY' ? candle.close + spread : candle.close;
+    const slippageAmount = this.slippagePips * this.config.pipSize;
+    const executionPrice = side === 'BUY' 
+      ? candle.close + spread + slippageAmount 
+      : candle.close - slippageAmount;
     const requiredMargin = MultiAssetMathEngine.calculateRequiredMargin(this.config, lotSize, executionPrice);
 
     if (this.openPositions.length > 0 && this.freeMargin < requiredMargin) {

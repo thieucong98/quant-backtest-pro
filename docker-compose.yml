@@ -1,0 +1,19 @@
+services:
+  quant-backtest-pro:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: quant-backtest-pro
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - DATABASE_URL="file:./dev.db"
+    volumes:
+      - sqlite_data:/app/server/prisma
+
+volumes:
+  sqlite_data:
+    driver: local

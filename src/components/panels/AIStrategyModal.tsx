@@ -144,6 +144,7 @@ export const AIStrategyModal: React.FC = () => {
   const [optApplyMessage, setOptApplyMessage] = useState<string | null>(null);
   const [filterMinTrades, setFilterMinTrades] = useState<boolean>(false);
   const [filterProfitable, setFilterProfitable] = useState<boolean>(false);
+  const [optEnableSplit, setOptEnableSplit] = useState<boolean>(true);
 
   const filteredRankedResults = useMemo(() => {
     if (!optSummary) return [];
@@ -588,7 +589,8 @@ export const AIStrategyModal: React.FC = () => {
           tpRange,
           initialBalance: account.initialBalance || 10000,
           lotSize: 0.1,
-          metricSortBy: optimizerSortBy
+          metricSortBy: optimizerSortBy,
+          splitRatio: optEnableSplit ? 0.70 : 1.0
         },
         (percent, current, total) => {
           setOptProgress({ percent, current, total });
@@ -1360,8 +1362,18 @@ export const AIStrategyModal: React.FC = () => {
                       </span>
                     </div>
 
-                    {/* QUALITY FILTERS */}
-                    <div className="flex items-center gap-3 font-mono text-[11px]">
+                    {/* QUALITY FILTERS & SPLIT TOGGLE */}
+                    <div className="flex flex-wrap items-center gap-3 font-mono text-[11px]">
+                      <label className="flex items-center gap-1.5 cursor-pointer text-amber-300 hover:text-amber-200 transition-colors bg-amber-950/40 px-2 py-0.5 rounded border border-amber-500/30">
+                        <input
+                          type="checkbox"
+                          checked={optEnableSplit}
+                          onChange={(e) => setOptEnableSplit(e.target.checked)}
+                          className="accent-amber-500 rounded cursor-pointer"
+                        />
+                        <span>Train/Test Split (70% IS / 30% OOS)</span>
+                      </label>
+
                       <div className="flex items-center gap-1.5 text-slate-400">
                         <Filter className="w-3 h-3 text-purple-400" />
                         <span className="text-[10px] text-slate-500">Bộ lọc:</span>
@@ -1398,7 +1410,9 @@ export const AIStrategyModal: React.FC = () => {
                           <th className="py-2 px-3">TP (Pips)</th>
                           <th className="py-2 px-3">R:R</th>
                           <th className="py-2 px-3">Lệnh</th>
-                          <th className="py-2 px-3">Win Rate</th>
+                          <th className="py-2 px-3">Win Rate (IS)</th>
+                          <th className="py-2 px-3">OOS WinRate</th>
+                          <th className="py-2 px-3">Độ Bền (WFA)</th>
                           <th className="py-2 px-3">Net PnL ($)</th>
                           <th className="py-2 px-3">{t.sparklineEquity}</th>
                           <th className="py-2 px-3">Profit Factor</th>
@@ -1431,6 +1445,26 @@ export const AIStrategyModal: React.FC = () => {
                               <td className="py-2 px-3 text-slate-400">{res.report.totalTrades}</td>
                               <td className="py-2 px-3 text-slate-200 font-bold">
                                 {res.report.winRate.toFixed(1)}%
+                              </td>
+                              <td className="py-2 px-3 font-bold text-indigo-300">
+                                {res.oosReport ? `${res.oosReport.winRate.toFixed(1)}%` : '---'}
+                              </td>
+                              <td className="py-2 px-3">
+                                {res.robustnessRating ? (
+                                  <span
+                                    className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
+                                      res.robustnessRating.includes('Robust')
+                                        ? 'bg-emerald-950 text-emerald-300 border border-emerald-500/40'
+                                        : res.robustnessRating.includes('Moderate')
+                                        ? 'bg-amber-950 text-amber-300 border border-amber-500/40'
+                                        : 'bg-rose-950 text-rose-300 border border-rose-500/40'
+                                    }`}
+                                  >
+                                    {res.robustnessRating}
+                                  </span>
+                                ) : (
+                                  <span className="text-slate-600">-</span>
+                                )}
                               </td>
                               <td
                                 className={`py-2 px-3 font-bold ${

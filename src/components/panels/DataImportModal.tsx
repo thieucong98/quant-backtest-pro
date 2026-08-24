@@ -23,7 +23,8 @@ import {
   Check,
   Star,
   Play,
-  Filter
+  Filter,
+  Download
 } from 'lucide-react';
 import { generateRealisticCandles } from '../../config/sampleData';
 import { CSVDataParser, CSVParseResult } from '../../engine/csvParser';
@@ -334,6 +335,24 @@ export const DataImportModal: React.FC = () => {
         message: err.message || 'Lỗi khi tải dataset từ Database.'
       });
     }
+  };
+
+  const handleDownloadCSV = (dataset: any, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!dataset.candles || dataset.candles.length === 0) return;
+    let csv = 'Timestamp,Date,Open,High,Low,Close,Volume\n';
+    dataset.candles.forEach((c: any) => {
+      const d = new Date(c.timestamp * 1000).toISOString().replace('T', ' ').substring(0, 19);
+      csv += `${c.timestamp},${d},${c.open},${c.high},${c.low},${c.close},${c.volume || 0}\n`;
+    });
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `${dataset.symbol}_${dataset.timeframe}_Cleaned_${dataset.candles.length}bars.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const handleSetDefault = (id: string, e: React.MouseEvent) => {
@@ -762,6 +781,13 @@ export const DataImportModal: React.FC = () => {
                           >
                             <Play className="w-3.5 h-3.5 fill-current" />
                             <span>Nạp & Backtest Ngay</span>
+                          </button>
+                          <button
+                            onClick={(e) => handleDownloadCSV(ds, e)}
+                            className="p-2 text-slate-500 hover:text-sky-400 hover:bg-slate-800 rounded-lg transition-colors"
+                            title="Tải về file CSV dữ liệu đã làm sạch"
+                          >
+                            <Download className="w-3.5 h-3.5" />
                           </button>
                           <button
                             onClick={(e) => handleDeleteFromDB(ds.id, e)}

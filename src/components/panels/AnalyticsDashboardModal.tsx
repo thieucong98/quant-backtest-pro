@@ -838,15 +838,21 @@ export const AnalyticsDashboardModal: React.FC = () => {
                         </div>
                         <div className="flex justify-between">
                           <span className="text-slate-400">{t.sortinoRatio}:</span>
-                          <span className="font-bold text-slate-200">{report.sortinoRatio.toFixed(2)}</span>
+                          <span className="font-bold text-teal-400">{report.sortinoRatio.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-400">Calmar Ratio:</span>
+                          <span className="font-bold text-amber-300">{report.calmarRatio ? report.calmarRatio.toFixed(2) : '0.00'}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-slate-400">Chỉ số SQN:</span>
+                          <span className="px-1.5 py-0.5 rounded bg-purple-950 text-purple-300 border border-purple-500/30 text-[10px] font-bold">
+                            {report.systemQualityNumber?.toFixed(2) || '0.00'} ({report.sqnRating || 'N/A'})
+                          </span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-slate-400">{t.maxDrawdown}:</span>
                           <span className="font-bold text-rose-400">{report.maxDrawdownPercent.toFixed(2)}%</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-slate-400">Sụt giảm tối đa $:</span>
-                          <span className="font-bold text-rose-400">-${report.maxDrawdownAmount.toFixed(2)}</span>
                         </div>
                       </div>
                     </div>

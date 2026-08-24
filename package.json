@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
+    "test": "npx tsx test_comprehensive_suite.ts",
     "server": "cd server && npx tsx watch index.ts",
     "server:start": "cd server && npx tsx index.ts",
     "db:studio": "cd server && npx prisma studio",
