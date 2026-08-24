@@ -56,8 +56,11 @@ export function generateNewsForCandles(candles: { timestamp: number }[]): Econom
   if (candles.length < 50) return [];
   const events: EconomicNewsEvent[] = [];
   
-  // Rải tin tức định kỳ mỗi 300 - 500 nến
-  for (let i = 150; i < candles.length; i += Math.floor(Math.random() * 250) + 200) {
+  // Tự động điều chỉnh khoảng cách để tối đa ~100-150 tin tức trên toàn bộ dải nến (tránh lag khi có 200k+ nến)
+  const targetEventCount = 100;
+  const baseStep = Math.max(300, Math.floor(candles.length / targetEventCount));
+  
+  for (let i = Math.min(100, Math.floor(candles.length / 10)); i < candles.length; i += baseStep + Math.floor(Math.random() * (baseStep * 0.2))) {
     const template = SAMPLE_ECONOMIC_NEWS[Math.floor(Math.random() * SAMPLE_ECONOMIC_NEWS.length)];
     events.push({
       ...template,

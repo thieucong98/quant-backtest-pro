@@ -68,6 +68,7 @@ interface BacktestStore {
   isOrderModalOpen: boolean;
   isAnalyticsModalOpen: boolean;
   isAIModalOpen: boolean;
+  aiModalTab: 'studio' | 'optimizer' | 'my-strategies' | 'templates' | 'settings';
   isDataModalOpen: boolean;
   isShortcutsModalOpen: boolean;
   isProfileModalOpen: boolean;
@@ -131,15 +132,42 @@ interface BacktestStore {
   setLanguage: (lang: 'vi' | 'en' | 'ja' | 'zh') => void;
   setOrderModalOpen: (open: boolean) => void;
   setAnalyticsModalOpen: (open: boolean) => void;
-  setAIModalOpen: (open: boolean) => void;
+  setAIModalOpen: (open: boolean, tab?: 'studio' | 'optimizer' | 'my-strategies' | 'templates' | 'settings') => void;
   setDataModalOpen: (open: boolean) => void;
   setShortcutsModalOpen: (open: boolean) => void;
   setProfileModalOpen: (open: boolean) => void;
 }
 
-// Helper: Sync current session state to both Local Cache (0ms) and Database API
-const syncCurrentSessionToStorage = async (get: () => BacktestStore) => {
+// Helper: Sync current session state to both Local Cache (0ms) and Database API (Throttled for 200k+ candles)
+let syncStorageTimeout: any = null;
+let lastSyncTimestamp = 0;
+
+const syncCurrentSessionToStorage = async (get: () => BacktestStore, forceImmediate = false) => {
+  const now = Date.now();
+  if (!forceImmediate && now - lastSyncTimestamp < 2000) {
+    if (!syncStorageTimeout) {
+      syncStorageTimeout = setTimeout(() => {
+        syncStorageTimeout = null;
+        syncCurrentSessionToStorage(get, true);
+      }, 2000);
+    }
+    return;
+  }
+
+  lastSyncTimestamp = now;
+  if (syncStorageTimeout) {
+    clearTimeout(syncStorageTimeout);
+    syncStorageTimeout = null;
+  }
+
   const { activeSessionId, isServerOnline, account, currentIndex, openPositions, closedPositions, drawings, equityCurve, instrument, timeframe } = get();
+
+  // Downsample equity curve for local cache if > 100 points
+  let sampleEquity = equityCurve;
+  if (sampleEquity.length > 100) {
+    const step = Math.ceil(sampleEquity.length / 100);
+    sampleEquity = sampleEquity.filter((_, idx) => idx % step === 0 || idx === sampleEquity.length - 1);
+  }
 
   // 1. Instant local persistence (0ms latency, survives F5 reload immediately)
   try {
@@ -153,13 +181,13 @@ const syncCurrentSessionToStorage = async (get: () => BacktestStore) => {
       openPositions,
       closedPositions,
       drawings,
-      equityCurve,
+      equityCurve: sampleEquity,
       savedAt: Date.now()
     };
     localStorage.setItem('quant_active_session_cache', JSON.stringify(localSnapshot));
   } catch (e) {}
 
-  // 2. Instant async database persistence (if online)
+  // 2. Async database persistence (if online)
   if (activeSessionId && isServerOnline) {
     const allTrades = [
       ...openPositions.map(p => ({ ...p, status: 'OPEN' })),
@@ -281,6 +309,7 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
     isOrderModalOpen: false,
     isAnalyticsModalOpen: false,
     isAIModalOpen: false,
+    aiModalTab: 'studio',
     isDataModalOpen: false,
     isShortcutsModalOpen: false,
     isProfileModalOpen: false,
@@ -410,14 +439,13 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
 
       const nextIndex = currentIndex + 1;
       const currentCandle = candles[nextIndex];
-      const sliceCandles = candles.slice(0, nextIndex + 1);
 
       // 1. Process Candle in Matching Engine
       matchingEngine.processCandle(currentCandle);
 
-      // 2. Process AI Strategy if auto trading is on
+      // 2. Process AI Strategy if auto trading is on (Zero-allocation point-in-time calculation)
       if (autoTradingEnabled && activeStrategy) {
-        indicatorCalculator.setCandles(sliceCandles);
+        indicatorCalculator.setCandles(candles, nextIndex + 1);
         const lib = indicatorCalculator.createLibrary();
         
         const accountInfo = {
@@ -513,23 +541,23 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
 
       // 3. Update Store State
       const currentAccount = matchingEngine.getAccountState();
-      const equityPoint: EquityPoint = {
-        timestamp: currentCandle.timestamp,
-        balance: currentAccount.balance,
-        equity: currentAccount.equity
-      };
+      
+      // Sample equity curve every 25 candles or on position changes or at the end
+      const shouldRecordEquity = nextIndex % 25 === 0 || matchingEngine.openPositions.length > 0 || nextIndex === candles.length - 1;
 
       set(state => ({
         currentIndex: nextIndex,
         account: currentAccount,
-        pendingOrders: [...matchingEngine.pendingOrders],
-        openPositions: [...matchingEngine.openPositions],
-        closedPositions: [...matchingEngine.closedPositions],
-        equityCurve: [...state.equityCurve, equityPoint]
+        pendingOrders: matchingEngine.pendingOrders,
+        openPositions: matchingEngine.openPositions,
+        closedPositions: matchingEngine.closedPositions,
+        equityCurve: shouldRecordEquity
+          ? [...state.equityCurve, { timestamp: currentCandle.timestamp, balance: currentAccount.balance, equity: currentAccount.equity }]
+          : state.equityCurve
       }));
 
-      // Sync state on position changes or periodically
-      if (matchingEngine.openPositions.length > 0 || nextIndex % 25 === 0) {
+      // Throttled storage sync
+      if (nextIndex % 50 === 0) {
         syncCurrentSessionToStorage(get);
       }
     },
@@ -1176,6 +1204,7 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
           markers: [],
           equityCurve: [{ timestamp: candles[0]?.timestamp || 0, balance: account.initialBalance, equity: account.initialBalance }]
         });
+        localStorage.removeItem('quant_active_session_cache');
         localStorage.removeItem('quant_backtest_active_session');
         get().addStrategyLog('INFO', `Đã đặt lại phiên #${sid.substring(0, 8)} về trạng thái ban đầu`);
       } catch (err: any) {
@@ -1201,6 +1230,7 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
         guestTradeCount: 0,
         equityCurve: [{ timestamp: candles[0]?.timestamp || 0, balance: initialBalance, equity: initialBalance }]
       });
+      localStorage.removeItem('quant_active_session_cache');
       localStorage.removeItem('quant_backtest_active_session');
       get().addStrategyLog('INFO', `Đã dọn sạch không gian làm việc về số dư ban đầu $${initialBalance.toLocaleString()}`);
     },
@@ -1214,7 +1244,11 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
     },
     setOrderModalOpen: (open) => set({ isOrderModalOpen: open }),
     setAnalyticsModalOpen: (open) => set({ isAnalyticsModalOpen: open }),
-    setAIModalOpen: (open) => set({ isAIModalOpen: open }),
+    setAIModalOpen: (open, tab) =>
+      set((state) => ({
+        isAIModalOpen: open,
+        aiModalTab: tab !== undefined ? tab : state.aiModalTab
+      })),
     setDataModalOpen: (open) => set({ isDataModalOpen: open }),
     setShortcutsModalOpen: (open) => set({ isShortcutsModalOpen: open }),
     setProfileModalOpen: (open) => set({ isProfileModalOpen: open })

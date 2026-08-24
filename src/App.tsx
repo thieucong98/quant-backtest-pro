@@ -11,6 +11,7 @@ import { ShortcutsModal } from './components/panels/ShortcutsModal';
 import { SessionManagerModal } from './components/panels/SessionManagerModal';
 import { AuthModal } from './components/auth/AuthModal';
 import { UserProfileModal } from './components/auth/UserProfileModal';
+import { AIBotHUD } from './components/panels/AIBotHUD';
 import { useBacktestStore } from './store/backtestStore';
 import { useAutoSave } from './hooks/useAutoSave';
 
@@ -103,6 +104,7 @@ export const App: React.FC = () => {
       {/* 2. MAIN CENTER: CHART & DRAWINGS */}
       <main className="flex-1 relative w-full h-full min-h-0 bg-[#0b0e14]">
         <TradingViewChart />
+        <AIBotHUD />
       </main>
 
       {/* 3. REPLAY TIMELINE CONTROLLER */}

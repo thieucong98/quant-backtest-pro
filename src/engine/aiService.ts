@@ -340,7 +340,25 @@ export class AIService {
     if (useMACD) code += `    macdFast: 12,\n    macdSlow: 26,\n    macdSignal: 9,\n`;
     if (useBreakout) code += `    breakoutPeriod: 20,\n`;
 
-    code += `    slPips: 25,\n    tpPips: 50,\n    lotSize: 0.1\n  },\n\n  onCandle(candle, indicators, account, api) {\n`;
+    // Adaptive default SL/TP based on symbol
+    let defaultSL = 20;
+    let defaultTP = 40;
+    const symUpper = (symbol || '').toUpperCase();
+    if (symUpper.includes('XAU') || symUpper.includes('GOLD')) {
+      defaultSL = 40;
+      defaultTP = 80;
+    } else if (symUpper.includes('BTC')) {
+      defaultSL = 500;
+      defaultTP = 1200;
+    } else if (symUpper.includes('ETH')) {
+      defaultSL = 100;
+      defaultTP = 250;
+    } else if (symUpper.includes('US30') || symUpper.includes('NAS') || symUpper.includes('SPX')) {
+      defaultSL = 50;
+      defaultTP = 120;
+    }
+
+    code += `    slPips: ${defaultSL},\n    tpPips: ${defaultTP},\n    lotSize: 0.1\n  },\n\n  onCandle(candle, indicators, account, api) {\n`;
 
     if (useEMA) {
       code += `    const emaFast = indicators.ema(this.parameters.emaFast);\n    const emaSlow = indicators.ema(this.parameters.emaSlow);\n`;
