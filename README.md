@@ -127,23 +127,64 @@ Monitor compliance with prop firm challenge rules (FTMO, FundedNext, MFF) in rea
 
 ## 🚀 Quickstart & Installation
 
-### Prerequisites
-- [Node.js](https://nodejs.org/) (version 18.0.0 or higher)
-- [npm](https://www.npmjs.com/) (or `pnpm` / `yarn`)
+You can run Quant Backtest Pro either with **Docker (Recommended for 1-click zero-config deployment)** or locally with **Node.js**.
 
-### 1. Clone the repository
+---
+
+### Option 1: 🐳 1-Click Startup with Docker Compose (Recommended)
+
+#### Prerequisites
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) or Docker Engine + Docker Compose
+
 ```bash
+# 1. Clone the repository
 git clone https://github.com/thieucong98/quant-backtest-pro.git
 cd quant-backtest-pro
+
+# 2. Build and start the application in background
+docker compose up -d
+
+# 3. View live logs
+docker compose logs -f
+
+# 4. Stop containers
+docker compose down
 ```
 
-### 2. Install dependencies
+Access the application in your browser:
+- **Web Application & API**: `http://localhost:3001`
+- **API Health Endpoint**: `http://localhost:3001/api/health`
+
+> [!TIP]
+> **Data Persistence**: All sessions, custom datasets, and closed trades are automatically persisted inside the Docker named volume `sqlite_data` (`/app/server/prisma`).
+
+---
+
+### Option 2: 🐳 Standalone Docker CLI
+
 ```bash
+# Build the production Docker image
+docker build -t quant-backtest-pro .
+
+# Run the container with persistent SQLite volume mount
+docker run -d -p 3001:3001 --name quant-backtest-pro -v quant_sqlite:/app/server/prisma quant-backtest-pro
+```
+
+---
+
+### Option 3: 💻 Local Node.js Development Setup
+
+#### Prerequisites
+- [Node.js](https://nodejs.org/) (v18.0.0 or higher)
+- [npm](https://www.npmjs.com/) (or `pnpm` / `yarn`)
+
+```bash
+# 1. Clone repository & install dependencies
+git clone https://github.com/thieucong98/quant-backtest-pro.git
+cd quant-backtest-pro
 npm install
-```
 
-### 3. Start development servers
-```bash
+# 2. Start development servers
 # Terminal 1: Start Frontend Client (Vite)
 npm run dev
 
@@ -152,10 +193,12 @@ npm run server:start
 ```
 
 Open your browser at:
-- **Frontend Application**: `http://localhost:5173/`
+- **Frontend UI**: `http://localhost:5173/`
 - **Backend API Health**: `http://localhost:3001/api/health`
 
-### 🔑 Default Trader Account
+---
+
+### 🔑 Default Institutional Account
 - **Email**: `admin@quantbacktest.pro`
 - **Password**: `QuantPro@2026`
 - **Tier**: `INSTITUTIONAL` (All features, unlimited trades & multi-pair datasets unlocked)

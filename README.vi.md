@@ -125,25 +125,66 @@ Kiểm soát vi phạm quy tắc thi tuyển Quỹ (FTMO, FundedNext, MFF) theo 
 
 ---
 
-## 🚀 Hướng Dẫn Cài Đặt & Chạy Ứng Dụng
+## 🚀 Hướng Dẫn Cài Đặt & Khởi Chạy Ứng Dụng
 
-### Yêu cầu hệ thống
+Bạn có thể khởi chạy Quant Backtest Pro bằng **Docker (Khuyến nghị để chạy nhanh 1-Click không cần cấu hình)** hoặc chạy thủ công bằng **Node.js**.
+
+---
+
+### Cách 1: 🐳 Khởi Chạy 1-Click Với Docker Compose (Khuyến nghị)
+
+#### Yêu cầu hệ thống
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) hoặc Docker Engine + Docker Compose
+
+```bash
+# 1. Clone mã nguồn từ GitHub
+git clone https://github.com/thieucong98/quant-backtest-pro.git
+cd quant-backtest-pro
+
+# 2. Xây dựng và khởi chạy ứng dụng ngầm
+docker compose up -d
+
+# 3. Theo dõi log ứng dụng thời gian thực
+docker compose logs -f
+
+# 4. Dừng container khi không sử dụng
+docker compose down
+```
+
+Truy cập ứng dụng trên trình duyệt:
+- **Giao diện Web & API**: `http://localhost:3001`
+- **Kiểm tra API Server**: `http://localhost:3001/api/health`
+
+> [!TIP]
+> **Lưu trữ dữ liệu vĩnh viễn**: Mọi phiên giao dịch, lịch sử nến và tập dữ liệu tùy chỉnh sẽ được lưu tự động trong Docker volume `sqlite_data` (`/app/server/prisma`).
+
+---
+
+### Cách 2: 🐳 Khởi Chạy Bằng Docker CLI
+
+```bash
+# Xây dựng Docker image bản production
+docker build -t quant-backtest-pro .
+
+# Khởi chạy container với volume lưu trữ SQLite
+docker run -d -p 3001:3001 --name quant-backtest-pro -v quant_sqlite:/app/server/prisma quant-backtest-pro
+```
+
+---
+
+### Cách 3: 💻 Chạy Trực Tiếp Bằng Node.js
+
+#### Yêu cầu hệ thống
 - [Node.js](https://nodejs.org/) (phiên bản 18.0.0 trở lên)
 - [npm](https://www.npmjs.com/) (hoặc `pnpm` / `yarn`)
 
-### 1. Clone mã nguồn
 ```bash
+# 1. Clone mã nguồn & cài đặt thư viện
 git clone https://github.com/thieucong98/quant-backtest-pro.git
 cd quant-backtest-pro
-```
-
-### 2. Cài đặt các gói phụ thuộc
-```bash
 npm install
-```
 
-### 3. Khởi chạy máy chủ phát triển
-```bash
+# 2. Khởi chạy máy chủ phát triển
 # Terminal 1: Chạy Frontend Client (Vite)
 npm run dev
 
@@ -152,8 +193,10 @@ npm run server:start
 ```
 
 Mở trình duyệt tại địa chỉ:
-- **Ứng dụng Web**: `http://localhost:5173/`
+- **Giao diện Web**: `http://localhost:5173/`
 - **Kiểm tra API Backend**: `http://localhost:3001/api/health`
+
+---
 
 ### 🔑 Tài Khoản Trader Mặc Định
 - **Email**: `admin@quantbacktest.pro`
