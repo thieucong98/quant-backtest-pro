@@ -1,7 +1,7 @@
 # Developer Guide
 ## Quant Backtest Pro Platform (English)
 
-This guide provides technical developers and contributors with detailed instructions on codebase architecture, core engine lifecycles, extending technical indicators, implementing new trading bot transpilers, and interacting with the local SQLite persistence layer.
+This guide provides technical developers and contributors with detailed instructions on codebase architecture, the 60 FPS replay lifecycle, zero-allocation indicator pipeline, extending SL/TP optimizer routines, implementing new trading bot transpilers, and interacting with the local SQLite persistence layer.
 
 ---
 
@@ -11,32 +11,35 @@ This guide provides technical developers and contributors with detailed instruct
 quant-backtest-pro/
 ├── src/
 │   ├── components/                 # React UI Components
-│   │   ├── chart/                  # ChartWrapper, CandlestickChart, DrawingCanvas
-│   │   ├── header/                 # Header, SymbolSearch, TimeframeDropdown, QuickStats
-│   │   ├── panels/                 # AIStrategyModal, ExportStrategyModal, SessionManagerModal,
-│   │   │                           # AnalyticsDashboardModal, OrderEntryModal, SymbolSearchModal
-│   │   └── common/                 # ReplayControls, PositionsTable, ProQuickDock
+│   │   ├── chart/                  # TradingViewChart (O(1) updates), DrawingCanvas
+│   │   ├── header/                 # Header, SymbolSearchModal, TimeframeDropdown, QuickStats
+│   │   ├── panels/                 # AIStrategyModal, AIBotHUD, DataImportModal, ExportStrategyModal,
+│   │   │                           # SessionManagerModal, AnalyticsDashboardModal, OrderEntryModal
+│   │   └── replay/                 # ReplayBar, PositionsTable, ProQuickDock
 │   ├── engine/                     # Core Quantitative Engines
-│   │   ├── aiService.ts            # Multi-LLM provider abstraction (OpenAI, Gemini, Proxy Tunnel)
-│   │   ├── orderMatchingEngine.ts  # Matching engine, Margin, SL/TP, Prop Firm Shield
+│   │   ├── aiService.ts            # Multi-LLM provider abstraction (OpenAI, Gemini, Claude, Proxy Tunnel)
+│   │   ├── strategyOptimizer.ts    # SL/TP Multi-Variant Grid Search, 2D Heatmap & Mini Sparklines
+│   │   ├── csvParser.ts            # Fast Integer Date.UTC Parser with Smart Slicing (200k/100k/Full)
+│   │   ├── orderMatchingEngine.ts  # Matching engine, Margin, SL/TP, Trailing Stop, Prop Firm Shield
 │   │   ├── strategySandbox.ts      # Sandboxed JavaScript strategy runner
-│   │   ├── strategyExporter.ts     # Bot transpilers (MT5, MT4, Pine, Python, cTrader)
+│   │   ├── strategyExporter.ts     # Bot transpilers (MT5, MT4, Pine, Python CCXT, cTrader, JSON)
 │   │   ├── analytics.ts            # Sharpe, Max Drawdown, Monte Carlo 500x simulation
-│   │   ├── indicators.ts           # SMA, EMA, RSI, MACD, Bollinger Bands, ATR, Highest, Lowest
+│   │   ├── indicators.ts           # Zero-allocation point-in-time indicators (SMA, EMA, RSI, MACD, BB, ATR)
 │   │   ├── resampler.ts            # Dynamic multi-timeframe candle aggregator
-│   │   └── dataCrawler.ts          # Market data crawler
+│   │   └── dataCrawler.ts          # Market data crawler (Binance REST API)
 │   ├── store/                      # Zustand Central Stores
-│   │   ├── backtestStore.ts        # Replay loop, candles, orders, drawings, active strategy
+│   │   ├── backtestStore.ts        # Replay loop, candles, orders, drawings, active strategy, throttled sync
 │   │   └── authStore.ts            # User profile and authentication state
 │   ├── types/                      # TypeScript definitions
-│   │   ├── market.ts               # Candle, Instrument, Timeframe
+│   │   ├── market.ts               # Candle, Instrument, Timeframe, DrawingObject
 │   │   ├── trade.ts                # Order, Position, AccountState
-│   │   └── strategy.ts             # AIStrategyDefinition, IndicatorLibrary
+│   │   └── strategy.ts             # AIStrategyDefinition, OptimizationResultItem, IndicatorLibrary
 │   ├── i18n/                       # Multi-language translations (en, vi, ja, zh)
-│   └── api/                        # REST API client for SQLite backend
+│   └── api/                        # REST API client for SQLite backend (sessions, trades, datasets)
 ├── server/                         # Express REST API Server
-│   ├── index.ts                    # REST Endpoints (/api/sessions, /api/strategies, /api/candles)
-│   └── db.ts                       # SQLite Driver (better-sqlite3)
+│   ├── index.ts                    # REST Server entry point (Port 3001)
+│   ├── routes/                     # Modular express routes (sessions, trades, datasets, strategies)
+│   └── prisma/                     # SQLite Schema & Migrations (server/backtest.db)
 └── docs/                           # Complete Technical & User Documentation
 ```
 
@@ -49,11 +52,14 @@ quant-backtest-pro/
 # Install NPM dependencies
 npm install
 
-# Start both Vite Frontend and Express Backend concurrently
+# Terminal 1: Start Vite Frontend Client
 npm run dev
+
+# Terminal 2: Start Express + Prisma SQLite Backend
+npm run server:start
 ```
 
-### 2.2. Production Build Verification
+### 2.2. Type Checking & Production Build Verification
 ```bash
 # Type check and build production bundles
 npm run build
@@ -61,30 +67,46 @@ npm run build
 
 ---
 
-## 3. Extending Core Engines
+## 3. High-Performance Design Patterns
 
-### 3.1. Adding a New Indicator to `indicators.ts`
-Open `src/engine/indicators.ts` and add your calculation method to `IndicatorCalculator`:
+### 3.1. $O(1)$ Incremental Chart Rendering Pattern
+When implementing chart interactions in `TradingViewChart.tsx`:
+- Avoid calling `series.setData()` inside high-frequency replay ticks.
+- Use `series.update(candle)` and `volumeSeries.update(volume)` when `currentIndex === lastRenderedIndex + 1`.
+- Reserve `series.setData()` strictly for dataset loading, timeframe switches, or timeline scrubbing jumps.
+
+### 3.2. Zero-Allocation Point-In-Time Indicator Pattern
+When adding or extending indicators in `src/engine/indicators.ts`:
+- Compute calculations over `this.effectiveLength` instead of `this.candles.length`.
+- Never call `this.candles.slice()` inside indicator methods to ensure zero garbage collection overhead.
 
 ```typescript
-// Example: Adding Stochastic Oscillator
-public stochastic(kPeriod: number = 14, dPeriod: number = 3, offset: number = 0): { k: number; d: number } {
-  // Compute calculation over this.candles
-  return { k: 80, d: 75 };
+// Example: Zero-Allocation Indicator
+public sma(period: number, offset: number = 0): number {
+  const effLen = this.effectiveLength ?? this.candles.length;
+  const endIndex = effLen - 1 - offset;
+  if (endIndex < period - 1 || period <= 0) return 0;
+
+  let sum = 0;
+  for (let i = endIndex - period + 1; i <= endIndex; i++) {
+    sum += this.candles[i].close;
+  }
+  return sum / period;
 }
 ```
 
-Then register the method in `IndicatorLibrary` (`src/types/strategy.ts`) to enable AI Sandbox auto-completion.
+---
 
-### 3.2. Adding a New Bot Target to `strategyExporter.ts`
-Open `src/engine/strategyExporter.ts`:
-1. Add the platform key to `ExportPlatform` (e.g. `'ninjatrader'`).
-2. Add metadata to `EXPORT_PLATFORMS`.
-3. Implement `public static toNinjaTrader(strategy: AIStrategyDefinition, symbol: string): string`.
+## 4. Extending the SL/TP Grid Search Optimizer
+
+Open `src/engine/strategyOptimizer.ts`:
+- `simulateSingleRun`: Simulates a single variant run against historical candles.
+- `runGridSearch`: Runs a parameter matrix scan across user-defined SL and TP ranges.
+- `replaceSLTPInCode`: AST regex injector that dynamically updates `slPips` and `tpPips` in JavaScript strategy source strings.
 
 ---
 
-## 4. Open-Source Security & Contribution Guidelines
+## 5. Security & Open-Source Guidelines
 
 1. **Never commit hardcoded API keys, private tokens, or confidential proxy endpoints**.
 2. Keep user credentials strictly in client `localStorage` or environment variables.

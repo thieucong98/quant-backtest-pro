@@ -1,17 +1,17 @@
-# TÀI LIỆU API RESTFUL (API REFERENCE)
-## QUANT BACKTEST PRO (TIẾNG VIỆT)
+# Tài Liệu API RESTful (API Reference)
+## Nền Tảng Quant Backtest Pro (Tiếng Việt)
 
-Máy chủ backend Express (`server/index.ts`) cung cấp các REST API endpoints để quản lý phiên giao dịch, chiến lược AI và nến lịch sử lưu trong cơ sở dữ liệu SQLite (`server/backtest.db`).
+Máy chủ backend Express cục bộ (`server/index.ts`) cung cấp các API RESTful hiệu năng cao để quản lý phiên giao dịch, thuật toán AI, tập dữ liệu nến lịch sử (datasets), lịch sử lệnh và nét vẽ biểu đồ lưu trong SQLite (`server/backtest.db`).
 
 - **Base URL mặc định**: `http://localhost:3001/api`
 
 ---
 
-## 1. BACKTEST SESSIONS API (`/api/sessions`)
+## 1. API Quản Lý Phiên Giao Dịch (`/api/sessions`)
 
-### 1.1. Lấy danh sách tất cả các phiên
-- **Endpoint**: `GET /api/sessions`
-- **Response**: `200 OK`
+### 1.1. Lấy danh sách tất cả phiên
+- **Phương thức & Tuyến**: `GET /api/sessions`
+- **Phản hồi**: `200 OK`
 ```json
 [
   {
@@ -31,56 +31,77 @@ Máy chủ backend Express (`server/index.ts`) cung cấp các REST API endpoint
 ]
 ```
 
-### 1.2. Lấy chi tiết một phiên
-- **Endpoint**: `GET /api/sessions/:id`
-- **Response**: `200 OK` (Trả về toàn bộ nến, lệnh mở/đóng, đường cong vốn và hình vẽ trên biểu đồ).
+### 1.2. Lấy chi tiết phiên theo ID
+- **Phương thức & Tuyến**: `GET /api/sessions/:id`
 
-### 1.3. Lưu hoặc Tạo mới phiên
-- **Endpoint**: `POST /api/sessions`
-- **Body**:
+### 1.3. Tạo phiên mới
+- **Phương thức & Tuyến**: `POST /api/sessions`
+- **Body yêu cầu**:
 ```json
 {
   "name": "XAUUSD Scalping Session",
   "symbol": "XAUUSD",
   "timeframe": "M5",
-  "initialBalance": 10000,
-  "finalBalance": 10500,
-  "data": "{ \"openPositions\": [], \"closedPositions\": [], \"equityCurve\": [] }"
+  "initialBalance": 10000
 }
 ```
 
-### 1.4. Xóa phiên
-- **Endpoint**: `DELETE /api/sessions/:id`
-- **Response**: `200 OK` `{ "success": true }`
+### 1.4. Cập nhật phiên
+- **Phương thức & Tuyến**: `PUT /api/sessions/:id`
+
+### 1.5. Xóa phiên
+- **Phương thức & Tuyến**: `DELETE /api/sessions/:id`
 
 ---
 
-## 2. AI STRATEGIES API (`/api/strategies`)
+## 2. API Quản Lý Tập Dữ Liệu Lịch Sử (`/api/datasets`)
 
-### 2.1. Lấy danh sách chiến lược đã lưu
-- **Endpoint**: `GET /api/strategies`
-- **Response**: `200 OK` Danh sách các chiến lược định lượng trong SQLite.
+### 2.1. Lấy danh sách datasets đã lưu
+- **Phương thức & Tuyến**: `GET /api/datasets`
 
-### 2.2. Lưu chiến lược mới
-- **Endpoint**: `POST /api/strategies`
-- **Body**:
+### 2.2. Lưu dataset mới
+- **Phương thức & Tuyến**: `POST /api/datasets`
+- **Body yêu cầu**:
 ```json
 {
-  "name": "EMA 9/21 Fast Scalper",
-  "description": "Chiến lược lướt sóng nhanh cắt EMA",
-  "code": "return { onCandle(candle, indicators, account, api) { ... } };",
-  "parameters": { "fastEma": 9, "slowEma": 21, "slPips": 15, "tpPips": 30 },
-  "enabled": true
+  "symbol": "XAUUSD",
+  "timeframe": "M5",
+  "candles": [
+    { "timestamp": 1740000000, "open": 2650.0, "high": 2655.0, "low": 2648.5, "close": 2654.0, "volume": 120 }
+  ],
+  "source": "import"
 }
 ```
 
-### 2.3. Xóa chiến lược
-- **Endpoint**: `DELETE /api/strategies/:id`
-- **Response**: `200 OK` `{ "success": true }`
+### 2.3. Xóa dataset
+- **Phương thức & Tuyến**: `DELETE /api/datasets/:id`
 
 ---
 
-## 3. HEALTH CHECK API
+## 3. API Quản Lý Thuật Toán AI (`/api/strategies`)
 
-- **Endpoint**: `GET /api/health`
-- **Response**: `200 OK` `{ "status": "ok", "timestamp": 1740000000000 }`
+### 3.1. Lấy danh sách thuật toán
+- **Phương thức & Tuyến**: `GET /api/strategies`
+
+### 3.2. Lưu thuật toán mới
+- **Phương thức & Tuyến**: `POST /api/strategies`
+
+### 3.3. Xóa thuật toán
+- **Phương thức & Tuyến**: `DELETE /api/strategies/:id`
+
+---
+
+## 4. API Lệnh & Nét Vẽ Biểu Đồ
+
+### 4.1. Đồng bộ lệnh hàng loạt
+- **Phương thức & Tuyến**: `POST /api/trades/bulk-sync/:sessionId`
+
+### 4.2. Đồng bộ nét vẽ biểu đồ
+- **Phương thức & Tuyến**: `POST /api/drawings/sync`
+
+---
+
+## 5. Kiểm Tra Sức Khỏe Máy Chủ (Health Check)
+
+- **Phương thức & Tuyến**: `GET /api/health`
+- **Phản hồi**: `200 OK` `{ "status": "ok", "timestamp": "2026-08-24T07:02:50.592Z" }`

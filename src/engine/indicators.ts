@@ -3,13 +3,15 @@ import { IndicatorLibrary } from '../types/strategy';
 
 export class IndicatorCalculator {
   private candles: Candle[] = [];
+  private effectiveLength: number = 0;
 
   constructor(candles: Candle[] = []) {
-    this.candles = candles;
+    this.setCandles(candles);
   }
 
-  public setCandles(candles: Candle[]) {
+  public setCandles(candles: Candle[], length?: number) {
     this.candles = candles;
+    this.effectiveLength = length !== undefined ? Math.min(candles.length, length) : candles.length;
   }
 
   public createLibrary(): IndicatorLibrary {
@@ -26,9 +28,9 @@ export class IndicatorCalculator {
   }
 
   public sma(period: number, offset: number = 0): number {
-    const end = this.candles.length - offset;
+    const end = this.effectiveLength - offset;
     const start = end - period;
-    if (start < 0 || end <= 0) return this.candles[this.candles.length - 1]?.close || 0;
+    if (start < 0 || end <= 0) return this.candles[this.effectiveLength - 1]?.close || 0;
 
     let sum = 0;
     for (let i = start; i < end; i++) {
@@ -38,7 +40,7 @@ export class IndicatorCalculator {
   }
 
   public ema(period: number, offset: number = 0): number {
-    const end = this.candles.length - offset;
+    const end = this.effectiveLength - offset;
     if (end <= period) return this.sma(period, offset);
 
     const k = 2 / (period + 1);
@@ -51,7 +53,7 @@ export class IndicatorCalculator {
   }
 
   public rsi(period: number = 14, offset: number = 0): number {
-    const end = this.candles.length - offset;
+    const end = this.effectiveLength - offset;
     if (end <= period + 1) return 50;
 
     let gains = 0;
@@ -83,7 +85,7 @@ export class IndicatorCalculator {
   }
 
   public atr(period: number = 14, offset: number = 0): number {
-    const end = this.candles.length - offset;
+    const end = this.effectiveLength - offset;
     if (end <= 1) return 0;
 
     const trs: number[] = [];
@@ -106,7 +108,7 @@ export class IndicatorCalculator {
 
   public bollingerBands(period: number = 20, stdDevMult: number = 2, offset: number = 0): { upper: number; middle: number; lower: number } {
     const middle = this.sma(period, offset);
-    const end = this.candles.length - offset;
+    const end = this.effectiveLength - offset;
     const start = Math.max(0, end - period);
     
     let varianceSum = 0;
@@ -140,7 +142,7 @@ export class IndicatorCalculator {
   }
 
   public highest(period: number, offset: number = 0): number {
-    const end = this.candles.length - offset;
+    const end = this.effectiveLength - offset;
     const start = Math.max(0, end - period);
     let max = -Infinity;
     for (let i = start; i < end; i++) {
@@ -150,7 +152,7 @@ export class IndicatorCalculator {
   }
 
   public lowest(period: number, offset: number = 0): number {
-    const end = this.candles.length - offset;
+    const end = this.effectiveLength - offset;
     const start = Math.max(0, end - period);
     let min = Infinity;
     for (let i = start; i < end; i++) {

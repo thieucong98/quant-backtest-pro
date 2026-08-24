@@ -112,6 +112,44 @@ export interface TranslationDict {
   // AI Strategy Modal
   aiStudioTitle: string;
   studioAndSandboxTab: string;
+  optimizerTab: string;
+  optimizerTitle: string;
+  optimizerDesc: string;
+  slRangeLabel: string;
+  tpRangeLabel: string;
+  rangeMin: string;
+  rangeMax: string;
+  rangeStep: string;
+  symbolPreset: string;
+  runOptimizerBtn: string;
+  runningOptimizer: string;
+  applyBestConfig: string;
+  appliedSuccess: string;
+  bestOverallBadge: string;
+  bestWinRateBadge: string;
+  lowestDDBadge: string;
+  bestSharpeBadge: string;
+  leaderboardTitle: string;
+  heatmapTitle: string;
+  heatmapSub: string;
+  autoTuneCheckbox: string;
+  autoTuneRunning: string;
+  totalTested: string;
+  executionTime: string;
+  sortByLabel: string;
+  sparklineEquity: string;
+  qualityFilterMinTrades: string;
+  qualityFilterProfitable: string;
+  botHudTitle: string;
+  botStatusWaiting: string;
+  botStatusInTrade: string;
+  botTodayTrades: string;
+  botNetPnL: string;
+  strategyRulesTitle: string;
+  ruleBuyConditions: string;
+  ruleSellConditions: string;
+  ruleRiskParams: string;
+  quickParamTuning: string;
   describeStrategyLabel: string;
   quickPromptsLabel: string;
   selectedLabel: string;
@@ -145,6 +183,7 @@ export interface TranslationDict {
   autoCrawlTab: string;
   uploadFileTab: string;
   sampleDataTab: string;
+  localLibraryTab: string;
   autoCrawlDesc: string;
   intervalLabel: string;
   startCrawlBtn: string;
@@ -152,6 +191,21 @@ export interface TranslationDict {
   dragDropCSV: string;
   parsingFile: string;
   supportedFormat: string;
+  dataHealthTitle: string;
+  totalRowsParsed: string;
+  validCandlesCount: string;
+  duplicatesCleaned: string;
+  detectedTimeframe: string;
+  dataDateRange: string;
+  candleRangeSlice: string;
+  sliceAll: string;
+  slice200k: string;
+  slice100k: string;
+  slice50k: string;
+  previewDataTable: string;
+  loadDatasetBtn: string;
+  selectSymbolLabel: string;
+  importSuccessCount: string;
 
   // Shortcuts Modal
   keyboardShortcutsTitle: string;
@@ -360,6 +414,44 @@ export const translations: Record<Language, TranslationDict> = {
 
     aiStudioTitle: 'AI Strategy Studio & Sandbox Runner',
     studioAndSandboxTab: 'Studio & Sandbox',
+    optimizerTab: '⚡ Tối Ưu SL/TP',
+    optimizerTitle: 'SL/TP Grid Search & Multi-Variant Optimizer',
+    optimizerDesc: 'Tự động quét hàng loạt cấu hình SL & TP trên dữ liệu nến thực tế để tìm điểm cân bằng lợi nhuận cao nhất và hạn chế rủi ro.',
+    slRangeLabel: 'Dải Stop Loss (Pips)',
+    tpRangeLabel: 'Dải Take Profit (Pips)',
+    rangeMin: 'Min (Pips)',
+    rangeMax: 'Max (Pips)',
+    rangeStep: 'Bước nhảy (Step)',
+    symbolPreset: 'Preset theo Symbol',
+    runOptimizerBtn: '🚀 Bắt đầu Quét & Tối Ưu Hóa',
+    runningOptimizer: 'Đang chạy mô phỏng hàng loạt...',
+    applyBestConfig: 'Áp Dụng Cấu Hình Này',
+    appliedSuccess: 'Đã áp dụng cấu hình SL/TP tối ưu vào chiến lược!',
+    bestOverallBadge: '🏆 Tối Ưu Nhất',
+    bestWinRateBadge: '🎯 Winrate Cao Nhất',
+    lowestDDBadge: '🛡️ Rủi Ro Thấp Nhất',
+    bestSharpeBadge: '⚡ Sharpe Tốt Nhất',
+    leaderboardTitle: 'Bảng Xếp Hạng Hiệu Suất Cấu Hình SL/TP',
+    heatmapTitle: 'Ma Trận Nhiệt Lợi Nhuận SL vs TP (Profit Heatmap)',
+    heatmapSub: 'Vùng màu xanh thể hiện vùng tham số sinh lời ổn định (Sweet Spot), tránh over-fitting.',
+    autoTuneCheckbox: '🔍 Tự động quét & tìm SL/TP tối ưu sau khi sinh code',
+    autoTuneRunning: 'Đang tối ưu SL/TP theo dữ liệu nến thực tế...',
+    totalTested: 'Tổng cấu hình đã quét',
+    executionTime: 'Thời gian thực thi',
+    sortByLabel: 'Sắp xếp theo',
+    sparklineEquity: 'Đường cong vốn (Sparkline)',
+    qualityFilterMinTrades: 'Chỉ hiện cấu hình có ý nghĩa (>= 5 lệnh)',
+    qualityFilterProfitable: 'Chỉ hiện cấu hình có lãi',
+    botHudTitle: 'AI Bot Live HUD',
+    botStatusWaiting: 'Đang chờ tín hiệu...',
+    botStatusInTrade: 'Đang giữ vị thế mở',
+    botTodayTrades: 'Lệnh thực thi',
+    botNetPnL: 'PnL Bot',
+    strategyRulesTitle: 'Tóm Tắt Quy Tắc Vào Lệnh (Strategy Rules)',
+    ruleBuyConditions: 'Điều kiện BUY (Mua)',
+    ruleSellConditions: 'Điều kiện SELL (Bán)',
+    ruleRiskParams: 'Quản trị Rủi ro & Khối lượng',
+    quickParamTuning: 'Tinh Chỉnh Nhanh Tham Số',
     describeStrategyLabel: 'Mô tả chiến lược bằng ngôn ngữ tự nhiên:',
     quickPromptsLabel: 'Gợi ý nhanh:',
     selectedLabel: 'Đang chọn',
@@ -391,13 +483,29 @@ export const translations: Record<Language, TranslationDict> = {
     autoCrawlTab: 'Tự động Crawl Online (Live REST API)',
     uploadFileTab: 'Nạp File CSV / TXT',
     sampleDataTab: 'Dữ liệu Mẫu (GBM Presets)',
+    localLibraryTab: 'Thư Viện Dataset (DB)',
     autoCrawlDesc: '🌐 Hệ thống Tự động Crawl Dữ liệu Trực tuyến cho phép kéo trực tiếp hàng ngàn nến lịch sử thực tế từ các sàn giao dịch hàng đầu thế giới (Binance REST API) mà không cần bất kỳ API key nào!',
-    intervalLabel: 'Khung Nến (Interval)',
-    startCrawlBtn: 'Bắt đầu Crawl & Nạp vào Chart',
-    crawlingBtn: 'Đang Crawl Dữ liệu...',
-    dragDropCSV: 'Kéo thả file CSV vào đây hoặc click để chọn file',
-    parsingFile: 'Đang đọc và phân tích file...',
-    supportedFormat: 'Hỗ trợ định dạng: Date, Time, Open, High, Low, Close, Volume (Tự động nhận diện)',
+    intervalLabel: 'Khung thời gian',
+    startCrawlBtn: 'Bắt đầu Crawl & Nạp Biểu Đồ',
+    crawlingBtn: 'Đang Crawl Dữ liệu Trực tuyến...',
+    dragDropCSV: 'Kéo & thả file CSV vào đây hoặc click để duyệt file',
+    parsingFile: 'Đang giải mã và tối ưu dữ liệu...',
+    supportedFormat: 'Hỗ trợ: Date, Time, Open, High, Low, Close, Volume (Tự động nhận diện dấu ; hoặc ,)',
+    dataHealthTitle: 'Báo cáo Kiểm tra Chất lượng Dữ liệu (Data Health)',
+    totalRowsParsed: 'Tổng số dòng quét',
+    validCandlesCount: 'Số nến hợp lệ nạp vào',
+    duplicatesCleaned: 'Nến trùng lặp đã khử',
+    detectedTimeframe: 'Timeframe tự động nhận diện',
+    dataDateRange: 'Khoảng thời gian nến',
+    candleRangeSlice: 'Giới hạn số nến nạp (Smart Slicer)',
+    sliceAll: 'Toàn bộ file (Full Dataset)',
+    slice200k: '200,000 nến gần nhất (Khuyên dùng - 60 FPS)',
+    slice100k: '100,000 nến gần nhất',
+    slice50k: '50,000 nến gần nhất',
+    previewDataTable: 'Xem trước dữ liệu trích xuất',
+    loadDatasetBtn: 'Nạp Vào Biểu Đồ',
+    selectSymbolLabel: 'Mã tài sản mục tiêu',
+    importSuccessCount: 'Đã nạp thành công {count} nến vào biểu đồ!',
 
     keyboardShortcutsTitle: 'Phím Tắt Thao Tác Nhanh (Keyboard Shortcuts)',
     keyboardShortcutsDesc: 'Nhấn bất kỳ phím nào để tương tác trực tiếp trên giao diện Backtest.',
@@ -599,6 +707,44 @@ export const translations: Record<Language, TranslationDict> = {
 
     aiStudioTitle: 'AI Strategy Studio & Sandbox Runner',
     studioAndSandboxTab: 'Studio & Sandbox',
+    optimizerTab: '⚡ SL/TP Optimizer',
+    optimizerTitle: 'SL/TP Grid Search & Multi-Variant Optimizer',
+    optimizerDesc: 'Auto-scan multiple SL & TP parameter combinations across active market candles to find the optimal sweet spot for profit & drawdown.',
+    slRangeLabel: 'Stop Loss Range (Pips)',
+    tpRangeLabel: 'Take Profit Range (Pips)',
+    rangeMin: 'Min (Pips)',
+    rangeMax: 'Max (Pips)',
+    rangeStep: 'Step (Pips)',
+    symbolPreset: 'Symbol Preset',
+    runOptimizerBtn: '🚀 Run Batch Optimization',
+    runningOptimizer: 'Simulating combinations...',
+    applyBestConfig: 'Apply This Configuration',
+    appliedSuccess: 'Optimal SL/TP applied to strategy!',
+    bestOverallBadge: '🏆 Best Overall',
+    bestWinRateBadge: '🎯 Highest Winrate',
+    lowestDDBadge: '🛡️ Lowest Drawdown',
+    bestSharpeBadge: '⚡ Best Sharpe',
+    leaderboardTitle: 'SL/TP Performance Leaderboard',
+    heatmapTitle: 'SL vs TP Profit Heatmap Matrix',
+    heatmapSub: 'Green clusters highlight robust profitable parameter zones (Sweet Spot) to avoid over-fitting.',
+    autoTuneCheckbox: '🔍 Auto-optimize SL/TP parameters after code generation',
+    autoTuneRunning: 'Auto-tuning SL/TP on active market candles...',
+    totalTested: 'Tested Combinations',
+    executionTime: 'Execution Time',
+    sortByLabel: 'Sort By',
+    sparklineEquity: 'Equity Trajectory (Sparkline)',
+    qualityFilterMinTrades: 'Significant configs only (>= 5 trades)',
+    qualityFilterProfitable: 'Profitable configs only',
+    botHudTitle: 'AI Bot Live HUD',
+    botStatusWaiting: 'Waiting for signal...',
+    botStatusInTrade: 'In open position',
+    botTodayTrades: 'Bot Trades',
+    botNetPnL: 'Bot Net PnL',
+    strategyRulesTitle: 'Strategy Rules Breakdown',
+    ruleBuyConditions: 'BUY Entry Rules',
+    ruleSellConditions: 'SELL Entry Rules',
+    ruleRiskParams: 'Risk & Position Sizing',
+    quickParamTuning: 'Quick Parameter Tuning',
     describeStrategyLabel: 'Describe strategy in natural language:',
     quickPromptsLabel: 'Quick Prompts:',
     selectedLabel: 'Selected',
@@ -630,13 +776,29 @@ export const translations: Record<Language, TranslationDict> = {
     autoCrawlTab: 'Auto Crawl Online (Live REST API)',
     uploadFileTab: 'Upload CSV / TXT File',
     sampleDataTab: 'Sample Data (GBM Presets)',
+    localLibraryTab: 'Dataset Library (DB)',
     autoCrawlDesc: '🌐 Automated Online Data Crawler pulls thousands of real historical candles directly from world-class exchanges (Binance REST API) without requiring any API key!',
     intervalLabel: 'Candle Interval',
     startCrawlBtn: 'Start Crawl & Load into Chart',
     crawlingBtn: 'Crawling Live Data...',
     dragDropCSV: 'Drag & drop CSV file here or click to browse',
-    parsingFile: 'Parsing and validating file...',
-    supportedFormat: 'Supported format: Date, Time, Open, High, Low, Close, Volume (Auto-detected)',
+    parsingFile: 'Parsing and validating data...',
+    supportedFormat: 'Supported format: Date, Time, Open, High, Low, Close, Volume (Auto-detected ; or ,)',
+    dataHealthTitle: 'Data Health & Integrity Diagnostics',
+    totalRowsParsed: 'Total Rows Scanned',
+    validCandlesCount: 'Valid Candles Loaded',
+    duplicatesCleaned: 'Duplicates Cleaned',
+    detectedTimeframe: 'Detected Timeframe',
+    dataDateRange: 'Date Range Span',
+    candleRangeSlice: 'Candle Limit / Range Slice',
+    sliceAll: 'Full Dataset',
+    slice200k: 'Last 200k Bars (Recommended - 60 FPS)',
+    slice100k: 'Last 100k Bars',
+    slice50k: 'Last 50k Bars',
+    previewDataTable: 'Data Extraction Preview',
+    loadDatasetBtn: 'Load to Chart',
+    selectSymbolLabel: 'Target Symbol',
+    importSuccessCount: 'Successfully loaded {count} candles to chart!',
 
     keyboardShortcutsTitle: 'Quick Keyboard Shortcuts',
     keyboardShortcutsDesc: 'Press any key to interact directly with the Backtest platform.',
@@ -838,6 +1000,44 @@ export const translations: Record<Language, TranslationDict> = {
 
     aiStudioTitle: 'AI戦略スタジオ＆実行サンドボックス',
     studioAndSandboxTab: 'スタジオ＆サンドボックス',
+    optimizerTab: '⚡ SL/TP 最適化',
+    optimizerTitle: 'SL/TP グリッドサーチ＆マルチバリアント最適化',
+    optimizerDesc: '実際のローソク足データ上で複数のSL/TP構成を一括バックテストし、最高のリターンとドローダウン抑制を両立する最適値を探索します。',
+    slRangeLabel: 'ストップロス範囲 (Pips)',
+    tpRangeLabel: 'テイクプロフィット範囲 (Pips)',
+    rangeMin: '最小値 (Pips)',
+    rangeMax: '最大値 (Pips)',
+    rangeStep: 'ステップ幅',
+    symbolPreset: '銘柄プリセット',
+    runOptimizerBtn: '🚀 最適化バッチ実行',
+    runningOptimizer: 'シミュレーション実行中...',
+    applyBestConfig: 'この設定を適用する',
+    appliedSuccess: '最適なSL/TP設定を戦略に適用しました！',
+    bestOverallBadge: '🏆 総合最高スコア',
+    bestWinRateBadge: '🎯 最高勝率',
+    lowestDDBadge: '🛡️ 最小ドローダウン',
+    bestSharpeBadge: '⚡ 最高シャープレシオ',
+    leaderboardTitle: 'SL/TP パフォーマンスランキング',
+    heatmapTitle: 'SL vs TP 損益ヒートマップマトリクス',
+    heatmapSub: '緑色のクラスターは過剰適合（Overfitting）を回避できる安定した収益ゾーンを示します。',
+    autoTuneCheckbox: '🔍 コード生成後にSL/TPパラメータを自動最適化',
+    autoTuneRunning: '実データでSL/TPを自動チューニング中...',
+    totalTested: 'テスト済み組み合わせ数',
+    executionTime: '実行時間',
+    sortByLabel: '並び替え基準',
+    sparklineEquity: '資産推移 (Sparkline)',
+    qualityFilterMinTrades: '統計的に有意な構成のみ (>= 5 取引)',
+    qualityFilterProfitable: '利益が出ている構成のみ',
+    botHudTitle: 'AI Bot ライブHUD',
+    botStatusWaiting: 'シグナル待機中...',
+    botStatusInTrade: 'ポジション保有中',
+    botTodayTrades: '実行取引数',
+    botNetPnL: 'Bot純損益',
+    strategyRulesTitle: '戦略ルール要約',
+    ruleBuyConditions: '買いエントリー条件',
+    ruleSellConditions: '売りエントリー条件',
+    ruleRiskParams: 'リスク管理＆ロット',
+    quickParamTuning: 'パラメータクイック調整',
     describeStrategyLabel: '自然言語で戦略を記述:',
     quickPromptsLabel: 'クイック提案:',
     selectedLabel: '選択中',
@@ -869,6 +1069,7 @@ export const translations: Record<Language, TranslationDict> = {
     autoCrawlTab: 'オンライン自動クロール (Binance API)',
     uploadFileTab: 'CSV / TXT ファイルインポート',
     sampleDataTab: 'サンプルデータ (GBM)',
+    localLibraryTab: 'データセットライブラリ (DB)',
     autoCrawlDesc: '🌐 オンライン自動クローラーにより、APIキーなしでBinance等の取引所から実際の過去ティック・K線データを直接取得できます。',
     intervalLabel: '時間軸 (Interval)',
     startCrawlBtn: 'クロール開始＆チャートに適用',
@@ -876,6 +1077,21 @@ export const translations: Record<Language, TranslationDict> = {
     dragDropCSV: 'CSVファイルをここにドラッグ＆ドロップ',
     parsingFile: 'ファイルを解析中...',
     supportedFormat: '対応形式: Date, Time, Open, High, Low, Close, Volume (自動判定)',
+    dataHealthTitle: 'データ品質・整合性レポート',
+    totalRowsParsed: '総行数',
+    validCandlesCount: '有効ローソク足数',
+    duplicatesCleaned: '重複除外数',
+    detectedTimeframe: '検出タイムフレーム',
+    dataDateRange: 'データ期間',
+    candleRangeSlice: 'ローソク足件数制限 (Smart Slicer)',
+    sliceAll: '全データ (Full Dataset)',
+    slice200k: '直近20万本 (推奨 - 60 FPS)',
+    slice100k: '直近10万本',
+    slice50k: '直近5万本',
+    previewDataTable: 'データプレビュー',
+    loadDatasetBtn: 'チャートに読み込む',
+    selectSymbolLabel: '対象シンボル',
+    importSuccessCount: '{count}本のローソク足をチャートに読み込みました！',
 
     keyboardShortcutsTitle: 'キーボードショートカット',
     keyboardShortcutsDesc: 'ショートカットキーで快適なバックテスト操作が可能です。',
@@ -1077,6 +1293,44 @@ export const translations: Record<Language, TranslationDict> = {
 
     aiStudioTitle: 'AI策略工作室与沙盒执行引擎',
     studioAndSandboxTab: '工作室与沙盒',
+    optimizerTab: '⚡ 止损止盈优化器',
+    optimizerTitle: 'SL/TP 网格扫描与多参数优化引擎',
+    optimizerDesc: '在当前K线历史数据上批量模拟多组止损和止盈组合，自动寻找胜率与盈亏比最均衡的最佳参数配置。',
+    slRangeLabel: '止损点数范围 (Pips)',
+    tpRangeLabel: '止盈点数范围 (Pips)',
+    rangeMin: '最小值 (Pips)',
+    rangeMax: '最大值 (Pips)',
+    rangeStep: '步长 (Step)',
+    symbolPreset: '品种预设',
+    runOptimizerBtn: '🚀 启动批量网格优化',
+    runningOptimizer: '正在进行多组合回测...',
+    applyBestConfig: '应用该参数配置',
+    appliedSuccess: '已将最优止损止盈参数应用至策略！',
+    bestOverallBadge: '🏆 综合最优',
+    bestWinRateBadge: '🎯 最高胜率',
+    lowestDDBadge: '🛡️ 最低回撤',
+    bestSharpeBadge: '⚡ 最佳夏普比率',
+    leaderboardTitle: 'SL/TP 参数表现排行榜',
+    heatmapTitle: 'SL vs TP 收益热力图矩阵 (Profit Heatmap)',
+    heatmapSub: '深绿色区块代表稳健盈利区间 (Sweet Spot)，有效避免过拟合。',
+    autoTuneCheckbox: '🔍 代码生成后自动优化 SL/TP 止损止盈参数',
+    autoTuneRunning: '正在根据实盘K线自动调优 SL/TP...',
+    totalTested: '已测组合总数',
+    executionTime: '运算耗时',
+    sortByLabel: '排序方式',
+    sparklineEquity: '资金走势 (Sparkline)',
+    qualityFilterMinTrades: '仅显示有效样本 (>= 5笔交易)',
+    qualityFilterProfitable: '仅显示盈利组合',
+    botHudTitle: 'AI Bot 实时悬浮窗 HUD',
+    botStatusWaiting: '等待入场信号...',
+    botStatusInTrade: '持仓中',
+    botTodayTrades: '执行笔数',
+    botNetPnL: 'Bot净收益',
+    strategyRulesTitle: '策略规则逻辑摘要',
+    ruleBuyConditions: '买入入场规则 (BUY)',
+    ruleSellConditions: '卖出入场规则 (SELL)',
+    ruleRiskParams: '风控止损与仓位',
+    quickParamTuning: '快速参数调优',
     describeStrategyLabel: '用自然语言描述您的策略:',
     quickPromptsLabel: '快捷提示词:',
     selectedLabel: '当前选择',
@@ -1104,17 +1358,33 @@ export const translations: Record<Language, TranslationDict> = {
     enterPips: '输入点数',
     enterPrice: '输入价格',
 
-    dataManagerTitle: '历史数据管理、导入与在线爬虫',
+    dataManagerTitle: '历史数据管理、导入与在线自动抓取',
     autoCrawlTab: '在线自动抓取 (Binance REST API)',
-    uploadFileTab: '上传 CSV / TXT 文件',
+    uploadFileTab: '导入 CSV / TXT 文件',
     sampleDataTab: '示例数据 (GBM Presets)',
+    localLibraryTab: '数据集库 (DB)',
     autoCrawlDesc: '🌐 在线自动抓取系统无需任何 API Key，即可直接从全球顶级交易所拉取数千根真实历史K线！',
     intervalLabel: 'K线周期 (Interval)',
     startCrawlBtn: '开始抓取并载入图表',
     crawlingBtn: '正在抓取数据...',
     dragDropCSV: '拖拽 CSV 文件至此处，或点击浏览',
-    parsingFile: '正在解析文件...',
-    supportedFormat: '支持格式: Date, Time, Open, High, Low, Close, Volume (自动识别)',
+    parsingFile: '正在解析与优化数据...',
+    supportedFormat: '支持格式: Date, Time, Open, High, Low, Close, Volume (自动识别分号 ; 或逗号 ,)',
+    dataHealthTitle: '数据质量与完整性诊断报告',
+    totalRowsParsed: '扫描总行数',
+    validCandlesCount: '有效K线数',
+    duplicatesCleaned: '已清理重复数',
+    detectedTimeframe: '检测时间周期',
+    dataDateRange: '时间跨度',
+    candleRangeSlice: 'K线数量限制 (Smart Slicer)',
+    sliceAll: '全部数据 (Full Dataset)',
+    slice200k: '最近20万根 (推荐 - 60 FPS)',
+    slice100k: '最近10万根',
+    slice50k: '最近5万根',
+    previewDataTable: '数据提取预览',
+    loadDatasetBtn: '载入图表',
+    selectSymbolLabel: '目标交易对',
+    importSuccessCount: '成功载入 {count} 根K线至图表！',
 
     keyboardShortcutsTitle: '常用快捷键指南',
     keyboardShortcutsDesc: '按任意键即可在回测界面上直接进行实时交互。',

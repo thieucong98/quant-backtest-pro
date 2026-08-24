@@ -28,21 +28,11 @@ const savePersistedUser = (user: UserProfile | null) => {
 };
 
 export const useAuthStore = create<AuthState>((set, get) => {
-  const initialUser = loadPersistedUser() || {
-    id: 'usr_demo_trader',
-    email: 'pro.trader@quantbacktest.com',
-    name: 'Pro Trader',
-    avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80',
-    tier: 'PRO',
-    createdAt: Date.now() - 86400000 * 30,
-    tradingBalance: 50000,
-    savedStrategiesCount: 8,
-    completedBacktests: 42
-  };
+  const initialUser = loadPersistedUser();
 
   return {
     user: initialUser,
-    isAuthenticated: true,
+    isAuthenticated: !!initialUser,
     isAuthModalOpen: false,
     authMode: 'login',
     isLoading: false,
