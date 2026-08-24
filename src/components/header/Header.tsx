@@ -24,18 +24,21 @@ import { INSTRUMENTS } from '../../config/instruments';
 import { useBacktestStore } from '../../store/backtestStore';
 import { useAuthStore } from '../../store/authStore';
 import { translations, Language } from '../../i18n/translations';
-import { AssetCategory, DrawingToolType, Timeframe } from '../../types/market';
+import { AssetCategory, ChartType, DrawingToolType, Timeframe } from '../../types/market';
 import { SymbolSearchModal } from './SymbolSearchModal';
 
 export const Header: React.FC = () => {
   const [isSymbolModalOpen, setIsSymbolModalOpen] = useState(false);
   const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false);
+  const [isChartTypeDropdownOpen, setIsChartTypeDropdownOpen] = useState(false);
 
   const {
     instrument,
     setInstrument,
     timeframe,
     setTimeframe,
+    chartType,
+    setChartType,
     account,
     activeTool,
     setActiveTool,
@@ -122,6 +125,80 @@ export const Header: React.FC = () => {
                 {tf}
               </button>
             ))}
+          </div>
+
+          {/* Chart Type Selector Dropdown (TradingView Style) */}
+          <div className="relative">
+            <button
+              onClick={() => setIsChartTypeDropdownOpen(!isChartTypeDropdownOpen)}
+              className="flex items-center gap-1.5 bg-slate-900/90 hover:bg-slate-800 px-2 py-1.5 rounded-lg border border-slate-800 hover:border-slate-700 text-xs font-mono transition-all"
+              title={t.chartType}
+            >
+              <span className="text-sm">
+                {chartType === 'candlestick' && '🕯️'}
+                {chartType === 'bar' && '📊'}
+                {chartType === 'line' && '📈'}
+                {chartType === 'area' && '🏔️'}
+                {chartType === 'heikin-ashi' && '⛩️'}
+                {chartType === 'hollow' && '🕳️'}
+                {chartType === 'baseline' && '📉'}
+              </span>
+              <span className="hidden md:inline text-slate-200 font-bold text-[11px]">
+                {chartType === 'candlestick' && 'Nến'}
+                {chartType === 'bar' && 'Bar'}
+                {chartType === 'line' && 'Line'}
+                {chartType === 'area' && 'Area'}
+                {chartType === 'heikin-ashi' && 'H-A'}
+                {chartType === 'hollow' && 'Hollow'}
+                {chartType === 'baseline' && 'Base'}
+              </span>
+              <ChevronDown className="w-3 h-3 text-slate-400" />
+            </button>
+
+            {isChartTypeDropdownOpen && (
+              <>
+                <div
+                  className="fixed inset-0 z-40"
+                  onClick={() => setIsChartTypeDropdownOpen(false)}
+                />
+                <div className="absolute left-0 mt-1.5 w-60 bg-[#111622] border border-slate-800 rounded-xl shadow-2xl p-1.5 z-50 animate-in fade-in zoom-in-95 font-mono text-xs space-y-0.5">
+                  <div className="px-2 py-1 text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-800/80 mb-1">
+                    {t.chartType}
+                  </div>
+                  {[
+                    { id: 'candlestick' as const, label: t.candlestick, icon: '🕯️' },
+                    { id: 'heikin-ashi' as const, label: t.heikinAshi, icon: '⛩️' },
+                    { id: 'hollow' as const, label: t.hollowCandles, icon: '🕳️' },
+                    { id: 'bar' as const, label: t.barChart, icon: '📊' },
+                    { id: 'line' as const, label: t.lineChart, icon: '📈' },
+                    { id: 'area' as const, label: t.areaChart, icon: '🏔️' },
+                    { id: 'baseline' as const, label: t.baselineChart, icon: '📉' },
+                  ].map(ct => {
+                    const isSelected = chartType === ct.id;
+                    return (
+                      <button
+                        key={ct.id}
+                        onClick={() => {
+                          setChartType(ct.id);
+                          setIsChartTypeDropdownOpen(false);
+                        }}
+                        className={`w-full px-2.5 py-1.5 rounded-lg flex items-center justify-between transition-colors text-left ${
+                          isSelected
+                            ? 'bg-indigo-600 text-white font-bold'
+                            : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm">{ct.icon}</span>
+                          <span className="text-xs">{ct.label}</span>
+                        </div>
+                        {isSelected && <span className="text-[10px] font-bold">✓</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
+            )}
           </div>
 
           {/* Drawing Tools Quick Bar */}

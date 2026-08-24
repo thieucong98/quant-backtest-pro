@@ -1,14 +1,84 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { createChart, IChartApi, ISeriesApi, CandlestickData, Time, LineStyle } from 'lightweight-charts';
-import { ArrowUpRight, ArrowDownRight, Zap, Shield, Target, AlertTriangle, CheckCircle, Sliders, ChevronDown, ChevronUp } from 'lucide-react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
+import {
+  createChart,
+  IChartApi,
+  ISeriesApi,
+  CandlestickData,
+  LineData,
+  BarData,
+  AreaData,
+  BaselineData,
+  Time,
+  LineStyle,
+  PriceScaleMode
+} from 'lightweight-charts';
+import {
+  ArrowUpRight,
+  ArrowDownRight,
+  Zap,
+  Shield,
+  Target,
+  AlertTriangle,
+  CheckCircle,
+  Sliders,
+  ChevronDown,
+  ChevronUp,
+  Clock
+} from 'lucide-react';
 import { useBacktestStore } from '../../store/backtestStore';
 import { translations } from '../../i18n/translations';
+import { Candle, ChartType, InstrumentSpec, Timeframe } from '../../types/market';
 import { DrawingCanvas } from './DrawingCanvas';
+
+/**
+ * Tính toán nến Heikin-Ashi làm mượt xu hướng
+ */
+export function calculateHeikinAshi(rawCandles: Candle[]): Candle[] {
+  if (rawCandles.length === 0) return [];
+  const haList: Candle[] = [];
+
+  let prevHaOpen = rawCandles[0].open;
+  let prevHaClose = rawCandles[0].close;
+
+  for (let i = 0; i < rawCandles.length; i++) {
+    const c = rawCandles[i];
+    const haClose = (c.open + c.high + c.low + c.close) / 4;
+    const haOpen = i === 0 ? (c.open + c.close) / 2 : (prevHaOpen + prevHaClose) / 2;
+    const haHigh = Math.max(c.high, haOpen, haClose);
+    const haLow = Math.min(c.low, haOpen, haClose);
+
+    haList.push({
+      timestamp: c.timestamp,
+      open: haOpen,
+      high: haHigh,
+      low: haLow,
+      close: haClose,
+      volume: c.volume
+    });
+
+    prevHaOpen = haOpen;
+    prevHaClose = haClose;
+  }
+  return haList;
+}
+
+/**
+ * Thời lượng mỗi Timeframe tính theo giây
+ */
+const TIMEFRAME_SECONDS: Record<Timeframe, number> = {
+  M1: 60,
+  M5: 300,
+  M15: 900,
+  M30: 1800,
+  H1: 3600,
+  H4: 14400,
+  D1: 86400
+};
 
 export const TradingViewChart: React.FC = () => {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
-  const candleSeriesRef = useRef<ISeriesApi<'Candlestick'> | null>(null);
+  const mainSeriesRef = useRef<ISeriesApi<any> | null>(null);
   const volumeSeriesRef = useRef<ISeriesApi<'Histogram'> | null>(null);
 
   // Price lines references for open positions and SL/TP
@@ -29,6 +99,7 @@ export const TradingViewChart: React.FC = () => {
     candles,
     currentIndex,
     instrument,
+    timeframe,
     openPositions,
     markers,
     economicNews,
@@ -40,10 +111,106 @@ export const TradingViewChart: React.FC = () => {
     propFirmMaxDrawdownLimit,
     propFirmProfitTarget,
     propFirmStartingDayBalance,
-    togglePropFirmMode
+    chartType,
+    isLogScale,
+    isPercentageScale,
+    isInvertedScale,
+    showCountdown,
+    showWatermark,
+    showGrid,
+    toggleLogScale,
+    togglePercentageScale,
+    toggleInvertedScale
   } = useBacktestStore();
 
   const t = translations[language] || translations.vi;
+
+  // Track last rendered index and candles array reference
+  const lastRenderedIndexRef = useRef<number>(-1);
+  const lastCandlesRef = useRef<any[] | null>(null);
+  const lastChartTypeRef = useRef<ChartType>(chartType);
+
+  // Tạo Main Series theo Chart Type đã chọn
+  const createMainSeriesForType = (chart: IChartApi, type: ChartType, spec: InstrumentSpec, basePrice?: number) => {
+    const priceFormat = {
+      type: 'price' as const,
+      precision: spec.digits,
+      minMove: spec.pipSize / 10
+    };
+
+    switch (type) {
+      case 'hollow':
+        return chart.addCandlestickSeries({
+          upColor: 'rgba(38, 166, 154, 0.05)',
+          downColor: '#ef5350',
+          borderVisible: true,
+          borderColor: '#26a69a',
+          borderUpColor: '#26a69a',
+          borderDownColor: '#ef5350',
+          wickUpColor: '#26a69a',
+          wickDownColor: '#ef5350',
+          priceFormat
+        });
+
+      case 'heikin-ashi':
+      case 'candlestick':
+        return chart.addCandlestickSeries({
+          upColor: '#26a69a',
+          downColor: '#ef5350',
+          borderVisible: false,
+          wickUpColor: '#26a69a',
+          wickDownColor: '#ef5350',
+          priceFormat
+        });
+
+      case 'bar':
+        return chart.addBarSeries({
+          upColor: '#26a69a',
+          downColor: '#ef5350',
+          thinBars: false,
+          priceFormat
+        });
+
+      case 'line':
+        return chart.addLineSeries({
+          color: '#6366f1',
+          lineWidth: 2,
+          priceFormat
+        });
+
+      case 'area':
+        return chart.addAreaSeries({
+          topColor: 'rgba(99, 102, 241, 0.45)',
+          bottomColor: 'rgba(99, 102, 241, 0.02)',
+          lineColor: '#6366f1',
+          lineWidth: 2,
+          priceFormat
+        });
+
+      case 'baseline':
+        return chart.addBaselineSeries({
+          baseValue: { type: 'price', price: basePrice || 100 },
+          topFillColor1: 'rgba(38, 166, 154, 0.28)',
+          topFillColor2: 'rgba(38, 166, 154, 0.05)',
+          topLineColor: '#26a69a',
+          bottomFillColor1: 'rgba(239, 83, 80, 0.05)',
+          bottomFillColor2: 'rgba(239, 83, 80, 0.28)',
+          bottomLineColor: '#ef5350',
+          lineWidth: 2,
+          priceFormat
+        });
+
+      default:
+        return chart.addCandlestickSeries({
+          upColor: '#26a69a',
+          downColor: '#ef5350',
+          borderVisible: false,
+          wickUpColor: '#26a69a',
+          wickDownColor: '#ef5350',
+          priceFormat
+        });
+    }
+  };
 
   // Khởi tạo Chart khi component mount
   useEffect(() => {
@@ -59,8 +226,8 @@ export const TradingViewChart: React.FC = () => {
         fontFamily: 'JetBrains Mono, Inter, sans-serif'
       },
       grid: {
-        vertLines: { color: 'rgba(51, 65, 85, 0.2)' },
-        horzLines: { color: 'rgba(51, 65, 85, 0.2)' }
+        vertLines: { color: showGrid ? 'rgba(51, 65, 85, 0.2)' : 'transparent' },
+        horzLines: { color: showGrid ? 'rgba(51, 65, 85, 0.2)' : 'transparent' }
       },
       crosshair: {
         mode: 1, // CrosshairMode.Normal
@@ -91,18 +258,7 @@ export const TradingViewChart: React.FC = () => {
       }
     });
 
-    const candleSeries = chart.addCandlestickSeries({
-      upColor: '#26a69a',
-      downColor: '#ef5350',
-      borderVisible: false,
-      wickUpColor: '#26a69a',
-      wickDownColor: '#ef5350',
-      priceFormat: {
-        type: 'price',
-        precision: instrument.digits,
-        minMove: instrument.pipSize / 10
-      }
-    });
+    const mainSeries = createMainSeriesForType(chart, chartType, instrument, candles[0]?.close);
 
     const volumeSeries = chart.addHistogramSeries({
       color: '#38bdf8',
@@ -117,7 +273,7 @@ export const TradingViewChart: React.FC = () => {
     });
 
     chartRef.current = chart;
-    candleSeriesRef.current = candleSeries;
+    mainSeriesRef.current = mainSeries;
     volumeSeriesRef.current = volumeSeries;
 
     const handleResize = () => {
@@ -137,10 +293,57 @@ export const TradingViewChart: React.FC = () => {
     };
   }, []);
 
-  // Update Instrument digits khi đổi Symbol
+  // Xử lý khi đổi ChartType
   useEffect(() => {
-    if (!candleSeriesRef.current) return;
-    candleSeriesRef.current.applyOptions({
+    if (!chartRef.current || !volumeSeriesRef.current) return;
+    if (lastChartTypeRef.current === chartType && mainSeriesRef.current) return;
+
+    if (mainSeriesRef.current) {
+      try {
+        chartRef.current.removeSeries(mainSeriesRef.current);
+      } catch (e) {}
+    }
+
+    const newSeries = createMainSeriesForType(chartRef.current, chartType, instrument, candles[0]?.close);
+    mainSeriesRef.current = newSeries;
+    lastChartTypeRef.current = chartType;
+
+    // Reset render flags to force full data update
+    lastRenderedIndexRef.current = -1;
+    lastCandlesRef.current = null;
+  }, [chartType, instrument]);
+
+  // Cập nhật Price Scale Modes (Logarithmic, Percentage, Invert Scale, Auto Scale)
+  useEffect(() => {
+    if (!chartRef.current) return;
+    const rightScale = chartRef.current.priceScale('right');
+
+    let mode = PriceScaleMode.Normal;
+    if (isLogScale) mode = PriceScaleMode.Logarithmic;
+    else if (isPercentageScale) mode = PriceScaleMode.Percentage;
+
+    rightScale.applyOptions({
+      mode,
+      invertScale: isInvertedScale,
+      autoScale: true
+    });
+  }, [isLogScale, isPercentageScale, isInvertedScale]);
+
+  // Cập nhật Gridlines
+  useEffect(() => {
+    if (!chartRef.current) return;
+    chartRef.current.applyOptions({
+      grid: {
+        vertLines: { color: showGrid ? 'rgba(51, 65, 85, 0.2)' : 'transparent' },
+        horzLines: { color: showGrid ? 'rgba(51, 65, 85, 0.2)' : 'transparent' }
+      }
+    });
+  }, [showGrid]);
+
+  // Cập nhật Instrument digits khi đổi Symbol
+  useEffect(() => {
+    if (!mainSeriesRef.current) return;
+    mainSeriesRef.current.applyOptions({
       priceFormat: {
         type: 'price',
         precision: instrument.digits,
@@ -149,28 +352,41 @@ export const TradingViewChart: React.FC = () => {
     });
   }, [instrument]);
 
-  // Track last rendered index and candles array reference
-  const lastRenderedIndexRef = useRef<number>(-1);
-  const lastCandlesRef = useRef<any[] | null>(null);
+  // Dữ liệu nến Heikin-Ashi tính toán trước
+  const effectiveCandles = useMemo(() => {
+    if (chartType === 'heikin-ashi') {
+      return calculateHeikinAshi(candles);
+    }
+    return candles;
+  }, [candles, chartType]);
 
-  // Cập nhật dữ liệu nến khi Replay thay đổi (Tối ưu hóa O(1) Incremental Update cho 200k+ nến)
+  // Cập nhật dữ liệu nến khi Replay thay đổi (O(1) Incremental Update)
   useEffect(() => {
-    if (!candleSeriesRef.current || !volumeSeriesRef.current || candles.length === 0) return;
+    if (!mainSeriesRef.current || !volumeSeriesRef.current || effectiveCandles.length === 0) return;
 
-    const isSameCandlesArray = lastCandlesRef.current === candles;
+    const isSameCandlesArray = lastCandlesRef.current === effectiveCandles;
     const isSequentialStep = isSameCandlesArray && currentIndex === lastRenderedIndexRef.current + 1;
 
+    const isLineOrArea = chartType === 'line' || chartType === 'area' || chartType === 'baseline';
+
     if (isSequentialStep) {
-      // ⚡ FAST PATH: O(1) Incremental Update (0.05ms) cho 60 FPS mượt mà
-      const c = candles[currentIndex];
+      // ⚡ FAST PATH: O(1) Incremental Update (0.05ms)
+      const c = effectiveCandles[currentIndex];
       if (c) {
-        candleSeriesRef.current.update({
-          time: (c.timestamp / 1000) as Time,
-          open: c.open,
-          high: c.high,
-          low: c.low,
-          close: c.close
-        });
+        if (isLineOrArea) {
+          mainSeriesRef.current.update({
+            time: (c.timestamp / 1000) as Time,
+            value: c.close
+          });
+        } else {
+          mainSeriesRef.current.update({
+            time: (c.timestamp / 1000) as Time,
+            open: c.open,
+            high: c.high,
+            low: c.low,
+            close: c.close
+          });
+        }
 
         volumeSeriesRef.current.update({
           time: (c.timestamp / 1000) as Time,
@@ -181,33 +397,40 @@ export const TradingViewChart: React.FC = () => {
         lastRenderedIndexRef.current = currentIndex;
       }
     } else {
-      // 🔄 FULL PATH: Chỉ chạy khi Load dữ liệu mới, Đổi Timeframe, hoặc Kéo thanh Scrubber
-      const visibleCandles = candles.slice(0, currentIndex + 1);
+      // 🔄 FULL PATH: Chạy khi Load dữ liệu mới, Đổi Type, Đổi TF, hoặc Kéo thanh Scrubber
+      const visibleCandles = effectiveCandles.slice(0, currentIndex + 1);
 
-      const candleData: CandlestickData<Time>[] = visibleCandles.map(c => ({
-        time: (c.timestamp / 1000) as Time,
-        open: c.open,
-        high: c.high,
-        low: c.low,
-        close: c.close
-      }));
+      if (isLineOrArea) {
+        const lineData: LineData<Time>[] = visibleCandles.map(c => ({
+          time: (c.timestamp / 1000) as Time,
+          value: c.close
+        }));
+        mainSeriesRef.current.setData(lineData);
+      } else {
+        const candleData: CandlestickData<Time>[] = visibleCandles.map(c => ({
+          time: (c.timestamp / 1000) as Time,
+          open: c.open,
+          high: c.high,
+          low: c.low,
+          close: c.close
+        }));
+        mainSeriesRef.current.setData(candleData);
+      }
 
       const volumeData = visibleCandles.map(c => ({
         time: (c.timestamp / 1000) as Time,
         value: c.volume,
         color: c.close >= c.open ? 'rgba(38, 166, 154, 0.35)' : 'rgba(239, 83, 80, 0.35)'
       }));
-
-      candleSeriesRef.current.setData(candleData);
       volumeSeriesRef.current.setData(volumeData);
 
-      lastCandlesRef.current = candles;
+      lastCandlesRef.current = effectiveCandles;
       lastRenderedIndexRef.current = currentIndex;
       chartRef.current?.timeScale().scrollToRealTime();
     }
 
     // Render Markers
-    const currentMaxTime = candles[currentIndex]?.timestamp || 0;
+    const currentMaxTime = effectiveCandles[currentIndex]?.timestamp || 0;
     const activeMarkers = markers
       .filter(m => m.time <= currentMaxTime)
       .map(m => ({
@@ -232,23 +455,23 @@ export const TradingViewChart: React.FC = () => {
       }));
 
     const allMarkers = [...activeMarkers, ...newsMarkers].sort((a, b) => (a.time as number) - (b.time as number));
-    candleSeriesRef.current.setMarkers(allMarkers);
-  }, [candles, currentIndex, markers, economicNews, instrument.digits]);
+    mainSeriesRef.current.setMarkers(allMarkers);
+  }, [effectiveCandles, currentIndex, markers, economicNews, instrument.digits, chartType]);
 
   // Cập nhật đường giá hiển thị cho Open Positions (Entry, SL, TP lines với số tiền USD & %)
   useEffect(() => {
-    if (!candleSeriesRef.current) return;
+    if (!mainSeriesRef.current) return;
 
     priceLinesRef.current.forEach(line => {
       try {
-        candleSeriesRef.current?.removePriceLine(line);
+        mainSeriesRef.current?.removePriceLine(line);
       } catch (e) {}
     });
     priceLinesRef.current = [];
 
     openPositions.forEach(pos => {
       // 1. Entry Line
-      const entryLine = candleSeriesRef.current?.createPriceLine({
+      const entryLine = mainSeriesRef.current?.createPriceLine({
         price: pos.entryPrice,
         color: pos.side === 'BUY' ? '#26a69a' : '#ef5350',
         lineWidth: 2,
@@ -264,7 +487,7 @@ export const TradingViewChart: React.FC = () => {
         const slDollar = slDiff * instrument.contractSize * pos.lotSize;
         const slPercent = (slDollar / account.initialBalance) * 100;
 
-        const slLine = candleSeriesRef.current?.createPriceLine({
+        const slLine = mainSeriesRef.current?.createPriceLine({
           price: pos.stopLoss,
           color: '#ef5350',
           lineWidth: 1,
@@ -281,7 +504,7 @@ export const TradingViewChart: React.FC = () => {
         const tpDollar = tpDiff * instrument.contractSize * pos.lotSize;
         const tpPercent = (tpDollar / account.initialBalance) * 100;
 
-        const tpLine = candleSeriesRef.current?.createPriceLine({
+        const tpLine = mainSeriesRef.current?.createPriceLine({
           price: pos.takeProfit,
           color: '#26a69a',
           lineWidth: 1,
@@ -292,7 +515,7 @@ export const TradingViewChart: React.FC = () => {
         if (tpLine) priceLinesRef.current.push(tpLine);
       }
     });
-  }, [openPositions, instrument, account.initialBalance]);
+  }, [openPositions, instrument, account.initialBalance, chartType]);
 
   // Handle Quick Market Entry
   const handleQuickTrade = (side: 'BUY' | 'SELL') => {
@@ -316,6 +539,22 @@ export const TradingViewChart: React.FC = () => {
 
     executeMarketOrder(side, quickLot, slPrice, tpPrice);
   };
+
+  // Tính toán Countdown to Bar Close
+  const countdownText = useMemo(() => {
+    if (!showCountdown || candles.length === 0 || currentIndex < 0) return null;
+    const currentCandle = candles[currentIndex];
+    if (!currentCandle) return null;
+
+    const tfSec = TIMEFRAME_SECONDS[timeframe] || 300;
+    const candleSec = Math.floor(currentCandle.timestamp / 1000);
+    const nextCloseSec = (Math.floor(candleSec / tfSec) + 1) * tfSec;
+    const remainingSec = Math.max(0, nextCloseSec - candleSec);
+
+    const m = Math.floor(remainingSec / 60);
+    const s = remainingSec % 60;
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  }, [showCountdown, candles, currentIndex, timeframe]);
 
   // Prop Firm Calculations
   const dailyLossMax = (propFirmStartingDayBalance * (propFirmDailyLossLimit / 100));
@@ -350,36 +589,6 @@ export const TradingViewChart: React.FC = () => {
               <span>{t.buy}</span>
             </button>
 
-            {/* LOT SIZE STEPPER CONTROLLER */}
-            <div className="flex items-center bg-slate-950 border border-slate-700/80 rounded-lg overflow-hidden">
-              <button
-                type="button"
-                onClick={() => setQuickLot(Math.max(instrument.minLot, Number((quickLot - instrument.lotStep).toFixed(2))))}
-                className="px-2 py-1 text-slate-400 hover:text-white hover:bg-slate-800 transition-colors font-bold text-xs"
-                title="Giảm Lot"
-              >
-                -
-              </button>
-              <input
-                type="number"
-                step={instrument.lotStep}
-                min={instrument.minLot}
-                max={instrument.maxLot}
-                value={quickLot}
-                onChange={(e) => setQuickLot(parseFloat(e.target.value) || instrument.minLot)}
-                className="w-13 bg-transparent text-center font-bold text-slate-100 py-1 text-xs focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                title="Khối lượng Lot"
-              />
-              <button
-                type="button"
-                onClick={() => setQuickLot(Math.min(instrument.maxLot, Number((quickLot + instrument.lotStep).toFixed(2))))}
-                className="px-2 py-1 text-slate-400 hover:text-white hover:bg-slate-800 transition-colors font-bold text-xs"
-                title="Tăng Lot"
-              >
-                +
-              </button>
-            </div>
-
             {/* SELL BUTTON */}
             <button
               onClick={() => handleQuickTrade('SELL')}
@@ -390,114 +599,113 @@ export const TradingViewChart: React.FC = () => {
               <span>{t.sell}</span>
             </button>
 
-            <div className="h-5 w-px bg-slate-800 mx-0.5" />
+            {/* LOT SIZE INPUT */}
+            <div className="flex items-center gap-1.5 bg-slate-900/90 px-2 py-1 rounded-lg border border-slate-800">
+              <span className="text-[10px] text-slate-500 font-bold">LOT:</span>
+              <input
+                type="number"
+                min="0.01"
+                max="100"
+                step="0.01"
+                value={quickLot}
+                onChange={(e) => setQuickLot(Math.max(0.01, parseFloat(e.target.value) || 0.01))}
+                className="w-12 bg-transparent text-slate-100 font-bold text-center focus:outline-hidden"
+              />
+            </div>
 
-            {/* AUTO SL PILL CONTAINER */}
-            <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border transition-colors ${
-              useAutoSL ? 'bg-rose-950/40 border-rose-500/40' : 'bg-slate-950/60 border-slate-800 opacity-70'
-            }`}>
-              <label className="flex items-center gap-1 cursor-pointer">
+            {/* AUTO SL / TP TOGGLES */}
+            <div className="flex items-center gap-2 border-l border-slate-800 pl-2">
+              <label className="flex items-center gap-1 cursor-pointer" title="Tự động gắn Stop Loss khi vào lệnh">
                 <input
                   type="checkbox"
                   checked={useAutoSL}
                   onChange={(e) => setUseAutoSL(e.target.checked)}
-                  className="rounded accent-rose-500 w-3.5 h-3.5 cursor-pointer"
+                  className="accent-rose-500 rounded cursor-pointer"
                 />
-                <span className="text-rose-400 font-bold text-[11px]">SL:</span>
+                <span className="text-[10px] text-slate-400">SL</span>
+                {useAutoSL && (
+                  <input
+                    type="number"
+                    value={autoSLPips}
+                    onChange={(e) => setAutoSLPips(parseInt(e.target.value) || 10)}
+                    className="w-8 bg-slate-900 border border-slate-700 text-rose-400 font-bold text-[10px] px-1 rounded text-center"
+                  />
+                )}
               </label>
-              <input
-                type="number"
-                value={autoSLPips}
-                onChange={(e) => setAutoSLPips(parseInt(e.target.value) || 0)}
-                disabled={!useAutoSL}
-                className="w-12 bg-slate-900 border border-slate-700/80 rounded text-center text-xs font-bold py-0.5 text-slate-100 focus:outline-none focus:border-rose-500 disabled:opacity-50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-              />
-              <span className="text-slate-500 text-[10px]">p</span>
-            </div>
 
-            {/* AUTO TP PILL CONTAINER */}
-            <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border transition-colors ${
-              useAutoTP ? 'bg-teal-950/40 border-teal-500/40' : 'bg-slate-950/60 border-slate-800 opacity-70'
-            }`}>
-              <label className="flex items-center gap-1 cursor-pointer">
+              <label className="flex items-center gap-1 cursor-pointer" title="Tự động gắn Take Profit khi vào lệnh">
                 <input
                   type="checkbox"
                   checked={useAutoTP}
                   onChange={(e) => setUseAutoTP(e.target.checked)}
-                  className="rounded accent-teal-500 w-3.5 h-3.5 cursor-pointer"
+                  className="accent-emerald-500 rounded cursor-pointer"
                 />
-                <span className="text-teal-400 font-bold text-[11px]">TP:</span>
+                <span className="text-[10px] text-slate-400">TP</span>
+                {useAutoTP && (
+                  <input
+                    type="number"
+                    value={autoTPPips}
+                    onChange={(e) => setAutoTPPips(parseInt(e.target.value) || 20)}
+                    className="w-8 bg-slate-900 border border-slate-700 text-emerald-400 font-bold text-[10px] px-1 rounded text-center"
+                  />
+                )}
               </label>
-              <input
-                type="number"
-                value={autoTPPips}
-                onChange={(e) => setAutoTPPips(parseInt(e.target.value) || 0)}
-                disabled={!useAutoTP}
-                className="w-12 bg-slate-900 border border-slate-700/80 rounded text-center text-xs font-bold py-0.5 text-slate-100 focus:outline-none focus:border-teal-500 disabled:opacity-50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-              />
-              <span className="text-slate-500 text-[10px]">p</span>
             </div>
 
-            {/* LIVE R:R RATIO BADGE */}
-            {useAutoSL && useAutoTP && autoSLPips > 0 && autoTPPips > 0 && (
-              <span className="px-1.5 py-0.5 rounded bg-indigo-950/80 border border-indigo-500/40 text-indigo-300 font-bold text-[10px]" title="Tỷ lệ Risk:Reward">
-                1:{(autoTPPips / autoSLPips).toFixed(1)} R
-              </span>
-            )}
-
-            {/* MINIMIZE BUTTON */}
+            {/* COLLAPSE DOCK BUTTON */}
             <button
               onClick={() => setIsQuickDockOpen(false)}
-              className="p-1 hover:bg-slate-800 text-slate-500 hover:text-slate-300 rounded transition-colors"
-              title="Thu gọn"
+              className="p-1 text-slate-500 hover:text-slate-300 rounded transition-colors"
+              title="Thu nhỏ thanh Quick Trade"
             >
-              ✕
+              <ChevronUp className="w-3.5 h-3.5" />
             </button>
           </div>
         ) : (
           <button
             onClick={() => setIsQuickDockOpen(true)}
-            className="bg-[#111622]/95 border border-slate-700/90 px-3 py-1.5 rounded-lg flex items-center gap-1.5 text-xs text-indigo-300 font-bold hover:bg-slate-800 transition-all shadow-xl backdrop-blur-md active:scale-95"
-            title="Mở Quick Trade"
+            className="bg-[#111622]/95 border border-slate-700/90 px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 shadow-xl backdrop-blur-md hover:bg-slate-800 text-xs font-bold font-mono text-slate-300"
+            title="Mở rộng thanh Quick Trade"
           >
-            <Zap className="w-3.5 h-3.5 text-amber-400" />
-            <span>{t.quickTrade}</span>
+            <Zap className="w-3.5 h-3.5 text-amber-400 fill-current" />
+            <span>Quick Trade</span>
+            <ChevronDown className="w-3 h-3 text-slate-400" />
           </button>
         )}
+      </div>
 
-        {/* 2. PROP FIRM CHALLENGE SHIELD (DOCK ON TOP-LEFT ALONGSIDE QUICK TRADE) */}
+      {/* 2. PROP FIRM CHALLENGE SHIELD (TOP-RIGHT OVERLAY) */}
+      <div className="absolute top-3 right-3 z-20 flex flex-col items-end gap-1.5 font-mono">
         {isPropFirmMode && (
-          <div className="font-mono text-xs animate-in fade-in">
-            {isShieldExpanded ? (
-              <div className="bg-[#111622]/95 border border-slate-700/90 backdrop-blur-md p-3 rounded-xl shadow-2xl w-64 space-y-2">
-                <div className="flex items-center justify-between border-b border-slate-800 pb-1.5">
-                  <div className="flex items-center gap-1.5">
-                    <Shield className="w-4 h-4 text-emerald-400" />
-                    <span className="font-bold text-slate-200 text-[11px]">Prop Firm Shield</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    {isPassed ? (
-                      <span className="px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-500/40 text-[9px] font-bold">
-                        PASS CHALLENGE 🎉
-                      </span>
-                    ) : isDailyBreached || isMaxDDBreached ? (
-                      <span className="px-1.5 py-0.5 rounded bg-rose-950 text-rose-300 border border-rose-500/40 text-[9px] font-bold">
-                        VIOLATED ⛔
-                      </span>
-                    ) : (
-                      <span className="px-1.5 py-0.5 rounded bg-indigo-950 text-indigo-300 border border-indigo-500/40 text-[9px] font-bold">
-                        ACTIVE
-                      </span>
-                    )}
-                    <button
-                      onClick={() => setIsShieldExpanded(false)}
-                      className="text-slate-500 hover:text-slate-300 p-0.5"
-                    >
-                      <ChevronUp className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </div>
+          <div className="bg-[#111622]/95 border border-slate-700/90 backdrop-blur-md rounded-xl p-2.5 shadow-2xl text-xs space-y-2 min-w-[260px] animate-in fade-in">
+            {/* Header / Badges */}
+            <div className="flex items-center justify-between border-b border-slate-800 pb-1.5">
+              <div className="flex items-center gap-1.5 font-bold text-slate-200">
+                <Shield className={`w-4 h-4 ${isDailyBreached || isMaxDDBreached ? 'text-rose-500' : isPassed ? 'text-emerald-400' : 'text-indigo-400'}`} />
+                <span>{t.propFirmShieldTitle}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                {isPassed && (
+                  <span className="px-1.5 py-0.5 bg-emerald-950 text-emerald-300 border border-emerald-500/40 rounded text-[9px] font-bold">
+                    {t.passChallengeBadge}
+                  </span>
+                )}
+                {(isDailyBreached || isMaxDDBreached) && (
+                  <span className="px-1.5 py-0.5 bg-rose-950 text-rose-300 border border-rose-500/40 rounded text-[9px] font-bold">
+                    {t.violatedBadge}
+                  </span>
+                )}
+                <button
+                  onClick={() => setIsShieldExpanded(!isShieldExpanded)}
+                  className="p-1 text-slate-500 hover:text-slate-300 rounded"
+                >
+                  {isShieldExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                </button>
+              </div>
+            </div>
 
+            {isShieldExpanded ? (
+              <div className="space-y-2 pt-0.5">
                 {/* Metric 1: Daily Loss Limit */}
                 <div className="space-y-1">
                   <div className="flex items-center justify-between text-[10px]">
@@ -561,11 +769,73 @@ export const TradingViewChart: React.FC = () => {
         )}
       </div>
 
+      {/* 3. SYMBOL WATERMARK BACKGROUND OVERLAY */}
+      {showWatermark && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none select-none z-0 opacity-[0.035]">
+          <div className="text-8xl sm:text-9xl font-black tracking-tighter text-slate-100 font-mono">
+            {instrument.symbol}
+          </div>
+          <div className="text-2xl sm:text-3xl font-bold tracking-widest text-indigo-400 font-mono mt-1">
+            {timeframe} • QUANT BACKTEST PRO
+          </div>
+        </div>
+      )}
+
+      {/* 4. COUNTDOWN TIMER TO BAR CLOSE */}
+      {countdownText && (
+        <div className="absolute top-16 right-3 z-10 bg-slate-950/80 backdrop-blur-md border border-slate-800 px-2.5 py-1 rounded-lg flex items-center gap-1.5 text-xs font-mono text-amber-300 shadow-md">
+          <Clock className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+          <span className="font-bold">{countdownText}</span>
+          <span className="text-[10px] text-slate-500">đóng nến</span>
+        </div>
+      )}
+
+      {/* 5. TRADINGVIEW BOTTOM-RIGHT SCALE TOOLBAR */}
+      <div className="absolute bottom-6 right-16 z-20 flex items-center gap-1 bg-[#111622]/90 backdrop-blur-md border border-slate-800 rounded-lg p-1 text-[10px] font-mono shadow-xl">
+        <button
+          onClick={toggleLogScale}
+          className={`px-1.5 py-0.5 rounded font-bold transition-all ${
+            isLogScale ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+          }`}
+          title="Bật/Tắt thang đo Logarithm (Log)"
+        >
+          LOG
+        </button>
+        <button
+          onClick={togglePercentageScale}
+          className={`px-1.5 py-0.5 rounded font-bold transition-all ${
+            isPercentageScale ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+          }`}
+          title="Bật/Tắt thang đo Phần trăm (%)"
+        >
+          %
+        </button>
+        <button
+          onClick={toggleInvertedScale}
+          className={`px-1.5 py-0.5 rounded font-bold transition-all ${
+            isInvertedScale ? 'bg-amber-600 text-white shadow-xs' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+          }`}
+          title="Đảo ngược đồ thị (Invert Scale)"
+        >
+          INV
+        </button>
+        <button
+          onClick={() => {
+            chartRef.current?.timeScale().resetTimeScale();
+            chartRef.current?.priceScale('right').applyOptions({ autoScale: true });
+          }}
+          className="px-1.5 py-0.5 rounded text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors"
+          title="Tự động căn chỉnh thang đo (Auto)"
+        >
+          AUTO
+        </button>
+      </div>
+
       {/* Chart Canvas */}
       <div ref={chartContainerRef} className="w-full h-full relative" />
-      
+
       {/* Overlay Drawing Canvas */}
-      <DrawingCanvas chart={chartRef.current} series={candleSeriesRef.current} />
+      <DrawingCanvas chart={chartRef.current} series={mainSeriesRef.current} />
     </div>
   );
 };

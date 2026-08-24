@@ -306,6 +306,23 @@ export interface TranslationDict {
   importStrategyBtn: string;
   importStrategySuccess: string;
   importStrategyError: string;
+
+  // Chart Visuals & Types
+  chartType: string;
+  candlestick: string;
+  barChart: string;
+  lineChart: string;
+  areaChart: string;
+  baselineChart: string;
+  heikinAshi: string;
+  hollowCandles: string;
+  autoScale: string;
+  logScale: string;
+  percentageScale: string;
+  invertScale: string;
+  countdownTimer: string;
+  watermark: string;
+  gridlines: string;
 }
 
 export const translations: Record<Language, TranslationDict> = {
@@ -600,7 +617,23 @@ export const translations: Record<Language, TranslationDict> = {
     exportBotModalTitle: 'Xuất Chiến Lược Sang Bot Giao Dịch Đa Nền Tảng',
     importStrategyBtn: 'Nhập Chiến Lược (.json/.js)',
     importStrategySuccess: 'Đã nạp chiến lược thành công!',
-    importStrategyError: 'Lỗi định dạng file chiến lược.'
+    importStrategyError: 'Lỗi định dạng file chiến lược.',
+
+    chartType: 'Loại biểu đồ',
+    candlestick: 'Nến Nhật (Candlestick)',
+    barChart: 'Thanh OHLC (Bars)',
+    lineChart: 'Đường (Line)',
+    areaChart: 'Vùng (Area)',
+    baselineChart: 'Đường cơ sở (Baseline)',
+    heikinAshi: 'Heikin-Ashi (Mượt xu hướng)',
+    hollowCandles: 'Nến rỗng (Hollow)',
+    autoScale: 'Tự động (Auto)',
+    logScale: 'Thang Logarithm (Log)',
+    percentageScale: 'Thang Phần trăm (%)',
+    invertScale: 'Đảo ngược đồ thị (Inv)',
+    countdownTimer: 'Đếm ngược đóng nến',
+    watermark: 'Hình mờ thương hiệu',
+    gridlines: 'Đường lưới'
   },
   en: {
     appTitle: 'Quant Backtest Pro',
@@ -893,7 +926,23 @@ export const translations: Record<Language, TranslationDict> = {
     exportBotModalTitle: 'Export Strategy to Trading Bot Hub',
     importStrategyBtn: 'Import Strategy (.json/.js)',
     importStrategySuccess: 'Strategy imported successfully!',
-    importStrategyError: 'Invalid strategy file format.'
+    importStrategyError: 'Invalid strategy file format.',
+
+    chartType: 'Chart Type',
+    candlestick: 'Candlestick',
+    barChart: 'Bars (OHLC)',
+    lineChart: 'Line',
+    areaChart: 'Area',
+    baselineChart: 'Baseline',
+    heikinAshi: 'Heikin-Ashi (Smoothed)',
+    hollowCandles: 'Hollow Candles',
+    autoScale: 'Auto Scale',
+    logScale: 'Logarithmic (Log)',
+    percentageScale: 'Percentage (%)',
+    invertScale: 'Invert Scale (Inv)',
+    countdownTimer: 'Countdown to Bar Close',
+    watermark: 'Symbol Watermark',
+    gridlines: 'Gridlines'
   },
   ja: {
     appTitle: 'Quant Backtest Pro',
@@ -1186,7 +1235,23 @@ export const translations: Record<Language, TranslationDict> = {
     exportBotModalTitle: 'マルチプラットフォーム自動売買Bot出力ハブ',
     importStrategyBtn: 'ストラテジーをインポート (.json/.js)',
     importStrategySuccess: 'ストラテジーが正常に読み込まれました！',
-    importStrategyError: 'ストラテジーファイルの形式が無効です。'
+    importStrategyError: 'ストラテジーファイルの形式が無効です。',
+
+    chartType: 'チャート種別',
+    candlestick: 'ローソク足 (Candlestick)',
+    barChart: 'バーチャート (Bars)',
+    lineChart: 'ライン (Line)',
+    areaChart: 'エリア (Area)',
+    baselineChart: 'ベースライン (Baseline)',
+    heikinAshi: '平均足 (Heikin-Ashi)',
+    hollowCandles: '中空ローソク足 (Hollow)',
+    autoScale: '自動調整 (Auto)',
+    logScale: '対数スケール (Log)',
+    percentageScale: 'パーセンテージ (%)',
+    invertScale: 'スケール反転 (Inv)',
+    countdownTimer: '足確定カウントダウン',
+    watermark: 'ウォーターマーク',
+    gridlines: 'グリッド線'
   },
   zh: {
     appTitle: 'Quant Backtest Pro',
@@ -1479,6 +1544,22 @@ export const translations: Record<Language, TranslationDict> = {
     exportBotModalTitle: '导出策略至多平台量化交易 Bot',
     importStrategyBtn: '导入策略 (.json/.js)',
     importStrategySuccess: '策略导入成功！',
-    importStrategyError: '策略文件格式无效。'
+    importStrategyError: '策略文件格式无效。',
+
+    chartType: '图表类型',
+    candlestick: '日本蜡烛图 (Candlestick)',
+    barChart: '美国线 (Bars)',
+    lineChart: '折线图 (Line)',
+    areaChart: '面积图 (Area)',
+    baselineChart: '基准线图 (Baseline)',
+    heikinAshi: '平均K线 (Heikin-Ashi)',
+    hollowCandles: '空心蜡烛图 (Hollow)',
+    autoScale: '自动适配 (Auto)',
+    logScale: '对数坐标 (Log)',
+    percentageScale: '百分比坐标 (%)',
+    invertScale: '反转坐标 (Inv)',
+    countdownTimer: 'K线收盘倒计时',
+    watermark: '背景水印',
+    gridlines: '网格线'
   }
 };

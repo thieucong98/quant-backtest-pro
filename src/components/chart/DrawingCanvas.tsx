@@ -5,7 +5,7 @@ import { DrawingObject, DrawingPoint } from '../../types/market';
 
 interface DrawingCanvasProps {
   chart: IChartApi | null;
-  series: ISeriesApi<'Candlestick'> | null;
+  series: ISeriesApi<any> | null;
 }
 
 export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ chart, series }) => {

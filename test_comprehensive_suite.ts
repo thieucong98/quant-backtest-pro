@@ -7,11 +7,11 @@ import { StrategyRunner, PREBUILT_STRATEGIES } from './src/engine/strategySandbo
 import { StrategyOptimizerEngine } from './src/engine/strategyOptimizer';
 import { StrategyExporter, EXPORT_PLATFORMS } from './src/engine/strategyExporter';
 import { CSVDataParser } from './src/engine/csvParser';
-import { DataCrawler } from './src/engine/dataCrawler';
 import { TimeframeResampler } from './src/engine/resampler';
 import { generateRealisticCandles } from './src/config/sampleData';
 import { Candle, InstrumentSpec } from './src/types/market';
 import { Position } from './src/types/order';
+import { calculateHeikinAshi } from './src/components/chart/TradingViewChart';
 
 interface TestResult {
   suite: string;
@@ -500,9 +500,41 @@ async function runComprehensiveTests() {
   const emptyRes = CSVDataParser.parse('');
   assert(emptyRes.candles.length === 0 && emptyRes.error !== undefined, 'CSVParser', 'Empty CSV handled with error message');
 
+  // =========================================================================
+  // 10. TRADINGVIEW CHART ENGINE & HEIKIN-ASHI ALGORITHM TESTS
+  // =========================================================================
+  console.log('--- 10. TradingView Chart Engine & Heikin-Ashi Algorithm Tests ---');
+
+  // Test 10.1: Empty Candles Handling
+  const emptyHa = calculateHeikinAshi([]);
+  assert(emptyHa.length === 0, 'ChartEngine', 'calculateHeikinAshi([]) returns empty array');
+
+  // Test 10.2: Formula Precision Verification
+  const sampleHaCandles: Candle[] = [
+    { timestamp: 1000, open: 10, high: 15, low: 8, close: 12, volume: 100 },
+    { timestamp: 2000, open: 12, high: 18, low: 11, close: 16, volume: 150 },
+    { timestamp: 3000, open: 16, high: 20, low: 15, close: 19, volume: 200 }
+  ];
+
+  const haResult = calculateHeikinAshi(sampleHaCandles);
+  assert(haResult.length === 3, 'ChartEngine', 'Heikin-Ashi computed 3 transformed candles', { count: haResult.length });
+
+  // Candle 0: haClose = (10+15+8+12)/4 = 11.25, haOpen = (10+12)/2 = 11, haHigh = max(15, 11, 11.25) = 15, haLow = min(8, 11, 11.25) = 8
+  assert(Math.abs(haResult[0].close - 11.25) < 0.0001, 'ChartEngine', 'Candle 0 haClose == 11.25', { close: haResult[0].close });
+  assert(Math.abs(haResult[0].open - 11.0) < 0.0001, 'ChartEngine', 'Candle 0 haOpen == 11.0', { open: haResult[0].open });
+  assert(Math.abs(haResult[0].high - 15.0) < 0.0001, 'ChartEngine', 'Candle 0 haHigh == 15.0', { high: haResult[0].high });
+  assert(Math.abs(haResult[0].low - 8.0) < 0.0001, 'ChartEngine', 'Candle 0 haLow == 8.0', { low: haResult[0].low });
+
+  // Candle 1: haClose = (12+18+11+16)/4 = 14.25, haOpen = (11+11.25)/2 = 11.125, haHigh = max(18, 11.125, 14.25) = 18, haLow = min(11, 11.125, 14.25) = 11
+  assert(Math.abs(haResult[1].close - 14.25) < 0.0001, 'ChartEngine', 'Candle 1 haClose == 14.25', { close: haResult[1].close });
+  assert(Math.abs(haResult[1].open - 11.125) < 0.0001, 'ChartEngine', 'Candle 1 haOpen == 11.125', { open: haResult[1].open });
+
+  // Test 10.3: Volume and Timestamps preservation
+  assert(haResult[1].timestamp === 2000, 'ChartEngine', 'Timestamp preserved on transformed candles');
+  assert(haResult[1].volume === 150, 'ChartEngine', 'Volume preserved on transformed candles');
 
   // =========================================================================
-  // 10. SUMMARY OF TEST SUITE RESULTS
+  // 11. SUMMARY OF TEST SUITE RESULTS
   // =========================================================================
   console.log('\n===============================================================');
   const total = testResults.length;

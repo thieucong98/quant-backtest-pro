@@ -1,5 +1,17 @@
 export type Timeframe = 'M1' | 'M5' | 'M15' | 'M30' | 'H1' | 'H4' | 'D1';
 
+export type ChartType = 'candlestick' | 'bar' | 'line' | 'area' | 'baseline' | 'heikin-ashi' | 'hollow';
+
+export interface ChartSettings {
+  chartType: ChartType;
+  isLogScale: boolean;
+  isPercentageScale: boolean;
+  isInvertedScale: boolean;
+  showCountdown: boolean;
+  showWatermark: boolean;
+  showGrid: boolean;
+}
+
 export type AssetCategory = 'FOREX' | 'METALS' | 'CRYPTO' | 'INDICES' | 'COMMODITIES';
 
 export interface Candle {

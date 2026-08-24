@@ -4,9 +4,9 @@ import { EconomicNewsEvent, generateNewsForCandles } from '../config/newsEvents'
 import { generateRealisticCandles } from '../config/sampleData';
 import { IndicatorCalculator } from '../engine/indicators';
 import { OrderMatchingEngine } from '../engine/orderMatchingEngine';
-import { TimeframeResampler } from '../engine/resampler';
 import { PREBUILT_STRATEGIES, StrategyRunner } from '../engine/strategySandbox';
-import { Candle, ChartMarker, DrawingObject, DrawingToolType, InstrumentSpec, Timeframe } from '../types/market';
+import { TimeframeResampler } from '../engine/resampler';
+import { Candle, ChartMarker, ChartType, DrawingObject, DrawingToolType, InstrumentSpec, Timeframe } from '../types/market';
 import { AccountState, EquityPoint, Order, OrderSide, OrderType, Position } from '../types/order';
 import { AIStrategyDefinition, StrategyLogMessage } from '../types/strategy';
 import { sessionsApi } from '../api/sessions';
@@ -62,6 +62,23 @@ interface BacktestStore {
   strategyLogs: StrategyLogMessage[];
   llmApiKey: string;
   llmProvider: 'openai' | 'claude' | 'gemini' | 'ollama';
+
+  // Chart Visuals & Scale Settings
+  chartType: ChartType;
+  isLogScale: boolean;
+  isPercentageScale: boolean;
+  isInvertedScale: boolean;
+  showCountdown: boolean;
+  showWatermark: boolean;
+  showGrid: boolean;
+
+  setChartType: (type: ChartType) => void;
+  toggleLogScale: () => void;
+  togglePercentageScale: () => void;
+  toggleInvertedScale: () => void;
+  toggleCountdown: () => void;
+  toggleWatermark: () => void;
+  toggleGrid: () => void;
 
   // Modals & Language
   language: 'vi' | 'en' | 'ja' | 'zh';
@@ -184,7 +201,9 @@ const syncCurrentSessionToStorage = async (get: () => BacktestStore, forceImmedi
       equityCurve: sampleEquity,
       savedAt: Date.now()
     };
-    localStorage.setItem('quant_active_session_cache', JSON.stringify(localSnapshot));
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('quant_active_session_cache', JSON.stringify(localSnapshot));
+    }
   } catch (e) {}
 
   // 2. Async database persistence (if online)
@@ -211,9 +230,11 @@ const syncCurrentSessionToStorage = async (get: () => BacktestStore, forceImmedi
 // Helper: Load cached snapshot on startup
 const loadInitialCachedSession = () => {
   try {
-    const raw = localStorage.getItem('quant_active_session_cache');
-    if (raw) {
-      return JSON.parse(raw);
+    if (typeof localStorage !== 'undefined') {
+      const raw = localStorage.getItem('quant_active_session_cache');
+      if (raw) {
+        return JSON.parse(raw);
+      }
     }
   } catch (e) {}
   return null;
@@ -305,7 +326,24 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
     llmApiKey: '',
     llmProvider: 'gemini',
 
-    language: (localStorage.getItem('quant_lang') as any) || 'vi',
+    // Chart Visuals & Scale Settings
+    chartType: (cachedInit?.chartType as ChartType) || 'candlestick',
+    isLogScale: false,
+    isPercentageScale: false,
+    isInvertedScale: false,
+    showCountdown: true,
+    showWatermark: true,
+    showGrid: true,
+
+    setChartType: (chartType) => set({ chartType }),
+    toggleLogScale: () => set(s => ({ isLogScale: !s.isLogScale, isPercentageScale: false })),
+    togglePercentageScale: () => set(s => ({ isPercentageScale: !s.isPercentageScale, isLogScale: false })),
+    toggleInvertedScale: () => set(s => ({ isInvertedScale: !s.isInvertedScale })),
+    toggleCountdown: () => set(s => ({ showCountdown: !s.showCountdown })),
+    toggleWatermark: () => set(s => ({ showWatermark: !s.showWatermark })),
+    toggleGrid: () => set(s => ({ showGrid: !s.showGrid })),
+
+    language: (typeof localStorage !== 'undefined' ? (localStorage.getItem('quant_lang') as any) : 'vi') || 'vi',
     isOrderModalOpen: false,
     isAnalyticsModalOpen: false,
     isAIModalOpen: false,
@@ -377,7 +415,7 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
       const currentTimestamp = candles[currentIndex]?.timestamp || 0;
       const resampled = TimeframeResampler.resample(rawM1Candles, tf);
       
-      let newIdx = resampled.findIndex(c => c.timestamp >= currentTimestamp);
+      let newIdx = resampled.findIndex((c: Candle) => c.timestamp >= currentTimestamp);
       if (newIdx === -1) newIdx = Math.min(100, resampled.length - 1);
 
       set({
@@ -1229,8 +1267,10 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
           markers: [],
           equityCurve: [{ timestamp: candles[0]?.timestamp || 0, balance: account.initialBalance, equity: account.initialBalance }]
         });
-        localStorage.removeItem('quant_active_session_cache');
-        localStorage.removeItem('quant_backtest_active_session');
+        if (typeof localStorage !== 'undefined') {
+          localStorage.removeItem('quant_active_session_cache');
+          localStorage.removeItem('quant_backtest_active_session');
+        }
         get().addStrategyLog('INFO', `Đã đặt lại phiên #${sid.substring(0, 8)} về trạng thái ban đầu`);
       } catch (err: any) {
         console.error('[Reset Active Session Error]', err);
@@ -1255,8 +1295,10 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
         guestTradeCount: 0,
         equityCurve: [{ timestamp: candles[0]?.timestamp || 0, balance: initialBalance, equity: initialBalance }]
       });
-      localStorage.removeItem('quant_active_session_cache');
-      localStorage.removeItem('quant_backtest_active_session');
+      if (typeof localStorage !== 'undefined') {
+        localStorage.removeItem('quant_active_session_cache');
+        localStorage.removeItem('quant_backtest_active_session');
+      }
       get().addStrategyLog('INFO', `Đã dọn sạch không gian làm việc về số dư ban đầu $${initialBalance.toLocaleString()}`);
     },
 
@@ -1264,7 +1306,9 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
 
     // --- MODAL & LANG TOGGLES ---
     setLanguage: (lang) => {
-      localStorage.setItem('quant_lang', lang);
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('quant_lang', lang);
+      }
       set({ language: lang });
     },
     setOrderModalOpen: (open) => set({ isOrderModalOpen: open }),

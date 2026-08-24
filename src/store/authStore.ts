@@ -7,6 +7,7 @@ const STORAGE_KEY = 'quant_backtest_auth_user';
 
 const loadPersistedUser = (): UserProfile | null => {
   try {
+    if (typeof localStorage === 'undefined') return null;
     const data = localStorage.getItem(STORAGE_KEY);
     if (data) return JSON.parse(data);
   } catch (e) {
@@ -17,6 +18,7 @@ const loadPersistedUser = (): UserProfile | null => {
 
 const savePersistedUser = (user: UserProfile | null) => {
   try {
+    if (typeof localStorage === 'undefined') return;
     if (user) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
     } else {
