@@ -4,8 +4,8 @@ import { AIStrategyDefinition, IndicatorLibrary, StrategyAccountInfo, StrategyEx
 export const PREBUILT_STRATEGIES: AIStrategyDefinition[] = [
   {
     id: 'strat_ema_scalp',
-    name: 'EMA 9/21 Fast Scalper (Tín hiệu Nhanh)',
-    description: 'Chiến lược lướt sóng nhanh: Mua khi EMA 9 cắt lên EMA 21; Bán khi EMA 9 cắt xuống EMA 21. Tín hiệu vào lệnh liên tục và rõ ràng khi tua nến.',
+    name: 'EMA 9/21 Fast Scalper',
+    description: 'Fast scalping strategy: BUY when EMA 9 crosses above EMA 21; SELL when EMA 9 crosses below EMA 21.',
     parameters: {
       emaFast: 9,
       emaSlow: 21,
@@ -29,10 +29,10 @@ return {
     const fast = indicators.ema(this.parameters.emaFast);
     const slow = indicators.ema(this.parameters.emaSlow);
 
-    // Không mở thêm nếu đang có vị thế
+    // Only 1 position at a time
     if (account.openPositionsCount > 0) return;
 
-    // Tín hiệu BUY: Nến đóng trên EMA Fast và EMA Fast > EMA Slow
+    // BUY Signal: Candle closes above EMA Fast and EMA Fast > Slow
     if (candle.close > fast && fast > slow) {
       api.buy({
         lotSize: this.parameters.lotSize,
@@ -40,9 +40,9 @@ return {
         takeProfitPips: this.parameters.tpPips,
         comment: 'AI BUY: EMA 9 > 21 Scalp'
       });
-      api.log('[AI SIGNAL] Khớp BUY ' + this.parameters.lotSize + 'L @ ' + candle.close);
+      api.log('[AI SIGNAL] Filled BUY ' + this.parameters.lotSize + 'L @ ' + candle.close);
     }
-    // Tín hiệu SELL: Nến đóng dưới EMA Fast và EMA Fast < EMA Slow
+    // SELL Signal: Candle closes below EMA Fast and EMA Fast < Slow
     else if (candle.close < fast && fast < slow) {
       api.sell({
         lotSize: this.parameters.lotSize,
@@ -50,7 +50,7 @@ return {
         takeProfitPips: this.parameters.tpPips,
         comment: 'AI SELL: EMA 9 < 21 Scalp'
       });
-      api.log('[AI SIGNAL] Khớp SELL ' + this.parameters.lotSize + 'L @ ' + candle.close);
+      api.log('[AI SIGNAL] Filled SELL ' + this.parameters.lotSize + 'L @ ' + candle.close);
     }
   }
 };`
@@ -58,7 +58,7 @@ return {
   {
     id: 'strat_rsi_pullback',
     name: 'RSI Dynamic Oversold/Overbought Pullback',
-    description: 'Chiến lược bắt nhịp hồi: Mua khi RSI < 35 (Quá bán) và có nến xanh xác nhận; Bán khi RSI > 65 (Quá mua) và có nến đỏ.',
+    description: 'Pullback reversal strategy: BUY when RSI < 35 with bullish candle; SELL when RSI > 65 with bearish candle.',
     parameters: {
       rsiPeriod: 14,
       rsiBuy: 35,
@@ -85,7 +85,7 @@ return {
 
     if (account.openPositionsCount > 0) return;
 
-    // BUY: RSI chạm quá bán + nến tăng
+    // BUY: RSI Oversold + Bullish candle
     if (rsi <= this.parameters.rsiBuy && candle.close > candle.open) {
       api.buy({
         lotSize: this.parameters.lotSize,
@@ -93,9 +93,9 @@ return {
         takeProfitPips: this.parameters.tpPips,
         comment: 'AI BUY: RSI ' + rsi.toFixed(1)
       });
-      api.log('[AI SIGNAL] Khớp BUY RSI Quá bán @ ' + candle.close);
+      api.log('[AI SIGNAL] Filled BUY RSI Oversold @ ' + candle.close);
     }
-    // SELL: RSI chạm quá mua + nến giảm
+    // SELL: RSI Overbought + Bearish candle
     else if (rsi >= this.parameters.rsiSell && candle.close < candle.open) {
       api.sell({
         lotSize: this.parameters.lotSize,
@@ -103,7 +103,7 @@ return {
         takeProfitPips: this.parameters.tpPips,
         comment: 'AI SELL: RSI ' + rsi.toFixed(1)
       });
-      api.log('[AI SIGNAL] Khớp SELL RSI Quá mua @ ' + candle.close);
+      api.log('[AI SIGNAL] Filled SELL RSI Overbought @ ' + candle.close);
     }
   }
 };`
@@ -111,7 +111,7 @@ return {
   {
     id: 'strat_bollinger_breakout',
     name: 'Bollinger Bands Mean Reversion',
-    description: 'Chiến lược bắt đỉnh đáy đảo chiều khi giá đâm thủng dải Bollinger Bands rồi đóng cửa quay lại vào trong dải.',
+    description: 'Mean reversion strategy when price pierces outside Bollinger Bands and reverses back inside.',
     parameters: {
       bbPeriod: 20,
       bbStdDev: 2,
@@ -136,7 +136,6 @@ return {
 
     if (account.openPositionsCount > 0) return;
 
-    // Giá nến trước đâm thủng Lower Band, nến này đóng cửa trở lại trên Lower Band
     if (candle.low <= bb.lower && candle.close > bb.lower) {
       api.buy({
         lotSize: this.parameters.lotSize,
@@ -144,9 +143,8 @@ return {
         takeProfitPips: this.parameters.tpPips,
         comment: 'AI BUY: Bollinger Lower Rejection'
       });
-      api.log('[AI SIGNAL] Khớp BUY BB Lower @ ' + candle.close);
+      api.log('[AI SIGNAL] Filled BUY BB Lower @ ' + candle.close);
     }
-    // Giá nến trước chạm Upper Band, nến này đóng dưới Upper Band
     else if (candle.high >= bb.upper && candle.close < bb.upper) {
       api.sell({
         lotSize: this.parameters.lotSize,
@@ -154,7 +152,7 @@ return {
         takeProfitPips: this.parameters.tpPips,
         comment: 'AI SELL: Bollinger Upper Rejection'
       });
-      api.log('[AI SIGNAL] Khớp SELL BB Upper @ ' + candle.close);
+      api.log('[AI SIGNAL] Filled SELL BB Upper @ ' + candle.close);
     }
   }
 };`
@@ -162,7 +160,7 @@ return {
   {
     id: 'strat_macd_trend',
     name: 'MACD Zero Line + Momentum Crossover',
-    description: 'Chiến lược xung lượng: Mua khi MACD Histogram chuyển từ âm sang dương; Bán khi Histogram chuyển từ dương sang âm.',
+    description: 'Momentum strategy: BUY when MACD Histogram flips positive; SELL when Histogram flips negative.',
     parameters: {
       fast: 12,
       slow: 26,
@@ -196,7 +194,7 @@ return {
         takeProfitPips: this.parameters.tpPips,
         comment: 'AI BUY: MACD Bullish Crossover'
       });
-      api.log('[AI SIGNAL] Khớp BUY MACD Bullish @ ' + candle.close);
+      api.log('[AI SIGNAL] Filled BUY MACD Bullish @ ' + candle.close);
     } else if (macd.histogram < 0 && macd.macd < macd.signal) {
       api.sell({
         lotSize: this.parameters.lotSize,
@@ -204,7 +202,7 @@ return {
         takeProfitPips: this.parameters.tpPips,
         comment: 'AI SELL: MACD Bearish Crossover'
       });
-      api.log('[AI SIGNAL] Khớp SELL MACD Bearish @ ' + candle.close);
+      api.log('[AI SIGNAL] Filled SELL MACD Bearish @ ' + candle.close);
     }
   }
 };`

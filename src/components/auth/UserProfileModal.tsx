@@ -106,15 +106,15 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onCl
             <ul className="space-y-1.5 text-[11px] text-slate-300">
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-teal-400" />
-                <span>{language === 'vi' ? 'Tua nến không giới hạn tốc độ 100x với Đa khung thời gian M1 - D1' : 'Unlimited 100x Replay Speed with Multi-Timeframe M1 - D1'}</span>
+                <span>{t.vipPerk1}</span>
               </li>
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-teal-400" />
-                <span>{language === 'vi' ? 'AI Copilot & Sandbox sinh mã chiến lược JavaScript không giới hạn' : 'Unlimited AI Copilot & JavaScript Execution Sandbox'}</span>
+                <span>{t.vipPerk2}</span>
               </li>
               <li className="flex items-center gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-teal-400" />
-                <span>{language === 'vi' ? 'Mô phỏng Monte Carlo 1,000 chu kỳ & Heatmap theo giờ/thứ' : 'Monte Carlo 1,000 Stress Testing & PnL Heatmap Analytics'}</span>
+                <span>{t.vipPerk3}</span>
               </li>
             </ul>
           </div>

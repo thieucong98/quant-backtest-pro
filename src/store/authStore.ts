@@ -49,14 +49,14 @@ export const useAuthStore = create<AuthState>((set, get) => {
 
       const cleanEmail = email.trim().toLowerCase();
       if (!cleanEmail || !password) {
-        set({ isLoading: false, error: 'Vui lòng nhập đầy đủ Email và Mật khẩu' });
+        set({ isLoading: false, error: 'Please enter both Email and Password' });
         return false;
       }
 
       // Basic email pattern check
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(cleanEmail)) {
-        set({ isLoading: false, error: 'Định dạng Email không hợp lệ (VD: trader@quantbacktest.pro)' });
+        set({ isLoading: false, error: 'Invalid email address format (e.g. trader@quantbacktest.pro)' });
         return false;
       }
 
@@ -85,7 +85,7 @@ export const useAuthStore = create<AuthState>((set, get) => {
         console.error('Login error:', err);
         set({
           isLoading: false,
-          error: err.message || 'Email hoặc mật khẩu không chính xác. Vui lòng thử lại!'
+          error: err.message || 'Invalid email or password. Please try again!'
         });
         return false;
       }
@@ -98,18 +98,18 @@ export const useAuthStore = create<AuthState>((set, get) => {
       const cleanName = name.trim();
 
       if (!cleanEmail || !password || !cleanName) {
-        set({ isLoading: false, error: 'Vui lòng điền đầy đủ Họ tên, Email và Mật khẩu' });
+        set({ isLoading: false, error: 'Please enter Full Name, Email and Password' });
         return false;
       }
 
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(cleanEmail)) {
-        set({ isLoading: false, error: 'Định dạng Email không hợp lệ (VD: trader@quantbacktest.pro)' });
+        set({ isLoading: false, error: 'Invalid email address format (e.g. trader@quantbacktest.pro)' });
         return false;
       }
 
       if (password.length < 6) {
-        set({ isLoading: false, error: 'Mật khẩu phải có độ dài tối thiểu từ 6 ký tự' });
+        set({ isLoading: false, error: 'Password must be at least 6 characters long' });
         return false;
       }
 
@@ -138,7 +138,7 @@ export const useAuthStore = create<AuthState>((set, get) => {
         console.error('Register error:', err);
         set({
           isLoading: false,
-          error: err.message || 'Đăng ký không thành công. Email này có thể đã được sử dụng!'
+          error: err.message || 'Registration failed. This email may already be in use!'
         });
         return false;
       }

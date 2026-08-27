@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { X, ShieldAlert, ArrowUpRight, ArrowDownRight, Calculator } from 'lucide-react';
+import { X, ShieldAlert, ArrowUpRight, ArrowDownRight, Calculator, Zap, Globe } from 'lucide-react';
 import { useBacktestStore } from '../../store/backtestStore';
+import { useBrokerStore } from '../../store/brokerStore';
 import { translations } from '../../i18n/translations';
 import { OrderSide, OrderType } from '../../types/order';
 
@@ -9,13 +10,23 @@ export const OrderEntryModal: React.FC = () => {
     isOrderModalOpen,
     setOrderModalOpen,
     instrument,
-    account,
+    account: backtestAccount,
     candles,
     currentIndex,
     executeMarketOrder,
     placePendingOrder,
     language
   } = useBacktestStore();
+
+  const {
+    isLiveTradingMode,
+    activeBroker,
+    account: brokerAccount,
+    executeLiveMarketOrder,
+    placeLivePendingOrder
+  } = useBrokerStore();
+
+  const activeAccount = isLiveTradingMode && brokerAccount ? brokerAccount : backtestAccount;
 
   const t = translations[language] || translations.vi;
 
@@ -83,14 +94,43 @@ export const OrderEntryModal: React.FC = () => {
   const requiredMargin = (lotSize * instrument.contractSize * executionPrice) / instrument.leverage;
 
   const handleQuickRisk = (percent: number) => {
-    const riskUSD = account.balance * (percent / 100);
+    const riskUSD = activeAccount.balance * (percent / 100);
     const pips = slPips > 0 ? slPips : 20;
     const calculatedLot = riskUSD / (pips * instrument.contractSize * instrument.pipSize);
     setLotSize(Number(Math.max(instrument.minLot, Math.min(calculatedLot, instrument.maxLot)).toFixed(2)));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (isLiveTradingMode) {
+      if (orderType === 'MARKET') {
+        const res = await executeLiveMarketOrder(
+          instrument.symbol,
+          side,
+          lotSize,
+          calculatedSLPrice,
+          calculatedTPPrice,
+          'QuantPro Live'
+        );
+        if (res.success) setOrderModalOpen(false);
+      } else {
+        const price = parseFloat(pendingPrice);
+        if (isNaN(price)) return;
+        const res = await placeLivePendingOrder(
+          instrument.symbol,
+          side,
+          orderType,
+          lotSize,
+          price,
+          calculatedSLPrice,
+          calculatedTPPrice,
+          'QuantPro Pending'
+        );
+        if (res.success) setOrderModalOpen(false);
+      }
+      return;
+    }
 
     if (orderType === 'MARKET') {
       const success = executeMarketOrder(
@@ -128,6 +168,12 @@ export const OrderEntryModal: React.FC = () => {
             <span className="text-[10px] px-1.5 py-0.5 rounded bg-indigo-950 text-indigo-400 border border-indigo-500/30">
               {instrument.category}
             </span>
+            {isLiveTradingMode && (
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-rose-950 border border-rose-500/40 text-rose-300 font-mono font-bold flex items-center gap-1 animate-pulse">
+                <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />
+                LIVE: {activeBroker}
+              </span>
+            )}
           </div>
           <button
             onClick={() => setOrderModalOpen(false)}
@@ -255,7 +301,22 @@ export const OrderEntryModal: React.FC = () => {
             <div>
               <div className="flex justify-between items-center mb-1">
                 <label className="text-teal-400 font-medium">Take Profit:</label>
-                <span className="text-[10px] text-slate-500">{slMode === 'pips' ? 'Pips' : (language === 'vi' ? 'Giá' : 'Price')}</span>
+                <div className="flex gap-1">
+                  {[1.5, 2, 3, 5].map(mult => (
+                    <button
+                      key={mult}
+                      type="button"
+                      onClick={() => {
+                        const sl = parseFloat(slValue) || 20;
+                        setTpValue((sl * mult).toString());
+                      }}
+                      className="px-1 py-0.2 bg-slate-900 hover:bg-slate-800 text-teal-300 border border-slate-800 rounded text-[9px] font-bold font-mono"
+                      title={t.setTPByRR.replace('{ratio}', mult.toString())}
+                    >
+                      1:{mult}
+                    </button>
+                  ))}
+                </div>
               </div>
               <input
                 type="number"

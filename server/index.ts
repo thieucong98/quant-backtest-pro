@@ -8,6 +8,7 @@ import { datasetsRouter } from './routes/datasets.js';
 import { analyticsRouter } from './routes/analytics.js';
 import { usersRouter, getOrCreateDefaultUser } from './routes/users.js';
 import { drawingsRouter } from './routes/drawings.js';
+import { brokerRouter } from './routes/broker.js';
 
 // Polyfill BigInt JSON serialization for Prisma
 (BigInt.prototype as any).toJSON = function () {
@@ -40,6 +41,7 @@ app.use('/api/strategies', strategiesRouter);
 app.use('/api/datasets', datasetsRouter);
 app.use('/api/analytics', analyticsRouter);
 app.use('/api/drawings', drawingsRouter);
+app.use('/api/broker', brokerRouter);
 
 // Global error handler
 app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {

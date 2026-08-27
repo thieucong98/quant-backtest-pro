@@ -23,12 +23,18 @@ import {
   Sliders,
   ChevronDown,
   ChevronUp,
-  Clock
+  Clock,
+  Minus,
+  Plus,
+  Scale
 } from 'lucide-react';
 import { useBacktestStore } from '../../store/backtestStore';
 import { translations } from '../../i18n/translations';
 import { Candle, ChartType, InstrumentSpec, Timeframe } from '../../types/market';
+import { MultiAssetMathEngine } from '../../engine/quantMath';
 import { DrawingCanvas } from './DrawingCanvas';
+import { AIBotHUD } from '../panels/AIBotHUD';
+import { VisualChartTradingOverlay } from './VisualChartTradingOverlay';
 
 /**
  * Tính toán nến Heikin-Ashi làm mượt xu hướng
@@ -84,16 +90,18 @@ export const TradingViewChart: React.FC = () => {
   // Price lines references for open positions and SL/TP
   const priceLinesRef = useRef<any[]>([]);
 
-  // Quick Trade Dock State
+  // Quick Trade Dock State (Mặc định mở trên desktop, thu gọn trên mobile)
   const [quickLot, setQuickLot] = useState<number>(0.1);
   const [useAutoSL, setUseAutoSL] = useState<boolean>(true);
   const [autoSLPips, setAutoSLPips] = useState<number>(20);
   const [useAutoTP, setUseAutoTP] = useState<boolean>(true);
   const [autoTPPips, setAutoTPPips] = useState<number>(40);
-  const [isQuickDockOpen, setIsQuickDockOpen] = useState<boolean>(true);
+  const [isQuickDockOpen, setIsQuickDockOpen] = useState<boolean>(
+    typeof window !== 'undefined' ? window.innerWidth >= 640 : true
+  );
 
-  // Prop Firm Shield State
-  const [isShieldExpanded, setIsShieldExpanded] = useState<boolean>(true);
+  // Prop Firm Shield State (Mặc định thu gọn dạng Micro-Pill để không che nến)
+  const [isShieldExpanded, setIsShieldExpanded] = useState<boolean>(false);
 
   const {
     candles,
@@ -129,6 +137,17 @@ export const TradingViewChart: React.FC = () => {
   const lastRenderedIndexRef = useRef<number>(-1);
   const lastCandlesRef = useRef<any[] | null>(null);
   const lastChartTypeRef = useRef<ChartType>(chartType);
+
+  // Tự động thu gọn Quick Trade dock khi chuyển sang màn hình nhỏ
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 640) {
+        setIsQuickDockOpen(false);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Tạo Main Series theo Chart Type đã chọn
   const createMainSeriesForType = (chart: IChartApi, type: ChartType, spec: InstrumentSpec, basePrice?: number) => {
@@ -458,7 +477,7 @@ export const TradingViewChart: React.FC = () => {
     mainSeriesRef.current.setMarkers(allMarkers);
   }, [effectiveCandles, currentIndex, markers, economicNews, instrument.digits, chartType]);
 
-  // Cập nhật đường giá hiển thị cho Open Positions (Entry, SL, TP lines với số tiền USD & %)
+  // Cập nhật đường giá hiển thị cho Open Positions (Entry, SL, TP lines với số tiền USD, % & R:R)
   useEffect(() => {
     if (!mainSeriesRef.current) return;
 
@@ -482,8 +501,10 @@ export const TradingViewChart: React.FC = () => {
       if (entryLine) priceLinesRef.current.push(entryLine);
 
       // 2. Stop Loss Line with Dollar Risk & Percent
+      let slDistance = 0;
       if (pos.stopLoss) {
         const slDiff = pos.side === 'BUY' ? pos.stopLoss - pos.entryPrice : pos.entryPrice - pos.stopLoss;
+        slDistance = Math.abs(slDiff);
         const slDollar = slDiff * instrument.contractSize * pos.lotSize;
         const slPercent = (slDollar / account.initialBalance) * 100;
 
@@ -493,16 +514,23 @@ export const TradingViewChart: React.FC = () => {
           lineWidth: 1,
           lineStyle: LineStyle.Dashed,
           axisLabelVisible: true,
-          title: `SL: -$${Math.abs(slDollar).toFixed(2)} (${slPercent.toFixed(2)}%)`
+          title: `SL: -$${Math.abs(slDollar).toFixed(2)} (${Math.abs(slPercent) < 0.01 ? slPercent.toFixed(3) : slPercent.toFixed(2)}%)`
         });
         if (slLine) priceLinesRef.current.push(slLine);
       }
 
-      // 3. Take Profit Line with Dollar Gain & Percent
+      // 3. Take Profit Line with Dollar Gain, Percent & R:R Ratio
       if (pos.takeProfit) {
         const tpDiff = pos.side === 'BUY' ? pos.takeProfit - pos.entryPrice : pos.entryPrice - pos.takeProfit;
+        const tpDistance = Math.abs(tpDiff);
         const tpDollar = tpDiff * instrument.contractSize * pos.lotSize;
         const tpPercent = (tpDollar / account.initialBalance) * 100;
+
+        let rrText = '';
+        if (slDistance > 0) {
+          const rr = (tpDistance / slDistance).toFixed(1);
+          rrText = ` • R:R 1:${rr}`;
+        }
 
         const tpLine = mainSeriesRef.current?.createPriceLine({
           price: pos.takeProfit,
@@ -510,7 +538,7 @@ export const TradingViewChart: React.FC = () => {
           lineWidth: 1,
           lineStyle: LineStyle.Dashed,
           axisLabelVisible: true,
-          title: `TP: +$${tpDollar.toFixed(2)} (+${tpPercent.toFixed(2)}%)`
+          title: `TP: +$${tpDollar.toFixed(2)} (+${tpPercent < 0.01 ? tpPercent.toFixed(3) : tpPercent.toFixed(2)}%)${rrText}`
         });
         if (tpLine) priceLinesRef.current.push(tpLine);
       }
@@ -540,10 +568,35 @@ export const TradingViewChart: React.FC = () => {
     executeMarketOrder(side, quickLot, slPrice, tpPrice);
   };
 
+  // Tính toán Live Bid, Ask & Pip Value ước tính
+  const currentCandle = candles[currentIndex];
+  const currentBid = currentCandle?.close || 0;
+  const spreadValue = instrument.defaultSpreadPips * instrument.pipSize;
+  const currentAsk = currentBid + spreadValue;
+
+  const pipDollarValue = currentCandle
+    ? MultiAssetMathEngine.calculatePipValue(instrument, quickLot, currentCandle.close)
+    : 10 * quickLot;
+
+  const slRiskDollar = autoSLPips * pipDollarValue;
+  const slRiskPercent = account.initialBalance > 0 ? (slRiskDollar / account.initialBalance) * 100 : 0;
+
+  const tpGainDollar = autoTPPips * pipDollarValue;
+  const tpGainPercent = account.initialBalance > 0 ? (tpGainDollar / account.initialBalance) * 100 : 0;
+
+  // Format phần trăm thông minh (không bị 0.0% khi tài khoản lớn)
+  const formatRiskPercent = (pct: number) => {
+    if (pct === 0) return '0.00%';
+    if (pct < 0.01) return pct.toFixed(3) + '%';
+    return pct.toFixed(2) + '%';
+  };
+
+  // Tính toán Tỷ lệ R:R
+  const rrRatio = autoSLPips > 0 ? +(autoTPPips / autoSLPips).toFixed(2) : 0;
+
   // Tính toán Countdown to Bar Close
   const countdownText = useMemo(() => {
     if (!showCountdown || candles.length === 0 || currentIndex < 0) return null;
-    const currentCandle = candles[currentIndex];
     if (!currentCandle) return null;
 
     const tfSec = TIMEFRAME_SECONDS[timeframe] || 300;
@@ -554,7 +607,7 @@ export const TradingViewChart: React.FC = () => {
     const m = Math.floor(remainingSec / 60);
     const s = remainingSec % 60;
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-  }, [showCountdown, candles, currentIndex, timeframe]);
+  }, [showCountdown, candles, currentIndex, timeframe, currentCandle]);
 
   // Prop Firm Calculations
   const dailyLossMax = (propFirmStartingDayBalance * (propFirmDailyLossLimit / 100));
@@ -578,195 +631,340 @@ export const TradingViewChart: React.FC = () => {
       {/* 1. ONE-CLICK QUICK TRADING DOCK (TOP-LEFT OVERLAY) */}
       <div className="absolute top-3 left-3 z-20 flex items-center gap-2">
         {isQuickDockOpen ? (
-          <div className="bg-[#111622]/95 border border-slate-700/90 backdrop-blur-md p-2 rounded-xl flex items-center gap-2.5 shadow-2xl animate-in fade-in zoom-in-95 text-xs font-mono">
-            {/* BUY BUTTON */}
-            <button
-              onClick={() => handleQuickTrade('BUY')}
-              className="px-3 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold rounded-lg flex items-center gap-1.5 shadow-md shadow-emerald-600/25 active:scale-95 transition-all"
-              title="Vào lệnh BUY thị trường"
-            >
-              <ArrowUpRight className="w-4 h-4" />
-              <span>{t.buy}</span>
-            </button>
+          <div className="bg-[#111622]/95 border border-slate-700/90 backdrop-blur-md p-2.5 rounded-2xl shadow-2xl animate-in fade-in zoom-in-95 font-mono text-xs max-w-[95vw] overflow-x-auto">
+            <div className="flex items-center gap-3">
+              {/* BUY / SELL BUTTONS */}
+              <div className="flex items-center gap-1.5">
+                {/* BUY BUTTON */}
+                <button
+                  onClick={() => handleQuickTrade('BUY')}
+                  className="px-3.5 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold rounded-xl flex flex-col items-center justify-center shadow-lg shadow-emerald-600/25 active:scale-95 transition-all min-w-[76px]"
+                  title={t.buyAtAskTooltip.replace('{price}', currentAsk.toFixed(instrument.digits))}
+                >
+                  <div className="flex items-center gap-1">
+                    <ArrowUpRight className="w-4 h-4" />
+                    <span className="font-bold text-xs">{t.buy}</span>
+                  </div>
+                  <span className="text-[10px] text-emerald-200 font-mono font-medium">
+                    {currentAsk.toFixed(instrument.digits)}
+                  </span>
+                </button>
 
-            {/* SELL BUTTON */}
-            <button
-              onClick={() => handleQuickTrade('SELL')}
-              className="px-3 py-1.5 bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white font-bold rounded-lg flex items-center gap-1.5 shadow-md shadow-rose-600/25 active:scale-95 transition-all"
-              title="Vào lệnh SELL thị trường"
-            >
-              <ArrowDownRight className="w-4 h-4" />
-              <span>{t.sell}</span>
-            </button>
+                {/* SELL BUTTON */}
+                <button
+                  onClick={() => handleQuickTrade('SELL')}
+                  className="px-3.5 py-2 bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white font-bold rounded-xl flex flex-col items-center justify-center shadow-lg shadow-rose-600/25 active:scale-95 transition-all min-w-[76px]"
+                  title={t.sellAtBidTooltip.replace('{price}', currentBid.toFixed(instrument.digits))}
+                >
+                  <div className="flex items-center gap-1">
+                    <ArrowDownRight className="w-4 h-4" />
+                    <span className="font-bold text-xs">{t.sell}</span>
+                  </div>
+                  <span className="text-[10px] text-rose-200 font-mono font-medium">
+                    {currentBid.toFixed(instrument.digits)}
+                  </span>
+                </button>
+              </div>
 
-            {/* LOT SIZE INPUT */}
-            <div className="flex items-center gap-1.5 bg-slate-900/90 px-2 py-1 rounded-lg border border-slate-800">
-              <span className="text-[10px] text-slate-500 font-bold">LOT:</span>
-              <input
-                type="number"
-                min="0.01"
-                max="100"
-                step="0.01"
-                value={quickLot}
-                onChange={(e) => setQuickLot(Math.max(0.01, parseFloat(e.target.value) || 0.01))}
-                className="w-12 bg-transparent text-slate-100 font-bold text-center focus:outline-hidden"
-              />
-            </div>
-
-            {/* AUTO SL / TP TOGGLES */}
-            <div className="flex items-center gap-2 border-l border-slate-800 pl-2">
-              <label className="flex items-center gap-1 cursor-pointer" title="Tự động gắn Stop Loss khi vào lệnh">
-                <input
-                  type="checkbox"
-                  checked={useAutoSL}
-                  onChange={(e) => setUseAutoSL(e.target.checked)}
-                  className="accent-rose-500 rounded cursor-pointer"
-                />
-                <span className="text-[10px] text-slate-400">SL</span>
-                {useAutoSL && (
+              {/* LOT SIZE STEPPER & PRESETS */}
+              <div className="flex flex-col gap-1 border-l border-slate-800/90 pl-3">
+                <div className="flex items-center gap-1 bg-slate-900/95 px-1.5 py-0.5 rounded-lg border border-slate-800">
+                  <span className="text-[10px] text-slate-500 font-bold px-0.5">LOT:</span>
+                  <button
+                    onClick={() => setQuickLot(Math.max(0.01, +(quickLot - 0.01).toFixed(2)))}
+                    className="p-1 text-slate-400 hover:text-white hover:bg-slate-800 rounded transition-colors"
+                    title={t.decreaseLotTooltip}
+                  >
+                    <Minus className="w-3 h-3" />
+                  </button>
                   <input
                     type="number"
-                    value={autoSLPips}
-                    onChange={(e) => setAutoSLPips(parseInt(e.target.value) || 10)}
-                    className="w-8 bg-slate-900 border border-slate-700 text-rose-400 font-bold text-[10px] px-1 rounded text-center"
+                    min="0.01"
+                    max="100"
+                    step="0.01"
+                    value={quickLot}
+                    onChange={(e) => setQuickLot(Math.max(0.01, parseFloat(e.target.value) || 0.01))}
+                    className="w-14 bg-transparent text-slate-100 font-bold text-center text-xs focus:outline-hidden"
                   />
-                )}
-              </label>
+                  <button
+                    onClick={() => setQuickLot(+(quickLot + 0.01).toFixed(2))}
+                    className="p-1 text-slate-400 hover:text-white hover:bg-slate-800 rounded transition-colors"
+                    title={t.increaseLotTooltip}
+                  >
+                    <Plus className="w-3 h-3" />
+                  </button>
+                </div>
 
-              <label className="flex items-center gap-1 cursor-pointer" title="Tự động gắn Take Profit khi vào lệnh">
-                <input
-                  type="checkbox"
-                  checked={useAutoTP}
-                  onChange={(e) => setUseAutoTP(e.target.checked)}
-                  className="accent-emerald-500 rounded cursor-pointer"
-                />
-                <span className="text-[10px] text-slate-400">TP</span>
-                {useAutoTP && (
-                  <input
-                    type="number"
-                    value={autoTPPips}
-                    onChange={(e) => setAutoTPPips(parseInt(e.target.value) || 20)}
-                    className="w-8 bg-slate-900 border border-slate-700 text-emerald-400 font-bold text-[10px] px-1 rounded text-center"
-                  />
-                )}
-              </label>
+                {/* Preset Chips */}
+                <div className="flex items-center gap-1">
+                  {[0.01, 0.05, 0.1, 1.0].map((preset) => (
+                    <button
+                      key={preset}
+                      onClick={() => setQuickLot(preset)}
+                      className={`px-1.5 py-0.2 rounded text-[9px] font-bold transition-all ${
+                        quickLot === preset
+                          ? 'bg-indigo-600 text-white'
+                          : 'bg-slate-900/80 text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+                      }`}
+                    >
+                      {preset}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* AUTO SL / TP TOGGLES WITH LIVE DOLLAR RISK */}
+              <div className="flex items-center gap-3 border-l border-slate-800/90 pl-3">
+                {/* SL Control */}
+                <div className="flex flex-col gap-0.5">
+                  <div className="flex items-center gap-1.5">
+                    <label className="flex items-center gap-1 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={useAutoSL}
+                        onChange={(e) => setUseAutoSL(e.target.checked)}
+                        className="accent-rose-500 rounded cursor-pointer"
+                      />
+                      <span className="text-[11px] font-bold text-rose-400">SL</span>
+                    </label>
+
+                    {useAutoSL && (
+                      <div className="flex items-center bg-slate-900 border border-slate-800 rounded-md p-0.5">
+                        <button
+                          onClick={() => setAutoSLPips(Math.max(1, autoSLPips - 5))}
+                          className="px-1 text-slate-400 hover:text-white"
+                        >
+                          <Minus className="w-2.5 h-2.5" />
+                        </button>
+                        <input
+                          type="number"
+                          value={autoSLPips}
+                          onChange={(e) => setAutoSLPips(Math.max(1, parseInt(e.target.value) || 1))}
+                          className="w-12 bg-transparent text-rose-400 font-bold text-[11px] text-center focus:outline-hidden"
+                        />
+                        <button
+                          onClick={() => setAutoSLPips(autoSLPips + 5)}
+                          className="px-1 text-slate-400 hover:text-white"
+                        >
+                          <Plus className="w-2.5 h-2.5" />
+                        </button>
+                        <span className="text-[9px] text-slate-500 pr-1">pips</span>
+                      </div>
+                    )}
+                  </div>
+                  {useAutoSL && (
+                    <span className="text-[9px] font-mono text-rose-400/90 pl-5">
+                      -${slRiskDollar.toFixed(1)} ({formatRiskPercent(slRiskPercent)})
+                    </span>
+                  )}
+                </div>
+
+                {/* TP Control */}
+                <div className="flex flex-col gap-0.5">
+                  <div className="flex items-center gap-1.5">
+                    <label className="flex items-center gap-1 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={useAutoTP}
+                        onChange={(e) => setUseAutoTP(e.target.checked)}
+                        className="accent-emerald-500 rounded cursor-pointer"
+                      />
+                      <span className="text-[11px] font-bold text-emerald-400">TP</span>
+                    </label>
+
+                    {useAutoTP && (
+                      <div className="flex items-center bg-slate-900 border border-slate-800 rounded-md p-0.5">
+                        <button
+                          onClick={() => setAutoTPPips(Math.max(1, autoTPPips - 5))}
+                          className="px-1 text-slate-400 hover:text-white"
+                        >
+                          <Minus className="w-2.5 h-2.5" />
+                        </button>
+                        <input
+                          type="number"
+                          value={autoTPPips}
+                          onChange={(e) => setAutoTPPips(Math.max(1, parseInt(e.target.value) || 1))}
+                          className="w-12 bg-transparent text-emerald-400 font-bold text-[11px] text-center focus:outline-hidden"
+                        />
+                        <button
+                          onClick={() => setAutoTPPips(autoTPPips + 5)}
+                          className="px-1 text-slate-400 hover:text-white"
+                        >
+                          <Plus className="w-2.5 h-2.5" />
+                        </button>
+                        <span className="text-[9px] text-slate-500 pr-1">pips</span>
+                      </div>
+                    )}
+                  </div>
+                  {useAutoTP && (
+                    <span className="text-[9px] font-mono text-emerald-400/90 pl-5">
+                      +${tpGainDollar.toFixed(1)} (+{formatRiskPercent(tpGainPercent)})
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* R:R RATIO BADGE & 1-CLICK PRESETS */}
+              {useAutoSL && useAutoTP && (
+                <div className="flex flex-col gap-1 border-l border-slate-800/90 pl-3">
+                  {/* Dynamic R:R Badge */}
+                  <div
+                    className={`px-2 py-0.5 rounded-lg border text-xs font-bold flex items-center justify-center gap-1 shadow-xs ${
+                      rrRatio >= 2.0
+                        ? 'bg-emerald-950/80 text-emerald-300 border-emerald-500/40'
+                        : rrRatio >= 1.0
+                        ? 'bg-amber-950/80 text-amber-300 border-amber-500/40'
+                        : 'bg-rose-950/80 text-rose-300 border-rose-500/40 animate-pulse'
+                    }`}
+                    title={t.riskRewardRatioTooltip.replace('{ratio}', rrRatio.toString())}
+                  >
+                    <Scale className="w-3 h-3 text-indigo-400" />
+                    <span className="text-[10px] text-slate-400">R:R</span>
+                    <span className="font-bold">1 : {rrRatio}</span>
+                  </div>
+
+                  {/* 1-Click R:R Target Presets */}
+                  <div className="flex items-center gap-1">
+                    {[1.5, 2.0, 3.0, 5.0].map((mult) => (
+                      <button
+                        key={mult}
+                        onClick={() => setAutoTPPips(Math.round(autoSLPips * mult))}
+                        className={`px-1.5 py-0.2 rounded text-[9px] font-bold transition-all ${
+                          rrRatio === mult
+                            ? 'bg-emerald-600 text-white shadow-xs'
+                            : 'bg-slate-900/80 text-slate-400 hover:bg-slate-800 hover:text-emerald-300'
+                        }`}
+                        title={t.autoSetTPRRTooltip.replace('{mult}', mult.toString()).replace('{pips}', Math.round(autoSLPips * mult).toString())}
+                      >
+                        1:{mult}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* COLLAPSE DOCK BUTTON */}
+              <button
+                onClick={() => setIsQuickDockOpen(false)}
+                className="p-1.5 text-slate-500 hover:text-slate-300 hover:bg-slate-800/80 rounded-lg transition-colors ml-1"
+                title={t.collapseQuickTradeTooltip}
+              >
+                <ChevronUp className="w-4 h-4" />
+              </button>
             </div>
-
-            {/* COLLAPSE DOCK BUTTON */}
-            <button
-              onClick={() => setIsQuickDockOpen(false)}
-              className="p-1 text-slate-500 hover:text-slate-300 rounded transition-colors"
-              title="Thu nhỏ thanh Quick Trade"
-            >
-              <ChevronUp className="w-3.5 h-3.5" />
-            </button>
           </div>
         ) : (
           <button
             onClick={() => setIsQuickDockOpen(true)}
-            className="bg-[#111622]/95 border border-slate-700/90 px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 shadow-xl backdrop-blur-md hover:bg-slate-800 text-xs font-bold font-mono text-slate-300"
-            title="Mở rộng thanh Quick Trade"
+            className="bg-[#111622]/95 border border-slate-700/90 px-3 py-1.5 rounded-xl flex items-center gap-2 shadow-xl backdrop-blur-md hover:bg-slate-800 text-xs font-bold font-mono text-slate-200 transition-all hover:scale-105"
+            title={t.expandQuickTradeTooltip}
           >
             <Zap className="w-3.5 h-3.5 text-amber-400 fill-current" />
             <span>Quick Trade</span>
-            <ChevronDown className="w-3 h-3 text-slate-400" />
+            <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
           </button>
         )}
       </div>
 
-      {/* 2. PROP FIRM CHALLENGE SHIELD (TOP-RIGHT OVERLAY) */}
-      <div className="absolute top-3 right-3 z-20 flex flex-col items-end gap-1.5 font-mono">
-        {isPropFirmMode && (
-          <div className="bg-[#111622]/95 border border-slate-700/90 backdrop-blur-md rounded-xl p-2.5 shadow-2xl text-xs space-y-2 min-w-[260px] animate-in fade-in">
-            {/* Header / Badges */}
-            <div className="flex items-center justify-between border-b border-slate-800 pb-1.5">
-              <div className="flex items-center gap-1.5 font-bold text-slate-200">
-                <Shield className={`w-4 h-4 ${isDailyBreached || isMaxDDBreached ? 'text-rose-500' : isPassed ? 'text-emerald-400' : 'text-indigo-400'}`} />
-                <span>{t.propFirmShieldTitle}</span>
+      {/* 2. TOP-RIGHT SMART STACKING CONTAINER (ZERO OVERLAPPING & CLEAR OF PRICE SCALE) */}
+      <div className="absolute top-12 sm:top-14 xl:top-3 right-2 sm:right-20 md:right-22 z-20 flex flex-col items-end gap-2 font-mono max-w-[calc(100vw-1rem)] sm:max-w-[320px] pointer-events-none">
+        <div className="pointer-events-auto w-full flex flex-col items-end gap-2">
+          {/* AI BOT FLOATING HUD */}
+          <AIBotHUD />
+
+          {/* PROP FIRM CHALLENGE SHIELD */}
+          {isPropFirmMode && (
+            <div className="bg-[#111622]/95 border border-slate-700/90 backdrop-blur-md rounded-xl p-2 shadow-2xl text-xs space-y-2 w-full transition-all duration-200">
+              {/* Header / Pill */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5 font-bold text-slate-200">
+                  <Shield className={`w-4 h-4 ${isDailyBreached || isMaxDDBreached ? 'text-rose-500' : isPassed ? 'text-emerald-400' : 'text-indigo-400'}`} />
+                  <span className="text-xs">{t.propFirmShieldTitle}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  {isPassed && (
+                    <span className="px-1.5 py-0.5 bg-emerald-950 text-emerald-300 border border-emerald-500/40 rounded text-[9px] font-bold">
+                      {t.passChallengeBadge}
+                    </span>
+                  )}
+                  {(isDailyBreached || isMaxDDBreached) && (
+                    <span className="px-1.5 py-0.5 bg-rose-950 text-rose-300 border border-rose-500/40 rounded text-[9px] font-bold">
+                      {t.violatedBadge}
+                    </span>
+                  )}
+                  <button
+                    onClick={() => setIsShieldExpanded(!isShieldExpanded)}
+                    className="p-1 text-slate-400 hover:text-slate-200 hover:bg-slate-800/80 rounded transition-colors"
+                    title={t.toggleShieldTooltip}
+                  >
+                    {isShieldExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                  </button>
+                </div>
               </div>
-              <div className="flex items-center gap-1">
-                {isPassed && (
-                  <span className="px-1.5 py-0.5 bg-emerald-950 text-emerald-300 border border-emerald-500/40 rounded text-[9px] font-bold">
-                    {t.passChallengeBadge}
-                  </span>
-                )}
-                {(isDailyBreached || isMaxDDBreached) && (
-                  <span className="px-1.5 py-0.5 bg-rose-950 text-rose-300 border border-rose-500/40 rounded text-[9px] font-bold">
-                    {t.violatedBadge}
-                  </span>
-                )}
-                <button
-                  onClick={() => setIsShieldExpanded(!isShieldExpanded)}
-                  className="p-1 text-slate-500 hover:text-slate-300 rounded"
-                >
-                  {isShieldExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-                </button>
-              </div>
+
+              {isShieldExpanded && (
+                <div className="space-y-2 pt-1 border-t border-slate-800/80">
+                  {/* Metric 1: Daily Loss Limit */}
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between text-[10px]">
+                      <span className="text-slate-400">{t.dailyLossLabel} ({propFirmDailyLossLimit}%):</span>
+                      <span className={`font-bold ${dailyLossPercent >= 4.0 ? 'text-rose-400' : 'text-slate-300'}`}>
+                        ${currentDailyLoss.toFixed(1)} / ${dailyLossMax.toFixed(0)} ({dailyLossPercent.toFixed(1)}%)
+                      </span>
+                    </div>
+                    <div className="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full transition-all duration-300 ${dailyLossPercent >= 4.0 ? 'bg-rose-500' : 'bg-amber-500'}`}
+                        style={{ width: `${Math.min(100, (dailyLossPercent / propFirmDailyLossLimit) * 100)}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Metric 2: Max Drawdown Limit */}
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between text-[10px]">
+                      <span className="text-slate-400">{t.maxDrawdownLabel} ({propFirmMaxDrawdownLimit}%):</span>
+                      <span className={`font-bold ${maxDDPercent >= 8.0 ? 'text-rose-400' : 'text-slate-300'}`}>
+                        ${currentMaxDD.toFixed(1)} / ${maxDDMax.toFixed(0)} ({maxDDPercent.toFixed(1)}%)
+                      </span>
+                    </div>
+                    <div className="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full transition-all duration-300 ${maxDDPercent >= 8.0 ? 'bg-rose-500' : 'bg-indigo-500'}`}
+                        style={{ width: `${Math.min(100, (maxDDPercent / propFirmMaxDrawdownLimit) * 100)}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Metric 3: Target Profit Progress */}
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between text-[10px]">
+                      <span className="text-slate-400">{t.profitTargetLabel} (+{propFirmProfitTarget}%):</span>
+                      <span className="font-bold text-emerald-400">
+                        +${currentProfit.toFixed(1)} / ${profitTargetMax.toFixed(0)} ({profitProgressPercent.toFixed(0)}%)
+                      </span>
+                    </div>
+                    <div className="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-emerald-500 transition-all duration-300"
+                        style={{ width: `${profitProgressPercent}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
+          )}
 
-            {isShieldExpanded ? (
-              <div className="space-y-2 pt-0.5">
-                {/* Metric 1: Daily Loss Limit */}
-                <div className="space-y-1">
-                  <div className="flex items-center justify-between text-[10px]">
-                    <span className="text-slate-400">{t.dailyLossLabel} ({propFirmDailyLossLimit}%):</span>
-                    <span className={`font-bold ${dailyLossPercent >= 4.0 ? 'text-rose-400' : 'text-slate-300'}`}>
-                      ${currentDailyLoss.toFixed(1)} / ${dailyLossMax.toFixed(0)} ({dailyLossPercent.toFixed(1)}%)
-                    </span>
-                  </div>
-                  <div className="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden">
-                    <div
-                      className={`h-full transition-all duration-300 ${dailyLossPercent >= 4.0 ? 'bg-rose-500' : 'bg-amber-500'}`}
-                      style={{ width: `${Math.min(100, (dailyLossPercent / propFirmDailyLossLimit) * 100)}%` }}
-                    />
-                  </div>
-                </div>
-
-                {/* Metric 2: Max Drawdown Limit */}
-                <div className="space-y-1">
-                  <div className="flex items-center justify-between text-[10px]">
-                    <span className="text-slate-400">{t.maxDrawdownLabel} ({propFirmMaxDrawdownLimit}%):</span>
-                    <span className={`font-bold ${maxDDPercent >= 8.0 ? 'text-rose-400' : 'text-slate-300'}`}>
-                      ${currentMaxDD.toFixed(1)} / ${maxDDMax.toFixed(0)} ({maxDDPercent.toFixed(1)}%)
-                    </span>
-                  </div>
-                  <div className="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden">
-                    <div
-                      className={`h-full transition-all duration-300 ${maxDDPercent >= 8.0 ? 'bg-rose-500' : 'bg-indigo-500'}`}
-                      style={{ width: `${Math.min(100, (maxDDPercent / propFirmMaxDrawdownLimit) * 100)}%` }}
-                    />
-                  </div>
-                </div>
-
-                {/* Metric 3: Target Profit Progress */}
-                <div className="space-y-1">
-                  <div className="flex items-center justify-between text-[10px]">
-                    <span className="text-slate-400">{t.profitTargetLabel} (+{propFirmProfitTarget}%):</span>
-                    <span className="font-bold text-emerald-400">
-                      +${currentProfit.toFixed(1)} / ${profitTargetMax.toFixed(0)} ({profitProgressPercent.toFixed(0)}%)
-                    </span>
-                  </div>
-                  <div className="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-emerald-500 transition-all duration-300"
-                      style={{ width: `${profitProgressPercent}%` }}
-                    />
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <button
-                onClick={() => setIsShieldExpanded(true)}
-                className="bg-[#111622]/95 border border-slate-700/90 px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 shadow-xl backdrop-blur-md hover:bg-slate-800 text-[11px] font-bold text-slate-300"
-                title="Mở rộng Prop Firm Shield"
-              >
-                <Shield className="w-3.5 h-3.5 text-emerald-400" />
-                <span>Shield: {isDailyBreached || isMaxDDBreached ? '⛔' : `${dailyLossPercent.toFixed(1)}% / 5%`}</span>
-                <ChevronDown className="w-3 h-3 text-slate-400" />
-              </button>
-            )}
-          </div>
-        )}
+          {/* COUNTDOWN TIMER TO BAR CLOSE */}
+          {countdownText && (
+            <div className="bg-slate-950/85 backdrop-blur-md border border-slate-800 px-2.5 py-1 rounded-lg flex items-center gap-1.5 text-xs font-mono text-amber-300 shadow-md">
+              <Clock className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+              <span className="font-bold">{countdownText}</span>
+              <span className="text-[10px] text-slate-400">{t.candleCloseCountdown}</span>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* 3. SYMBOL WATERMARK BACKGROUND OVERLAY */}
@@ -781,23 +979,14 @@ export const TradingViewChart: React.FC = () => {
         </div>
       )}
 
-      {/* 4. COUNTDOWN TIMER TO BAR CLOSE */}
-      {countdownText && (
-        <div className="absolute top-16 right-3 z-10 bg-slate-950/80 backdrop-blur-md border border-slate-800 px-2.5 py-1 rounded-lg flex items-center gap-1.5 text-xs font-mono text-amber-300 shadow-md">
-          <Clock className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
-          <span className="font-bold">{countdownText}</span>
-          <span className="text-[10px] text-slate-500">đóng nến</span>
-        </div>
-      )}
-
-      {/* 5. TRADINGVIEW BOTTOM-RIGHT SCALE TOOLBAR */}
+      {/* 4. TRADINGVIEW BOTTOM-RIGHT SCALE TOOLBAR */}
       <div className="absolute bottom-6 right-16 z-20 flex items-center gap-1 bg-[#111622]/90 backdrop-blur-md border border-slate-800 rounded-lg p-1 text-[10px] font-mono shadow-xl">
         <button
           onClick={toggleLogScale}
           className={`px-1.5 py-0.5 rounded font-bold transition-all ${
             isLogScale ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
           }`}
-          title="Bật/Tắt thang đo Logarithm (Log)"
+          title={t.logScaleTooltip}
         >
           LOG
         </button>
@@ -806,7 +995,7 @@ export const TradingViewChart: React.FC = () => {
           className={`px-1.5 py-0.5 rounded font-bold transition-all ${
             isPercentageScale ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
           }`}
-          title="Bật/Tắt thang đo Phần trăm (%)"
+          title={t.percentScaleTooltip}
         >
           %
         </button>
@@ -815,7 +1004,7 @@ export const TradingViewChart: React.FC = () => {
           className={`px-1.5 py-0.5 rounded font-bold transition-all ${
             isInvertedScale ? 'bg-amber-600 text-white shadow-xs' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
           }`}
-          title="Đảo ngược đồ thị (Invert Scale)"
+          title={t.invertScaleTooltip}
         >
           INV
         </button>
@@ -825,7 +1014,7 @@ export const TradingViewChart: React.FC = () => {
             chartRef.current?.priceScale('right').applyOptions({ autoScale: true });
           }}
           className="px-1.5 py-0.5 rounded text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors"
-          title="Tự động căn chỉnh thang đo (Auto)"
+          title={t.autoScaleTooltip}
         >
           AUTO
         </button>
@@ -833,6 +1022,14 @@ export const TradingViewChart: React.FC = () => {
 
       {/* Chart Canvas */}
       <div ref={chartContainerRef} className="w-full h-full relative" />
+
+      {/* Visual Chart Trading (Interactive Drag & Drop SL/TP) */}
+      <VisualChartTradingOverlay
+        chartApi={chartRef.current}
+        seriesApi={mainSeriesRef.current}
+        containerRef={chartContainerRef}
+        instrument={instrument}
+      />
 
       {/* Overlay Drawing Canvas */}
       <DrawingCanvas chart={chartRef.current} series={mainSeriesRef.current} />

@@ -98,7 +98,7 @@ interface BacktestStore {
   // Actions
   setInstrument: (symbol: string) => void;
   setTimeframe: (tf: Timeframe) => void;
-  loadCandles: (candles: Candle[], startIndex?: number) => void;
+  loadCandles: (candles: Candle[], startIndex?: number, targetSymbol?: string, targetTimeframe?: Timeframe) => void;
   
   // Replay Actions
   play: () => void;
@@ -322,7 +322,7 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
 
     activeStrategy: PREBUILT_STRATEGIES[0],
     autoTradingEnabled: false,
-    strategyLogs: [{ id: 'init', timestamp: Date.now(), type: 'INFO', message: 'Hệ thống Quant Backtest Pro khởi tạo thành công.' }],
+    strategyLogs: [{ id: 'init', timestamp: Date.now(), type: 'INFO', message: 'Quant Backtest Pro initialized successfully.' }],
     llmApiKey: '',
     llmProvider: 'gemini',
 
@@ -425,27 +425,44 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
       });
     },
 
-    loadCandles: (newCandles, startIndex = 0) => {
+    loadCandles: (newCandles: Candle[], startIndex = 0, targetSymbol?: string, targetTimeframe?: Timeframe) => {
       get().pause();
-      const { timeframe, matchingEngine } = get();
-      const resampled = TimeframeResampler.resample(newCandles, timeframe);
-      const news = generateNewsForCandles(newCandles);
-      matchingEngine.reset();
 
+      const currentInstrument = get().instrument;
+      const targetSpec = targetSymbol ? (INSTRUMENTS[targetSymbol] || currentInstrument) : currentInstrument;
+      const tf = targetTimeframe || get().timeframe;
+
+      const engine = get().matchingEngine;
+      if (targetSymbol && targetSymbol !== currentInstrument.symbol) {
+        engine.setConfig(targetSpec);
+      }
+      engine.reset();
+
+      const resampled = TimeframeResampler.resample(newCandles, tf);
+      const news = generateNewsForCandles(newCandles);
       const initialIdx = Math.max(0, Math.min(startIndex, resampled.length - 1));
 
+      const newSessionId = 'sess_' + Date.now();
+
       set({
+        activeSessionId: newSessionId,
+        instrument: targetSpec,
+        timeframe: tf,
         rawM1Candles: newCandles,
         candles: resampled,
         currentIndex: initialIdx,
         economicNews: news,
-        account: matchingEngine.getAccountState(),
+        account: engine.getAccountState(),
         pendingOrders: [],
         openPositions: [],
         closedPositions: [],
         markers: [],
-        equityCurve: [{ timestamp: resampled[0]?.timestamp || 0, balance: matchingEngine.initialBalance, equity: matchingEngine.initialBalance }]
+        drawings: [],
+        equityCurve: [{ timestamp: resampled[0]?.timestamp || 0, balance: engine.initialBalance, equity: engine.initialBalance }]
       });
+
+      syncCurrentSessionToStorage(get);
+      get().addStrategyLog('INFO', `Đã nạp ${newCandles.length.toLocaleString()} nến cho ${targetSpec.symbol} (${tf}) — Sẵn sàng backtest`);
     },
 
     // --- REPLAY CONTROLS ---
@@ -698,7 +715,7 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
         const count = get().guestTradeCount || 0;
         if (count >= 3) {
           soundFx.playPropAlert();
-          get().addStrategyLog('ERROR', '🔒 Bạn đã đạt giới hạn 3 lệnh dùng thử cho Khách. Vui lòng Đăng nhập để mở khóa giao dịch không giới hạn!');
+          get().addStrategyLog('ERROR', '🔒 Free Guest limit reached (3 trades). Please sign in to unlock unlimited trading!');
           auth.setAuthModalOpen(true, 'login');
           return false;
         }
@@ -747,7 +764,7 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
         const count = get().guestTradeCount || 0;
         if (count >= 3) {
           soundFx.playPropAlert();
-          get().addStrategyLog('ERROR', '🔒 Bạn đã đạt giới hạn 3 lệnh dùng thử cho Khách. Vui lòng Đăng nhập để mở khóa giao dịch không giới hạn!');
+          get().addStrategyLog('ERROR', '🔒 Free Guest limit reached (3 trades). Please sign in to unlock unlimited trading!');
           auth.setAuthModalOpen(true, 'login');
           return false;
         }
@@ -913,7 +930,7 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
         const online = await checkServerHealth();
         set({ isServerOnline: online });
         if (!online) {
-          get().addStrategyLog('INFO', 'Server offline — chế độ cục bộ, dữ liệu không được lưu tự động');
+          get().addStrategyLog('INFO', 'Server offline — running in local mode');
           return;
         }
 
@@ -1239,7 +1256,7 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
     clearAllSessions: async () => {
       try {
         await sessionsApi.clearAll();
-        get().addStrategyLog('INFO', 'Đã xóa toàn bộ tất cả các phiên giao dịch');
+        get().addStrategyLog('INFO', 'Cleared all backtest sessions from database');
         await get().createNewSession();
         return true;
       } catch (err: any) {

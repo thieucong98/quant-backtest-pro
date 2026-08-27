@@ -36,7 +36,7 @@ import {
 } from 'lucide-react';
 import { AnalyticsEngine, MonteCarloResult, DayHourHeatmapCell, MonthlyCalendarGroup, DailyCalendarCell, PerformanceReport } from '../../engine/analytics';
 import { useBacktestStore } from '../../store/backtestStore';
-import { translations } from '../../i18n/translations';
+import { translations, formatDate } from '../../i18n/translations';
 import { analyticsApi, sessionsApi } from '../../api';
 
 export const AnalyticsDashboardModal: React.FC = () => {
@@ -310,7 +310,7 @@ export const AnalyticsDashboardModal: React.FC = () => {
     if (targetEquityCurve.length < 2) {
       return (
         <div className="h-40 flex items-center justify-center text-slate-500 text-xs font-mono">
-          Cần ít nhất 2 điểm dữ liệu để vẽ biểu đồ tăng trưởng vốn (Equity Curve).
+          {t.equityCurveMinPoints}
         </div>
       );
     }
@@ -359,7 +359,7 @@ export const AnalyticsDashboardModal: React.FC = () => {
     if (monteCarlo.simulationPaths.length === 0) {
       return (
         <div className="h-40 flex items-center justify-center text-slate-500 text-xs font-mono">
-          Cần ít nhất 5 lệnh đã hoàn thành để chạy mô phỏng Monte Carlo.
+          {t.monteCarloMinTrades}
         </div>
       );
     }
@@ -378,7 +378,7 @@ export const AnalyticsDashboardModal: React.FC = () => {
     return (
       <div className="relative w-full h-48 bg-slate-950 p-2 rounded-lg border border-slate-800">
         <div className="absolute top-2 left-3 text-[10px] font-mono text-purple-300">
-          🎲 10 Đường Mô phỏng Đại diện (từ 1,000 lần lặp)
+          {t.monteCarloSimPaths}
         </div>
         <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full">
           <line x1={padding} y1={height / 2} x2={width - padding} y2={height / 2} stroke="#1e293b" strokeDasharray="3 3" />
@@ -428,7 +428,7 @@ export const AnalyticsDashboardModal: React.FC = () => {
                 </span>
               </div>
               <p className="text-[11px] text-slate-400 mt-0.5">
-                Phân tích định lượng, đường cong vốn & mô phỏng Monte Carlo theo chuẩn quỹ đầu tư
+                {t.analyticsSub}
               </p>
             </div>
           </div>
@@ -439,11 +439,11 @@ export const AnalyticsDashboardModal: React.FC = () => {
               onClick={handleSaveSnapshot}
               disabled={saveStatus === 'saving'}
               className="px-3 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all shadow-md active:scale-95"
-              title="Lưu Snapshot Báo cáo vào Database"
+              title={t.saveSnapshotTitle}
             >
               <Save className="w-3.5 h-3.5" />
               <span>
-                {saveStatus === 'saving' ? 'Đang lưu...' : saveStatus === 'success' ? t.snapshotSaved : t.saveSnapshot}
+                {saveStatus === 'saving' ? t.savingSnapshot : saveStatus === 'success' ? t.snapshotSaved : t.saveSnapshot}
               </span>
             </button>
 
@@ -479,7 +479,7 @@ export const AnalyticsDashboardModal: React.FC = () => {
                   {t.selectSessionPrompt}
                 </span>
                 <span className="font-bold text-slate-100 truncate text-[11px] font-mono group-hover:text-indigo-300 transition-colors">
-                  {selectedSessionId === 'ACTIVE_SESSION' ? `🌟 ${t.currentActiveSessionLabel}` : (selectedSessionDetail?.name || 'Chọn phiên...')}
+                  {selectedSessionId === 'ACTIVE_SESSION' ? `🌟 ${t.currentActiveSessionLabel}` : (selectedSessionDetail?.name || t.selectSessionPlaceholder)}
                 </span>
               </div>
               <ChevronDown className={`w-3.5 h-3.5 text-slate-400 group-hover:text-slate-200 transition-transform shrink-0 ${isDropdownOpen ? 'rotate-180 text-indigo-400' : ''}`} />
@@ -651,7 +651,7 @@ export const AnalyticsDashboardModal: React.FC = () => {
           {isLoadingSession ? (
             <div className="py-20 text-center text-slate-500 text-xs">
               <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 opacity-40 text-indigo-400" />
-              Đang tải dữ liệu báo cáo của phiên đã chọn...
+              {t.loadingAnalyticsReport}
             </div>
           ) : (
             <>
@@ -666,7 +666,7 @@ export const AnalyticsDashboardModal: React.FC = () => {
                         <span>{t.equityGrowth}:</span>
                       </h4>
                       <span className="text-[11px] text-slate-400">
-                        Phiên: <strong className="text-slate-200">{currentSessionTitle}</strong> ({currentSymbolName})
+                        {t.sessionLabel} <strong className="text-slate-200">{currentSessionTitle}</strong> ({currentSymbolName})
                       </span>
                     </div>
                     {renderEquityChart()}
@@ -683,7 +683,7 @@ export const AnalyticsDashboardModal: React.FC = () => {
                         {report.netProfit >= 0 ? '+' : ''}${report.netProfit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </div>
                       <div className="text-[10px] text-slate-500 mt-0.5">
-                        {report.netProfit >= 0 ? '🟢 Lợi nhuận ròng' : '🔴 Lỗ ròng'}
+                        {report.netProfit >= 0 ? t.netProfitStatus : t.netLossStatus}
                       </div>
                     </div>
 
@@ -693,7 +693,7 @@ export const AnalyticsDashboardModal: React.FC = () => {
                         <Percent className="w-3.5 h-3.5 text-indigo-400" />
                       </div>
                       <div className="text-xl font-bold text-indigo-300 mt-1">{report.winRate}%</div>
-                      <div className="text-[10px] text-slate-500 mt-0.5">{report.winTrades} Thắng / {report.lossTrades} Thua</div>
+                      <div className="text-[10px] text-slate-500 mt-0.5">{report.winTrades} {t.winTradesCount} / {report.lossTrades} {t.lossTradesCount}</div>
                     </div>
 
                     <div className="bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-800 p-3.5 rounded-xl shadow-md">
@@ -705,7 +705,7 @@ export const AnalyticsDashboardModal: React.FC = () => {
                         {report.profitFactor > 99 ? '99+' : report.profitFactor.toFixed(2)}
                       </div>
                       <div className="text-[10px] text-slate-500 mt-0.5">
-                        {report.profitFactor >= 1.5 ? '⭐ Xuất sắc' : report.profitFactor >= 1.0 ? '⚖️ Cân bằng' : '⚠️ Cần tối ưu'}
+                        {report.profitFactor >= 1.5 ? t.profitFactorExcellent : report.profitFactor >= 1.0 ? t.profitFactorBalanced : t.profitFactorSuboptimal}
                       </div>
                     </div>
 
@@ -725,11 +725,11 @@ export const AnalyticsDashboardModal: React.FC = () => {
                       <div className="flex items-center justify-between text-[11px] font-medium">
                         <span className="text-emerald-400 flex items-center gap-1">
                           <CheckCircle2 className="w-3 h-3" />
-                          <span>Thắng: {report.winTrades} lệnh ({report.winRate}%)</span>
+                          <span>{t.winTradesCount}: {report.winTrades} ({report.winRate}%)</span>
                         </span>
                         <span className="text-rose-400 flex items-center gap-1">
                           <XCircle className="w-3 h-3" />
-                          <span>Thua: {report.lossTrades} lệnh ({(100 - report.winRate).toFixed(1)}%)</span>
+                          <span>{t.lossTradesCount}: {report.lossTrades} ({(100 - report.winRate).toFixed(1)}%)</span>
                         </span>
                       </div>
                       <div className="w-full h-2.5 bg-slate-950 rounded-full overflow-hidden flex">
@@ -751,7 +751,7 @@ export const AnalyticsDashboardModal: React.FC = () => {
                     <div className="bg-slate-900/70 border border-slate-800/90 rounded-xl p-3.5 space-y-2.5">
                       <div className="font-bold text-emerald-400 text-[11px] uppercase tracking-wider flex items-center gap-1.5 pb-1 border-b border-slate-800">
                         <DollarSign className="w-3.5 h-3.5" />
-                        <span>Hiệu Quả Lợi Nhuận</span>
+                        <span>{t.profitabilityCardTitle}</span>
                       </div>
                       <div className="space-y-1.5">
                         <div className="flex justify-between">
@@ -777,7 +777,7 @@ export const AnalyticsDashboardModal: React.FC = () => {
                     <div className="bg-slate-900/70 border border-slate-800/90 rounded-xl p-3.5 space-y-2.5">
                       <div className="font-bold text-indigo-400 text-[11px] uppercase tracking-wider flex items-center gap-1.5 pb-1 border-b border-slate-800">
                         <Percent className="w-3.5 h-3.5" />
-                        <span>Tỷ Lệ & Khối Lượng</span>
+                        <span>{t.ratiosVolumeCardTitle}</span>
                       </div>
                       <div className="space-y-1.5">
                         <div className="flex justify-between">
@@ -803,23 +803,23 @@ export const AnalyticsDashboardModal: React.FC = () => {
                     <div className="bg-slate-900/70 border border-slate-800/90 rounded-xl p-3.5 space-y-2.5">
                       <div className="font-bold text-amber-400 text-[11px] uppercase tracking-wider flex items-center gap-1.5 pb-1 border-b border-slate-800">
                         <Award className="w-3.5 h-3.5" />
-                        <span>Chuỗi Thắng / Thua</span>
+                        <span>{t.streaksCardTitle}</span>
                       </div>
                       <div className="space-y-1.5">
                         <div className="flex justify-between">
                           <span className="text-slate-400">{t.consecutiveWins}:</span>
-                          <span className="font-bold text-teal-400">{report.consecutiveWins} chuỗi</span>
+                          <span className="font-bold text-teal-400">{report.consecutiveWins} {t.streaksWinsLabel}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-slate-400">{t.consecutiveLosses}:</span>
-                          <span className="font-bold text-rose-400">{report.consecutiveLosses} chuỗi</span>
+                          <span className="font-bold text-rose-400">{report.consecutiveLosses} {t.streaksLossesLabel}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-slate-400">Tỷ lệ Lệnh Thắng:</span>
+                          <span className="text-slate-400">{t.winTradesRatioLabel}</span>
                           <span className="font-bold text-slate-200">{report.winRate}%</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-slate-400">Tỷ lệ Lệnh Thua:</span>
+                          <span className="text-slate-400">{t.lossTradesRatioLabel}</span>
                           <span className="font-bold text-slate-200">{(100 - report.winRate).toFixed(2)}%</span>
                         </div>
                       </div>
@@ -829,7 +829,7 @@ export const AnalyticsDashboardModal: React.FC = () => {
                     <div className="bg-slate-900/70 border border-slate-800/90 rounded-xl p-3.5 space-y-2.5">
                       <div className="font-bold text-purple-400 text-[11px] uppercase tracking-wider flex items-center gap-1.5 pb-1 border-b border-slate-800">
                         <Activity className="w-3.5 h-3.5" />
-                        <span>Chỉ Số Quỹ (Risk)</span>
+                        <span>{t.institutionalRiskCardTitle}</span>
                       </div>
                       <div className="space-y-1.5">
                         <div className="flex justify-between">
@@ -845,7 +845,7 @@ export const AnalyticsDashboardModal: React.FC = () => {
                           <span className="font-bold text-amber-300">{report.calmarRatio ? report.calmarRatio.toFixed(2) : '0.00'}</span>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className="text-slate-400">Chỉ số SQN:</span>
+                          <span className="text-slate-400">{t.sqnScoreLabel}</span>
                           <span className="px-1.5 py-0.5 rounded bg-purple-950 text-purple-300 border border-purple-500/30 text-[10px] font-bold">
                             {report.systemQualityNumber?.toFixed(2) || '0.00'} ({report.sqnRating || 'N/A'})
                           </span>
@@ -875,7 +875,7 @@ export const AnalyticsDashboardModal: React.FC = () => {
                         : 'bg-rose-950/80 border-rose-500/40 text-rose-300'
                     }`}>
                       <Dice5 className="w-3.5 h-3.5" />
-                      <span>{monteCarlo.riskOfRuinPercent === 0 ? '🛡️ Risk of Ruin: 0% (An toàn cao)' : `Xác suất rủi ro: ${monteCarlo.riskOfRuinPercent}%`}</span>
+                      <span>{monteCarlo.riskOfRuinPercent === 0 ? t.riskOfRuinSafe : t.riskOfRuinProb.replace('{prob}', monteCarlo.riskOfRuinPercent.toString())}</span>
                     </div>
                   </div>
 
@@ -885,25 +885,25 @@ export const AnalyticsDashboardModal: React.FC = () => {
                     <div className="bg-slate-900 border border-slate-800 p-3.5 rounded-xl">
                       <div className="text-slate-400 text-[11px]">{t.medianProfit}:</div>
                       <div className="text-lg font-bold text-teal-400 mt-1">${monteCarlo.medianProfit.toFixed(2)}</div>
-                      <div className="text-[10px] text-slate-500 mt-0.5">Lợi nhuận trung vị 50th</div>
+                      <div className="text-[10px] text-slate-500 mt-0.5">{t.medianProfitSub}</div>
                     </div>
 
                     <div className="bg-slate-900 border border-slate-800 p-3.5 rounded-xl">
                       <div className="text-slate-400 text-[11px]">{t.worstCaseDD}:</div>
                       <div className="text-lg font-bold text-rose-400 mt-1">{monteCarlo.worstCaseDrawdown.toFixed(2)}%</div>
-                      <div className="text-[10px] text-slate-500 mt-0.5">Sụt giảm xấu nhất 1,000 runs</div>
+                      <div className="text-[10px] text-slate-500 mt-0.5">{t.worstCaseDDSub}</div>
                     </div>
 
                     <div className="bg-slate-900 border border-slate-800 p-3.5 rounded-xl">
                       <div className="text-slate-400 text-[11px]">{t.percentile95DD}:</div>
                       <div className="text-lg font-bold text-amber-400 mt-1">{monteCarlo.percentile95Drawdown.toFixed(2)}%</div>
-                      <div className="text-[10px] text-slate-500 mt-0.5">Khoảng tin cậy 95% DD</div>
+                      <div className="text-[10px] text-slate-500 mt-0.5">{t.percentile95DDSub}</div>
                     </div>
 
                     <div className="bg-slate-900 border border-slate-800 p-3.5 rounded-xl">
                       <div className="text-slate-400 text-[11px]">{t.riskOfRuin}:</div>
                       <div className="text-lg font-bold text-purple-300 mt-1">{monteCarlo.riskOfRuinPercent.toFixed(1)}%</div>
-                      <div className="text-[10px] text-slate-500 mt-0.5">Nguy cơ sụt giảm &gt; 50%</div>
+                      <div className="text-[10px] text-slate-500 mt-0.5">{t.riskOfRuinSub}</div>
                     </div>
                   </div>
                 </div>
@@ -912,21 +912,9 @@ export const AnalyticsDashboardModal: React.FC = () => {
               {/* TAB 3: HEATMAP (INSTITUTIONAL DUAL-MODE: CALENDAR VIEW + HOURLY MATRIX) */}
               {activeTab === 'heatmap' && (() => {
                 const hours = [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22];
-                const dayLabels = language === 'vi' 
-                  ? ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6']
-                  : language === 'ja'
-                  ? ['月曜', '火曜', '水曜', '木曜', '金曜']
-                  : language === 'zh'
-                  ? ['周一', '周二', '周三', '周四', '周五']
-                  : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+                const dayLabels = t.heatmapDays.split(',');
 
-                const calendarWeekHeaders = language === 'vi'
-                  ? ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'CN', 'Tổng Tuần']
-                  : language === 'ja'
-                  ? ['月', '火', '水', '木', '金', '土', '日', '週間計']
-                  : language === 'zh'
-                  ? ['一', '二', '三', '四', '五', '六', '日', '周总计']
-                  : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun', 'Week Total'];
+                const calendarWeekHeaders = t.calendarHeaders.split(',');
 
                 // Current selected calendar month
                 const validMonthIdx = Math.max(0, Math.min(selectedMonthIdx, monthlyCalendars.length - 1));
@@ -952,7 +940,7 @@ export const AnalyticsDashboardModal: React.FC = () => {
                     {/* VIEW MODE SELECTOR BAR */}
                     <div className="bg-[#0b0e17] p-2 rounded-xl border border-slate-800 flex items-center justify-between flex-wrap gap-2">
                       <div className="flex items-center gap-2">
-                        <span className="text-slate-400 text-[11px] font-sans font-medium">Chế độ phân tích:</span>
+                        <span className="text-slate-400 text-[11px] font-sans font-medium">{t.analysisModeLabel}</span>
                         <div className="flex items-center bg-slate-950 p-1 rounded-lg border border-slate-800/80">
                           <button
                             type="button"
@@ -989,19 +977,19 @@ export const AnalyticsDashboardModal: React.FC = () => {
                             disabled={validMonthIdx <= 0}
                             onClick={() => setSelectedMonthIdx(validMonthIdx - 1)}
                             className="p-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-                            title="Tháng trước"
+                            title={t.prevMonthTitle}
                           >
                             <ChevronLeft className="w-4 h-4" />
                           </button>
                           <span className="px-3 py-1 bg-slate-900 border border-slate-800 rounded-lg text-xs font-bold text-slate-100 font-mono">
-                            {currentMonth?.monthLabel || 'Tháng'}
+                            {currentMonth?.monthLabel || 'Month'}
                           </span>
                           <button
                             type="button"
                             disabled={validMonthIdx >= monthlyCalendars.length - 1}
                             onClick={() => setSelectedMonthIdx(validMonthIdx + 1)}
                             className="p-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-                            title="Tháng sau"
+                            title={t.nextMonthTitle}
                           >
                             <ChevronRight className="w-4 h-4" />
                           </button>
@@ -1034,7 +1022,7 @@ export const AnalyticsDashboardModal: React.FC = () => {
                                 {currentMonth.totalPnL >= 0 ? '+' : ''}${currentMonth.totalPnL.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                               </div>
                               <div className="text-[10px] text-slate-500 mt-0.5">
-                                {currentMonth.totalPnL >= 0 ? '🟢 Lợi nhuận ròng' : '🔴 Lỗ trong tháng'}
+                                {currentMonth.totalPnL >= 0 ? t.netProfitStatus : t.monthlyLossLabel}
                               </div>
                             </div>
 
@@ -1044,10 +1032,10 @@ export const AnalyticsDashboardModal: React.FC = () => {
                                 <span>{t.winningDays}</span>
                               </div>
                               <div className="text-base font-bold text-slate-100 mt-1 font-mono">
-                                <span className="text-teal-400">{currentMonth.profitableDaysCount} Thắng</span> / <span className="text-rose-400">{currentMonth.lossDaysCount} Thua</span>
+                                <span className="text-teal-400">{currentMonth.profitableDaysCount} {t.winTradesCount}</span> / <span className="text-rose-400">{currentMonth.lossDaysCount} {t.lossTradesCount}</span>
                               </div>
                               <div className="text-[10px] text-slate-400 mt-0.5">
-                                Tỷ lệ ngày thắng: <strong className="text-indigo-300">{currentMonth.profitableDaysCount + currentMonth.lossDaysCount > 0 ? ((currentMonth.profitableDaysCount / (currentMonth.profitableDaysCount + currentMonth.lossDaysCount)) * 100).toFixed(0) : 0}%</strong>
+                                {t.profitableDaysRatioLabel}: <strong className="text-indigo-300">{currentMonth.profitableDaysCount + currentMonth.lossDaysCount > 0 ? ((currentMonth.profitableDaysCount / (currentMonth.profitableDaysCount + currentMonth.lossDaysCount)) * 100).toFixed(0) : 0}%</strong>
                               </div>
                             </div>
 
@@ -1057,7 +1045,7 @@ export const AnalyticsDashboardModal: React.FC = () => {
                                 <span>{t.bestTradingDay}</span>
                               </div>
                               <div className="text-sm font-bold text-slate-100 mt-1 truncate">
-                                {currentMonth.bestDay ? currentMonth.bestDay.dateStr : 'Không có lãi'}
+                                {currentMonth.bestDay ? currentMonth.bestDay.dateStr : t.noProfitLabel}
                               </div>
                               <div className="text-[11px] font-bold text-teal-400 mt-0.5">
                                 {currentMonth.bestDay ? `+$${currentMonth.bestDay.pnl.toFixed(2)}` : '-'}
@@ -1070,10 +1058,10 @@ export const AnalyticsDashboardModal: React.FC = () => {
                                 <span>{t.tradesInMonth}</span>
                               </div>
                               <div className="text-base font-bold text-slate-100 mt-1 font-mono">
-                                {currentMonth.totalTrades} Lệnh
+                                {currentMonth.totalTrades} {t.tradesCountLabel}
                               </div>
                               <div className="text-[10px] text-slate-400 mt-0.5">
-                                Winrate tháng: <strong className="text-teal-400">{currentMonth.winRate}%</strong>
+                                {t.monthlyWinrateLabel}: <strong className="text-teal-400">{currentMonth.winRate}%</strong>
                               </div>
                             </div>
                           </div>
@@ -1145,7 +1133,7 @@ export const AnalyticsDashboardModal: React.FC = () => {
                                     <div
                                       key={dIdx}
                                       className={`min-h-[64px] p-2 rounded-lg border flex flex-col justify-between transition-all select-none ${cellBg}`}
-                                      title={hasTrades ? `${dateStr}: ${cellData.tradesCount} lệnh (PnL: $${cellData.pnl.toFixed(2)})` : dateStr}
+                                      title={hasTrades ? `${dateStr}: ${cellData.tradesCount} ${t.tradesCountLabel} (PnL: ${cellData.pnl.toFixed(2)})` : dateStr}
                                     >
                                       <div className="flex items-center justify-between text-[10px]">
                                         <span className={`font-bold ${hasTrades ? 'text-slate-100' : 'text-slate-600'}`}>{dayNum}</span>
@@ -1185,14 +1173,14 @@ export const AnalyticsDashboardModal: React.FC = () => {
                                           : 'bg-slate-950/40 border-slate-900/60 text-slate-600'
                                       }`}
                                     >
-                                      <span className="text-[10px] font-sans text-slate-400 font-medium uppercase">Tuần {wIdx + 1}</span>
+                                      <span className="text-[10px] font-sans text-slate-400 font-medium uppercase">{t.weekNumberLabel.replace('{num}', (wIdx + 1).toString())}</span>
                                       <span className="font-bold text-xs mt-0.5">
                                         {weekTradesCount > 0
                                           ? (weekTotalPnL >= 0 ? `+$${weekTotalPnL.toFixed(0)}` : `-$${Math.abs(weekTotalPnL).toFixed(0)}`)
                                           : '-'}
                                       </span>
                                       {weekTradesCount > 0 && (
-                                        <span className="text-[9px] opacity-75 font-sans mt-0.5">{weekTradesCount} lệnh</span>
+                                        <span className="text-[9px] opacity-75 font-sans mt-0.5">{weekTradesCount} {t.tradesCountLabel}</span>
                                       )}
                                     </div>
                                   </React.Fragment>
@@ -1214,49 +1202,49 @@ export const AnalyticsDashboardModal: React.FC = () => {
                           <div className="bg-slate-900/80 border border-slate-800 p-3 rounded-xl">
                             <div className="text-[10px] text-slate-400 uppercase font-sans font-bold flex items-center gap-1 text-emerald-400">
                               <Sparkles className="w-3 h-3" />
-                              <span>Khung Giờ Tốt Nhất</span>
+                              <span>{t.bestTradingHourCard}</span>
                             </div>
                             <div className="text-sm font-bold text-slate-100 mt-1 truncate">
-                              {bestCell ? `${dayLabels[bestCell.day - 1]} @ ${bestCell.hour}:00` : 'Chưa đủ dữ liệu'}
+                              {bestCell ? `${dayLabels[bestCell.day - 1]} @ ${bestCell.hour}:00` : t.notEnoughDataLabel}
                             </div>
                             <div className="text-[11px] font-bold text-teal-400 mt-0.5">
-                              {bestCell ? `+$${bestCell.pnl.toFixed(2)} (${bestCell.tradesCount} lệnh)` : '-'}
+                              {bestCell ? `+${bestCell.pnl.toFixed(2)} (${bestCell.tradesCount} ${t.tradesCountLabel})` : '-'}
                             </div>
                           </div>
 
                           <div className="bg-slate-900/80 border border-slate-800 p-3 rounded-xl">
                             <div className="text-[10px] text-slate-400 uppercase font-sans font-bold flex items-center gap-1 text-rose-400">
                               <AlertTriangle className="w-3 h-3" />
-                              <span>Khung Giờ Kém Nhất</span>
+                              <span>{t.worstTradingHourCard}</span>
                             </div>
                             <div className="text-sm font-bold text-slate-100 mt-1 truncate">
-                              {worstCell && worstCell.pnl < 0 ? `${dayLabels[worstCell.day - 1]} @ ${worstCell.hour}:00` : 'Không có lỗ lớn'}
+                              {worstCell && worstCell.pnl < 0 ? `${dayLabels[worstCell.day - 1]} @ ${worstCell.hour}:00` : t.noMajorLossLabel}
                             </div>
                             <div className="text-[11px] font-bold text-rose-400 mt-0.5">
-                              {worstCell && worstCell.pnl < 0 ? `-$${Math.abs(worstCell.pnl).toFixed(2)} (${worstCell.tradesCount} lệnh)` : '-'}
+                              {worstCell && worstCell.pnl < 0 ? `-${Math.abs(worstCell.pnl).toFixed(2)} (${worstCell.tradesCount} ${t.tradesCountLabel})` : '-'}
                             </div>
                           </div>
 
                           <div className="bg-slate-900/80 border border-slate-800 p-3 rounded-xl">
                             <div className="text-[10px] text-slate-400 uppercase font-sans font-bold flex items-center gap-1 text-indigo-400">
                               <Calendar className="w-3 h-3" />
-                              <span>Ngày Hiệu Quả Nhất</span>
+                              <span>{t.bestDayCard}</span>
                             </div>
                             <div className="text-sm font-bold text-slate-100 mt-1">
                               {dayLabels[bestDayIdx - 1]}
                             </div>
                             <div className="text-[11px] font-bold text-indigo-300 mt-0.5">
-                              {dayPnL[bestDayIdx]?.pnl >= 0 ? '+' : ''}${dayPnL[bestDayIdx]?.pnl.toFixed(2)} ({dayPnL[bestDayIdx]?.count} lệnh)
+                              {dayPnL[bestDayIdx]?.pnl >= 0 ? '+' : ''}${dayPnL[bestDayIdx]?.pnl.toFixed(2)} ({dayPnL[bestDayIdx]?.count} {t.tradesCountLabel})
                             </div>
                           </div>
 
                           <div className="bg-slate-900/80 border border-slate-800 p-3 rounded-xl">
                             <div className="text-[10px] text-slate-400 uppercase font-sans font-bold flex items-center gap-1 text-amber-400">
                               <Activity className="w-3 h-3" />
-                              <span>Tổng Số Lệnh Khớp</span>
+                              <span>{t.totalClosedTradesCard}</span>
                             </div>
                             <div className="text-sm font-bold text-slate-100 mt-1">
-                              {report.totalTrades} Lệnh đã đóng
+                              {report.totalTrades} {t.closedTradesSuffix}
                             </div>
                             <div className="text-[11px] text-slate-400 mt-0.5">
                               Winrate: <strong className="text-teal-400">{report.winRate}%</strong>
@@ -1266,22 +1254,22 @@ export const AnalyticsDashboardModal: React.FC = () => {
 
                         {/* GLOBAL SESSION COLOR LEGEND */}
                         <div className="bg-slate-900/50 border border-slate-800/80 px-3.5 py-2 rounded-xl flex items-center justify-between text-[11px] flex-wrap gap-2">
-                          <span className="text-slate-400 font-sans font-medium">Phiên giao dịch thế giới:</span>
+                          <span className="text-slate-400 font-sans font-medium">{t.worldTradingSessionsLabel}</span>
                           <div className="flex items-center gap-3 text-[10px] font-sans">
                             <span className="flex items-center gap-1">
                               <span className="w-2 h-2 rounded-full bg-blue-500" />
-                              <span className="text-slate-300">🌏 Á (00-08h)</span>
+                              <span className="text-slate-300">{t.asianSessionLabel}</span>
                             </span>
                             <span className="flex items-center gap-1">
                               <span className="w-2 h-2 rounded-full bg-amber-500" />
-                              <span className="text-slate-300">🇬🇧 Âu (08-16h)</span>
+                              <span className="text-slate-300">{t.europeanSessionLabel}</span>
                             </span>
                             <span className="flex items-center gap-1">
                               <span className="w-2 h-2 rounded-full bg-purple-500" />
-                              <span className="text-slate-300">🇺🇸 Mỹ (13-21h)</span>
+                              <span className="text-slate-300">{t.americanSessionLabel}</span>
                             </span>
                             <span className="flex items-center gap-1 bg-amber-950/60 border border-amber-500/40 px-1.5 py-0.5 rounded text-amber-300 font-bold">
-                              🔥 Trùng Âu/Mỹ (13-16h)
+                              {t.overlapEuroUsLabel}
                             </span>
                           </div>
                         </div>
@@ -1298,7 +1286,7 @@ export const AnalyticsDashboardModal: React.FC = () => {
                           >
                             {/* Header Cell: Day / Hour */}
                             <div className="font-bold text-slate-500 p-2 bg-slate-900/80 border border-slate-800 rounded-lg flex items-center justify-center text-[10px] uppercase font-sans">
-                              {language === 'vi' ? 'Thứ \\ Giờ' : 'Day \\ UTC'}
+                              {t.dayHourMatrixHeader}
                             </div>
 
                             {/* Hour Column Headers */}
@@ -1313,7 +1301,7 @@ export const AnalyticsDashboardModal: React.FC = () => {
                                 <div
                                   key={h}
                                   className={`p-1.5 rounded-lg border font-mono font-bold text-[11px] flex flex-col items-center justify-center ${sessionBadge}`}
-                                  title={`Khung giờ ${h}:00 - ${h + 1}:59 UTC`}
+                                  title={`${h}:00 - ${h + 1}:59 UTC`}
                                 >
                                   <span>{h < 10 ? `0${h}` : h}:00</span>
                                 </div>
@@ -1355,7 +1343,7 @@ export const AnalyticsDashboardModal: React.FC = () => {
                                     <div
                                       key={h}
                                       className={`p-1.5 min-h-[46px] rounded-lg border flex flex-col items-center justify-center transition-all cursor-default select-none ${cellStyle}`}
-                                      title={`${dayName} lúc ${h}:00 UTC — ${count} lệnh | PnL: $${pnl.toFixed(2)} | Thắng: ${winRate}%`}
+                                      title={`${dayName} @ ${h}:00 UTC — ${count} ${t.tradesCountLabel} | PnL: ${pnl.toFixed(2)} | WR: ${winRate}%`}
                                     >
                                       {count > 0 ? (
                                         <>
@@ -1610,7 +1598,7 @@ export const AnalyticsDashboardModal: React.FC = () => {
                                     <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-400 font-mono">{t.viewReportBadge}</span>
                                   </div>
                                   <div className="text-[10px] text-slate-500 mt-0.5">
-                                    {s.symbol} • {s.timeframe} • {new Date(s.createdAt).toLocaleDateString(language === 'vi' ? 'vi-VN' : 'en-US')} • {s.tradeCount} {t.tradesCountLabel}
+                                    {s.symbol} • {s.timeframe} • {formatDate(s.createdAt, language)} • {s.tradeCount} {t.tradesCountLabel}
                                   </div>
                                 </div>
                                 <div className="text-right font-mono">

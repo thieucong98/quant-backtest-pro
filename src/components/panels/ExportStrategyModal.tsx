@@ -130,7 +130,7 @@ export const ExportStrategyModal: React.FC<ExportStrategyModalProps> = ({
       );
       setGeneratedCode(result);
     } catch (err: any) {
-      setTranspileError(err.message || 'Lỗi khi dịch mã bằng AI.');
+      setTranspileError(err.message || t.transpileErrorFallback);
     } finally {
       setIsAITranspiling(false);
     }
@@ -208,7 +208,7 @@ export const ExportStrategyModal: React.FC<ExportStrategyModalProps> = ({
                   onClick={handleAIDeepTranspile}
                   disabled={isAITranspiling}
                   className="px-3 py-1.5 bg-gradient-to-r from-purple-600/80 to-indigo-600/80 hover:from-purple-500 hover:to-indigo-500 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs disabled:opacity-50"
-                  title="Dịch mã tùy biến sâu qua LLM AI"
+                  title={t.aiDeepTranspileTooltip}
                 >
                   {isAITranspiling ? (
                     <RefreshCw className="w-3.5 h-3.5 animate-spin text-purple-300" />
@@ -225,7 +225,7 @@ export const ExportStrategyModal: React.FC<ExportStrategyModalProps> = ({
                 className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors"
               >
                 {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                <span>{isCopied ? (language === 'vi' ? 'Đã sao chép!' : 'Copied!') : (language === 'vi' ? 'Sao chép' : 'Copy Code')}</span>
+                <span>{isCopied ? t.copiedCodeBtn : t.copyCodeBtn}</span>
               </button>
 
               {/* Download File Button */}
@@ -234,7 +234,7 @@ export const ExportStrategyModal: React.FC<ExportStrategyModalProps> = ({
                 className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all shadow-md shadow-emerald-600/30"
               >
                 <Download className="w-3.5 h-3.5" />
-                <span>{language === 'vi' ? `Tải file (${currentMeta.extension})` : `Download (${currentMeta.extension})`}</span>
+                <span>{t.downloadCodeFileBtn.replace('{ext}', currentMeta.extension)}</span>
               </button>
             </div>
           </div>

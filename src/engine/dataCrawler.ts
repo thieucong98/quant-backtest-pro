@@ -242,20 +242,22 @@ export class DataCrawler {
       statusText: `Đang khởi tạo dữ liệu thị trường thực tế cho ${sym}...`
     });
 
-    const startPrices: Record<string, number> = {
-      'XAUUSD': 2648.50,
-      'EURUSD': 1.0845,
-      'GBPUSD': 1.2950,
-      'USDJPY': 153.20,
-      'US30': 43500.0,
-      'DXY': 104.20
-    };
+    const cleanSym = sym.replace(/[^A-Z0-9]/g, '');
+    let startPrice = 1.0850;
+    if (cleanSym.includes('XAU') || cleanSym.includes('GOLD')) startPrice = 2648.50;
+    else if (cleanSym.includes('BTC')) startPrice = 68500.0;
+    else if (cleanSym.includes('ETH')) startPrice = 2600.0;
+    else if (cleanSym.includes('JPY')) startPrice = 153.20;
+    else if (cleanSym.includes('GBP')) startPrice = 1.2950;
+    else if (cleanSym.includes('US30') || cleanSym.includes('DOW')) startPrice = 43500.0;
+    else if (cleanSym.includes('DXY') || cleanSym.includes('USDX')) startPrice = 104.20;
+    else if (cleanSym.includes('EUR')) startPrice = 1.0845;
+    else startPrice = 100.0;
 
-    const startPrice = startPrices[sym] || 100.0;
     const tfMinutes = interval.includes('1m') || interval === 'M1' ? 1 : interval.includes('15m') || interval === 'M15' ? 15 : interval.includes('1h') || interval === 'H1' ? 60 : 5;
     
     // Nạp nến mô phỏng thị trường thực tế độ phân giải cao
-    const candles = generateRealisticCandles(sym, startPrice, totalLimit, tfMinutes);
+    const candles = generateRealisticCandles(cleanSym, startPrice, totalLimit, tfMinutes);
 
     onProgress?.({
       currentCandles: candles.length,
@@ -272,6 +274,38 @@ export class DataCrawler {
   /**
    * Danh sách các cặp tiền hỗ trợ Crawl trực tuyến
    */
+
+  public static async crawlHistoricalCandles(
+    symbol: string,
+    interval: string = '5m',
+    totalLimit: number = 5000,
+    onProgress?: (progress: CrawlProgress) => void
+  ): Promise<{ error?: string; candles: Candle[]; source: string }> {
+    try {
+      const candles = await this.fetchMultiAssetKlines(symbol, interval, totalLimit, onProgress);
+      return { candles, source: 'Online' };
+    } catch (e: any) {
+      return { error: e.message || 'Crawl failed', candles: [], source: 'Online' };
+    }
+  }
+
+  public static async crawlDateRange(
+    symbol: string,
+    interval: string = '5m',
+    startTs: number,
+    endTs: number,
+    onProgress?: (progress: CrawlProgress) => void
+  ): Promise<{ error?: string; candles: Candle[]; source: string }> {
+    try {
+      const startStr = new Date(startTs).toISOString().substring(0, 10);
+      const endStr = new Date(endTs).toISOString().substring(0, 10);
+      const candles = await this.fetchBinanceKlinesByDateRange(symbol, interval, startStr, endStr, onProgress);
+      return { candles, source: 'DateRange' };
+    } catch (e: any) {
+      return { error: e.message || 'Crawl failed', candles: [], source: 'DateRange' };
+    }
+  }
+
   public static getPopularCrawlSymbols(): { symbol: string; name: string; category: string }[] {
     return [
       { symbol: 'BTCUSDT', name: 'Bitcoin (BTC / USDT)', category: 'CRYPTO' },

@@ -14,38 +14,14 @@ export const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose 
 
   if (!isOpen) return null;
 
-  const shortcutsList = language === 'vi' ? [
-    { key: 'Space', desc: 'Play / Pause vòng lặp Replay phát nến' },
-    { key: 'F', desc: 'Tới 1 nến tiếp theo (Step Forward +1)' },
-    { key: 'B', desc: 'Mở cửa sổ Đặt lệnh Nhanh (Order Ticket)' },
-    { key: 'Ctrl + Z', desc: 'Tua lùi 1 nến (Step Backward -1)' },
-    { key: 'Esc', desc: 'Đóng tất cả các bảng Modal / Popup' },
-    { key: '1, 2, 3, 4', desc: 'Chuyển nhanh Khung thời gian (M1, M5, H1, D1)' },
-    { key: 'Delete', desc: 'Xóa công cụ vẽ đang được chọn' }
-  ] : language === 'ja' ? [
-    { key: 'Space', desc: 'K線リプレイの再生 / 一時停止' },
-    { key: 'F', desc: '次のK線へ進む (Step +1)' },
-    { key: 'B', desc: '新規注文パネルを開く' },
-    { key: 'Ctrl + Z', desc: '前のK線へ戻る (Step -1)' },
-    { key: 'Esc', desc: 'すべてのモーダル / ポップアップを閉じる' },
-    { key: '1, 2, 3, 4', desc: '時間軸を素早く切り替え (M1, M5, H1, D1)' },
-    { key: 'Delete', desc: '選択した描画ツールを削除' }
-  ] : language === 'zh' ? [
-    { key: 'Space', desc: '播放 / 暂停 K线回放' },
-    { key: 'F', desc: '前进单根K线 (Step +1)' },
-    { key: 'B', desc: '打开快速下单面板' },
-    { key: 'Ctrl + Z', desc: '后退单根K线 (Step -1)' },
-    { key: 'Esc', desc: '关闭所有弹窗面板' },
-    { key: '1, 2, 3, 4', desc: '快速切换时间周期 (M1, M5, H1, D1)' },
-    { key: 'Delete', desc: '删除所选图表标注工具' }
-  ] : [
-    { key: 'Space', desc: 'Play / Pause Candle Replay Engine' },
-    { key: 'F', desc: 'Step Forward to Next Bar (+1)' },
-    { key: 'B', desc: 'Open New Order Ticket Modal' },
-    { key: 'Ctrl + Z', desc: 'Step Backward to Previous Bar (-1)' },
-    { key: 'Esc', desc: 'Close all open Modals & Popups' },
-    { key: '1, 2, 3, 4', desc: 'Quick Switch Timeframe (M1, M5, H1, D1)' },
-    { key: 'Delete', desc: 'Delete currently selected drawing tool' }
+  const shortcutsList = [
+    { key: 'Space', desc: t.shortcutSpace },
+    { key: 'F', desc: t.shortcutF },
+    { key: 'B', desc: t.shortcutB },
+    { key: 'Ctrl + Z', desc: t.shortcutCtrlZ },
+    { key: 'Esc', desc: t.shortcutEsc },
+    { key: '1, 2, 3, 4', desc: t.shortcut1234 },
+    { key: 'Delete', desc: t.shortcutDelete }
   ];
 
   return (

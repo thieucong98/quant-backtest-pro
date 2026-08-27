@@ -44,6 +44,7 @@ export const App: React.FC = () => {
 
   // Initialize session on mount
   useEffect(() => {
+    (window as any).__BACKTEST_STORE__ = useBacktestStore;
     initSession();
   }, []);
 
@@ -104,7 +105,6 @@ export const App: React.FC = () => {
       {/* 2. MAIN CENTER: CHART & DRAWINGS */}
       <main className="flex-1 relative w-full h-full min-h-0 bg-[#0b0e14]">
         <TradingViewChart />
-        <AIBotHUD />
       </main>
 
       {/* 3. REPLAY TIMELINE CONTROLLER */}

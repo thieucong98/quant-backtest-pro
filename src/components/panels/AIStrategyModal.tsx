@@ -42,7 +42,7 @@ import {
   HeatmapCell
 } from '../../engine/strategyOptimizer';
 import { useBacktestStore } from '../../store/backtestStore';
-import { translations } from '../../i18n/translations';
+import { translations, formatDate } from '../../i18n/translations';
 import { AIStrategyDefinition } from '../../types/strategy';
 import { strategiesApi } from '../../api';
 import { ExportStrategyModal } from './ExportStrategyModal';
@@ -71,7 +71,7 @@ const MiniSparkline: React.FC<{ data?: number[]; isPositive: boolean }> = ({ dat
   const closedArea = `${points} ${lastX},${height} ${firstX},${height}`;
 
   return (
-    <div className="flex items-center gap-1.5" title={`Vốn: $${data[0]} -> $${data[data.length - 1]}`}>
+    <div className="flex items-center gap-1.5" title={`$${data[0]} -> $${data[data.length - 1]}`}>
       <svg width={width} height={height} className="overflow-visible inline-block">
         <polygon points={closedArea} fill={fillColor} />
         <polyline
@@ -145,7 +145,6 @@ export const AIStrategyModal: React.FC = () => {
   const [filterMinTrades, setFilterMinTrades] = useState<boolean>(false);
   const [filterProfitable, setFilterProfitable] = useState<boolean>(false);
   const [optEnableSplit, setOptEnableSplit] = useState<boolean>(true);
-
   const filteredRankedResults = useMemo(() => {
     if (!optSummary) return [];
     return optSummary.rankedResults.filter((item) => {
@@ -166,46 +165,26 @@ export const AIStrategyModal: React.FC = () => {
     const lotMatch = strategyCode.match(/lotSize\s*:\s*(\d+(\.\d+)?)/);
     if (lotMatch) lot = parseFloat(lotMatch[1]);
 
-    let buyConditionText = language === 'vi' 
-      ? 'Khớp tín hiệu Mua (LONG) khi nến và chỉ báo kỹ thuật thỏa mãn logic chiến lược.'
-      : 'Triggers BUY order when price action & technical indicators align with strategy logic.';
-    let sellConditionText = language === 'vi'
-      ? 'Khớp tín hiệu Bán (SHORT) khi chỉ báo kỹ thuật đảo chiều giảm.'
-      : 'Triggers SELL order when technical indicators flip bearish.';
+    let buyConditionText = t.ruleBuyDefault;
+    let sellConditionText = t.ruleSellDefault;
 
     const lower = strategyCode.toLowerCase();
     if (lower.includes('ema') || lower.includes('sma')) {
-      buyConditionText = language === 'vi'
-        ? 'Đường MA/EMA nhanh cắt lên MA chậm (Bullish Trend Crossover)'
-        : 'Fast EMA crosses above Slow EMA (Bullish Trend Crossover)';
-      sellConditionText = language === 'vi'
-        ? 'Đường MA/EMA nhanh cắt xuống MA chậm (Bearish Trend Crossover)'
-        : 'Fast EMA crosses below Slow EMA (Bearish Trend Crossover)';
+      buyConditionText = t.ruleBuyEma;
+      sellConditionText = t.ruleSellEma;
     } else if (lower.includes('rsi')) {
-      buyConditionText = language === 'vi'
-        ? 'RSI quá bán (< 30) và phục hồi tăng trở lại'
-        : 'RSI Oversold condition (< 30) with bullish reversal candle';
-      sellConditionText = language === 'vi'
-        ? 'RSI quá mua (> 70) và quay đầu giảm'
-        : 'RSI Overbought condition (> 70) with bearish reversal candle';
+      buyConditionText = t.ruleBuyRsi;
+      sellConditionText = t.ruleSellRsi;
     } else if (lower.includes('bollinger') || lower.includes('bb')) {
-      buyConditionText = language === 'vi'
-        ? 'Giá phá vỡ hoặc bật nảy từ dải Bollinger Band dưới (Lower Band)'
-        : 'Price bounces from Lower Bollinger Band towards Middle Band';
-      sellConditionText = language === 'vi'
-        ? 'Giá chạm dải Bollinger Band trên (Upper Band) và đảo chiều'
-        : 'Price touches Upper Bollinger Band and reverts downward';
+      buyConditionText = t.ruleBuyBb;
+      sellConditionText = t.ruleSellBb;
     } else if (lower.includes('macd')) {
-      buyConditionText = language === 'vi'
-        ? 'Đường MACD cắt lên Signal Line hoặc vượt mốc 0'
-        : 'MACD line crosses above Signal line or crosses above zero';
-      sellConditionText = language === 'vi'
-        ? 'Đường MACD cắt xuống Signal Line hoặc thủng mốc 0'
-        : 'MACD line crosses below Signal line or crosses below zero';
+      buyConditionText = t.ruleBuyMacd;
+      sellConditionText = t.ruleSellMacd;
     }
 
     return { sl, tp, lot, buyConditionText, sellConditionText };
-  }, [strategyCode, language]);
+  }, [strategyCode, t]);
 
   // Export & Import Bot State
   const [isExportModalOpen, setExportModalOpen] = useState<boolean>(false);
@@ -281,9 +260,7 @@ export const AIStrategyModal: React.FC = () => {
     const { isAuthenticated, setAuthModalOpen } = useAuthStore.getState();
     if (!isAuthenticated) {
       setCompileStatus('ERROR');
-      setErrorMessage(language === 'vi'
-        ? '🔒 Tính năng AI Strategy Copilot & Auto-Trading yêu cầu tài khoản PRO / INSTITUTIONAL. Vui lòng Đăng nhập để sử dụng!'
-        : '🔒 AI Strategy Copilot requires PRO / INSTITUTIONAL account. Please sign in to unlock!');
+      setErrorMessage(t.aiCopilotAuthRequired);
       setAuthModalOpen(true, 'login');
       return;
     }
@@ -300,7 +277,7 @@ export const AIStrategyModal: React.FC = () => {
       // 🔍 AI Auto-Tuning: Tự động quét SL/TP tối ưu cho Symbol hiện tại
       if (autoTuneAfterGen && candles && candles.length >= 10) {
         setIsAutoTuning(true);
-        addStrategyLog('INFO', `[AI Auto-Tune] Đang tự động quét & tối ưu SL/TP cho ${instrument.symbol}...`);
+        addStrategyLog('INFO', `[AI Auto-Tune] Auto-scanning & optimizing SL/TP for ${instrument.symbol}...`);
         try {
           const ranges = StrategyOptimizerEngine.getSymbolDefaultRanges(instrument);
           const autoOptSummary = await StrategyOptimizerEngine.runBatchOptimization(
@@ -330,7 +307,7 @@ export const AIStrategyModal: React.FC = () => {
             };
             addStrategyLog(
               'SIGNAL',
-              `[AI Auto-Tune] Đã tối ưu cho ${instrument.symbol}: SL=${autoOptSummary.bestItem.slPips}p, TP=${autoOptSummary.bestItem.tpPips}p (Winrate: ${autoOptSummary.bestItem.report.winRate}%, Net: +$${autoOptSummary.bestItem.report.netProfit.toFixed(1)})`
+              `[AI Auto-Tune] Optimized for ${instrument.symbol}: SL=${autoOptSummary.bestItem.slPips}p, TP=${autoOptSummary.bestItem.tpPips}p (Winrate: ${autoOptSummary.bestItem.report.winRate}%, Net: +${autoOptSummary.bestItem.report.netProfit.toFixed(1)})`
             );
           }
         } catch (optErr: any) {
@@ -357,10 +334,10 @@ export const AIStrategyModal: React.FC = () => {
 
       setActiveStrategy(newStrat);
       setCompileStatus('SUCCESS');
-      addStrategyLog('SIGNAL', `[AI Copilot] Đã tạo và nạp chiến lược: "${result.name}"`);
+      addStrategyLog('SIGNAL', `[AI Copilot] Generated and loaded strategy: "${result.name}"`);
     } catch (err: any) {
       setCompileStatus('ERROR');
-      setErrorMessage(err.message || 'Lỗi khi sinh chiến lược.');
+      setErrorMessage(err.message || 'Error generating strategy.');
       addStrategyLog('ERROR', `[AI Generator Error] ${err.message}`);
     } finally {
       setIsGenerating(false);
@@ -373,7 +350,7 @@ export const AIStrategyModal: React.FC = () => {
       const compileRes = strategyRunner.compile(strategyCode, activeStrategy?.parameters || {});
       if (!compileRes.success) {
         setCompileStatus('ERROR');
-        setErrorMessage(compileRes.error || 'Lỗi cú pháp chiến lược.');
+        setErrorMessage(compileRes.error || 'Strategy compilation syntax error.');
         return;
       }
 
@@ -391,19 +368,19 @@ export const AIStrategyModal: React.FC = () => {
       toggleAutoTrading(true);
       setCompileStatus('SUCCESS');
       setErrorMessage('');
-      addStrategyLog('SIGNAL', `[AI Copilot] Kích hoạt & chạy chiến lược: "${strategyName}" (Auto-Trading: BẬT)`);
+      addStrategyLog('SIGNAL', `[AI Copilot] Activated & running strategy: "${strategyName}" (Auto-Trading: ON)`);
       setAIModalOpen(false);
       play();
     } catch (err: any) {
       setCompileStatus('ERROR');
-      setErrorMessage(err.message || 'Lỗi cú pháp chiến lược.');
+      setErrorMessage(err.message || 'Strategy compilation syntax error.');
     }
   };
 
   const handleSaveToDatabase = async () => {
     const { isAuthenticated, setAuthModalOpen } = useAuthStore.getState();
     if (!isAuthenticated) {
-      setDbSaveMessage('🔒 Vui lòng đăng nhập để lưu trữ chiến lược vào SQLite');
+      setDbSaveMessage('🔒 Please sign in to save strategy to database');
       setAuthModalOpen(true, 'login');
       setTimeout(() => setDbSaveMessage(null), 3000);
       return;
@@ -421,9 +398,9 @@ export const AIStrategyModal: React.FC = () => {
       });
       setDbSaveMessage(t.savedToDBSuccess || 'Đã lưu vào DB thành công!');
       setTimeout(() => setDbSaveMessage(null), 3000);
-      addStrategyLog('INFO', `Đã lưu chiến lược "${strategyName}" vào cơ sở dữ liệu`);
+      addStrategyLog('INFO', `Saved strategy "${strategyName}" to database`);
     } catch (err: any) {
-      setDbSaveMessage('Lỗi khi lưu vào DB');
+      setDbSaveMessage('Error saving to DB');
       setTimeout(() => setDbSaveMessage(null), 3000);
     } finally {
       setIsSavingDB(false);
@@ -437,7 +414,7 @@ export const AIStrategyModal: React.FC = () => {
     setActiveStrategy(tpl);
     setActiveTab('studio');
     setCompileStatus('SUCCESS');
-    addStrategyLog('INFO', `Đã nạp mẫu chiến lược: "${tpl.name}"`);
+    addStrategyLog('INFO', `Loaded template strategy: "${tpl.name}"`);
   };
 
   const handleLoadCustomStrategy = (strat: any) => {
@@ -456,7 +433,7 @@ export const AIStrategyModal: React.FC = () => {
     setActiveStrategy(loaded);
     toggleAutoTrading(true);
     setCompileStatus('SUCCESS');
-    addStrategyLog('SIGNAL', `[AI Copilot] Đã nạp & chạy chiến lược từ DB: "${loaded.name}" (Auto-Trading: BẬT)`);
+    addStrategyLog('SIGNAL', `[AI Copilot] Loaded & activated strategy from DB: "${loaded.name}" (Auto-Trading: ON)`);
     setAIModalOpen(false);
     play();
   };
@@ -468,7 +445,7 @@ export const AIStrategyModal: React.FC = () => {
     try {
       const text = await file.text();
       let importedName = file.name.replace(/\.[^/.]+$/, '');
-      let importedDesc = 'Chiến lược được import từ file ' + file.name;
+      let importedDesc = 'Strategy imported from ' + file.name;
       let importedCode = text;
       let importedParams = {};
 
@@ -497,7 +474,7 @@ export const AIStrategyModal: React.FC = () => {
       await fetchMyStrategies();
       setDbSaveMessage(t.importStrategySuccess || 'Đã import chiến lược thành công!');
       setTimeout(() => setDbSaveMessage(null), 3000);
-      addStrategyLog('INFO', `[Strategy Import] Đã import thành công chiến lược "${importedName}"`);
+      addStrategyLog('INFO', `[Strategy Import] Successfully imported strategy "${importedName}"`);
     } catch (err: any) {
       alert(t.importStrategyError || 'Lỗi khi đọc file chiến lược: ' + err.message);
     } finally {
@@ -521,7 +498,7 @@ export const AIStrategyModal: React.FC = () => {
 
   const handleDeleteCustomStrategy = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (window.confirm('Bạn có chắc muốn xóa chiến lược này khỏi DB?')) {
+    if (window.confirm(t.confirmDeleteStrat)) {
       try {
         await strategiesApi.delete(id);
         await fetchMyStrategies();
@@ -541,7 +518,7 @@ export const AIStrategyModal: React.FC = () => {
       setTestMessage(`🟢 ${res.message} • Model: ${res.model}`);
     } catch (err: any) {
       setTestStatus('ERROR');
-      setTestMessage(`🔴 ${err.message || 'Không thể kết nối tới nhà cung cấp.'}`);
+      setTestMessage(`🔴 ${err.message || 'Cannot connect to provider.'}`);
     }
   };
 
@@ -570,13 +547,16 @@ export const AIStrategyModal: React.FC = () => {
   // --- OPTIMIZER HANDLERS ---
   const handleRunOptimizer = async () => {
     if (candles.length < 10) {
-      alert('Không đủ dữ liệu nến để chạy tối ưu hóa. Vui lòng tải dữ liệu nến vào biểu đồ trước.');
+      alert(t.insufficientCandlesForOpt);
       return;
     }
 
     setIsOptimizing(true);
     setOptProgress({ percent: 0, current: 0, total: 0 });
-    setOptApplyMessage(null);
+    setSelectedOptItem(null);
+
+    // Give UI a moment to show spinner
+    await new Promise(r => setTimeout(r, 60));
 
     try {
       const summary = await StrategyOptimizerEngine.runBatchOptimization(
@@ -587,26 +567,19 @@ export const AIStrategyModal: React.FC = () => {
         {
           slRange,
           tpRange,
-          initialBalance: account.initialBalance || 10000,
-          lotSize: 0.1,
           metricSortBy: optimizerSortBy,
-          splitRatio: optEnableSplit ? 0.70 : 1.0
+          splitRatio: optEnableSplit ? 0.70 : 0
         },
-        (percent, current, total) => {
-          setOptProgress({ percent, current, total });
-        }
+        (percent, current, total) => setOptProgress({ percent, current, total })
       );
 
       setOptSummary(summary);
       if (summary.bestItem) {
         setSelectedOptItem(summary.bestItem);
-        addStrategyLog(
-          'INFO',
-          `[SL/TP Optimizer] Đã quét ${summary.totalCombinations} tổ hợp cho ${instrument.symbol} (${summary.executionTimeMs}ms). Tối ưu nhất: SL ${summary.bestItem.slPips}p, TP ${summary.bestItem.tpPips}p (Net: +$${summary.bestItem.report.netProfit.toFixed(1)})`
-        );
       }
     } catch (err: any) {
-      alert('Lỗi tối ưu hóa: ' + err.message);
+      console.error('Optimization error:', err);
+      alert(`Optimizer error: ${err.message}`);
     } finally {
       setIsOptimizing(false);
     }
@@ -633,16 +606,12 @@ export const AIStrategyModal: React.FC = () => {
     };
 
     setActiveStrategy(newStrat);
-    setOptApplyMessage(
-      language === 'vi'
-        ? `✅ Đã áp dụng SL: ${item.slPips} pips, TP: ${item.tpPips} pips vào chiến lược!`
-        : `✅ Applied SL: ${item.slPips} pips, TP: ${item.tpPips} pips to strategy!`
-    );
+    setOptApplyMessage(t.optApplySuccessMsg.replace('{sl}', item.slPips.toString()).replace('{tp}', item.tpPips.toString()));
     setTimeout(() => setOptApplyMessage(null), 3500);
 
     addStrategyLog(
       'SIGNAL',
-      `[Optimizer] Áp dụng cấu hình SL=${item.slPips}p, TP=${item.tpPips}p (WR: ${item.report.winRate}%, Net: +$${item.report.netProfit.toFixed(1)})`
+      `[Optimizer] Applied config SL=${item.slPips}p, TP=${item.tpPips}p (WR: ${item.report.winRate}%, Net: +${item.report.netProfit.toFixed(1)})`
     );
   };
 
@@ -654,10 +623,10 @@ export const AIStrategyModal: React.FC = () => {
   };
 
   const promptSuggestions = [
-    { label: 'EMA 9/21 Scalper', text: 'Chiến lược lướt sóng nhanh: Mua khi EMA 9 cắt lên EMA 21, Bán khi EMA 9 cắt xuống EMA 21 kèm SL 15pips, TP 30pips' },
-    { label: 'RSI 30/70 Pullback', text: 'Mua khi RSI 14 quá bán dưới 30 và nến xanh xuất hiện; Bán khi RSI 14 quá mua trên 70 và nến đỏ xuất hiện' },
-    { label: 'Bollinger Band Squeeze', text: 'Chiến lược phá vỡ dải Bollinger Bands khi thị trường bung nén với dải mở rộng' },
-    { label: 'MACD Zero Crossover', text: 'Giao dịch theo đà xu hướng khi đường MACD cắt qua mức 0 kết hợp bộ lọc EMA 50' }
+    { label: t.promptSuggestionEmaLabel, text: t.promptSuggestionEmaText },
+    { label: t.promptSuggestionRsiLabel, text: t.promptSuggestionRsiText },
+    { label: t.promptSuggestionBbLabel, text: t.promptSuggestionBbText },
+    { label: t.promptSuggestionMacdLabel, text: t.promptSuggestionMacdText }
   ];
 
   return (
@@ -691,7 +660,7 @@ export const AIStrategyModal: React.FC = () => {
                     : 'bg-slate-800 text-slate-400 hover:text-slate-200'
                 }`}
               >
-                {autoTradingEnabled ? (language === 'vi' ? 'BẬT' : 'ON') : (language === 'vi' ? 'TẮT' : 'OFF')}
+                {autoTradingEnabled ? t.autoTradingOn : t.autoTradingOff}
               </button>
             </div>
 
@@ -865,9 +834,9 @@ export const AIStrategyModal: React.FC = () => {
                     <span>{t.copilotTips}</span>
                   </div>
                   <ul className="text-[11px] text-slate-400 space-y-1 list-disc list-inside">
-                    <li>Hỗ trợ quét tối ưu hóa SL/TP đa biến thể tại tab <strong className="text-emerald-400">⚡ Tối Ưu SL/TP</strong>.</li>
-                    <li>Sử dụng <code className="text-purple-300 bg-slate-950 px-1 rounded">api.buy()</code> và <code className="text-purple-300 bg-slate-950 px-1 rounded">api.sell()</code> để mở vị thế.</li>
-                    <li>Sandbox chạy an toàn trong môi trường Web Worker cô lập.</li>
+                    <li>{t.aiSandboxTip1}</li>
+                    <li>{t.aiSandboxTip2}</li>
+                    <li>{t.aiSandboxTip3}</li>
                   </ul>
                 </div>
               </div>
@@ -900,19 +869,19 @@ export const AIStrategyModal: React.FC = () => {
                       <button
                         onClick={() => setActiveTab('optimizer')}
                         className="px-2.5 py-1 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/40 rounded text-[10px] font-bold flex items-center gap-1 transition-all shadow-xs"
-                        title="Mở trình tối ưu SL/TP"
+                        title={t.openOptimizerTooltip}
                       >
                         <Flame className="w-3 h-3 text-emerald-400" />
-                        <span>Tối Ưu SL/TP</span>
+                        <span>{t.optimizerTab}</span>
                       </button>
 
                       <button
                         onClick={() => handleOpenExportModal()}
                         className="px-2.5 py-1 bg-gradient-to-r from-teal-600 to-indigo-600 hover:from-teal-500 hover:to-indigo-500 text-white rounded text-[10px] font-bold flex items-center gap-1 transition-all shadow-xs"
-                        title="Xuất chiến lược sang Bot MT4/MT5/TradingView/Python/cTrader"
+                        title={t.exportBotModalTooltip}
                       >
                         <Download className="w-3 h-3" />
-                        <span>{t.exportBotBtn || 'Xuất Bot'}</span>
+                        <span>{t.exportBotBtn}</span>
                       </button>
 
                       <button
@@ -957,7 +926,7 @@ export const AIStrategyModal: React.FC = () => {
                   {compileStatus === 'SUCCESS' && (
                     <div className="flex items-center gap-1.5 text-[11px] text-emerald-400 bg-emerald-950/30 border border-emerald-500/30 px-2.5 py-1 rounded">
                       <CheckCircle className="w-3.5 h-3.5 shrink-0" />
-                      <span>{t.savedToDBSuccess || 'Chiến lược đã được biên dịch và kích hoạt thành công!'}</span>
+                      <span>{t.strategyCompiledActive}</span>
                     </div>
                   )}
                   {compileStatus === 'ERROR' && (
@@ -1248,7 +1217,7 @@ export const AIStrategyModal: React.FC = () => {
                       <div className="mt-2 text-[11px] text-slate-400 flex items-center justify-between px-1">
                         <span>R:R 1:{optSummary.bestItem.riskRewardRatio}</span>
                         <span>Max DD: {optSummary.bestItem.report.maxDrawdownPercent.toFixed(1)}%</span>
-                        <span>{optSummary.bestItem.report.totalTrades} Lệnh</span>
+                        <span>{optSummary.bestItem.report.totalTrades} {t.tradesCol}</span>
                       </div>
                     </div>
 
@@ -1268,7 +1237,7 @@ export const AIStrategyModal: React.FC = () => {
                         <Layers className="w-4 h-4 text-indigo-400" />
                         <h4 className="font-bold text-xs text-slate-200">{t.heatmapTitle}</h4>
                       </div>
-                      <span className="text-[10px] text-slate-500 font-mono">Trục Y: TP (pips) • Trục X: SL (pips)</span>
+                      <span className="text-[10px] text-slate-500 font-mono">{t.optAxisHelp}</span>
                     </div>
 
                     {/* HEATMAP GRID */}
@@ -1376,7 +1345,7 @@ export const AIStrategyModal: React.FC = () => {
 
                       <div className="flex items-center gap-1.5 text-slate-400">
                         <Filter className="w-3 h-3 text-purple-400" />
-                        <span className="text-[10px] text-slate-500">Bộ lọc:</span>
+                        <span className="text-[10px] text-slate-500">{t.filterLabel}</span>
                       </div>
 
                       <label className="flex items-center gap-1.5 cursor-pointer text-slate-300 hover:text-slate-100 transition-colors">
@@ -1405,19 +1374,19 @@ export const AIStrategyModal: React.FC = () => {
                     <table className="w-full text-left font-mono text-xs">
                       <thead className="bg-slate-950/90 text-slate-400 sticky top-0 text-[10px] border-b border-slate-800">
                         <tr>
-                          <th className="py-2 px-3">Hạng</th>
+                          <th className="py-2 px-3">{t.rankCol}</th>
                           <th className="py-2 px-3">SL (Pips)</th>
                           <th className="py-2 px-3">TP (Pips)</th>
                           <th className="py-2 px-3">R:R</th>
-                          <th className="py-2 px-3">Lệnh</th>
+                          <th className="py-2 px-3">{t.tradesCol}</th>
                           <th className="py-2 px-3">Win Rate (IS)</th>
                           <th className="py-2 px-3">OOS WinRate</th>
-                          <th className="py-2 px-3">Độ Bền (WFA)</th>
+                          <th className="py-2 px-3">{t.wfaCol}</th>
                           <th className="py-2 px-3">Net PnL ($)</th>
                           <th className="py-2 px-3">{t.sparklineEquity}</th>
                           <th className="py-2 px-3">Profit Factor</th>
                           <th className="py-2 px-3">Max DD (%)</th>
-                          <th className="py-2 px-3 text-right">Thao tác</th>
+                          <th className="py-2 px-3 text-right">{t.actionsCol}</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-800/60 text-[11px]">
@@ -1483,7 +1452,7 @@ export const AIStrategyModal: React.FC = () => {
                                   onClick={() => handleApplyOptConfig(res)}
                                   className="px-2.5 py-1 bg-emerald-600/80 hover:bg-emerald-500 text-white rounded text-[10px] font-bold transition-colors shadow-xs"
                                 >
-                                  Áp Dụng
+                                  {t.applyConfigBtn}
                                 </button>
                               </td>
                             </tr>
@@ -1502,7 +1471,7 @@ export const AIStrategyModal: React.FC = () => {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <p className="text-slate-400 text-xs">
-                  Danh sách các chiến lược định lượng đã lưu trong cơ sở dữ liệu SQLite:
+                  {t.myStrategiesSub}
                 </p>
                 <div className="flex items-center gap-2">
                   <input
@@ -1515,10 +1484,10 @@ export const AIStrategyModal: React.FC = () => {
                   <button
                     onClick={() => fileInputRef.current?.click()}
                     className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-xs flex items-center gap-1 transition-colors border border-slate-700"
-                    title="Nhập chiến lược từ file JSON hoặc JS"
+                    title={t.importStrategyModalTooltip}
                   >
                     <Upload className="w-3 h-3 text-indigo-400" />
-                    <span>{t.importStrategyBtn || 'Nhập Chiến Lược'}</span>
+                    <span>{t.importStrategyBtn}</span>
                   </button>
 
                   <button
@@ -1539,7 +1508,7 @@ export const AIStrategyModal: React.FC = () => {
               ) : myStrategies.length === 0 ? (
                 <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-8 text-center text-slate-500 text-xs">
                   <FolderOpen className="w-10 h-10 mx-auto mb-3 opacity-30" />
-                  Chưa có chiến lược nào được lưu trong Database. Hãy tạo và bấm "{t.saveToDB}" ở tab Studio!
+                  {t.noCustomStrategiesInDb}
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -1552,11 +1521,11 @@ export const AIStrategyModal: React.FC = () => {
                         <div className="flex items-center justify-between">
                           <span className="font-bold text-slate-200 text-xs">{strat.name}</span>
                           <span className="text-[10px] text-slate-500">
-                            {new Date(strat.createdAt).toLocaleDateString(language === 'vi' ? 'vi-VN' : 'en-US')}
+                            {formatDate(strat.createdAt, language)}
                           </span>
                         </div>
                         <p className="text-slate-400 text-[11px] line-clamp-2 mt-1">
-                          {strat.description || 'Chiến lược tùy chỉnh không có mô tả.'}
+                          {strat.description || t.customStrategyNoDesc}
                         </p>
                       </div>
 
@@ -1574,14 +1543,14 @@ export const AIStrategyModal: React.FC = () => {
                             })
                           }
                           className="p-1.5 text-slate-400 hover:text-teal-300 hover:bg-slate-800 rounded transition-colors"
-                          title="Xuất Bot MT5/MT4/Pine/Python/cTrader"
+                          title={t.exportBotModalTooltip}
                         >
                           <Download className="w-3.5 h-3.5" />
                         </button>
                         <button
                           onClick={(e) => handleDeleteCustomStrategy(strat.id, e)}
                           className="p-1.5 text-slate-500 hover:text-rose-400 hover:bg-rose-950/40 rounded transition-colors"
-                          title="Xóa chiến lược"
+                          title={t.deleteStrategyTitle}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -1604,7 +1573,7 @@ export const AIStrategyModal: React.FC = () => {
           {activeTab === 'templates' && (
             <div className="space-y-4">
               <p className="text-slate-400 text-xs">
-                Chọn một mẫu chiến lược thuật toán kinh điển để nạp vào Sandbox Runner:
+                {t.templatesSub}
               </p>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -1624,7 +1593,7 @@ export const AIStrategyModal: React.FC = () => {
                         className="px-3 py-1 bg-indigo-600 hover:bg-indigo-500 text-white rounded text-xs font-bold flex items-center gap-1 transition-colors"
                       >
                         <Play className="w-3 h-3 fill-current" />
-                        <span>Nạp Vào Studio</span>
+                        <span>{t.loadIntoStudioBtn}</span>
                       </button>
                     </div>
                   </div>
@@ -1767,7 +1736,7 @@ export const AIStrategyModal: React.FC = () => {
                       onClick={() => setShowApiKey(!showApiKey)}
                       className="absolute right-2 top-2 text-[10px] text-slate-400 hover:text-slate-200"
                     >
-                      {showApiKey ? (language === 'vi' ? 'Ẩn' : 'Hide') : (language === 'vi' ? 'Hiện' : 'Show')}
+                      {showApiKey ? t.hideApiKey : t.showApiKey}
                     </button>
                   </div>
                 </div>

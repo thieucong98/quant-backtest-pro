@@ -63,7 +63,7 @@ export const ReplayBar: React.FC = () => {
   const formatDate = (timestamp?: number) => {
     if (!timestamp) return '---';
     const date = new Date(timestamp * 1000);
-    return date.toISOString().replace('T', ' ').substring(0, 19) + ' UTC';
+    return date.toISOString().replace('T', ' ').substring(0, 16) + ' UTC';
   };
 
   const handleApplyDateTime = () => {
@@ -76,14 +76,14 @@ export const ReplayBar: React.FC = () => {
   };
 
   return (
-    <div className="relative h-12 bg-[#111622] border-t border-slate-800/80 px-4 flex items-center justify-between gap-4 select-none z-20 text-xs">
+    <div className="relative min-h-[44px] sm:h-12 bg-[#111622] border-t border-slate-800/80 px-2 sm:px-4 py-1.5 sm:py-0 flex flex-wrap items-center justify-between gap-2 sm:gap-4 select-none z-20 text-xs">
       {/* PLAYBACK CONTROLS */}
-      <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
         {/* Step Backward (-1) */}
         <button
           onClick={stepBackward}
           disabled={isPlaying || currentIndex <= 0}
-          className="p-1.5 bg-slate-800 hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed border border-slate-700 text-slate-300 hover:text-white rounded-md transition-colors"
+          className="p-1.5 bg-slate-800 hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed border border-slate-700 text-slate-300 hover:text-white rounded-lg transition-colors"
           title={`${t.stepBackward} (Ctrl+Z)`}
         >
           <SkipBack className="w-3.5 h-3.5" />
@@ -92,7 +92,7 @@ export const ReplayBar: React.FC = () => {
         {/* Play/Pause Button */}
         <button
           onClick={isPlaying ? pause : play}
-          className={`px-3 py-1.5 rounded-md flex items-center gap-1.5 font-semibold text-white shadow transition-all active:scale-95 ${
+          className={`px-2.5 sm:px-3 py-1.5 rounded-lg flex items-center gap-1 sm:gap-1.5 font-semibold text-white shadow transition-all active:scale-95 text-xs ${
             isPlaying
               ? 'bg-amber-600 hover:bg-amber-500 shadow-amber-600/30'
               : 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-600/30'
@@ -116,46 +116,45 @@ export const ReplayBar: React.FC = () => {
         <button
           onClick={stepForward}
           disabled={isPlaying || currentIndex >= totalCandles - 1}
-          className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed border border-slate-700 text-slate-200 rounded-md flex items-center gap-1 font-mono transition-colors"
+          className="px-2 sm:px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed border border-slate-700 text-slate-200 rounded-lg flex items-center gap-1 font-mono transition-colors text-xs"
           title={`${t.stepForward} (F)`}
         >
           <SkipForward className="w-3.5 h-3.5" />
-          <span className="hidden sm:inline">{t.stepForward}</span>
+          <span className="hidden sm:inline">+1</span>
         </button>
 
         {/* Reset Button */}
         <button
           onClick={resetSimulation}
-          className="p-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-400 hover:text-slate-200 rounded-md transition-colors"
-          title="Reset về cây nến đầu tiên"
+          className="p-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-400 hover:text-slate-200 rounded-lg transition-colors"
+          title={t.reset}
         >
           <RotateCcw className="w-3.5 h-3.5" />
         </button>
 
         {/* Speed Selector */}
-        <div className="flex items-center gap-1.5 bg-slate-900 px-2 py-1 rounded-md border border-slate-800 ml-1">
-          <Gauge className="w-3.5 h-3.5 text-indigo-400" />
-          <span className="text-slate-400 font-mono hidden md:inline">{t.speed}:</span>
+        <div className="flex items-center gap-1 bg-slate-900 px-2 py-1 rounded-lg border border-slate-800">
+          <Gauge className="w-3 h-3 text-indigo-400" />
           <select
             value={speed}
             onChange={(e) => setSpeed(Number(e.target.value))}
-            className="bg-transparent text-indigo-300 font-bold font-mono focus:outline-none cursor-pointer text-xs"
+            className="bg-transparent text-indigo-300 font-bold font-mono focus:outline-hidden cursor-pointer text-xs"
           >
-            <option value={1} className="bg-slate-900">1x (1 {t.candlesCount}/s)</option>
+            <option value={1} className="bg-slate-900">1x</option>
             <option value={2} className="bg-slate-900">2x</option>
             <option value={5} className="bg-slate-900">5x</option>
             <option value={10} className="bg-slate-900">10x</option>
             <option value={20} className="bg-slate-900">20x</option>
             <option value={50} className="bg-slate-900">50x</option>
-            <option value={100} className="bg-slate-900">100x (Max)</option>
+            <option value={100} className="bg-slate-900">100x</option>
           </select>
         </div>
       </div>
 
       {/* TIMELINE PROGRESS & SCRUBBER */}
-      <div className="flex-1 max-w-xl flex items-center gap-3">
-        <span className="font-mono text-[11px] text-slate-400 hidden md:inline">
-          {currentIndex + 1} / {totalCandles} {t.candlesCount}
+      <div className="flex-1 min-w-[140px] max-w-xl flex items-center gap-2 sm:gap-3 order-last sm:order-none w-full sm:w-auto">
+        <span className="font-mono text-[10px] sm:text-[11px] text-slate-400 shrink-0">
+          {currentIndex + 1}/{totalCandles}
         </span>
 
         {/* Scrubber Range Slider */}
@@ -168,30 +167,32 @@ export const ReplayBar: React.FC = () => {
           className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500 hover:accent-indigo-400"
         />
 
-        <span className="font-mono text-[11px] text-indigo-400 font-bold hidden sm:inline">
+        <span className="font-mono text-[10px] sm:text-[11px] text-indigo-400 font-bold shrink-0">
           {progressPercent.toFixed(0)}%
         </span>
       </div>
 
       {/* INTERACTIVE TIME-TRAVEL BUTTON */}
-      <div className="relative flex items-center gap-2">
+      <div className="relative flex items-center gap-2 shrink-0">
         <button
           onClick={() => setIsTimePickerOpen(!isTimePickerOpen)}
-          className="flex items-center gap-2 bg-slate-900/90 hover:bg-slate-800 px-3 py-1 rounded-lg border border-slate-700/80 hover:border-indigo-500/50 text-[11px] font-mono text-slate-200 transition-all shadow-sm group active:scale-95"
-          title="Bấm để chọn chính xác Ngày/Giờ bắt đầu Backtest"
+          className="flex items-center gap-1.5 bg-slate-900/90 hover:bg-slate-800 px-2 sm:px-3 py-1 rounded-lg border border-slate-700/80 hover:border-indigo-500/50 text-[10px] sm:text-[11px] font-mono text-slate-200 transition-all shadow-xs group active:scale-95"
+          title={t.timeTravelBtnTitle}
         >
-          <Calendar className="w-3.5 h-3.5 text-indigo-400 group-hover:text-indigo-300 animate-pulse" />
-          <span>{formatDate(currentCandle?.timestamp)}</span>
-          <Clock className="w-3 h-3 text-slate-500 group-hover:text-slate-300" />
+          <Calendar className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-indigo-400 group-hover:text-indigo-300" />
+          <span className="truncate max-w-[120px] sm:max-w-none">{formatDate(currentCandle?.timestamp)}</span>
+          <Clock className="w-3 h-3 text-slate-500 group-hover:text-slate-300 hidden sm:inline" />
         </button>
 
         {/* TIME-TRAVEL POPOVER DIALOG */}
         {isTimePickerOpen && (
-          <div className="absolute right-0 bottom-14 w-80 bg-[#111622]/98 border border-slate-700/90 backdrop-blur-xl p-4 rounded-xl shadow-2xl space-y-3 z-50 animate-in fade-in zoom-in-95 text-xs font-sans">
+          <div className="absolute right-0 bottom-14 w-80 max-w-[90vw] bg-[#111622]/98 border border-slate-700/90 backdrop-blur-xl p-4 rounded-xl shadow-2xl space-y-3 z-50 animate-in fade-in zoom-in-95 text-xs font-sans">
             <div className="flex items-center justify-between border-b border-slate-800 pb-2">
               <div className="flex items-center gap-1.5">
                 <FastForward className="w-4 h-4 text-indigo-400" />
-                <h4 className="font-bold text-slate-200 text-xs">Time-Travel: Chọn Mốc Replay</h4>
+                <h4 className="font-bold text-slate-200 text-xs">
+                  {t.timeTravelTitle}
+                </h4>
               </div>
               <button
                 onClick={() => setIsTimePickerOpen(false)}
@@ -203,7 +204,9 @@ export const ReplayBar: React.FC = () => {
 
             {/* Quick Jump Shortcuts */}
             <div className="space-y-1">
-              <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Phím tắt nhanh:</span>
+              <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">
+                {t.timeTravelShortcuts}
+              </span>
               <div className="grid grid-cols-3 gap-1.5 text-[10px] font-mono">
                 <button
                   onClick={() => {
@@ -212,7 +215,7 @@ export const ReplayBar: React.FC = () => {
                   }}
                   className="px-2 py-1.5 bg-slate-800 hover:bg-indigo-900/60 hover:text-indigo-300 border border-slate-700 rounded text-slate-300 font-bold transition-colors text-center"
                 >
-                  ⏪ Đầu Dữ Liệu
+                  {t.timeTravelStart}
                 </button>
                 <button
                   onClick={() => {
@@ -221,7 +224,7 @@ export const ReplayBar: React.FC = () => {
                   }}
                   className="px-2 py-1.5 bg-slate-800 hover:bg-indigo-900/60 hover:text-indigo-300 border border-slate-700 rounded text-slate-300 font-bold transition-colors text-center"
                 >
-                  📍 Giữa (50%)
+                  {t.timeTravelMid}
                 </button>
                 <button
                   onClick={() => {
@@ -230,21 +233,23 @@ export const ReplayBar: React.FC = () => {
                   }}
                   className="px-2 py-1.5 bg-slate-800 hover:bg-indigo-900/60 hover:text-indigo-300 border border-slate-700 rounded text-slate-300 font-bold transition-colors text-center"
                 >
-                  ⏩ Mới Nhất
+                  {t.timeTravelLatest}
                 </button>
               </div>
             </div>
 
             {/* Custom DateTime Input */}
             <div className="space-y-1.5 pt-1">
-              <label className="block text-[11px] text-slate-300 font-medium">Chọn ngày & giờ cụ thể:</label>
+              <label className="block text-[11px] text-slate-300 font-medium">
+                {t.timeTravelSelectDateTime}
+              </label>
               <input
                 type="datetime-local"
                 value={selectedDateTime}
                 onChange={(e) => setSelectedDateTime(e.target.value)}
                 min={toDateTimeLocalValue(firstCandle?.timestamp)}
                 max={toDateTimeLocalValue(lastCandle?.timestamp)}
-                className="w-full bg-slate-900 border border-slate-700/90 rounded-lg p-2 text-slate-100 font-mono text-xs focus:outline-none focus:border-indigo-500"
+                className="w-full bg-slate-900 border border-slate-700/90 rounded-lg p-2 text-slate-100 font-mono text-xs focus:outline-hidden focus:border-indigo-500"
               />
               <div className="text-[10px] text-slate-500 flex justify-between font-mono">
                 <span>Min: {firstCandle ? new Date(firstCandle.timestamp * 1000).toLocaleDateString() : '---'}</span>
@@ -258,13 +263,13 @@ export const ReplayBar: React.FC = () => {
                 onClick={() => setIsTimePickerOpen(false)}
                 className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs"
               >
-                Hủy
+                {t.cancel}
               </button>
               <button
                 onClick={handleApplyDateTime}
                 className="px-3 py-1.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold rounded-lg text-xs shadow-md shadow-indigo-600/30 active:scale-95 transition-all"
               >
-                Tua Tới Mốc Này
+                {t.timeTravelJumpBtn}
               </button>
             </div>
           </div>
