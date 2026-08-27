@@ -315,6 +315,7 @@ mock_engine = MockMT5Engine()
 # PYDANTIC DATA MODELS
 # ==============================================================================
 class ConnectRequest(BaseModel):
+    brokerType: Optional[str] = Field(None, description="Broker type (e.g. MT5_EXNESS, MT5_MOCK)")
     account: Optional[int] = Field(None, description="MT5 Account Login Number (e.g. 84920184)")
     password: Optional[str] = Field(None, description="MT5 Account Master/Investor Password")
     server: Optional[str] = Field("Exness-MT5Real", description="MT5 Server Name (e.g. Exness-MT5Real, Exness-MT5Trial)")
