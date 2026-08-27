@@ -54,10 +54,12 @@ export const PositionsTable: React.FC = () => {
 
   const {
     isLiveTradingMode,
+    connectionStatus,
     activeBroker,
     positions: livePositions,
     orders: liveOrders,
     deals: liveDeals,
+    liveTicks,
     setLiveBreakeven,
     partialCloseLive,
     closeLivePosition,
@@ -65,6 +67,8 @@ export const PositionsTable: React.FC = () => {
     cancelLiveOrder,
     modifyLiveSLTP
   } = useBrokerStore();
+
+  const isLiveActive = isLiveTradingMode && connectionStatus === 'CONNECTED';
 
   const t = translations[language] || translations.vi;
   const currentCandle = candles[currentIndex];
@@ -90,7 +94,7 @@ export const PositionsTable: React.FC = () => {
     const sl = editSL ? parseFloat(editSL) : undefined;
     const tp = editTP ? parseFloat(editTP) : undefined;
 
-    if (isLiveTradingMode) {
+    if (isLiveActive) {
       const ticket = 'ticket' in editingPosition ? editingPosition.ticket : editingPosition.id;
       await modifyLiveSLTP(ticket, sl, tp);
     } else {
@@ -110,9 +114,9 @@ export const PositionsTable: React.FC = () => {
     return date.toISOString().replace('T', ' ').substring(5, 19);
   };
 
-  const openCount = isLiveTradingMode ? livePositions.length : openPositions.length;
-  const pendingCount = isLiveTradingMode ? liveOrders.length : pendingOrders.length;
-  const historyCount = isLiveTradingMode ? liveDeals.length : closedPositions.length;
+  const openCount = isLiveActive ? livePositions.length : openPositions.length;
+  const pendingCount = isLiveActive ? liveOrders.length : pendingOrders.length;
+  const historyCount = isLiveActive ? liveDeals.length : closedPositions.length;
 
   return (
     <div
@@ -138,7 +142,7 @@ export const PositionsTable: React.FC = () => {
             <span>
               {t.openPositions} ({openCount})
             </span>
-            {isLiveTradingMode && (
+            {isLiveActive && (
               <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
             )}
           </button>
@@ -201,7 +205,7 @@ export const PositionsTable: React.FC = () => {
           {openCount > 0 && activeTab === 'open' && !isCollapsed && (
             <button
               onClick={() => {
-                if (isLiveTradingMode) {
+                if (isLiveActive) {
                   closeAllLivePositions();
                 } else {
                   openPositions.forEach((p) => closePosition(p.id));
@@ -245,7 +249,7 @@ export const PositionsTable: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {isLiveTradingMode ? (
+                {isLiveActive ? (
                   // LIVE BROKER POSITIONS
                   livePositions.length === 0 ? (
                     <tr>
@@ -254,91 +258,106 @@ export const PositionsTable: React.FC = () => {
                       </td>
                     </tr>
                   ) : (
-                    livePositions.map((pos) => (
-                      <tr
-                        key={pos.ticket}
-                        className="border-b border-slate-800/40 hover:bg-slate-800/30 transition-colors"
-                      >
-                        <td className="py-1.5 px-3 font-semibold text-slate-200">
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-slate-400 font-mono text-[10px]">#{pos.ticket}</span>
-                            <span className="font-bold text-white">{pos.symbol}</span>
-                          </div>
-                          {pos.comment && (
-                            <div className="text-[9px] text-slate-500 truncate max-w-[120px]">{pos.comment}</div>
-                          )}
-                        </td>
-                        <td className="py-1.5 px-2">
-                          <span
-                            className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
-                              pos.side === 'BUY'
-                                ? 'bg-teal-950 text-teal-400 border border-teal-500/40'
-                                : 'bg-rose-950 text-rose-400 border border-rose-500/40'
+                    livePositions.map((pos) => {
+                      const liveTick = liveTicks[pos.symbol];
+                      const openPrice = Number(pos.openPrice || (pos as any).price_open || 0);
+                      const curPrice = liveTick
+                        ? (pos.side === 'BUY' ? liveTick.bid : liveTick.ask)
+                        : Number(pos.currentPrice || (pos as any).price_current || openPrice);
+
+                      const lot = Number(pos.lotSize || (pos as any).volume || 0.1);
+                      const pnlDiff = pos.side === 'BUY' ? curPrice - openPrice : openPrice - curPrice;
+                      const contractSize = INSTRUMENTS[pos.symbol]?.contractSize || (pos.symbol.includes('XAU') ? 100 : 100000);
+                      const displayPnL = (liveTick && openPrice > 0)
+                        ? Number((pnlDiff * contractSize * lot).toFixed(2))
+                        : Number(pos.floatingPnL ?? (pos as any).profit ?? 0);
+
+                      return (
+                        <tr
+                          key={pos.ticket}
+                          className="border-b border-slate-800/40 hover:bg-slate-800/30 transition-colors"
+                        >
+                          <td className="py-1.5 px-3 font-semibold text-slate-200">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-slate-400 font-mono text-[10px]">#{pos.ticket}</span>
+                              <span className="font-bold text-white">{pos.symbol}</span>
+                            </div>
+                            {pos.comment && (
+                              <div className="text-[9px] text-slate-500 truncate max-w-[120px]">{pos.comment}</div>
+                            )}
+                          </td>
+                          <td className="py-1.5 px-2">
+                            <span
+                              className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                                pos.side === 'BUY'
+                                  ? 'bg-teal-950 text-teal-400 border border-teal-500/40'
+                                  : 'bg-rose-950 text-rose-400 border border-rose-500/40'
+                              }`}
+                            >
+                              {pos.side || ((pos as any).type === 0 ? 'BUY' : 'SELL')}
+                            </span>
+                          </td>
+                          <td className="py-1.5 px-2 text-slate-300 font-bold">{lot}</td>
+                          <td className="py-1.5 px-2 text-slate-300">{formatPrice(pos.symbol, openPrice)}</td>
+                          <td className="py-1.5 px-2 text-indigo-300 font-semibold">
+                            {formatPrice(pos.symbol, curPrice)}
+                          </td>
+                          <td className="py-1.5 px-2">
+                            <div className="text-rose-400 text-[10px]">
+                              SL: {pos.sl ? formatPrice(pos.symbol, pos.sl) : 'None'}
+                            </div>
+                            <div className="text-teal-400 text-[10px]">
+                              TP: {pos.tp ? formatPrice(pos.symbol, pos.tp) : 'None'}
+                            </div>
+                          </td>
+                          <td className="py-1.5 px-2">
+                            <div className="flex items-center gap-1">
+                              <button
+                                onClick={() => setLiveBreakeven(pos.ticket)}
+                                className="px-1.5 py-0.5 bg-amber-950/80 hover:bg-amber-900 border border-amber-500/40 text-amber-300 rounded text-[10px] font-bold flex items-center gap-0.5"
+                                title="Set Breakeven SL"
+                              >
+                                <ShieldCheck className="w-3 h-3" />
+                                <span>BE</span>
+                              </button>
+                              <button
+                                onClick={() => partialCloseLive(pos.ticket, 50)}
+                                className="px-1.5 py-0.5 bg-sky-950/80 hover:bg-sky-900 border border-sky-500/40 text-sky-300 rounded text-[10px] font-bold flex items-center gap-0.5"
+                                title="Close 50% Lot"
+                              >
+                                <Percent className="w-3 h-3" />
+                                <span>50%</span>
+                              </button>
+                            </div>
+                          </td>
+                          <td
+                            className={`py-1.5 px-3 text-right font-bold text-xs ${
+                              displayPnL >= 0 ? 'text-teal-400' : 'text-rose-400'
                             }`}
                           >
-                            {pos.side}
-                          </span>
-                        </td>
-                        <td className="py-1.5 px-2 text-slate-300 font-bold">{pos.lotSize}</td>
-                        <td className="py-1.5 px-2 text-slate-300">{formatPrice(pos.symbol, pos.openPrice)}</td>
-                        <td className="py-1.5 px-2 text-indigo-300 font-semibold">
-                          {formatPrice(pos.symbol, pos.currentPrice)}
-                        </td>
-                        <td className="py-1.5 px-2">
-                          <div className="text-rose-400 text-[10px]">
-                            SL: {pos.sl ? formatPrice(pos.symbol, pos.sl) : 'None'}
-                          </div>
-                          <div className="text-teal-400 text-[10px]">
-                            TP: {pos.tp ? formatPrice(pos.symbol, pos.tp) : 'None'}
-                          </div>
-                        </td>
-                        <td className="py-1.5 px-2">
-                          <div className="flex items-center gap-1">
-                            <button
-                              onClick={() => setLiveBreakeven(pos.ticket)}
-                              className="px-1.5 py-0.5 bg-amber-950/80 hover:bg-amber-900 border border-amber-500/40 text-amber-300 rounded text-[10px] font-bold flex items-center gap-0.5"
-                              title="Set Breakeven SL"
-                            >
-                              <ShieldCheck className="w-3 h-3" />
-                              <span>BE</span>
-                            </button>
-                            <button
-                              onClick={() => partialCloseLive(pos.ticket, 50)}
-                              className="px-1.5 py-0.5 bg-sky-950/80 hover:bg-sky-900 border border-sky-500/40 text-sky-300 rounded text-[10px] font-bold flex items-center gap-0.5"
-                              title="Close 50% Lot"
-                            >
-                              <Percent className="w-3 h-3" />
-                              <span>50%</span>
-                            </button>
-                          </div>
-                        </td>
-                        <td
-                          className={`py-1.5 px-3 text-right font-bold text-xs ${
-                            pos.floatingPnL >= 0 ? 'text-teal-400' : 'text-rose-400'
-                          }`}
-                        >
-                          {pos.floatingPnL >= 0 ? '+' : ''}${pos.floatingPnL.toFixed(2)}
-                        </td>
-                        <td className="py-1.5 px-3 text-center">
-                          <div className="flex items-center justify-center gap-1.5">
-                            <button
-                              onClick={() => handleOpenEdit(pos)}
-                              className="p-1 hover:bg-slate-700 rounded text-slate-400 hover:text-indigo-300"
-                              title="Edit SL/TP"
-                            >
-                              <Edit2 className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              onClick={() => closeLivePosition(pos.ticket)}
-                              className="p-1 hover:bg-rose-900/60 rounded text-slate-400 hover:text-rose-400"
-                              title="Close Position"
-                            >
-                              <X className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
+                            {displayPnL >= 0 ? '+' : ''}${displayPnL.toFixed(2)}
+                          </td>
+                          <td className="py-1.5 px-3 text-center">
+                            <div className="flex items-center justify-center gap-1.5">
+                              <button
+                                onClick={() => handleOpenEdit(pos)}
+                                className="p-1 hover:bg-slate-700 rounded text-slate-400 hover:text-indigo-300"
+                                title="Edit SL/TP"
+                              >
+                                <Edit2 className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                onClick={() => closeLivePosition(pos.ticket)}
+                                className="p-1 hover:bg-rose-900/60 rounded text-slate-400 hover:text-rose-400"
+                                title="Close Position"
+                              >
+                                <X className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
                   )
                 ) : (
                   // REPLAY BACKTEST POSITIONS
@@ -468,7 +487,7 @@ export const PositionsTable: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {isLiveTradingMode ? (
+                {isLiveActive ? (
                   // LIVE BROKER ORDERS
                   liveOrders.length === 0 ? (
                     <tr>
@@ -506,7 +525,7 @@ export const PositionsTable: React.FC = () => {
                         <td className="py-1.5 px-3 text-center">
                           <button
                             onClick={() => cancelLiveOrder(order.ticket)}
-                            className="px-2 py-0.5 bg-slate-800 hover:bg-rose-900/60 text-slate-300 hover:text-rose-300 rounded text-[10px]"
+                            className="text-[10px] text-rose-400 hover:text-rose-300 bg-rose-950/80 px-2 py-0.5 rounded border border-rose-500/30 font-bold"
                           >
                             Cancel
                           </button>
@@ -515,7 +534,7 @@ export const PositionsTable: React.FC = () => {
                     ))
                   )
                 ) : (
-                  // REPLAY BACKTEST ORDERS
+                  // SANDBOX PENDING ORDERS
                   pendingOrders.length === 0 ? (
                     <tr>
                       <td colSpan={7} className="text-center py-8 text-slate-500">
@@ -525,26 +544,37 @@ export const PositionsTable: React.FC = () => {
                   ) : (
                     pendingOrders.map((order) => (
                       <tr key={order.id} className="border-b border-slate-800/40 hover:bg-slate-800/30">
-                        <td className="py-1.5 px-3 font-semibold text-slate-200">{order.symbol}</td>
+                        <td className="py-1.5 px-3 font-semibold text-slate-200">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-slate-400 font-mono text-[10px]">#{order.id.slice(0, 6)}</span>
+                            <span>{order.symbol}</span>
+                          </div>
+                        </td>
                         <td className="py-1.5 px-2">
-                          <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-indigo-950 text-indigo-400 border border-indigo-500/40">
-                            {order.side} {order.type}
+                          <span
+                            className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                              order.type.includes('BUY')
+                                ? 'bg-teal-950 text-teal-400 border border-teal-500/40'
+                                : 'bg-rose-950 text-rose-400 border border-rose-500/40'
+                            }`}
+                          >
+                            {order.type}
                           </span>
                         </td>
                         <td className="py-1.5 px-2 text-slate-300">{order.lotSize}</td>
                         <td className="py-1.5 px-2 text-amber-300 font-semibold">
-                          {order.price.toFixed(instrument.digits)}
+                          {formatPrice(order.symbol, (order as any).triggerPrice || order.price)}
                         </td>
                         <td className="py-1.5 px-2 text-rose-400">
-                          {order.stopLoss ? order.stopLoss.toFixed(instrument.digits) : '---'}
+                          {order.stopLoss ? formatPrice(order.symbol, order.stopLoss) : '---'}
                         </td>
                         <td className="py-1.5 px-2 text-teal-400">
-                          {order.takeProfit ? order.takeProfit.toFixed(instrument.digits) : '---'}
+                          {order.takeProfit ? formatPrice(order.symbol, order.takeProfit) : '---'}
                         </td>
                         <td className="py-1.5 px-3 text-center">
                           <button
                             onClick={() => cancelPendingOrder(order.id)}
-                            className="px-2 py-0.5 bg-slate-800 hover:bg-rose-900/60 text-slate-300 hover:text-rose-300 rounded text-[10px]"
+                            className="text-[10px] text-rose-400 hover:text-rose-300 bg-rose-950/80 px-2 py-0.5 rounded border border-rose-500/30 font-bold"
                           >
                             {t.cancel}
                           </button>
@@ -572,7 +602,7 @@ export const PositionsTable: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {isLiveTradingMode ? (
+                {isLiveActive ? (
                   // LIVE DEALS
                   liveDeals.length === 0 ? (
                     <tr>

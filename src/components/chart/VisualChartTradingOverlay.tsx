@@ -42,6 +42,7 @@ export const VisualChartTradingOverlay: React.FC<VisualChartTradingOverlayProps>
 
   const {
     isLiveTradingMode,
+    connectionStatus,
     positions: livePositions,
     modifyLiveSLTP,
     setLiveBreakeven,
@@ -50,8 +51,10 @@ export const VisualChartTradingOverlay: React.FC<VisualChartTradingOverlayProps>
     account: liveAccount
   } = useBrokerStore();
 
+  const isLiveActive = isLiveTradingMode && connectionStatus === 'CONNECTED';
+
   // Combine positions depending on mode
-  const activePositions = isLiveTradingMode
+  const activePositions = isLiveActive
     ? livePositions.map((p) => ({
         id: String(p.ticket),
         ticket: p.ticket,
@@ -206,7 +209,7 @@ export const VisualChartTradingOverlay: React.FC<VisualChartTradingOverlayProps>
 
   if (activePositions.length === 0 && !dragging) return null;
 
-  const currentBalance = isLiveTradingMode
+  const currentBalance = isLiveActive
     ? liveAccount?.balance || 10000
     : backtestAccount.balance;
 

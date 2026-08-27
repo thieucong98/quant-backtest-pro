@@ -29,6 +29,7 @@ import {
   Scale
 } from 'lucide-react';
 import { useBacktestStore } from '../../store/backtestStore';
+import { useBrokerStore } from '../../store/brokerStore';
 import { translations } from '../../i18n/translations';
 import { Candle, ChartType, InstrumentSpec, Timeframe } from '../../types/market';
 import { MultiAssetMathEngine } from '../../engine/quantMath';
@@ -112,6 +113,7 @@ export const TradingViewChart: React.FC = () => {
     markers,
     economicNews,
     executeMarketOrder,
+    addStrategyLog,
     account,
     language,
     isPropFirmMode,
@@ -131,7 +133,27 @@ export const TradingViewChart: React.FC = () => {
     toggleInvertedScale
   } = useBacktestStore();
 
+  const {
+    isLiveTradingMode,
+    activeBroker,
+    liveTicks,
+    positions: livePositions,
+    executeLiveMarketOrder,
+    connectionStatus: brokerStatus
+  } = useBrokerStore();
+
+  const isLiveActive = isLiveTradingMode && brokerStatus === 'CONNECTED';
   const t = translations[language] || translations.vi;
+
+  // Real-time second clock for live candle countdown
+  const [nowSec, setNowSec] = useState<number>(() => Math.floor(Date.now() / 1000));
+  useEffect(() => {
+    if (!isLiveActive) return;
+    const id = setInterval(() => {
+      setNowSec(Math.floor(Date.now() / 1000));
+    }, 1000);
+    return () => clearInterval(id);
+  }, [isLiveActive]);
 
   // Track last rendered index and candles array reference
   const lastRenderedIndexRef = useRef<number>(-1);
@@ -383,199 +405,256 @@ export const TradingViewChart: React.FC = () => {
   useEffect(() => {
     if (!mainSeriesRef.current || !volumeSeriesRef.current || effectiveCandles.length === 0) return;
 
-    const isSameCandlesArray = lastCandlesRef.current === effectiveCandles;
-    const isSequentialStep = isSameCandlesArray && currentIndex === lastRenderedIndexRef.current + 1;
+    try {
+      const isSameCandlesArray = lastCandlesRef.current === effectiveCandles;
+      const isSequentialStep = isSameCandlesArray && currentIndex === lastRenderedIndexRef.current + 1;
+      const isLineOrArea = chartType === 'line' || chartType === 'area' || chartType === 'baseline';
 
-    const isLineOrArea = chartType === 'line' || chartType === 'area' || chartType === 'baseline';
+      const toTimeSec = (ts: number): Time => (ts > 1e11 ? Math.floor(ts / 1000) : Math.floor(ts)) as Time;
 
-    if (isSequentialStep) {
-      // ⚡ FAST PATH: O(1) Incremental Update (0.05ms)
-      const c = effectiveCandles[currentIndex];
-      if (c) {
-        if (isLineOrArea) {
-          mainSeriesRef.current.update({
-            time: (c.timestamp / 1000) as Time,
-            value: c.close
+      if (isSequentialStep) {
+        // ⚡ FAST PATH: O(1) Incremental Update (0.05ms)
+        const c = effectiveCandles[currentIndex];
+        if (c) {
+          const tSec = toTimeSec(c.timestamp);
+          if (isLineOrArea) {
+            mainSeriesRef.current.update({
+              time: tSec,
+              value: c.close
+            });
+          } else {
+            mainSeriesRef.current.update({
+              time: tSec,
+              open: c.open,
+              high: c.high,
+              low: c.low,
+              close: c.close
+            });
+          }
+
+          volumeSeriesRef.current.update({
+            time: tSec,
+            value: c.volume,
+            color: c.close >= c.open ? 'rgba(38, 166, 154, 0.35)' : 'rgba(239, 83, 80, 0.35)'
           });
+
+          lastRenderedIndexRef.current = currentIndex;
+        }
+      } else {
+        // 🔄 FULL PATH: Chạy khi Load dữ liệu mới, Đổi Type, Đổi TF, hoặc Kéo thanh Scrubber
+        const visibleCandles = effectiveCandles.slice(0, currentIndex + 1);
+
+        // Sanitize & strictly deduplicate timestamps
+        const cleanCandles: Candle[] = [];
+        let lastTs = -1;
+        for (const c of visibleCandles) {
+          const sec = c.timestamp > 1e11 ? Math.floor(c.timestamp / 1000) : Math.floor(c.timestamp);
+          if (sec > lastTs) {
+            cleanCandles.push({ ...c, timestamp: sec });
+            lastTs = sec;
+          }
+        }
+
+        if (cleanCandles.length === 0) return;
+
+        if (isLineOrArea) {
+          const lineData: LineData<Time>[] = cleanCandles.map(c => ({
+            time: c.timestamp as Time,
+            value: c.close
+          }));
+          mainSeriesRef.current.setData(lineData);
         } else {
-          mainSeriesRef.current.update({
-            time: (c.timestamp / 1000) as Time,
+          const candleData: CandlestickData<Time>[] = cleanCandles.map(c => ({
+            time: c.timestamp as Time,
             open: c.open,
             high: c.high,
             low: c.low,
             close: c.close
-          });
+          }));
+          mainSeriesRef.current.setData(candleData);
         }
 
-        volumeSeriesRef.current.update({
-          time: (c.timestamp / 1000) as Time,
+        const volumeData = cleanCandles.map(c => ({
+          time: c.timestamp as Time,
           value: c.volume,
           color: c.close >= c.open ? 'rgba(38, 166, 154, 0.35)' : 'rgba(239, 83, 80, 0.35)'
-        });
+        }));
+        volumeSeriesRef.current.setData(volumeData);
 
+        lastCandlesRef.current = effectiveCandles;
         lastRenderedIndexRef.current = currentIndex;
-      }
-    } else {
-      // 🔄 FULL PATH: Chạy khi Load dữ liệu mới, Đổi Type, Đổi TF, hoặc Kéo thanh Scrubber
-      const visibleCandles = effectiveCandles.slice(0, currentIndex + 1);
-
-      if (isLineOrArea) {
-        const lineData: LineData<Time>[] = visibleCandles.map(c => ({
-          time: (c.timestamp / 1000) as Time,
-          value: c.close
-        }));
-        mainSeriesRef.current.setData(lineData);
-      } else {
-        const candleData: CandlestickData<Time>[] = visibleCandles.map(c => ({
-          time: (c.timestamp / 1000) as Time,
-          open: c.open,
-          high: c.high,
-          low: c.low,
-          close: c.close
-        }));
-        mainSeriesRef.current.setData(candleData);
+        chartRef.current?.timeScale().scrollToRealTime();
       }
 
-      const volumeData = visibleCandles.map(c => ({
-        time: (c.timestamp / 1000) as Time,
-        value: c.volume,
-        color: c.close >= c.open ? 'rgba(38, 166, 154, 0.35)' : 'rgba(239, 83, 80, 0.35)'
-      }));
-      volumeSeriesRef.current.setData(volumeData);
+      // Render Markers
+      const currentMaxTime = effectiveCandles[currentIndex]?.timestamp || 0;
+      const maxSec = currentMaxTime > 1e11 ? Math.floor(currentMaxTime / 1000) : Math.floor(currentMaxTime);
+      const activeMarkers = markers
+        .filter(m => (m.time > 1e11 ? Math.floor(m.time / 1000) : m.time) <= maxSec)
+        .map(m => ({
+          time: (m.time > 1e11 ? Math.floor(m.time / 1000) : m.time) as Time,
+          position: m.position as any,
+          color: m.color,
+          shape: m.shape as any,
+          text: m.text,
+          size: 1.2
+        }));
 
-      lastCandlesRef.current = effectiveCandles;
-      lastRenderedIndexRef.current = currentIndex;
-      chartRef.current?.timeScale().scrollToRealTime();
+      // Thêm Economic News Markers
+      const newsMarkers = economicNews
+        .filter(n => (n.timestamp > 1e11 ? Math.floor(n.timestamp / 1000) : n.timestamp) <= maxSec)
+        .map(n => ({
+          time: (n.timestamp > 1e11 ? Math.floor(n.timestamp / 1000) : n.timestamp) as Time,
+          position: 'aboveBar' as any,
+          color: n.impact === 'HIGH' ? '#f43f5e' : '#f59e0b',
+          shape: 'circle' as any,
+          text: `📰 ${n.title}`,
+          size: 1.5
+        }));
+
+      const allMarkers = [...activeMarkers, ...newsMarkers].sort((a, b) => (a.time as number) - (b.time as number));
+      mainSeriesRef.current.setMarkers(allMarkers);
+    } catch (err) {
+      console.error('Error rendering chart candles:', err);
     }
-
-    // Render Markers
-    const currentMaxTime = effectiveCandles[currentIndex]?.timestamp || 0;
-    const activeMarkers = markers
-      .filter(m => m.time <= currentMaxTime)
-      .map(m => ({
-        time: (Math.floor(m.time / 1000)) as Time,
-        position: m.position as any,
-        color: m.color,
-        shape: m.shape as any,
-        text: m.text,
-        size: 1.2
-      }));
-
-    // Thêm Economic News Markers
-    const newsMarkers = economicNews
-      .filter(n => n.timestamp <= currentMaxTime)
-      .map(n => ({
-        time: (Math.floor(n.timestamp / 1000)) as Time,
-        position: 'aboveBar' as any,
-        color: n.impact === 'HIGH' ? '#f43f5e' : '#f59e0b',
-        shape: 'circle' as any,
-        text: `📰 ${n.title}`,
-        size: 1.5
-      }));
-
-    const allMarkers = [...activeMarkers, ...newsMarkers].sort((a, b) => (a.time as number) - (b.time as number));
-    mainSeriesRef.current.setMarkers(allMarkers);
   }, [effectiveCandles, currentIndex, markers, economicNews, instrument.digits, chartType]);
 
-  // Cập nhật đường giá hiển thị cho Open Positions (Entry, SL, TP lines với số tiền USD, % & R:R)
+  // Cập nhật đường giá hiển thị cho Open Positions (Hỗ trợ cả Sandbox & Live Broker Positions)
   useEffect(() => {
     if (!mainSeriesRef.current) return;
 
-    priceLinesRef.current.forEach(line => {
-      try {
-        mainSeriesRef.current?.removePriceLine(line);
-      } catch (e) {}
-    });
-    priceLinesRef.current = [];
-
-    openPositions.forEach(pos => {
-      // 1. Entry Line
-      const entryLine = mainSeriesRef.current?.createPriceLine({
-        price: pos.entryPrice,
-        color: pos.side === 'BUY' ? '#26a69a' : '#ef5350',
-        lineWidth: 2,
-        lineStyle: LineStyle.Solid,
-        axisLabelVisible: true,
-        title: `${pos.side} ${pos.lotSize}L @ ${pos.entryPrice.toFixed(instrument.digits)}`
+    try {
+      priceLinesRef.current.forEach(line => {
+        try {
+          mainSeriesRef.current?.removePriceLine(line);
+        } catch (e) {}
       });
-      if (entryLine) priceLinesRef.current.push(entryLine);
+      priceLinesRef.current = [];
 
-      // 2. Stop Loss Line with Dollar Risk & Percent
-      let slDistance = 0;
-      if (pos.stopLoss) {
-        const slDiff = pos.side === 'BUY' ? pos.stopLoss - pos.entryPrice : pos.entryPrice - pos.stopLoss;
-        slDistance = Math.abs(slDiff);
-        const slDollar = slDiff * instrument.contractSize * pos.lotSize;
-        const slPercent = (slDollar / account.initialBalance) * 100;
+      const activePositionsToDraw = isLiveActive
+        ? (livePositions || [])
+            .filter((p) => p.symbol === instrument.symbol)
+            .map((p) => ({
+              symbol: p.symbol,
+              side: p.side || (p.type === 0 ? 'BUY' : 'SELL'),
+              lotSize: Number(p.lotSize || (p as any).volume || 0.1),
+              entryPrice: Number(p.openPrice || (p as any).price_open || 0),
+              stopLoss: p.sl && p.sl > 0 ? Number(p.sl) : undefined,
+              takeProfit: p.tp && p.tp > 0 ? Number(p.tp) : undefined,
+              ticket: p.ticket
+            }))
+        : openPositions.map((p) => ({
+            symbol: p.symbol,
+            side: p.side,
+            lotSize: Number(p.lotSize || 0.1),
+            entryPrice: Number(p.entryPrice || 0),
+            stopLoss: p.stopLoss && p.stopLoss > 0 ? Number(p.stopLoss) : undefined,
+            takeProfit: p.takeProfit && p.takeProfit > 0 ? Number(p.takeProfit) : undefined,
+            ticket: undefined
+          }));
 
-        const slLine = mainSeriesRef.current?.createPriceLine({
-          price: pos.stopLoss,
-          color: '#ef5350',
-          lineWidth: 1,
-          lineStyle: LineStyle.Dashed,
+      activePositionsToDraw.forEach(pos => {
+        if (!pos.entryPrice || isNaN(pos.entryPrice) || pos.entryPrice <= 0) return;
+
+        // 1. Entry Line
+        const title = pos.ticket
+          ? `${pos.side} ${pos.lotSize}L @ ${pos.entryPrice.toFixed(instrument.digits)} (#${pos.ticket})`
+          : `${pos.side} ${pos.lotSize}L @ ${pos.entryPrice.toFixed(instrument.digits)}`;
+
+        const entryLine = mainSeriesRef.current?.createPriceLine({
+          price: pos.entryPrice,
+          color: pos.side === 'BUY' ? '#26a69a' : '#ef5350',
+          lineWidth: 2,
+          lineStyle: LineStyle.Solid,
           axisLabelVisible: true,
-          title: `SL: -$${Math.abs(slDollar).toFixed(2)} (${Math.abs(slPercent) < 0.01 ? slPercent.toFixed(3) : slPercent.toFixed(2)}%)`
+          title
         });
-        if (slLine) priceLinesRef.current.push(slLine);
-      }
+        if (entryLine) priceLinesRef.current.push(entryLine);
 
-      // 3. Take Profit Line with Dollar Gain, Percent & R:R Ratio
-      if (pos.takeProfit) {
-        const tpDiff = pos.side === 'BUY' ? pos.takeProfit - pos.entryPrice : pos.entryPrice - pos.takeProfit;
-        const tpDistance = Math.abs(tpDiff);
-        const tpDollar = tpDiff * instrument.contractSize * pos.lotSize;
-        const tpPercent = (tpDollar / account.initialBalance) * 100;
+        // 2. Stop Loss Line with Dollar Risk & Percent
+        if (pos.stopLoss && !isNaN(pos.stopLoss) && pos.stopLoss > 0) {
+          const slDiff = pos.side === 'BUY' ? pos.stopLoss - pos.entryPrice : pos.entryPrice - pos.stopLoss;
+          const slDollar = Math.abs(slDiff * instrument.contractSize * pos.lotSize);
+          const slPercent = account.initialBalance > 0 ? (slDollar / account.initialBalance) * 100 : 0;
 
-        let rrText = '';
-        if (slDistance > 0) {
-          const rr = (tpDistance / slDistance).toFixed(1);
-          rrText = ` • R:R 1:${rr}`;
+          const slLine = mainSeriesRef.current?.createPriceLine({
+            price: pos.stopLoss,
+            color: '#ef5350',
+            lineWidth: 1,
+            lineStyle: LineStyle.Dashed,
+            axisLabelVisible: true,
+            title: `SL: -$${slDollar.toFixed(2)} (${slPercent < 0.01 ? slPercent.toFixed(3) : slPercent.toFixed(2)}%)`
+          });
+          if (slLine) priceLinesRef.current.push(slLine);
         }
 
-        const tpLine = mainSeriesRef.current?.createPriceLine({
-          price: pos.takeProfit,
-          color: '#26a69a',
-          lineWidth: 1,
-          lineStyle: LineStyle.Dashed,
-          axisLabelVisible: true,
-          title: `TP: +$${tpDollar.toFixed(2)} (+${tpPercent < 0.01 ? tpPercent.toFixed(3) : tpPercent.toFixed(2)}%)${rrText}`
-        });
-        if (tpLine) priceLinesRef.current.push(tpLine);
-      }
-    });
-  }, [openPositions, instrument, account.initialBalance, chartType]);
+        // 3. Take Profit Line with Dollar Gain
+        if (pos.takeProfit && !isNaN(pos.takeProfit) && pos.takeProfit > 0) {
+          const tpDiff = pos.side === 'BUY' ? pos.takeProfit - pos.entryPrice : pos.entryPrice - pos.takeProfit;
+          const tpDollar = Math.abs(tpDiff * instrument.contractSize * pos.lotSize);
+          const tpPercent = account.initialBalance > 0 ? (tpDollar / account.initialBalance) * 100 : 0;
+
+          const tpLine = mainSeriesRef.current?.createPriceLine({
+            price: pos.takeProfit,
+            color: '#26a69a',
+            lineWidth: 1,
+            lineStyle: LineStyle.Dashed,
+            axisLabelVisible: true,
+            title: `TP: +$${tpDollar.toFixed(2)} (+${tpPercent < 0.01 ? tpPercent.toFixed(3) : tpPercent.toFixed(2)}%)`
+          });
+          if (tpLine) priceLinesRef.current.push(tpLine);
+        }
+      });
+    } catch (err) {
+      console.error('Error updating position price lines:', err);
+    }
+  }, [openPositions, livePositions, isLiveActive, instrument, account.initialBalance, chartType]);
 
   // Handle Quick Market Entry
-  const handleQuickTrade = (side: 'BUY' | 'SELL') => {
+  const handleQuickTrade = async (side: 'BUY' | 'SELL') => {
     const currentCandle = candles[currentIndex];
     if (!currentCandle) return;
 
     let slPrice: number | undefined = undefined;
     let tpPrice: number | undefined = undefined;
-    const spread = instrument.defaultSpreadPips * instrument.pipSize;
-    const execPrice = side === 'BUY' ? currentCandle.close + spread : currentCandle.close;
+    const spread = (liveTicks[instrument.symbol]?.spread ? (liveTicks[instrument.symbol].spread * (instrument.pipSize / 10)) : instrument.defaultSpreadPips * instrument.pipSize);
+    const execPrice = side === 'BUY' ? (liveTicks[instrument.symbol]?.ask || currentCandle.close + spread) : (liveTicks[instrument.symbol]?.bid || currentCandle.close);
 
     if (useAutoSL) {
       const slDist = autoSLPips * instrument.pipSize;
-      slPrice = side === 'BUY' ? execPrice - slDist : execPrice + slDist;
+      const rawSL = side === 'BUY' ? execPrice - slDist : execPrice + slDist;
+      slPrice = Number(rawSL.toFixed(instrument.digits));
     }
 
     if (useAutoTP) {
       const tpDist = autoTPPips * instrument.pipSize;
-      tpPrice = side === 'BUY' ? execPrice + tpDist : execPrice - tpDist;
+      const rawTP = side === 'BUY' ? execPrice + tpDist : execPrice - tpDist;
+      tpPrice = Number(rawTP.toFixed(instrument.digits));
     }
 
-    executeMarketOrder(side, quickLot, slPrice, tpPrice);
+    if (isLiveActive && brokerStatus === 'CONNECTED') {
+      const res = await executeLiveMarketOrder(instrument.symbol, side, quickLot, slPrice, tpPrice);
+      if (res.success) {
+        addStrategyLog('INFO', `🔴 [LIVE QUICK TRADE] Khớp lệnh ${side} ${quickLot}L ${instrument.symbol} (#${res.ticket || 'OK'})`);
+      } else {
+        alert(`Không thể đặt lệnh ${side} trên sàn: ${res.message || 'Lỗi khớp lệnh MT5'}`);
+      }
+      return;
+    } else {
+      executeMarketOrder(side, quickLot, slPrice, tpPrice);
+      addStrategyLog('INFO', `🔵 [SANDBOX QUICK TRADE] Khớp lệnh ${side} ${quickLot}L ${instrument.symbol}`);
+    }
   };
 
   // Tính toán Live Bid, Ask & Pip Value ước tính
   const currentCandle = candles[currentIndex];
-  const currentBid = currentCandle?.close || 0;
-  const spreadValue = instrument.defaultSpreadPips * instrument.pipSize;
-  const currentAsk = currentBid + spreadValue;
+  const currentLiveTick = liveTicks[instrument.symbol];
+  const currentBid = isLiveActive && currentLiveTick ? currentLiveTick.bid : (currentCandle?.close || 0);
+  const spreadValue = isLiveActive && currentLiveTick ? (currentLiveTick.ask - currentLiveTick.bid) : (instrument.defaultSpreadPips * instrument.pipSize);
+  const currentAsk = isLiveActive && currentLiveTick ? currentLiveTick.ask : (currentBid + spreadValue);
 
   const pipDollarValue = currentCandle
-    ? MultiAssetMathEngine.calculatePipValue(instrument, quickLot, currentCandle.close)
+    ? MultiAssetMathEngine.calculatePipValue(instrument, quickLot, currentBid)
     : 10 * quickLot;
 
   const slRiskDollar = autoSLPips * pipDollarValue;
@@ -600,6 +679,13 @@ export const TradingViewChart: React.FC = () => {
     if (!currentCandle) return null;
 
     const tfSec = TIMEFRAME_SECONDS[timeframe] || 300;
+    if (isLiveActive) {
+      const remainingSec = Math.max(0, tfSec - (nowSec % tfSec));
+      const m = Math.floor(remainingSec / 60);
+      const s = remainingSec % 60;
+      return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
+
     const candleSec = Math.floor(currentCandle.timestamp / 1000);
     const nextCloseSec = (Math.floor(candleSec / tfSec) + 1) * tfSec;
     const remainingSec = Math.max(0, nextCloseSec - candleSec);
@@ -607,7 +693,7 @@ export const TradingViewChart: React.FC = () => {
     const m = Math.floor(remainingSec / 60);
     const s = remainingSec % 60;
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-  }, [showCountdown, candles, currentIndex, timeframe, currentCandle]);
+  }, [showCountdown, candles, currentIndex, timeframe, currentCandle, isLiveActive, nowSec]);
 
   // Prop Firm Calculations
   const dailyLossMax = (propFirmStartingDayBalance * (propFirmDailyLossLimit / 100));
@@ -629,7 +715,19 @@ export const TradingViewChart: React.FC = () => {
   return (
     <div className="relative w-full h-full flex flex-col bg-[#0b0e14] overflow-hidden select-none">
       {/* 1. ONE-CLICK QUICK TRADING DOCK (TOP-LEFT OVERLAY) */}
-      <div className="absolute top-3 left-3 z-20 flex items-center gap-2">
+      <div className="absolute top-3 left-3 z-20 flex flex-col gap-1.5">
+        {/* LIVE STREAM STATUS RIBBON */}
+        {isLiveActive && (
+          <div className="bg-rose-950/90 border border-rose-500/50 backdrop-blur-md px-2.5 py-1 rounded-xl flex items-center gap-2 text-[11px] font-mono text-rose-200 shadow-xl max-w-fit animate-pulse">
+            <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
+            <span className="font-bold">🔴 LIVE STREAM • {activeBroker === 'MT5_EXNESS' ? 'EXNESS MT5' : activeBroker}</span>
+            <span className="text-[10px] text-rose-300 border-l border-rose-800/80 pl-1.5 font-bold">
+              SPREAD: {currentLiveTick ? (currentLiveTick.spread / 10).toFixed(1) : instrument.defaultSpreadPips}p
+            </span>
+          </div>
+        )}
+
+        <div className="flex items-center gap-2">
         {isQuickDockOpen ? (
           <div className="bg-[#111622]/95 border border-slate-700/90 backdrop-blur-md p-2.5 rounded-2xl shadow-2xl animate-in fade-in zoom-in-95 font-mono text-xs max-w-[95vw] overflow-x-auto">
             <div className="flex items-center gap-3">
@@ -864,6 +962,7 @@ export const TradingViewChart: React.FC = () => {
             <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
           </button>
         )}
+        </div>
       </div>
 
       {/* 2. TOP-RIGHT SMART STACKING CONTAINER (ZERO OVERLAPPING & CLEAR OF PRICE SCALE) */}

@@ -431,8 +431,19 @@ export class StrategyOptimizerEngine {
         lotSize
       };
 
-      // Khởi tạo thực thi hàm chiến lược
-      const factory = new Function(functionBody);
+      // Khởi tạo thực thi hàm chiến lược trong Security Sandbox Scope
+      const sandboxPreamble = `
+        const window = undefined;
+        const document = undefined;
+        const localStorage = undefined;
+        const sessionStorage = undefined;
+        const fetch = undefined;
+        const WebSocket = undefined;
+        const XMLHttpRequest = undefined;
+        const globalThis = undefined;
+        const self = undefined;
+      `;
+      const factory = new Function(sandboxPreamble + functionBody);
       const stratInstance = factory();
       if (!stratInstance || typeof stratInstance.onCandle !== 'function') {
         return {

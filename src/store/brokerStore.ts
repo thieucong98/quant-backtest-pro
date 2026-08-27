@@ -2,17 +2,23 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import {
   BrokerAccount,
+  BrokerCandle,
   BrokerConfig,
   BrokerConnectionStatus,
   BrokerDeal,
   BrokerOrder,
   BrokerPosition,
+  BrokerSymbolDetail,
   BrokerType,
+  LiveTickUpdate,
   PositionMode,
   UnifiedOrderRequest
 } from '../types/broker';
 import { brokerApi } from '../api/broker';
 import { soundFx } from '../engine/audioEngine';
+import { useBacktestStore } from './backtestStore';
+import { INSTRUMENTS } from '../config/instruments';
+import { Timeframe } from '../types/market';
 
 interface BrokerStore {
   // Mode & Connection State
@@ -22,6 +28,7 @@ interface BrokerStore {
   statusMessage: string;
   pingLatency: number;
   isBrokerModalOpen: boolean;
+  isMarketWatchOpen: boolean;
   
   // Credentials & Config
   config: BrokerConfig;
@@ -31,13 +38,17 @@ interface BrokerStore {
   positions: BrokerPosition[];
   orders: BrokerOrder[];
   deals: BrokerDeal[];
+  brokerSymbols: BrokerSymbolDetail[];
+  liveTicks: Record<string, LiveTickUpdate>;
 
-  // Sync Timer
+  // Sync Timer & WebSocket
   syncIntervalId: any;
+  socket: WebSocket | null;
 
   // Actions
   setLiveTradingMode: (enabled: boolean) => void;
   setBrokerModalOpen: (open: boolean) => void;
+  setMarketWatchOpen: (open: boolean) => void;
   updateConfig: (partial: Partial<BrokerConfig>) => void;
   
   connectBroker: (overrideConfig?: Partial<BrokerConfig>) => Promise<boolean>;
@@ -45,6 +56,9 @@ interface BrokerStore {
   syncBrokerData: () => Promise<void>;
   startAutoSync: () => void;
   stopAutoSync: () => void;
+
+  fetchBrokerSymbols: () => Promise<BrokerSymbolDetail[]>;
+  fetchAndApplyBrokerCandles: (symbol: string, timeframe: Timeframe) => Promise<void>;
 
   // Order Execution Actions
   executeLiveMarketOrder: (
@@ -106,6 +120,66 @@ const DEFAULT_CONFIG: BrokerConfig = {
   maxSlippagePips: 20
 };
 
+function normalizeBrokerPosition(p: any): BrokerPosition {
+  const sideStr = p.side || (p.type === 0 || p.type === 'BUY' ? 'BUY' : 'SELL');
+  return {
+    ticket: p.ticket,
+    symbol: p.symbol,
+    side: sideStr,
+    type: typeof p.type === 'number' ? p.type : (sideStr === 'BUY' ? 0 : 1),
+    lotSize: p.volume ?? p.lotSize ?? 0.1,
+    openPrice: p.price_open ?? p.openPrice ?? 0,
+    currentPrice: p.price_current ?? p.currentPrice ?? p.price_open ?? 0,
+    sl: p.sl && p.sl > 0 ? p.sl : undefined,
+    tp: p.tp && p.tp > 0 ? p.tp : undefined,
+    floatingPnL: p.profit ?? p.floatingPnL ?? 0,
+    swap: p.swap ?? 0,
+    commission: p.commission ?? 0,
+    openTime: p.time ?? p.openTime ?? Math.floor(Date.now() / 1000),
+    magic: p.magic,
+    comment: p.comment
+  };
+}
+
+function normalizeBrokerOrder(o: any): BrokerOrder {
+  let typeStr: BrokerOrder['type'] = 'BUY_LIMIT';
+  if (typeof o.type === 'string') {
+    typeStr = o.type as any;
+  } else {
+    if (o.type === 2) typeStr = 'BUY_LIMIT';
+    else if (o.type === 3) typeStr = 'SELL_LIMIT';
+    else if (o.type === 4) typeStr = 'BUY_STOP';
+    else if (o.type === 5) typeStr = 'SELL_STOP';
+    else if (o.type === 0) typeStr = 'BUY_LIMIT';
+    else if (o.type === 1) typeStr = 'SELL_LIMIT';
+  }
+  const sideStr = o.side || (typeStr.startsWith('BUY') ? 'BUY' : 'SELL');
+  return {
+    ticket: o.ticket,
+    symbol: o.symbol,
+    side: sideStr,
+    type: typeStr,
+    lotSize: o.volume_initial ?? o.volume ?? o.lotSize ?? 0.1,
+    triggerPrice: o.price_open ?? o.triggerPrice ?? 0,
+    currentPrice: o.price_current ?? o.currentPrice ?? o.price_open ?? 0,
+    sl: o.sl && o.sl > 0 ? o.sl : undefined,
+    tp: o.tp && o.tp > 0 ? o.tp : undefined,
+    openTime: o.time_setup ?? o.openTime ?? Math.floor(Date.now() / 1000),
+    comment: o.comment,
+    magic: o.magic
+  };
+}
+
+export function sanitizeBrokerStorageConfig(state: BrokerStore) {
+  return {
+    activeBroker: state.activeBroker,
+    config: {
+      ...state.config,
+      password: '' // SECURITY: Never persist plain master password in browser localStorage
+    }
+  };
+}
+
 export const useBrokerStore = create<BrokerStore>()(
   persist(
     (set, get) => ({
@@ -115,6 +189,7 @@ export const useBrokerStore = create<BrokerStore>()(
       statusMessage: '',
       pingLatency: -1,
       isBrokerModalOpen: false,
+      isMarketWatchOpen: false,
 
       config: DEFAULT_CONFIG,
 
@@ -122,13 +197,21 @@ export const useBrokerStore = create<BrokerStore>()(
       positions: [],
       orders: [],
       deals: [],
+      brokerSymbols: [],
+      liveTicks: {},
       syncIntervalId: null,
+      socket: null,
 
-      setLiveTradingMode: (enabled: boolean) => {
+      setLiveTradingMode: async (enabled: boolean) => {
         set({ isLiveTradingMode: enabled });
-        if (enabled && get().connectionStatus !== 'CONNECTED') {
-          // Auto connect if not connected
-          get().connectBroker();
+        if (enabled) {
+          if (get().connectionStatus !== 'CONNECTED') {
+            await get().connectBroker();
+          }
+          // Automatically load live candles for current active symbol
+          const curSym = useBacktestStore.getState().instrument.symbol;
+          const curTf = useBacktestStore.getState().timeframe;
+          await get().fetchAndApplyBrokerCandles(curSym, curTf);
         }
       },
 
@@ -136,10 +219,35 @@ export const useBrokerStore = create<BrokerStore>()(
         set({ isBrokerModalOpen: open });
       },
 
+      setMarketWatchOpen: (open: boolean) => {
+        set({ isMarketWatchOpen: open });
+      },
+
       updateConfig: (partial: Partial<BrokerConfig>) => {
         set((state) => ({
           config: { ...state.config, ...partial }
         }));
+      },
+
+      fetchBrokerSymbols: async () => {
+        const { config } = get();
+        const symbols = await brokerApi.getAllSymbols(config.gatewayUrl);
+        if (symbols && symbols.length > 0) {
+          set({ brokerSymbols: symbols });
+        }
+        return symbols;
+      },
+
+      fetchAndApplyBrokerCandles: async (symbol: string, timeframe: Timeframe) => {
+        const { config, isLiveTradingMode } = get();
+        try {
+          const candles = await brokerApi.getCandles(symbol, timeframe, 500, config.gatewayUrl);
+          if (candles && candles.length > 0) {
+            useBacktestStore.getState().loadCandles(candles, candles.length - 1, symbol, timeframe);
+          }
+        } catch (e) {
+          console.error('Failed to fetch broker candles:', e);
+        }
       },
 
       connectBroker: async (overrideConfig) => {
@@ -174,9 +282,17 @@ export const useBrokerStore = create<BrokerStore>()(
             // Play connect sound
             try { soundFx.playOrderFilled(); } catch {}
 
-            // Initial fetch and start auto-sync
+            // Initial fetch symbols, candles and start auto-sync
+            await get().fetchBrokerSymbols();
             await get().syncBrokerData();
             get().startAutoSync();
+
+            if (get().isLiveTradingMode) {
+              const curSym = useBacktestStore.getState().instrument.symbol;
+              const curTf = useBacktestStore.getState().timeframe;
+              await get().fetchAndApplyBrokerCandles(curSym, curTf);
+            }
+
             return true;
           } else {
             set({
@@ -198,6 +314,7 @@ export const useBrokerStore = create<BrokerStore>()(
         get().stopAutoSync();
         await brokerApi.disconnect(get().config.gatewayUrl);
         set({
+          isLiveTradingMode: false,
           connectionStatus: 'DISCONNECTED',
           statusMessage: 'Disconnected',
           account: null,
@@ -231,18 +348,63 @@ export const useBrokerStore = create<BrokerStore>()(
 
       startAutoSync: () => {
         get().stopAutoSync();
+        
+        // 1. Polling fallback (1000ms)
         const id = setInterval(() => {
           get().syncBrokerData();
-        }, 1000); // 1s sync rate
+        }, 1000);
         set({ syncIntervalId: id });
+
+        // 2. WebSocket Real-time Tick & Snapshot Stream
+        try {
+          const { config } = get();
+          const wsUrl = config.gatewayUrl.replace(/^http/, 'ws') + '/ws';
+          const ws = new WebSocket(wsUrl);
+
+          ws.onmessage = (event) => {
+            try {
+              const data = JSON.parse(event.data);
+              if (data.type === 'SNAPSHOT') {
+                if (data.account) set({ account: data.account });
+                if (data.positions && Array.isArray(data.positions)) {
+                  set({ positions: data.positions.map(normalizeBrokerPosition) });
+                }
+                if (data.orders && Array.isArray(data.orders)) {
+                  set({ orders: data.orders.map(normalizeBrokerOrder) });
+                }
+                if (data.ticks) {
+                  set((state) => ({ liveTicks: { ...state.liveTicks, ...data.ticks } }));
+                  
+                  // If live trading is active, stream the tick to update the current candle
+                  if (get().isLiveTradingMode) {
+                    const activeSym = useBacktestStore.getState().instrument.symbol;
+                    const activeTick = data.ticks[activeSym];
+                    if (activeTick) {
+                      useBacktestStore.getState().updateLiveCandle(activeTick);
+                    }
+                  }
+                }
+              }
+            } catch (e) {}
+          };
+
+          ws.onerror = () => {
+            // silent fallback to polling
+          };
+
+          set({ socket: ws });
+        } catch {}
       },
 
       stopAutoSync: () => {
-        const { syncIntervalId } = get();
+        const { syncIntervalId, socket } = get();
         if (syncIntervalId) {
           clearInterval(syncIntervalId);
-          set({ syncIntervalId: null });
         }
+        if (socket) {
+          try { socket.close(); } catch {}
+        }
+        set({ syncIntervalId: null, socket: null });
       },
 
       // Execution methods
@@ -357,11 +519,7 @@ export const useBrokerStore = create<BrokerStore>()(
     }),
     {
       name: 'quantpro-broker-storage',
-      partialize: (state) => ({
-        activeBroker: state.activeBroker,
-        config: state.config,
-        isLiveTradingMode: state.isLiveTradingMode
-      })
+      partialize: sanitizeBrokerStorageConfig
     }
   )
 );

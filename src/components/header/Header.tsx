@@ -31,6 +31,7 @@ import { translations, Language } from '../../i18n/translations';
 import { AssetCategory, ChartType, DrawingToolType, Timeframe } from '../../types/market';
 import { SymbolSearchModal } from './SymbolSearchModal';
 import { BrokerConnectionModal } from '../panels/BrokerConnectionModal';
+import { MarketWatchDrawer } from '../panels/MarketWatchDrawer';
 
 export const Header: React.FC = () => {
   const [isSymbolModalOpen, setIsSymbolModalOpen] = useState(false);
@@ -68,6 +69,8 @@ export const Header: React.FC = () => {
     activeBroker,
     account: brokerAccount,
     pingLatency,
+    isMarketWatchOpen,
+    setMarketWatchOpen,
     setBrokerModalOpen
   } = useBrokerStore();
 
@@ -83,7 +86,10 @@ export const Header: React.FC = () => {
     { code: 'zh', label: '中文', flag: '🇨🇳' }
   ];
 
-  const floatingPnL = account.equity - account.balance;
+  const isLiveActive = isLiveTradingMode && brokerStatus === 'CONNECTED';
+  const activeBalance = isLiveActive && brokerAccount ? brokerAccount.balance : account.balance;
+  const activeEquity = isLiveActive && brokerAccount ? brokerAccount.equity : account.equity;
+  const floatingPnL = activeEquity - activeBalance;
 
   const getAssetBadge = (cat: AssetCategory) => {
     switch (cat) {
@@ -123,6 +129,20 @@ export const Header: React.FC = () => {
               </span>
             </div>
             <ChevronDown className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-200" />
+          </button>
+
+          {/* Market Watch Toggle Button */}
+          <button
+            onClick={() => setMarketWatchOpen(!isMarketWatchOpen)}
+            className={`flex items-center gap-1.5 px-2 py-1.5 rounded-lg border text-xs font-mono transition-all ${
+              isMarketWatchOpen
+                ? 'bg-indigo-600 text-white border-indigo-500 shadow-sm'
+                : 'bg-slate-900/90 text-slate-300 border-slate-700/80 hover:border-indigo-500/50 hover:bg-slate-800'
+            }`}
+            title="Mở Bảng giá Market Watch"
+          >
+            <Layers className="w-3.5 h-3.5 text-indigo-400" />
+            <span className="hidden lg:inline text-[11px] font-bold">Market Watch</span>
           </button>
 
           {/* Timeframe Selector (Responsive: Compact on small screens) */}
@@ -301,15 +321,15 @@ export const Header: React.FC = () => {
             {/* Mode Switcher Toggle */}
             {brokerStatus === 'CONNECTED' && (
               <button
-                onClick={() => setLiveTradingMode(!isLiveTradingMode)}
+                onClick={() => setLiveTradingMode(!isLiveActive)}
                 className={`px-2 py-1 rounded-lg text-[10px] font-bold font-mono transition-all border ${
-                  isLiveTradingMode
+                  isLiveActive
                     ? 'bg-rose-950/90 border-rose-500/60 text-rose-300 shadow-sm shadow-rose-500/20'
                     : 'bg-indigo-950/90 border-indigo-500/60 text-indigo-300'
                 }`}
-                title={isLiveTradingMode ? 'Chuyển về Replay Sandbox' : 'Chuyển sang Live Broker Mode'}
+                title={isLiveActive ? 'Chuyển về Replay Sandbox' : 'Chuyển sang Live Broker Mode'}
               >
-                {isLiveTradingMode ? '🔴 LIVE' : '🔄 REPLAY'}
+                {isLiveActive ? '🔴 LIVE' : '🔄 REPLAY'}
               </button>
             )}
           </div>
@@ -317,23 +337,23 @@ export const Header: React.FC = () => {
           {/* Smart Live Account Widget (Desktop & Laptop) */}
           <div 
             className="hidden xl:flex items-center bg-slate-900/90 px-3 py-1.5 rounded-lg border border-slate-800 text-xs font-mono select-none"
-            title={`${t.balanceLabel}: $${account.balance.toLocaleString('en-US', { minimumFractionDigits: 2 })} • ${t.equityLabel}: $${account.equity.toLocaleString('en-US', { minimumFractionDigits: 2 })} • ${t.floatingPnLLabel}: ${floatingPnL >= 0 ? '+' : ''}$${floatingPnL.toFixed(2)}`}
+            title={`${t.balanceLabel}: $${activeBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })} • ${t.equityLabel}: $${activeEquity.toLocaleString('en-US', { minimumFractionDigits: 2 })} • ${t.floatingPnLLabel}: ${floatingPnL >= 0 ? '+' : ''}$${floatingPnL.toFixed(2)}`}
           >
             {floatingPnL === 0 ? (
               <div className="flex items-center gap-1.5">
                 <span className="text-slate-500 font-medium">{t.balanceLabel}:</span>
-                <span className="font-bold text-slate-200">${account.balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                <span className="font-bold text-slate-200">${activeBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
               </div>
             ) : (
               <div className="flex items-center gap-2">
                 <div className="flex items-center gap-1.5">
                   <span className="text-slate-500 font-medium">{t.equityLabel}:</span>
-                  <span className={`font-bold ${account.equity >= account.balance ? 'text-teal-400' : 'text-rose-400'}`}>
-                    ${account.equity.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                  <span className={`font-bold ${activeEquity >= activeBalance ? 'text-teal-400' : 'text-rose-400'}`}>
+                    ${activeEquity.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                   </span>
                 </div>
                 <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold tracking-tight ${floatingPnL > 0 ? 'bg-teal-950/80 text-teal-300 border border-teal-500/30' : 'bg-rose-950/80 text-rose-300 border border-rose-500/30'}`}>
-                  {floatingPnL > 0 ? '+' : ''}${floatingPnL.toFixed(2)} ({account.balance > 0 ? ((floatingPnL / account.balance) * 100).toFixed(1) : 0}%)
+                  {floatingPnL > 0 ? '+' : ''}${floatingPnL.toFixed(2)} ({activeBalance > 0 ? ((floatingPnL / activeBalance) * 100).toFixed(1) : 0}%)
                 </span>
               </div>
             )}
@@ -604,6 +624,9 @@ export const Header: React.FC = () => {
 
       {/* BROKER CONNECTION MODAL */}
       <BrokerConnectionModal />
+
+      {/* MARKET WATCH DRAWER */}
+      <MarketWatchDrawer />
     </>
   );
 };

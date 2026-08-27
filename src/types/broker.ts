@@ -100,19 +100,63 @@ export interface UnifiedOrderRequest {
   price?: number;
   sl?: number;
   tp?: number;
-  deviation?: number;
   comment?: string;
+  deviation?: number;
   magic?: number;
 }
 
-export interface UnifiedModifyRequest {
+export interface OrderModifyRequest {
   ticket: string | number;
   sl?: number;
   tp?: number;
   price?: number;
 }
 
-export interface UnifiedCloseRequest {
+export type UnifiedModifyRequest = OrderModifyRequest;
+
+export interface OrderCloseRequest {
   ticket: string | number;
-  lotSize?: number; // Optional for partial close
+  lotSize?: number; // Omit for 100% close
+}
+
+export type UnifiedCloseRequest = OrderCloseRequest;
+
+// -----------------------------------------------------------------------------
+// Live Market Data & Candlestick Streaming Types
+// -----------------------------------------------------------------------------
+export interface BrokerCandle {
+  timestamp: number;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+}
+
+export interface BrokerSymbolDetail {
+  symbol: string;
+  description: string;
+  digits: number;
+  point: number;
+  spread: number;
+  min_lot: number;
+  max_lot: number;
+  step: number;
+  contract_size: number;
+  bid: number;
+  ask: number;
+  category: 'METALS' | 'FOREX' | 'CRYPTO' | 'INDICES' | 'COMMODITIES';
+  change24h?: number;
+  isFavorite?: boolean;
+}
+
+export interface LiveTickUpdate {
+  symbol: string;
+  bid: number;
+  ask: number;
+  last?: number;
+  volume?: number;
+  spread: number;
+  timestamp: number;
+  digits: number;
 }

@@ -29,6 +29,9 @@ jobs:
       - name: Run Automated Comprehensive Test Suite
         run: npm test
 
+      - name: Run Security Hardening Suite
+        run: npx tsx scripts/test_security_hardening.ts
+
       - name: Verify Server Build
         working-directory: ./server
         run: |

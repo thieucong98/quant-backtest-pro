@@ -99,6 +99,7 @@ interface BacktestStore {
   setInstrument: (symbol: string) => void;
   setTimeframe: (tf: Timeframe) => void;
   loadCandles: (candles: Candle[], startIndex?: number, targetSymbol?: string, targetTimeframe?: Timeframe) => void;
+  updateLiveCandle: (tick: { symbol: string; bid: number; ask: number; last?: number; timestamp: number }) => void;
   
   // Replay Actions
   play: () => void;
@@ -465,6 +466,29 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
       get().addStrategyLog('INFO', `Đã nạp ${newCandles.length.toLocaleString()} nến cho ${targetSpec.symbol} (${tf}) — Sẵn sàng backtest`);
     },
 
+    updateLiveCandle: (tick: { symbol: string; bid: number; ask: number; last?: number; timestamp: number }) => {
+      const { candles, instrument } = get();
+      if (!candles || candles.length === 0) return;
+      if (tick.symbol && tick.symbol !== instrument.symbol) return;
+
+      const lastCandle = { ...candles[candles.length - 1] };
+      const price = tick.last || tick.bid;
+      const tickSec = tick.timestamp > 1e11 ? Math.floor(tick.timestamp / 1000) : Math.floor(tick.timestamp || Date.now() / 1000);
+      
+      lastCandle.close = price;
+      lastCandle.high = Math.max(lastCandle.high, price);
+      lastCandle.low = Math.min(lastCandle.low, price);
+      lastCandle.timestamp = Math.max(lastCandle.timestamp, tickSec);
+
+      const newCandles = [...candles];
+      newCandles[newCandles.length - 1] = lastCandle;
+
+      set({
+        candles: newCandles,
+        currentIndex: newCandles.length - 1
+      });
+    },
+
     // --- REPLAY CONTROLS ---
     play: () => {
       if (get().isPlaying) return;
@@ -709,19 +733,6 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
 
     // --- TRADING ACTIONS ---
     executeMarketOrder: (side, lotSize, sl, tp, trailingStop) => {
-      // Guest Tier Guard: Limit to 3 demo trades for unauthenticated users
-      const auth = useAuthStore.getState();
-      if (!auth.isAuthenticated) {
-        const count = get().guestTradeCount || 0;
-        if (count >= 3) {
-          soundFx.playPropAlert();
-          get().addStrategyLog('ERROR', '🔒 Free Guest limit reached (3 trades). Please sign in to unlock unlimited trading!');
-          auth.setAuthModalOpen(true, 'login');
-          return false;
-        }
-        set({ guestTradeCount: count + 1 });
-      }
-
       const { matchingEngine, candles, currentIndex } = get();
       const currentCandle = candles[currentIndex];
       if (!currentCandle) return false;
@@ -759,18 +770,6 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
     },
 
     placePendingOrder: (side, type, lotSize, price, sl, tp, trailingStop) => {
-      const auth = useAuthStore.getState();
-      if (!auth.isAuthenticated) {
-        const count = get().guestTradeCount || 0;
-        if (count >= 3) {
-          soundFx.playPropAlert();
-          get().addStrategyLog('ERROR', '🔒 Free Guest limit reached (3 trades). Please sign in to unlock unlimited trading!');
-          auth.setAuthModalOpen(true, 'login');
-          return false;
-        }
-        set({ guestTradeCount: count + 1 });
-      }
-
       const { matchingEngine } = get();
       matchingEngine.placePendingOrder({
         side,

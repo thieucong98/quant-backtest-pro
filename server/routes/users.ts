@@ -112,16 +112,35 @@ usersRouter.post('/login', async (req: Request, res: Response) => {
 usersRouter.post('/sso', async (req: Request, res: Response) => {
   try {
     const { provider, email, name, avatarUrl } = req.body;
+    if (!email || !provider) {
+      res.status(400).json({ error: 'Thiếu thông tin xác thực SSO' });
+      return;
+    }
+
+    const validProviders = ['google', 'github', 'apple'];
+    if (!validProviders.includes(provider.toLowerCase())) {
+      res.status(400).json({ error: 'Nhà cung cấp SSO không hợp lệ' });
+      return;
+    }
+
     let user = await prisma.user.findUnique({ where: { email } });
 
-    if (!user) {
+    if (user) {
+      // Security Guard: If account was created with password, prevent takeover via unverified SSO
+      if (user.passwordHash && !user.ssoProvider) {
+        res.status(403).json({
+          error: 'Tài khoản này đã được tạo bằng mật khẩu. Vui lòng sử dụng phương thức đăng nhập bằng Email/Password.'
+        });
+        return;
+      }
+    } else {
       user = await prisma.user.create({
         data: {
           email,
-          name,
+          name: name || 'Trader',
           avatarUrl,
           ssoProvider: provider,
-          tier: 'INSTITUTIONAL',
+          tier: 'PRO',
           settings: {
             create: { language: 'vi', llmProvider: 'gemini' }
           }
@@ -141,10 +160,7 @@ usersRouter.get('/me', authMiddleware, async (req: Request, res: Response) => {
   try {
     const userId = (req as any).userId;
     if (!userId) {
-      // In dev mode, return default user
-      const user = await getOrCreateDefaultUser();
-      const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '30d' });
-      res.json({ user: { id: user.id, email: user.email, name: user.name, tier: user.tier, avatarUrl: user.avatarUrl, createdAt: user.createdAt }, token });
+      res.status(401).json({ error: 'Chưa đăng nhập. Vui lòng cung cấp token hợp lệ.' });
       return;
     }
 
@@ -174,10 +190,10 @@ usersRouter.get('/me', authMiddleware, async (req: Request, res: Response) => {
 // PUT /api/users/settings
 usersRouter.put('/settings', authMiddleware, async (req: Request, res: Response) => {
   try {
-    let userId = (req as any).userId;
+    const userId = (req as any).userId;
     if (!userId) {
-      const user = await getOrCreateDefaultUser();
-      userId = user.id;
+      res.status(401).json({ error: 'Chưa đăng nhập. Vui lòng cung cấp token hợp lệ.' });
+      return;
     }
 
     const settings = await prisma.userSettings.upsert({

@@ -39,12 +39,13 @@ strategiesRouter.get('/', async (req: Request, res: Response) => {
 strategiesRouter.get('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params as { id: string };
-    const strategy = await prisma.strategy.findUnique({
-      where: { id }
+    const userId = await getUserId(req);
+    const strategy = await prisma.strategy.findFirst({
+      where: { id, userId }
     });
 
     if (!strategy) {
-      res.status(404).json({ error: 'Strategy not found' });
+      res.status(404).json({ error: 'Strategy not found or access denied' });
       return;
     }
 
@@ -81,6 +82,13 @@ strategiesRouter.post('/', async (req: Request, res: Response) => {
 strategiesRouter.put('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params as { id: string };
+    const userId = await getUserId(req);
+    const existing = await prisma.strategy.findFirst({ where: { id, userId } });
+    if (!existing) {
+      res.status(404).json({ error: 'Strategy not found or access denied' });
+      return;
+    }
+
     const data: any = { ...req.body };
     if (data.parameters && typeof data.parameters === 'object') {
       data.parameters = JSON.stringify(data.parameters);
@@ -101,6 +109,13 @@ strategiesRouter.put('/:id', async (req: Request, res: Response) => {
 strategiesRouter.delete('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params as { id: string };
+    const userId = await getUserId(req);
+    const existing = await prisma.strategy.findFirst({ where: { id, userId } });
+    if (!existing) {
+      res.status(404).json({ error: 'Strategy not found or access denied' });
+      return;
+    }
+
     await prisma.strategy.delete({ where: { id } });
     res.json({ success: true });
   } catch (err: any) {

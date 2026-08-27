@@ -44,8 +44,9 @@ sessionsRouter.get('/', async (req: Request, res: Response) => {
 sessionsRouter.get('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params as { id: string };
-    const session = await prisma.session.findUnique({
-      where: { id },
+    const userId = await getUserId(req);
+    const session = await prisma.session.findFirst({
+      where: { id, userId },
       include: {
         trades: { orderBy: { openTime: 'asc' } },
         drawings: true,
@@ -55,7 +56,7 @@ sessionsRouter.get('/:id', async (req: Request, res: Response) => {
     });
 
     if (!session) {
-      res.status(404).json({ error: 'Session not found' });
+      res.status(404).json({ error: 'Session not found or access denied' });
       return;
     }
 
@@ -95,6 +96,13 @@ sessionsRouter.post('/', async (req: Request, res: Response) => {
 sessionsRouter.put('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params as { id: string };
+    const userId = await getUserId(req);
+    const existing = await prisma.session.findFirst({ where: { id, userId } });
+    if (!existing) {
+      res.status(404).json({ error: 'Session not found or access denied' });
+      return;
+    }
+
     const { finalBalance, finalEquity, currentIndex, status, name, symbol, timeframe, strategyId } = req.body;
 
     const session = await prisma.session.update({
@@ -121,6 +129,13 @@ sessionsRouter.put('/:id', async (req: Request, res: Response) => {
 sessionsRouter.put('/:id/complete', async (req: Request, res: Response) => {
   try {
     const { id } = req.params as { id: string };
+    const userId = await getUserId(req);
+    const existing = await prisma.session.findFirst({ where: { id, userId } });
+    if (!existing) {
+      res.status(404).json({ error: 'Session not found or access denied' });
+      return;
+    }
+
     const { analyticsSnapshot, finalBalance, finalEquity } = req.body;
 
     const session = await prisma.session.update({
@@ -149,6 +164,7 @@ sessionsRouter.put('/:id/complete', async (req: Request, res: Response) => {
 // POST /api/sessions/bulk-delete — Delete multiple sessions
 sessionsRouter.post('/bulk-delete', async (req: Request, res: Response) => {
   try {
+    const userId = await getUserId(req);
     const { ids } = req.body as { ids: string[] };
     if (!ids || !Array.isArray(ids) || ids.length === 0) {
       res.status(400).json({ error: 'ids array required' });
@@ -156,7 +172,7 @@ sessionsRouter.post('/bulk-delete', async (req: Request, res: Response) => {
     }
 
     const result = await prisma.session.deleteMany({
-      where: { id: { in: ids } }
+      where: { id: { in: ids }, userId }
     });
 
     res.json({ success: true, count: result.count });
@@ -182,9 +198,10 @@ sessionsRouter.delete('/clear-all', async (req: Request, res: Response) => {
 sessionsRouter.post('/:id/reset', async (req: Request, res: Response) => {
   try {
     const { id } = req.params as { id: string };
-    const session = await prisma.session.findUnique({ where: { id } });
+    const userId = await getUserId(req);
+    const session = await prisma.session.findFirst({ where: { id, userId } });
     if (!session) {
-      res.status(404).json({ error: 'Session not found' });
+      res.status(404).json({ error: 'Session not found or access denied' });
       return;
     }
 
@@ -215,6 +232,13 @@ sessionsRouter.post('/:id/reset', async (req: Request, res: Response) => {
 sessionsRouter.delete('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params as { id: string };
+    const userId = await getUserId(req);
+    const existing = await prisma.session.findFirst({ where: { id, userId } });
+    if (!existing) {
+      res.status(404).json({ error: 'Session not found or access denied' });
+      return;
+    }
+
     await prisma.session.delete({ where: { id } });
     res.json({ success: true });
   } catch (err: any) {

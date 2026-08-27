@@ -27,3 +27,11 @@ server/.env
 *.njsproj
 *.sln
 *.sw?
+
+# Python & Temporary Binaries
+__pycache__/
+*.pyc
+mt5_gateway/python_embed/
+mt5_gateway/__pycache__/
+scratch/
+scripts/installers/

@@ -20,13 +20,15 @@ export const OrderEntryModal: React.FC = () => {
 
   const {
     isLiveTradingMode,
+    connectionStatus,
     activeBroker,
     account: brokerAccount,
     executeLiveMarketOrder,
     placeLivePendingOrder
   } = useBrokerStore();
 
-  const activeAccount = isLiveTradingMode && brokerAccount ? brokerAccount : backtestAccount;
+  const isLiveActive = isLiveTradingMode && connectionStatus === 'CONNECTED';
+  const activeAccount = isLiveActive && brokerAccount ? brokerAccount : backtestAccount;
 
   const t = translations[language] || translations.vi;
 
@@ -103,7 +105,7 @@ export const OrderEntryModal: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (isLiveTradingMode) {
+    if (isLiveActive) {
       if (orderType === 'MARKET') {
         const res = await executeLiveMarketOrder(
           instrument.symbol,
@@ -113,7 +115,12 @@ export const OrderEntryModal: React.FC = () => {
           calculatedTPPrice,
           'QuantPro Live'
         );
-        if (res.success) setOrderModalOpen(false);
+        if (res.success) {
+          useBacktestStore.getState().addStrategyLog('INFO', `🔴 [LIVE EXNESS MT5] Khớp lệnh ${side} ${lotSize}L ${instrument.symbol} (Ticket #${res.ticket || 'OK'})`);
+          setOrderModalOpen(false);
+        } else {
+          alert(`Không thể đặt lệnh sàn: ${res.message || 'Unknown error'}`);
+        }
       } else {
         const price = parseFloat(pendingPrice);
         if (isNaN(price)) return;
@@ -127,7 +134,12 @@ export const OrderEntryModal: React.FC = () => {
           calculatedTPPrice,
           'QuantPro Pending'
         );
-        if (res.success) setOrderModalOpen(false);
+        if (res.success) {
+          useBacktestStore.getState().addStrategyLog('INFO', `🟡 [LIVE MT5 PENDING] Đã đặt lệnh ${orderType} ${lotSize}L @ ${price} (Ticket #${res.ticket || 'OK'})`);
+          setOrderModalOpen(false);
+        } else {
+          alert(`Không thể đặt lệnh chờ: ${res.message || 'Unknown error'}`);
+        }
       }
       return;
     }
@@ -168,7 +180,7 @@ export const OrderEntryModal: React.FC = () => {
             <span className="text-[10px] px-1.5 py-0.5 rounded bg-indigo-950 text-indigo-400 border border-indigo-500/30">
               {instrument.category}
             </span>
-            {isLiveTradingMode && (
+            {isLiveActive && (
               <span className="text-[10px] px-2 py-0.5 rounded-full bg-rose-950 border border-rose-500/40 text-rose-300 font-mono font-bold flex items-center gap-1 animate-pulse">
                 <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />
                 LIVE: {activeBroker}

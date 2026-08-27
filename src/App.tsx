@@ -15,6 +15,8 @@ import { AIBotHUD } from './components/panels/AIBotHUD';
 import { useBacktestStore } from './store/backtestStore';
 import { useAutoSave } from './hooks/useAutoSave';
 
+import { ErrorBoundary } from './components/common/ErrorBoundary';
+
 export const App: React.FC = () => {
   const {
     isPlaying,
@@ -104,7 +106,9 @@ export const App: React.FC = () => {
 
       {/* 2. MAIN CENTER: CHART & DRAWINGS */}
       <main className="flex-1 relative w-full h-full min-h-0 bg-[#0b0e14]">
-        <TradingViewChart />
+        <ErrorBoundary fallbackTitle="Không thể tải biểu đồ TradingView">
+          <TradingViewChart />
+        </ErrorBoundary>
       </main>
 
       {/* 3. REPLAY TIMELINE CONTROLLER */}

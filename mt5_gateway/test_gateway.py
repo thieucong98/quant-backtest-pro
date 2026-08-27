@@ -1,6 +1,12 @@
 """
 Unit & Integration Tests for MT5 Micro-Gateway
 """
+import os
+import sys
+
+# Ensure local imports resolve correctly
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 import unittest
 from fastapi.testclient import TestClient
 from app import app, mock_engine
@@ -133,6 +139,78 @@ class TestMT5Gateway(unittest.TestCase):
         # Verify Empty
         ord_res2 = client.get("/orders")
         self.assertEqual(len(ord_res2.json()), 0)
+
+    def test_symbols_endpoint(self):
+        sym_res = client.get("/symbols")
+        self.assertEqual(sym_res.status_code, 200)
+        symbols = sym_res.json()
+        self.assertIn("XAUUSD", symbols)
+        self.assertIn("EURUSD", symbols)
+        self.assertIn("BTCUSD", symbols)
+        self.assertGreater(symbols["XAUUSD"]["bid"], 0)
+        self.assertGreater(symbols["EURUSD"]["digits"], 0)
+
+    def test_symbols_all_endpoint(self):
+        res = client.get("/symbols/all")
+        self.assertEqual(res.status_code, 200)
+        symbols = res.json()
+        self.assertIsInstance(symbols, list)
+        self.assertGreaterEqual(len(symbols), 5)
+        
+        tickers = [s["symbol"] for s in symbols]
+        self.assertIn("XAUUSD", tickers)
+        self.assertIn("EURUSD", tickers)
+        self.assertIn("BTCUSD", tickers)
+        self.assertIn("US30", tickers)
+
+        # Check Category
+        gold = next(s for s in symbols if s["symbol"] == "XAUUSD")
+        self.assertEqual(gold["category"], "METALS")
+        btc = next(s for s in symbols if s["symbol"] == "BTCUSD")
+        self.assertEqual(btc["category"], "CRYPTO")
+
+    def test_candles_endpoint(self):
+        res = client.get("/candles?symbol=XAUUSD&timeframe=M5&count=50")
+        self.assertEqual(res.status_code, 200)
+        candles = res.json()
+        self.assertIsInstance(candles, list)
+        self.assertEqual(len(candles), 50)
+        
+        first = candles[0]
+        self.assertIn("timestamp", first)
+        self.assertIn("open", first)
+        self.assertIn("high", first)
+        self.assertIn("low", first)
+        self.assertIn("close", first)
+        self.assertIn("volume", first)
+        self.assertGreater(first["close"], 0)
+        self.assertGreaterEqual(first["high"], first["low"])
+
+    def test_negative_cases(self):
+        # 1. Modify non-existent ticket
+        mod_bad = client.post("/order/modify", json={
+            "ticket": 99999999,
+            "sl": 2700.0
+        })
+        self.assertEqual(mod_bad.status_code, 200)
+        self.assertFalse(mod_bad.json()["success"])
+
+        # 2. Close non-existent position
+        close_bad = client.post("/order/close", json={
+            "ticket": 99999999
+        })
+        self.assertEqual(close_bad.status_code, 200)
+        self.assertFalse(close_bad.json()["success"])
+
+        # 3. Cancel non-existent pending order
+        cancel_bad = client.post("/order/cancel?ticket=99999999")
+        self.assertEqual(cancel_bad.status_code, 200)
+        self.assertFalse(cancel_bad.json()["success"])
+
+    def test_disconnect_endpoint(self):
+        disc_res = client.post("/disconnect")
+        self.assertEqual(disc_res.status_code, 200)
+        self.assertTrue(disc_res.json()["success"])
 
 if __name__ == "__main__":
     unittest.main()

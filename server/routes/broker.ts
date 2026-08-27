@@ -394,3 +394,77 @@ brokerRouter.post('/order/cancel', async (req: Request, res: Response) => {
   }
   return res.status(404).json({ success: false, error: 'Order not found' });
 });
+
+/**
+ * Get Historical Candles from Broker
+ */
+brokerRouter.get('/candles', async (req: Request, res: Response) => {
+  const gatewayUrl = (req.query.gatewayUrl as string) || activeBrokerSession?.gatewayUrl || 'http://127.0.0.1:8765';
+  const symbol = (req.query.symbol as string) || 'XAUUSD';
+  const timeframe = (req.query.timeframe as string) || 'M5';
+  const count = parseInt(req.query.count as string, 10) || 500;
+
+  try {
+    const response = await fetch(`${gatewayUrl}/candles?symbol=${symbol}&timeframe=${timeframe}&count=${count}`);
+    if (response.ok) return res.json(await response.json());
+  } catch {}
+
+  // Fallback Internal Mock Candle Generation
+  const syms = internalMock.getSymbols();
+  const symInfo = (syms as any)[symbol] || syms.XAUUSD;
+  const currentPrice = symInfo.bid;
+  const digits = symInfo.digits;
+  const tfSecs = timeframe === 'M1' ? 60 : timeframe === 'M5' ? 300 : timeframe === 'M15' ? 900 : timeframe === 'H1' ? 3600 : timeframe === 'D1' ? 86400 : 300;
+
+  const now = Math.floor(Date.now() / 1000);
+  const currentBarTime = Math.floor(now / tfSecs) * tfSecs;
+  const candles = [];
+  const prices = [currentPrice];
+
+  for (let i = 0; i < count; i++) {
+    const change = prices[prices.length - 1] * 0.0015 * (Math.random() - 0.495);
+    prices.push(prices[prices.length - 1] - change);
+  }
+  prices.reverse();
+
+  for (let i = 0; i < count; i++) {
+    const barTime = (currentBarTime - (count - 1 - i) * tfSecs) * 1000;
+    const o = Number(prices[i].toFixed(digits));
+    const c = Number((i + 1 < prices.length ? prices[i + 1] : currentPrice).toFixed(digits));
+    const hlRange = Math.max(0.01, Math.abs(c - o) * (1.2 + Math.random() * 0.8));
+    const h = Number((Math.max(o, c) + hlRange * Math.random() * 0.6).toFixed(digits));
+    const l = Number((Math.min(o, c) - hlRange * Math.random() * 0.6).toFixed(digits));
+    const vol = Number((10 + Math.random() * 90).toFixed(1));
+    candles.push({ timestamp: barTime, open: o, high: h, low: l, close: c, volume: vol });
+  }
+
+  return res.json(candles);
+});
+
+/**
+ * Get All Symbols List with Categories
+ */
+brokerRouter.get('/symbols/all', async (req: Request, res: Response) => {
+  const gatewayUrl = (req.query.gatewayUrl as string) || activeBrokerSession?.gatewayUrl || 'http://127.0.0.1:8765';
+
+  try {
+    const response = await fetch(`${gatewayUrl}/symbols/all`);
+    if (response.ok) return res.json(await response.json());
+  } catch {}
+
+  return res.json([
+    { symbol: 'XAUUSD', description: 'Gold vs US Dollar', category: 'METALS', bid: 2724.50, ask: 2724.62, digits: 2, spread: 12, min_lot: 0.01, max_lot: 100.0, step: 0.01, contract_size: 100, change24h: 0.85 },
+    { symbol: 'XAGUSD', description: 'Silver vs US Dollar', category: 'METALS', bid: 31.85, ask: 31.87, digits: 3, spread: 20, min_lot: 0.01, max_lot: 50.0, step: 0.01, contract_size: 5000, change24h: -0.42 },
+    { symbol: 'EURUSD', description: 'Euro vs US Dollar', category: 'FOREX', bid: 1.08350, ask: 1.08362, digits: 5, spread: 12, min_lot: 0.01, max_lot: 200.0, step: 0.01, contract_size: 100000, change24h: 0.18 },
+    { symbol: 'GBPUSD', description: 'Great Britain Pound vs US Dollar', category: 'FOREX', bid: 1.29420, ask: 1.29435, digits: 5, spread: 15, min_lot: 0.01, max_lot: 200.0, step: 0.01, contract_size: 100000, change24h: -0.12 },
+    { symbol: 'USDJPY', description: 'US Dollar vs Japanese Yen', category: 'FOREX', bid: 153.450, ask: 153.465, digits: 3, spread: 15, min_lot: 0.01, max_lot: 200.0, step: 0.01, contract_size: 100000, change24h: 0.45 },
+    { symbol: 'AUDUSD', description: 'Australian Dollar vs US Dollar', category: 'FOREX', bid: 0.65420, ask: 0.65434, digits: 5, spread: 14, min_lot: 0.01, max_lot: 200.0, step: 0.01, contract_size: 100000, change24h: 0.08 },
+    { symbol: 'USDCAD', description: 'US Dollar vs Canadian Dollar', category: 'FOREX', bid: 1.38520, ask: 1.38538, digits: 5, spread: 18, min_lot: 0.01, max_lot: 200.0, step: 0.01, contract_size: 100000, change24h: -0.22 },
+    { symbol: 'BTCUSD', description: 'Bitcoin vs US Dollar', category: 'CRYPTO', bid: 94250.0, ask: 94265.0, digits: 2, spread: 1500, min_lot: 0.01, max_lot: 50.0, step: 0.01, contract_size: 1, change24h: 3.45 },
+    { symbol: 'ETHUSD', description: 'Ethereum vs US Dollar', category: 'CRYPTO', bid: 2785.50, ask: 2786.20, digits: 2, spread: 70, min_lot: 0.01, max_lot: 100.0, step: 0.01, contract_size: 1, change24h: 2.15 },
+    { symbol: 'SOLUSD', description: 'Solana vs US Dollar', category: 'CRYPTO', bid: 188.40, ask: 188.55, digits: 2, spread: 15, min_lot: 0.1, max_lot: 500.0, step: 0.1, contract_size: 1, change24h: 5.80 },
+    { symbol: 'US30', description: 'Wall Street 30 (Dow Jones)', category: 'INDICES', bid: 43850.0, ask: 43852.5, digits: 1, spread: 25, min_lot: 0.1, max_lot: 100.0, step: 0.1, contract_size: 1, change24h: 0.65 },
+    { symbol: 'NAS100', description: 'US Tech 100 (Nasdaq)', category: 'INDICES', bid: 21120.0, ask: 21121.8, digits: 1, spread: 18, min_lot: 0.1, max_lot: 100.0, step: 0.1, contract_size: 1, change24h: 1.12 },
+    { symbol: 'USOIL', description: 'Crude Oil WTI', category: 'COMMODITIES', bid: 72.40, ask: 72.43, digits: 2, spread: 3, min_lot: 0.01, max_lot: 100.0, step: 0.01, contract_size: 1000, change24h: -1.45 }
+  ]);
+});

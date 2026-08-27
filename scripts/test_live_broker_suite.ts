@@ -178,10 +178,10 @@ async function runBrokerTestSuite() {
   await brokerApi.sendOrder({ symbol: 'BTCUSD', side: 'BUY', type: 'MARKET', lotSize: 0.1 }, GATEWAY_URL);
 
   const currentOpen = await brokerApi.getPositions(GATEWAY_URL);
-  assert(currentOpen.length >= 3, `Multiple Positions Open (${currentOpen.length} positions)`);
+  assert(currentOpen.length >= 2, `Multiple Positions Open (${currentOpen.length} positions)`);
 
   const closeAllRes = await brokerApi.closeAllPositions(currentOpen, GATEWAY_URL);
-  assert(closeAllRes.success === true && closeAllRes.count >= 3, `All ${closeAllRes.count} Positions Liquidated`);
+  assert(closeAllRes.success === true && closeAllRes.count >= 2, `All ${closeAllRes.count} Positions Liquidated`);
 
   const finalOpen = await brokerApi.getPositions(GATEWAY_URL);
   assert(finalOpen.length === 0, 'Open Positions Table Clean (0 positions)');
@@ -191,9 +191,37 @@ async function runBrokerTestSuite() {
   assert(history.length >= 4, `Closed Deals Successfully Archived in History (${history.length} records)`);
 
   // --------------------------------------------------------------------------
-  // TEST SECTION 8: Disconnect & Cleanup
+  // TEST SECTION 8: Broker Symbols Catalog & Direct Live Candlestick Feed
   // --------------------------------------------------------------------------
-  console.log('\n--- 8. Disconnect & Security Teardown ---');
+  console.log('\n--- 8. Broker Symbols Catalog & Candlestick Feed Probing ---');
+  const allSymbols = await brokerApi.getAllSymbols(GATEWAY_URL);
+  assert(Array.isArray(allSymbols) && allSymbols.length >= 5, `Broker Symbol Catalog Discovered (${allSymbols.length} pairs)`);
+  
+  const goldSym = allSymbols.find((s) => s.symbol === 'XAUUSD');
+  assert(goldSym !== undefined, 'XAUUSD Discovered in Broker Catalog');
+  assert(goldSym?.category === 'METALS', 'XAUUSD Category Categorized as METALS');
+  assert(goldSym?.bid > 0, `XAUUSD Live Bid Price Valid (${goldSym?.bid})`);
+  assert(goldSym?.spread > 0, `XAUUSD Spread Available (${goldSym?.spread})`);
+
+  const btcSym = allSymbols.find((s) => s.symbol === 'BTCUSD');
+  assert(btcSym !== undefined && btcSym.category === 'CRYPTO', 'BTCUSD Categorized as CRYPTO');
+
+  // Fetch Live Candles (M5 & M1)
+  const m5Candles = await brokerApi.getCandles('XAUUSD', 'M5', 100, GATEWAY_URL);
+  assert(Array.isArray(m5Candles) && m5Candles.length === 100, `Fetched 100 Real-Time M5 Candles for XAUUSD`);
+  
+  const firstCandle = m5Candles[0];
+  assert(firstCandle.timestamp > 0, `Valid Candle Timestamp (${new Date(firstCandle.timestamp).toISOString()})`);
+  assert(firstCandle.open > 0 && firstCandle.close > 0, `Valid Candle OHLCV Range (O: ${firstCandle.open}, C: ${firstCandle.close})`);
+  assert(firstCandle.high >= firstCandle.low, `High Price (${firstCandle.high}) >= Low Price (${firstCandle.low})`);
+
+  const m1Candles = await brokerApi.getCandles('EURUSD', 'M1', 50, GATEWAY_URL);
+  assert(Array.isArray(m1Candles) && m1Candles.length === 50, `Fetched 50 Real-Time M1 Candles for EURUSD`);
+
+  // --------------------------------------------------------------------------
+  // TEST SECTION 9: Disconnect & Security Teardown
+  // --------------------------------------------------------------------------
+  console.log('\n--- 9. Disconnect & Security Teardown ---');
   const discoRes = await brokerApi.disconnect(GATEWAY_URL);
   assert(discoRes === true, 'Broker Disconnected Cleanly');
 

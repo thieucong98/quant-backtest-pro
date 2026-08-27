@@ -230,8 +230,19 @@ export class StrategyRunner {
         functionBody = `return (${rawCode});`;
       }
 
-      // Khởi tạo hàm thực thi
-      const factory = new Function(functionBody);
+      // Khởi tạo hàm thực thi được bọc trong Security Sandbox Scope
+      const sandboxPreamble = `
+        const window = undefined;
+        const document = undefined;
+        const localStorage = undefined;
+        const sessionStorage = undefined;
+        const fetch = undefined;
+        const WebSocket = undefined;
+        const XMLHttpRequest = undefined;
+        const globalThis = undefined;
+        const self = undefined;
+      `;
+      const factory = new Function(sandboxPreamble + functionBody);
       this.compiledStrategy = factory();
 
       if (!this.compiledStrategy || typeof this.compiledStrategy.onCandle !== 'function') {
