@@ -33,7 +33,7 @@ import { useBrokerStore } from '../../store/brokerStore';
 import { translations } from '../../i18n/translations';
 import { Candle, ChartType, InstrumentSpec, Timeframe } from '../../types/market';
 import { MultiAssetMathEngine } from '../../engine/quantMath';
-import { snapEventToBarTime } from '../../config/newsEvents';
+import { snapEventToBarTime, getCurrenciesForSymbol } from '../../config/newsEvents';
 import { DrawingCanvas } from './DrawingCanvas';
 import { AIBotHUD } from '../panels/AIBotHUD';
 import { VisualChartTradingOverlay } from './VisualChartTradingOverlay';
@@ -115,6 +115,8 @@ export const TradingViewChart: React.FC = () => {
     economicNews,
     showEconomicNews,
     economicNewsFilter,
+    economicNewsDisplayMode,
+    economicNewsOnlyCurrentPair,
     selectedCalendarCurrency,
     executeMarketOrder,
     addStrategyLog,
@@ -504,46 +506,102 @@ export const TradingViewChart: React.FC = () => {
           size: 1.2
         }));
 
-      // Thêm Economic News Markers với Smart Bar Snapping
+      // Thêm Economic News Markers với Smart Bar Snapping & Adaptive Decluttering
       let newsMarkers: any[] = [];
       if (showEconomicNews && economicNews.length > 0) {
         const visibleBarSecs = effectiveCandles
           .slice(0, currentIndex + 1)
           .map((c: Candle) => (c.timestamp > 1e11 ? Math.floor(c.timestamp / 1000) : Math.floor(c.timestamp)));
 
-        newsMarkers = economicNews
-          .filter(n => {
-            if (selectedCalendarCurrency !== 'ALL') {
-              if (n.currency !== selectedCalendarCurrency && n.currency !== 'GLOBAL') return false;
-            }
-            if (economicNewsFilter === 'HIGH') {
-              return n.impact === 'HIGH';
-            } else if (economicNewsFilter === 'HIGH_MEDIUM') {
-              return n.impact === 'HIGH' || n.impact === 'MEDIUM';
-            }
-            return true;
-          })
-          .map(n => {
-            const rawSec = n.timestamp > 1e11 ? Math.floor(n.timestamp / 1000) : n.timestamp;
-            if (rawSec > maxSec) return null;
-            const snappedBarSec = snapEventToBarTime(rawSec, visibleBarSecs);
-            if (!snappedBarSec) return null;
+        // 1. Xác định chế độ hiển thị hiệu dụng (Effective Display Mode)
+        const isHighTimeframe = timeframe === 'D1' || (timeframe as any) === 'W1' || (timeframe as any) === 'MN' || effectiveCandles.length > 600;
+        const effectiveMode = economicNewsDisplayMode === 'AUTO'
+          ? (isHighTimeframe ? 'CLUSTERED' : 'FULL')
+          : economicNewsDisplayMode;
 
-            const isHigh = n.impact === 'HIGH';
-            const isMedium = n.impact === 'MEDIUM';
-            const color = isHigh ? '#f43f5e' : isMedium ? '#f59e0b' : '#0ea5e9';
-            const emoji = isHigh ? '🔴' : isMedium ? '🟡' : '🔵';
+        // 2. Danh sách tiền tệ liên quan tới cặp đang xem (ví dụ XAUUSD -> USD, XAU, GLOBAL)
+        const relevantCurrencies = getCurrenciesForSymbol(instrument.symbol);
 
-            return {
-              time: snappedBarSec as Time,
-              position: 'aboveBar' as any,
-              color,
-              shape: 'circle' as any,
-              text: `${emoji} ${n.currency} ${n.title}${n.actual ? ` [${n.actual}]` : ''}`,
-              size: isHigh ? 1.6 : 1.3
-            };
-          })
-          .filter(Boolean) as any[];
+        // 3. Lọc sự kiện theo cặp tiền và mức tác động
+        const filteredNews = economicNews.filter(n => {
+          if (economicNewsOnlyCurrentPair) {
+            if (!relevantCurrencies.includes(n.currency) && n.currency !== 'GLOBAL') {
+              return false;
+            }
+          }
+          if (selectedCalendarCurrency !== 'ALL') {
+            if (n.currency !== selectedCalendarCurrency && n.currency !== 'GLOBAL') return false;
+          }
+          if (economicNewsFilter === 'HIGH') {
+            return n.impact === 'HIGH';
+          } else if (economicNewsFilter === 'HIGH_MEDIUM') {
+            return n.impact === 'HIGH' || n.impact === 'MEDIUM';
+          }
+          return true;
+        });
+
+        // 4. Gom nhóm các tin tức theo từng thanh nến (Bar Snapping + Bucket Grouping)
+        const barEventMap = new Map<number, typeof economicNews>();
+        for (const n of filteredNews) {
+          const rawSec = n.timestamp > 1e11 ? Math.floor(n.timestamp / 1000) : n.timestamp;
+          if (rawSec > maxSec) continue;
+          const snappedBarSec = snapEventToBarTime(rawSec, visibleBarSecs);
+          if (!snappedBarSec) continue;
+
+          const existing = barEventMap.get(snappedBarSec);
+          if (existing) {
+            existing.push(n);
+          } else {
+            barEventMap.set(snappedBarSec, [n]);
+          }
+        }
+
+        // 5. Tạo Markers theo chế độ hiển thị (COMPACT vs CLUSTERED vs FULL)
+        barEventMap.forEach((eventsOnBar, snappedBarSec) => {
+          // Ưu tiên tin có tác động cao nhất lên đầu
+          eventsOnBar.sort((a, b) => {
+            const impactScore = (imp: string) => imp === 'HIGH' ? 3 : imp === 'MEDIUM' ? 2 : 1;
+            return impactScore(b.impact) - impactScore(a.impact);
+          });
+
+          const primaryEvent = eventsOnBar[0];
+          const hasHigh = eventsOnBar.some(e => e.impact === 'HIGH');
+          const hasMedium = eventsOnBar.some(e => e.impact === 'MEDIUM');
+          const color = hasHigh ? '#f43f5e' : hasMedium ? '#f59e0b' : '#0ea5e9';
+          const emoji = hasHigh ? '🔴' : hasMedium ? '🟡' : '🔵';
+
+          let markerText: string | undefined;
+
+          if (effectiveMode === 'COMPACT') {
+            // Tối giản tuyệt đối: Chỉ hiển thị icon chấm tròn thanh thoát, không chữ che nến
+            markerText = undefined;
+          } else if (effectiveMode === 'CLUSTERED') {
+            // Gộp cụm thông minh: Tối đa 1 badge ngắn gọn cho mỗi cây nến
+            if (eventsOnBar.length === 1) {
+              const shortTitle = primaryEvent.title.length > 20 ? primaryEvent.title.slice(0, 18) + '…' : primaryEvent.title;
+              markerText = `${emoji} ${primaryEvent.currency} ${shortTitle}`;
+            } else {
+              const shortTitle = primaryEvent.title.length > 14 ? primaryEvent.title.slice(0, 12) + '…' : primaryEvent.title;
+              markerText = `${emoji} [${eventsOnBar.length}] ${primaryEvent.currency} ${shortTitle}`;
+            }
+          } else {
+            // FULL MODE: Hiển thị đầy đủ tiêu đề và giá trị công bố
+            if (eventsOnBar.length === 1) {
+              markerText = `${emoji} ${primaryEvent.currency} ${primaryEvent.title}${primaryEvent.actual ? ` [${primaryEvent.actual}]` : ''}`;
+            } else {
+              markerText = `${emoji} ${primaryEvent.currency} ${primaryEvent.title} (+${eventsOnBar.length - 1})`;
+            }
+          }
+
+          newsMarkers.push({
+            time: snappedBarSec as Time,
+            position: 'aboveBar' as any,
+            color,
+            shape: 'circle' as any,
+            text: markerText,
+            size: hasHigh ? (effectiveMode === 'COMPACT' ? 1.3 : 1.5) : (effectiveMode === 'COMPACT' ? 1.0 : 1.2)
+          });
+        });
       }
 
       const allMarkers = [...activeMarkers, ...newsMarkers].sort((a, b) => (a.time as number) - (b.time as number));
@@ -551,7 +609,21 @@ export const TradingViewChart: React.FC = () => {
     } catch (err) {
       console.error('Error rendering chart candles:', err);
     }
-  }, [effectiveCandles, currentIndex, markers, economicNews, showEconomicNews, economicNewsFilter, selectedCalendarCurrency, instrument.digits, chartType]);
+  }, [
+    effectiveCandles,
+    currentIndex,
+    markers,
+    economicNews,
+    showEconomicNews,
+    economicNewsFilter,
+    economicNewsDisplayMode,
+    economicNewsOnlyCurrentPair,
+    selectedCalendarCurrency,
+    instrument.digits,
+    instrument.symbol,
+    timeframe,
+    chartType
+  ]);
 
   // Cập nhật đường giá hiển thị cho Open Positions (Hỗ trợ cả Sandbox & Live Broker Positions)
   useEffect(() => {

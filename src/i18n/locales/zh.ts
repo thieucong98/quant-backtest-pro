@@ -577,6 +577,14 @@ export const zh: TranslationDict = {
   "calendarFilterHigh": "仅重大事件 (红星)",
   "calendarFilterHighMed": "重要及中等事件",
   "calendarNoEvents": "暂无符合筛选条件的财经日历数据。",
+  "calendarDisplayMode": "财经日历显示模式",
+  "calendarModeAuto": "智能自适应（随时间周期）",
+  "calendarModeCompact": "精简图标（仅圆点，无文字遮挡）",
+  "calendarModeClustered": "聚合简报（每根K线1个微标）",
+  "calendarModeFull": "完整明细（标题与公布值）",
+  "calendarModeOff": "在图表上隐藏",
+  "calendarOnlyCurrentPair": "仅显示与当前标的相关的事件",
+  "calendarImpactLabel": "影响程度",
 
   // Kaggle Gold Dataset Hub
   "kaggleTabTitle": "Kaggle 黄金 (2004-2024)",

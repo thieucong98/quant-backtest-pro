@@ -608,6 +608,14 @@ export interface TranslationDict {
   calendarFilterHigh: string;
   calendarFilterHighMed: string;
   calendarNoEvents: string;
+  calendarDisplayMode: string;
+  calendarModeAuto: string;
+  calendarModeCompact: string;
+  calendarModeClustered: string;
+  calendarModeFull: string;
+  calendarModeOff: string;
+  calendarOnlyCurrentPair: string;
+  calendarImpactLabel: string;
 
   // Kaggle Gold Dataset Hub
   kaggleTabTitle: string;

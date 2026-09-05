@@ -41,6 +41,8 @@ export const EconomicCalendarTab: React.FC = () => {
     economicNews,
     showEconomicNews,
     economicNewsFilter,
+    economicNewsDisplayMode,
+    setEconomicNewsDisplayMode,
     selectedCalendarCurrency,
     toggleEconomicNews,
     setEconomicNewsFilter,
@@ -183,6 +185,20 @@ export const EconomicCalendarTab: React.FC = () => {
               <Clock className="w-3 h-3" /> {upcomingCount} sắp tới
             </span>
           </div>
+
+          {showEconomicNews && (
+            <select
+              value={economicNewsDisplayMode}
+              onChange={(e) => setEconomicNewsDisplayMode(e.target.value as any)}
+              className="bg-slate-900 border border-slate-800 text-amber-300 rounded px-2 py-1 text-[11px] font-mono focus:outline-none focus:border-amber-500"
+              title={t.calendarDisplayMode}
+            >
+              <option value="AUTO">🧠 Auto Smart</option>
+              <option value="COMPACT">🏷️ Tối Giản (Icon)</option>
+              <option value="CLUSTERED">📦 Gộp Cụm</option>
+              <option value="FULL">📜 Chi Tiết</option>
+            </select>
+          )}
 
           <button
             onClick={() => toggleEconomicNews()}

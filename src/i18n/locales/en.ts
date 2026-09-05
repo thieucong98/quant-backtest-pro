@@ -577,6 +577,14 @@ export const en: TranslationDict = {
   "calendarFilterHigh": "High Impact Only (Red)",
   "calendarFilterHighMed": "High & Medium Impact",
   "calendarNoEvents": "No economic events matching current filters.",
+  "calendarDisplayMode": "Calendar Display Mode",
+  "calendarModeAuto": "Auto Adaptive (Smart by Timeframe)",
+  "calendarModeCompact": "Compact (Icons Only, No Text Clutter)",
+  "calendarModeClustered": "Clustered (1 Badge per Bar)",
+  "calendarModeFull": "Full Details (Title & Actuals)",
+  "calendarModeOff": "Hide from Chart",
+  "calendarOnlyCurrentPair": "Only events for current instrument",
+  "calendarImpactLabel": "Impact Level",
 
   // Kaggle Gold Dataset Hub
   "kaggleTabTitle": "Kaggle Gold (2004-2024)",

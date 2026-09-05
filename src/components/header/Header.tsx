@@ -22,9 +22,15 @@ import {
   X,
   Shield,
   Layers,
-  Radio
+  Radio,
+  Calendar,
+  Eye,
+  EyeOff,
+  Filter,
+  Sparkles
 } from 'lucide-react';
 import { INSTRUMENTS } from '../../config/instruments';
+import { getCurrenciesForSymbol } from '../../config/newsEvents';
 import { useBacktestStore } from '../../store/backtestStore';
 import { useBrokerStore } from '../../store/brokerStore';
 import { useAuthStore } from '../../store/authStore';
@@ -39,6 +45,7 @@ export const Header: React.FC = () => {
   const [isSymbolModalOpen, setIsSymbolModalOpen] = useState(false);
   const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false);
   const [isChartTypeDropdownOpen, setIsChartTypeDropdownOpen] = useState(false);
+  const [isCalendarMenuOpen, setIsCalendarMenuOpen] = useState(false);
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
 
   const {
@@ -55,6 +62,14 @@ export const Header: React.FC = () => {
     autoTradingEnabled,
     language,
     setLanguage,
+    showEconomicNews,
+    toggleEconomicNews,
+    economicNewsFilter,
+    setEconomicNewsFilter,
+    economicNewsDisplayMode,
+    setEconomicNewsDisplayMode,
+    economicNewsOnlyCurrentPair,
+    setEconomicNewsOnlyCurrentPair,
     setOrderModalOpen,
     setAIModalOpen,
     setAnalyticsModalOpen,
@@ -95,6 +110,7 @@ export const Header: React.FC = () => {
   const activeBalance = isLiveActive && brokerAccount ? brokerAccount.balance : account.balance;
   const activeEquity = isLiveActive && brokerAccount ? brokerAccount.equity : account.equity;
   const floatingPnL = activeEquity - activeBalance;
+  const relevantCurrencies = getCurrenciesForSymbol(instrument.symbol);
 
   const getAssetBadge = (cat: AssetCategory) => {
     switch (cat) {
@@ -286,6 +302,150 @@ export const Header: React.FC = () => {
             >
               <Trash2 className="w-3.5 h-3.5" />
             </button>
+          </div>
+
+          {/* Economic Calendar Quick Controls */}
+          <div className="relative">
+            <button
+              onClick={() => setIsCalendarMenuOpen(!isCalendarMenuOpen)}
+              className={`h-8 px-2.5 rounded-lg border text-xs font-medium flex items-center gap-1.5 transition-all shadow-2xs ${
+                showEconomicNews
+                  ? 'bg-slate-900 border-amber-500/40 text-amber-300 hover:border-amber-400/80 hover:bg-slate-850'
+                  : 'bg-slate-900/60 border-slate-800 text-slate-500 hover:text-slate-300 hover:border-slate-700'
+              }`}
+              title={t.calendarDisplayMode || 'Cài đặt hiển thị lịch kinh tế trên biểu đồ'}
+            >
+              <Calendar className={`w-3.5 h-3.5 ${showEconomicNews ? 'text-amber-400' : 'text-slate-500'}`} />
+              <span className="hidden xl:inline text-[11px] font-mono">
+                {showEconomicNews ? (
+                  economicNewsDisplayMode === 'AUTO' ? 'Lịch: Auto' :
+                  economicNewsDisplayMode === 'COMPACT' ? 'Lịch: Gọn' :
+                  economicNewsDisplayMode === 'CLUSTERED' ? 'Lịch: Gộp' : 'Lịch: Đầy đủ'
+                ) : 'Lịch: TẮT'}
+              </span>
+              <span className={`w-1.5 h-1.5 rounded-full ${
+                showEconomicNews
+                  ? (economicNewsFilter === 'HIGH' ? 'bg-rose-500' : economicNewsFilter === 'HIGH_MEDIUM' ? 'bg-amber-400' : 'bg-sky-400')
+                  : 'bg-slate-600'
+              }`} />
+              <ChevronDown className="w-3 h-3 text-slate-400" />
+            </button>
+
+            {isCalendarMenuOpen && (
+              <>
+                <div
+                  className="fixed inset-0 z-40"
+                  onClick={() => setIsCalendarMenuOpen(false)}
+                />
+                <div className="absolute left-0 mt-1.5 w-72 bg-[#111622] border border-slate-700/80 rounded-xl shadow-2xl p-3 z-50 animate-in fade-in zoom-in-95 font-sans text-xs space-y-3">
+                  {/* Header */}
+                  <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-4 h-4 text-amber-400" />
+                      <span className="font-bold text-slate-100 text-xs">
+                        {t.calendarDisplayMode || 'Lịch Kinh Tế Trên Biểu Đồ'}
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => toggleEconomicNews()}
+                      className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold transition-all border ${
+                        showEconomicNews
+                          ? 'bg-emerald-950 text-emerald-300 border-emerald-500/50'
+                          : 'bg-slate-800 text-slate-400 border-slate-700'
+                      }`}
+                    >
+                      {showEconomicNews ? 'BẬT' : 'TẮT'}
+                    </button>
+                  </div>
+
+                  {showEconomicNews && (
+                    <>
+                      {/* Display Mode Options */}
+                      <div className="space-y-1.5">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block font-mono">
+                          {t.calendarDisplayMode}:
+                        </span>
+                        <div className="grid grid-cols-2 gap-1 font-mono text-[11px]">
+                          {[
+                            { id: 'AUTO' as const, label: '🧠 ' + (t.calendarModeAuto?.split('(')[0] || 'Auto Smart'), desc: 'Theo timeframe' },
+                            { id: 'COMPACT' as const, label: '🏷️ ' + (t.calendarModeCompact?.split('(')[0] || 'Tối giản'), desc: 'Chỉ chấm tròn' },
+                            { id: 'CLUSTERED' as const, label: '📦 ' + (t.calendarModeClustered?.split('(')[0] || 'Gộp cụm'), desc: '1 badge / nến' },
+                            { id: 'FULL' as const, label: '📜 ' + (t.calendarModeFull?.split('(')[0] || 'Đầy đủ'), desc: 'Chi tiết tin' }
+                          ].map(mode => (
+                            <button
+                              key={mode.id}
+                              onClick={() => setEconomicNewsDisplayMode(mode.id)}
+                              className={`p-1.5 rounded-lg border text-left transition-all ${
+                                economicNewsDisplayMode === mode.id
+                                  ? 'bg-indigo-600/30 border-indigo-500 text-indigo-200 font-bold'
+                                  : 'bg-slate-900/60 border-slate-800 text-slate-300 hover:bg-slate-800'
+                              }`}
+                            >
+                              <div className="text-[11px] truncate">{mode.label}</div>
+                              <div className="text-[9px] text-slate-500 truncate">{mode.desc}</div>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Filter by Impact */}
+                      <div className="space-y-1.5 pt-2 border-t border-slate-800">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block font-mono">
+                          {t.calendarImpactLabel}:
+                        </span>
+                        <div className="flex items-center gap-1 text-[10px] font-mono">
+                          <button
+                            onClick={() => setEconomicNewsFilter('HIGH')}
+                            className={`flex-1 py-1 px-1.5 rounded border transition-all text-center ${
+                              economicNewsFilter === 'HIGH'
+                                ? 'bg-rose-950 text-rose-300 border-rose-500/60 font-bold'
+                                : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:text-slate-200'
+                            }`}
+                          >
+                            🔴 Chỉ Tin Đỏ
+                          </button>
+                          <button
+                            onClick={() => setEconomicNewsFilter('HIGH_MEDIUM')}
+                            className={`flex-1 py-1 px-1.5 rounded border transition-all text-center ${
+                              economicNewsFilter === 'HIGH_MEDIUM'
+                                ? 'bg-amber-950 text-amber-300 border-amber-500/60 font-bold'
+                                : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:text-slate-200'
+                            }`}
+                          >
+                            🟡 Đỏ + Vàng
+                          </button>
+                          <button
+                            onClick={() => setEconomicNewsFilter('ALL')}
+                            className={`flex-1 py-1 px-1.5 rounded border transition-all text-center ${
+                              economicNewsFilter === 'ALL'
+                                ? 'bg-sky-950 text-sky-300 border-sky-500/60 font-bold'
+                                : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:text-slate-200'
+                            }`}
+                          >
+                            Tất Cả
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Filter by Current Pair Checkbox */}
+                      <div className="pt-2 border-t border-slate-800">
+                        <label className="flex items-center gap-2 cursor-pointer select-none">
+                          <input
+                            type="checkbox"
+                            checked={economicNewsOnlyCurrentPair}
+                            onChange={(e) => setEconomicNewsOnlyCurrentPair(e.target.checked)}
+                            className="accent-indigo-500 rounded cursor-pointer w-3.5 h-3.5"
+                          />
+                          <span className="text-[11px] text-slate-300">
+                            Chỉ tin liên quan <span className="text-amber-300 font-mono font-bold">{instrument.symbol}</span> ({relevantCurrencies.filter(c => c !== 'GLOBAL').join(', ')})
+                          </span>
+                        </label>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </>
+            )}
           </div>
         </div>
 

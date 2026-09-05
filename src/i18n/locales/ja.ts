@@ -577,6 +577,14 @@ export const ja: TranslationDict = {
   "calendarFilterHigh": "高影響度のみ (赤)",
   "calendarFilterHighMed": "高・中影響度",
   "calendarNoEvents": "条件に一致する経済指標はありません。",
+  "calendarDisplayMode": "経済カレンダー表示モード",
+  "calendarModeAuto": "スマート自動（時間足連動）",
+  "calendarModeCompact": "コンパクト（アイコンのみ・文字なし）",
+  "calendarModeClustered": "統合表示（1本あたり1バッジ）",
+  "calendarModeFull": "詳細表示（タイトルと発表値）",
+  "calendarModeOff": "チャートから非表示",
+  "calendarOnlyCurrentPair": "現在の通貨ペア関連のみ表示",
+  "calendarImpactLabel": "重要度",
 
   // Kaggle Gold Dataset Hub
   "kaggleTabTitle": "Kaggle Gold (2004-2024)",

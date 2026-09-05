@@ -577,6 +577,14 @@ export const vi: TranslationDict = {
   "calendarFilterHigh": "Chỉ Tin Đỏ (HIGH)",
   "calendarFilterHighMed": "Tin Đỏ + Vàng",
   "calendarNoEvents": "Không có sự kiện kinh tế nào phù hợp với bộ lọc.",
+  "calendarDisplayMode": "Chế Độ Hiển Thị Lịch",
+  "calendarModeAuto": "Thông Minh Tự Động (Auto Adaptive)",
+  "calendarModeCompact": "Tối Giản (Icon Chỉ Chấm Tròn, Không Chữ)",
+  "calendarModeClustered": "Gộp Cụm (1 Badge Gọn / Cây Nến)",
+  "calendarModeFull": "Chi Tiết Đầy Đủ (Tiêu Đề & Thực Tế)",
+  "calendarModeOff": "Tắt Hoàn Toàn Trên Biểu Đồ",
+  "calendarOnlyCurrentPair": "Chỉ hiện tin liên quan cặp này",
+  "calendarImpactLabel": "Mức Độ Tác Động",
 
   // Kaggle Gold Dataset Hub
   "kaggleTabTitle": "Kaggle Gold (2004-2024)",

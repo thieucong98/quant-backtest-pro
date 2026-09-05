@@ -40,9 +40,13 @@ interface BacktestStore {
   economicNews: EconomicNewsEvent[];
   showEconomicNews: boolean;
   economicNewsFilter: 'ALL' | 'HIGH' | 'HIGH_MEDIUM';
+  economicNewsDisplayMode: 'AUTO' | 'COMPACT' | 'CLUSTERED' | 'FULL';
+  economicNewsOnlyCurrentPair: boolean;
   selectedCalendarCurrency: string;
   toggleEconomicNews: (show?: boolean) => void;
   setEconomicNewsFilter: (filter: 'ALL' | 'HIGH' | 'HIGH_MEDIUM') => void;
+  setEconomicNewsDisplayMode: (mode: 'AUTO' | 'COMPACT' | 'CLUSTERED' | 'FULL') => void;
+  setEconomicNewsOnlyCurrentPair: (onlyCurrent: boolean) => void;
   setSelectedCalendarCurrency: (currency: string) => void;
   fetchCalendarEvents: () => Promise<void>;
 
@@ -315,10 +319,14 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
     currentIndex: cachedInit?.currentIndex || Math.min(200, initialM1.length - 1),
     economicNews: initialNews,
     showEconomicNews: true,
-    economicNewsFilter: 'ALL',
+    economicNewsFilter: 'HIGH',
+    economicNewsDisplayMode: 'AUTO',
+    economicNewsOnlyCurrentPair: true,
     selectedCalendarCurrency: 'ALL',
     toggleEconomicNews: (show) => set(s => ({ showEconomicNews: show !== undefined ? show : !s.showEconomicNews })),
     setEconomicNewsFilter: (filter) => set({ economicNewsFilter: filter }),
+    setEconomicNewsDisplayMode: (mode) => set({ economicNewsDisplayMode: mode }),
+    setEconomicNewsOnlyCurrentPair: (onlyCurrent) => set({ economicNewsOnlyCurrentPair: onlyCurrent }),
     setSelectedCalendarCurrency: (currency) => set({ selectedCalendarCurrency: currency }),
     fetchCalendarEvents: async () => {
       try {
