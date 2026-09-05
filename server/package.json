@@ -14,10 +14,13 @@
   },
   "dependencies": {
     "@prisma/client": "^6.8.0",
+    "@types/localtunnel": "^2.0.4",
     "bcryptjs": "^2.4.3",
+    "cloudflared": "^0.7.3",
     "cors": "^2.8.5",
     "express": "^4.21.2",
-    "jsonwebtoken": "^9.0.2"
+    "jsonwebtoken": "^9.0.2",
+    "localtunnel": "^2.0.2"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",

@@ -1,11 +1,11 @@
 # ===================================================
-# Stage 1: Build Frontend Client (Vite + React 18/19)
+# Stage 1: Build Frontend Client (Vite + React 18)
 # ===================================================
 FROM node:20-alpine AS frontend-builder
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm install
+RUN npm ci || npm install
 
 COPY . .
 RUN npm run build
@@ -17,7 +17,7 @@ FROM node:20-alpine AS server-builder
 WORKDIR /app/server
 
 COPY server/package*.json ./
-RUN npm install
+RUN npm ci || npm install
 
 COPY server/ ./
 RUN npx prisma generate
@@ -31,6 +31,11 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 ENV PORT=3001
+ENV STATIC_PATH=/app/dist
+ENV DATABASE_URL="file:./prisma/dev.db"
+
+# Install openssl and wget for Alpine Prisma SQLite & Healthcheck
+RUN apk add --no-cache openssl wget
 
 # Copy Frontend Build Output
 COPY --from=frontend-builder /app/dist /app/dist
@@ -44,4 +49,5 @@ COPY --from=server-builder /app/server/package*.json /app/server/
 EXPOSE 3001
 
 WORKDIR /app/server
+
 CMD ["node", "dist/index.js"]
