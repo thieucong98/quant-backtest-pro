@@ -23,8 +23,17 @@ export const datasetsApi = {
   save: (data: { symbol: string; timeframe: string; candles: any[]; source?: string }) =>
     api.post<any>('/datasets', data),
   delete: (id: string) =>
-    api.delete(`/datasets/${id}`)
+    api.delete(`/datasets/${id}`),
+  kaggleDownload: (data: { username?: string; key?: string; maxCandles?: number; selectedTimeframes?: string[] }) =>
+    api.post<any>('/datasets/kaggle/download', data),
+  kaggleScanLocal: (data?: { maxCandles?: number; selectedTimeframes?: string[] }) =>
+    api.post<any>('/datasets/kaggle/scan-local', data || {}),
+  kaggleImportZip: (data: { base64Zip: string; maxCandles?: number; selectedTimeframes?: string[] }) =>
+    api.post<any>('/datasets/kaggle/import-zip', data),
+  kaggleSeedCurated: () =>
+    api.post<any>('/datasets/kaggle/seed-curated', {})
 };
+
 
 export const analyticsApi = {
   dashboard: () => api.get<any>('/analytics/dashboard'),

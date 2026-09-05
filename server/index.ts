@@ -33,7 +33,8 @@ app.use(cors({
   origin: true,
   credentials: true
 }));
-app.use(express.json({ limit: '50mb' })); // Large payloads for candle data
+app.use(express.json({ limit: '250mb' })); // Large payloads for candle data and zip imports
+app.use(express.urlencoded({ limit: '250mb', extended: true }));
 
 // Health check
 app.get('/api/health', (_req, res) => {

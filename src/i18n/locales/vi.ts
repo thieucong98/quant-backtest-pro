@@ -576,6 +576,26 @@ export const vi: TranslationDict = {
   "calendarFilterAll": "Tất Cả Tin",
   "calendarFilterHigh": "Chỉ Tin Đỏ (HIGH)",
   "calendarFilterHighMed": "Tin Đỏ + Vàng",
-  "calendarNoEvents": "Không có sự kiện kinh tế nào phù hợp với bộ lọc."
+  "calendarNoEvents": "Không có sự kiện kinh tế nào phù hợp với bộ lọc.",
+
+  // Kaggle Gold Dataset Hub
+  "kaggleTabTitle": "Kaggle Gold (2004-2024)",
+  "kaggleHubHeader": "XAUUSD Institutional Historical Dataset (2004 - 2024)",
+  "kaggleHubDesc": "Dữ liệu nến vàng thật từ Kaggle (novandraanugrah/xauusd-gold-price-historical-data-2004-2024). Tự động phân tách đa khung thời gian (M1, M5, M15, M30, H1, H4, D1) và lưu vĩnh viễn vào SQLite Database — chỉ cần nạp 1 lần duy nhất!",
+  "kaggleAutoDownloadTitle": "Tải Tự Động Qua Kaggle API (cURL Engine)",
+  "kaggleAutoDownloadDesc": "Nhập Kaggle API Token của bạn để hệ thống tự động tải trực tiếp từ Kaggle về server.",
+  "kaggleUsernameLabel": "Kaggle Username:",
+  "kaggleKeyLabel": "Kaggle API Key:",
+  "kaggleFetchBtn": "Tải & Lưu Vào SQLite Ngay",
+  "kaggleDropZipTitle": "Kéo Thả File ZIP Hoặc CSV Kaggle",
+  "kaggleDropZipDesc": "Hoặc kéo thả trực tiếp file zip (103MB) tải từ trình duyệt vào đây để giải nén & lưu database tự động",
+  "kaggleScanFolderBtn": "Quét Thư Mục data/ Trên Máy",
+  "kaggleSeedQuickBtn": "⚡ Nạp Nhanh 5,000 Nến Vàng Thật 2024",
+  "kaggleSeedQuickDesc": "Không cần API Key hay tải 103MB — nạp ngay bộ 5,000 nến XAUUSD thực tế chuẩn xác của năm 2024 vào Database để kiểm thử ngay lập tức!",
+  "kaggleTimeframesLabel": "Khung thời gian cần giải nén & lưu:",
+  "kaggleMaxCandlesLabel": "Giới hạn số nến mỗi khung (để tối ưu RAM/Chart):",
+  "kaggleSuccessMsg": "Đã nhập thành công {count} nến vàng thật vào Database!",
+  "kaggleHelpNotice": "Kaggle yêu cầu tài khoản để tải tự động qua API. Nếu không muốn tạo API Key, bạn có thể bấm nút 'Download dataset as zip' trực tiếp trên trang Kaggle, sau đó thả file zip vào ô bên dưới!"
 };
+
 

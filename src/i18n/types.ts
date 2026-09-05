@@ -608,4 +608,24 @@ export interface TranslationDict {
   calendarFilterHigh: string;
   calendarFilterHighMed: string;
   calendarNoEvents: string;
+
+  // Kaggle Gold Dataset Hub
+  kaggleTabTitle: string;
+  kaggleHubHeader: string;
+  kaggleHubDesc: string;
+  kaggleAutoDownloadTitle: string;
+  kaggleAutoDownloadDesc: string;
+  kaggleUsernameLabel: string;
+  kaggleKeyLabel: string;
+  kaggleFetchBtn: string;
+  kaggleDropZipTitle: string;
+  kaggleDropZipDesc: string;
+  kaggleScanFolderBtn: string;
+  kaggleSeedQuickBtn: string;
+  kaggleSeedQuickDesc: string;
+  kaggleTimeframesLabel: string;
+  kaggleMaxCandlesLabel: string;
+  kaggleSuccessMsg: string;
+  kaggleHelpNotice: string;
 }
+

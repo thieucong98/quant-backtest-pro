@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { prisma } from '../index.js';
 import { authMiddleware } from './users.js';
+import { KaggleDatasetService } from '../services/kaggleService.js';
 
 export const datasetsRouter = Router();
 datasetsRouter.use(authMiddleware);
@@ -149,3 +150,85 @@ datasetsRouter.delete('/:id', async (req: Request, res: Response) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+// POST /api/datasets/kaggle/download — Download from Kaggle via cURL and save to DB
+datasetsRouter.post('/kaggle/download', async (req: Request, res: Response) => {
+  try {
+    const userId = await getUserId(req);
+    const username = req.body?.username || process.env.KAGGLE_USERNAME;
+    const key = req.body?.key || process.env.KAGGLE_KEY;
+    const maxCandles = Number(req.body?.maxCandles) || 20000;
+    const selectedTimeframes = req.body?.selectedTimeframes || ['M5', 'M15', 'H1', 'D1'];
+
+    if (!username || !key) {
+      res.status(400).json({
+        success: false,
+        error: 'Vui lòng cung cấp Kaggle Username và API Key (hoặc cấu hình trong .env)!'
+      });
+      return;
+    }
+
+    const zipPath = await KaggleDatasetService.downloadViaCurl(username, key);
+    const summary = await KaggleDatasetService.importFromZipFile(zipPath, userId, {
+      maxCandlesPerTimeframe: maxCandles,
+      selectedTimeframes
+    });
+
+    res.json(summary);
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// POST /api/datasets/kaggle/scan-local — Scan local data/ directory for zip/csv
+datasetsRouter.post('/kaggle/scan-local', async (req: Request, res: Response) => {
+  try {
+    const userId = await getUserId(req);
+    const maxCandles = Number(req.body?.maxCandles) || 20000;
+    const selectedTimeframes = req.body?.selectedTimeframes || ['M5', 'M15', 'H1', 'D1'];
+
+    const summary = await KaggleDatasetService.scanAndImportLocal(userId, {
+      maxCandlesPerTimeframe: maxCandles,
+      selectedTimeframes
+    });
+
+    res.json(summary);
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// POST /api/datasets/kaggle/import-zip — Import Base64 / uploaded ZIP buffer
+datasetsRouter.post('/kaggle/import-zip', async (req: Request, res: Response) => {
+  try {
+    const userId = await getUserId(req);
+    const { base64Zip, maxCandles, selectedTimeframes } = req.body;
+
+    if (!base64Zip) {
+      res.status(400).json({ success: false, error: 'Dữ liệu file zip không hợp lệ' });
+      return;
+    }
+
+    const buffer = Buffer.from(base64Zip, 'base64');
+    const summary = await KaggleDatasetService.importFromZipFile(buffer, userId, {
+      maxCandlesPerTimeframe: Number(maxCandles) || 20000,
+      selectedTimeframes: selectedTimeframes || ['M5', 'M15', 'H1', 'D1']
+    });
+
+    res.json(summary);
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// POST /api/datasets/kaggle/seed-curated — Seed authentic real historical gold data
+datasetsRouter.post('/kaggle/seed-curated', async (req: Request, res: Response) => {
+  try {
+    const userId = await getUserId(req);
+    const result = await KaggleDatasetService.seedCuratedRealGold(userId);
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+

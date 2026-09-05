@@ -576,6 +576,26 @@ export const en: TranslationDict = {
   "calendarFilterAll": "All News",
   "calendarFilterHigh": "High Impact Only (Red)",
   "calendarFilterHighMed": "High & Medium Impact",
-  "calendarNoEvents": "No economic events matching current filters."
+  "calendarNoEvents": "No economic events matching current filters.",
+
+  // Kaggle Gold Dataset Hub
+  "kaggleTabTitle": "Kaggle Gold (2004-2024)",
+  "kaggleHubHeader": "XAUUSD Institutional Historical Dataset (2004 - 2024)",
+  "kaggleHubDesc": "Real historical Gold data from Kaggle (novandraanugrah/xauusd-gold-price-historical-data-2004-2024). Automatically decomposes multi-timeframe quotes (M1, M5, M15, M30, H1, H4, D1) and saves permanently to SQLite Database — 1-time import forever!",
+  "kaggleAutoDownloadTitle": "Automated Download via Kaggle API (cURL Engine)",
+  "kaggleAutoDownloadDesc": "Enter your Kaggle API Token to automatically download dataset from Kaggle directly to server.",
+  "kaggleUsernameLabel": "Kaggle Username:",
+  "kaggleKeyLabel": "Kaggle API Key:",
+  "kaggleFetchBtn": "Download & Store to SQLite",
+  "kaggleDropZipTitle": "Drag & Drop Kaggle ZIP / CSV File",
+  "kaggleDropZipDesc": "Or drop the 103MB ZIP file downloaded directly from your browser to auto-unzip & persist",
+  "kaggleScanFolderBtn": "Scan Local data/ Folder",
+  "kaggleSeedQuickBtn": "⚡ Quick Seed 5,000 Real 2024 Gold Candles",
+  "kaggleSeedQuickDesc": "No API key or 103MB download required — instantly import 5,000 genuine historical 2024 XAUUSD candles into SQLite for testing right away!",
+  "kaggleTimeframesLabel": "Timeframes to extract & persist:",
+  "kaggleMaxCandlesLabel": "Max candles limit per timeframe (for RAM & chart responsiveness):",
+  "kaggleSuccessMsg": "Successfully imported {count} real gold candles into Database!",
+  "kaggleHelpNotice": "Kaggle requires authenticated credentials for API downloads. If you prefer not using API keys, click 'Download dataset as zip' directly on Kaggle in your browser and drag the file here!"
 };
+
 

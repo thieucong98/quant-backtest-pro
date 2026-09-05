@@ -576,6 +576,26 @@ export const zh: TranslationDict = {
   "calendarFilterAll": "所有事件",
   "calendarFilterHigh": "仅重大事件 (红星)",
   "calendarFilterHighMed": "重要及中等事件",
-  "calendarNoEvents": "暂无符合筛选条件的财经日历数据。"
+  "calendarNoEvents": "暂无符合筛选条件的财经日历数据。",
+
+  // Kaggle Gold Dataset Hub
+  "kaggleTabTitle": "Kaggle 黄金 (2004-2024)",
+  "kaggleHubHeader": "XAUUSD 机构级历史数据集 (2004 - 2024)",
+  "kaggleHubDesc": "来自 Kaggle (novandraanugrah) 的真实黄金历史K线。自动解析多周期 (M1, M5, M15, M30, H1, H4, D1) 并永久保存至 SQLite 数据库 — 一次导入，永久使用！",
+  "kaggleAutoDownloadTitle": "通过 Kaggle API 自动下载 (cURL 引擎)",
+  "kaggleAutoDownloadDesc": "输入您的 Kaggle API Token，系统将自动从 Kaggle 下载至服务器并解压入库。",
+  "kaggleUsernameLabel": "Kaggle 用户名:",
+  "kaggleKeyLabel": "Kaggle API Key:",
+  "kaggleFetchBtn": "立即下载并保存至 SQLite",
+  "kaggleDropZipTitle": "拖放 Kaggle ZIP 或 CSV 文件",
+  "kaggleDropZipDesc": "或者直接将浏览器下载的 103MB ZIP 压缩包拖入此处，自动解压入库",
+  "kaggleScanFolderBtn": "扫描本地 data/ 文件夹",
+  "kaggleSeedQuickBtn": "⚡ 快速载入 5,000 根 2024 真实黄金K线",
+  "kaggleSeedQuickDesc": "无需 API Key 或下载 103MB — 一键将 2024 年真实的 5,000 根 XAUUSD K线写入数据库，立即开始回测！",
+  "kaggleTimeframesLabel": "需要解压与保存的周期:",
+  "kaggleMaxCandlesLabel": "各周期最大K线数量限制 (优化图表性能):",
+  "kaggleSuccessMsg": "成功将 {count} 根真实黄金K线存入数据库！",
+  "kaggleHelpNotice": "Kaggle API 下载需要账户认证。如不想配置 API Key，可直接在 Kaggle 网页端点击 'Download dataset as zip'，将文件拖入下方即可！"
 };
+
 

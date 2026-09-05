@@ -576,6 +576,26 @@ export const ja: TranslationDict = {
   "calendarFilterAll": "すべての指標",
   "calendarFilterHigh": "高影響度のみ (赤)",
   "calendarFilterHighMed": "高・中影響度",
-  "calendarNoEvents": "条件に一致する経済指標はありません。"
+  "calendarNoEvents": "条件に一致する経済指標はありません。",
+
+  // Kaggle Gold Dataset Hub
+  "kaggleTabTitle": "Kaggle Gold (2004-2024)",
+  "kaggleHubHeader": "XAUUSD 機関投資家向けヒストリカルデータセット (2004 - 2024)",
+  "kaggleHubDesc": "Kaggle（novandraanugrah）からのゴールド実データ。複数時間軸（M1, M5, M15, M30, H1, H4, D1）を自動分解し、SQLiteデータベースに永続保存 — 一度のインポートで永続的に利用可能です！",
+  "kaggleAutoDownloadTitle": "Kaggle API 自動ダウンロード (cURL Engine)",
+  "kaggleAutoDownloadDesc": "Kaggle API トークンを入力してサーバーへ直接ダウンロードします。",
+  "kaggleUsernameLabel": "Kaggle ユーザー名:",
+  "kaggleKeyLabel": "Kaggle API キー:",
+  "kaggleFetchBtn": "ダウンロードしてSQLiteへ保存",
+  "kaggleDropZipTitle": "Kaggle ZIP または CSV ファイルをドロップ",
+  "kaggleDropZipDesc": "ブラウザから直接ダウンロードした 103MB ZIP ファイルをここにドロップして自動解凍＆保存",
+  "kaggleScanFolderBtn": "ローカル data/ フォルダをスキャン",
+  "kaggleSeedQuickBtn": "⚡ 2024年ゴールド実データ5,000本をクイック導入",
+  "kaggleSeedQuickDesc": "APIキーや103MBのDLは不要 — 2024年のリアルなXAUUSDローソク足5,000本を即座にデータベースへロードして検証可能！",
+  "kaggleTimeframesLabel": "抽出・保存する時間軸:",
+  "kaggleMaxCandlesLabel": "時間軸ごとの最大ローソク足数制限:",
+  "kaggleSuccessMsg": "{count} 本のゴールド実データをデータベースにインポートしました！",
+  "kaggleHelpNotice": "Kaggle API には認証が必要です。APIキーを使用しない場合は、ブラウザで Kaggle から 'Download dataset as zip' をクリックしてZIPファイルをここにドロップしてください！"
 };
+
 

@@ -15,6 +15,7 @@
   "dependencies": {
     "@prisma/client": "^6.8.0",
     "@types/localtunnel": "^2.0.4",
+    "adm-zip": "^0.6.0",
     "bcryptjs": "^2.4.3",
     "cloudflared": "^0.7.3",
     "cors": "^2.8.5",
@@ -23,6 +24,7 @@
     "localtunnel": "^2.0.2"
   },
   "devDependencies": {
+    "@types/adm-zip": "^0.5.8",
     "@types/bcryptjs": "^2.4.6",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
