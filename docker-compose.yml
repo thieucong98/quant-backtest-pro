@@ -11,9 +11,9 @@ services:
       - NODE_ENV=production
       - PORT=3001
       - STATIC_PATH=/app/dist
-      - DATABASE_URL="file:./prisma/dev.db"
+      - DATABASE_URL=file:./data/dev.db
     volumes:
-      - sqlite_data:/app/server/prisma
+      - sqlite_data:/app/server/prisma/data
     healthcheck:
       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3001/api/health || exit 1"]
       interval: 15s

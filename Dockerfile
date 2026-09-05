@@ -32,7 +32,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3001
 ENV STATIC_PATH=/app/dist
-ENV DATABASE_URL="file:./prisma/dev.db"
+ENV DATABASE_URL=file:./data/dev.db
 
 # Install openssl and wget for Alpine Prisma SQLite & Healthcheck
 RUN apk add --no-cache openssl wget
@@ -44,10 +44,15 @@ COPY --from=frontend-builder /app/dist /app/dist
 COPY --from=server-builder /app/server/node_modules /app/server/node_modules
 COPY --from=server-builder /app/server/dist /app/server/dist
 COPY --from=server-builder /app/server/prisma /app/server/prisma
-COPY --from=server-builder /app/server/package*.json /app/server/
+COPY --from=server-builder /app/server/package.json /app/server/package.json
+COPY --from=server-builder /app/server/package-lock.json /app/server/package-lock.json
+
+# Ensure data directory exists for SQLite database storage
+RUN mkdir -p /app/server/prisma/data
 
 EXPOSE 3001
 
 WORKDIR /app/server
 
-CMD ["node", "dist/index.js"]
+CMD ["sh", "-c", "npx prisma db push --skip-generate && node dist/index.js"]
+
