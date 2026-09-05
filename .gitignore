@@ -37,3 +37,4 @@ scratch/
 scripts/installers/
 server/data/
 *.zip
+scan_summary.json
