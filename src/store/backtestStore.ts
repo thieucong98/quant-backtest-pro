@@ -38,6 +38,13 @@ interface BacktestStore {
   candles: Candle[];
   currentIndex: number;
   economicNews: EconomicNewsEvent[];
+  showEconomicNews: boolean;
+  economicNewsFilter: 'ALL' | 'HIGH' | 'HIGH_MEDIUM';
+  selectedCalendarCurrency: string;
+  toggleEconomicNews: (show?: boolean) => void;
+  setEconomicNewsFilter: (filter: 'ALL' | 'HIGH' | 'HIGH_MEDIUM') => void;
+  setSelectedCalendarCurrency: (currency: string) => void;
+  fetchCalendarEvents: () => Promise<void>;
 
   // Replay Controller
   isPlaying: boolean;
@@ -245,8 +252,9 @@ const cachedInit = loadInitialCachedSession();
 
 // Khởi tạo dữ liệu mẫu ban đầu
 const initialInstrument = cachedInit?.symbol ? (INSTRUMENTS[cachedInit.symbol] || DEFAULT_INSTRUMENT) : DEFAULT_INSTRUMENT;
-const initialM1 = generateRealisticCandles(initialInstrument.symbol, initialInstrument.symbol === 'BTCUSD' ? 68500 : initialInstrument.symbol === 'XAUUSD' ? 2650 : 1.0850, 2500, 5);
-const initialNews = generateNewsForCandles(initialM1);
+const initialStartPrice = initialInstrument.symbol === 'BTCUSD' ? 68500 : initialInstrument.symbol === 'XAUUSD' ? 2650 : initialInstrument.symbol === 'XAGUSD' ? 31.85 : 1.0850;
+const initialM1 = generateRealisticCandles(initialInstrument.symbol, initialStartPrice, 2500, 5);
+const initialNews = generateNewsForCandles(initialM1, initialInstrument.symbol);
 const initialMatchingEngine = new OrderMatchingEngine(cachedInit?.balance || 10000, initialInstrument);
 const initialStrategyRunner = new StrategyRunner();
 const initialIndicatorCalculator = new IndicatorCalculator();
@@ -306,6 +314,22 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
     candles: initialM1,
     currentIndex: cachedInit?.currentIndex || Math.min(200, initialM1.length - 1),
     economicNews: initialNews,
+    showEconomicNews: true,
+    economicNewsFilter: 'ALL',
+    selectedCalendarCurrency: 'ALL',
+    toggleEconomicNews: (show) => set(s => ({ showEconomicNews: show !== undefined ? show : !s.showEconomicNews })),
+    setEconomicNewsFilter: (filter) => set({ economicNewsFilter: filter }),
+    setSelectedCalendarCurrency: (currency) => set({ selectedCalendarCurrency: currency }),
+    fetchCalendarEvents: async () => {
+      try {
+        const { rawM1Candles, instrument } = get();
+        if (rawM1Candles.length === 0) return;
+        const first = rawM1Candles[0].timestamp;
+        const last = rawM1Candles[rawM1Candles.length - 1].timestamp;
+        const events = generateNewsForCandles(rawM1Candles, instrument.symbol);
+        set({ economicNews: events });
+      } catch {}
+    },
 
     isPlaying: false,
     speed: 5,
@@ -364,6 +388,7 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
       const spec = INSTRUMENTS[symbol] || DEFAULT_INSTRUMENT;
       let startPrice = 1.0850;
       if (symbol === 'XAUUSD') startPrice = 2650.0;
+      if (symbol === 'XAGUSD') startPrice = 31.85;
       if (symbol === 'BTCUSD') startPrice = 68500.0;
       if (symbol === 'USDJPY') startPrice = 155.0;
       if (symbol === 'GBPUSD') startPrice = 1.2950;
@@ -372,7 +397,7 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
       if (symbol === 'DXY') startPrice = 104.5;
 
       const newM1 = generateRealisticCandles(symbol, startPrice, 2500, 5);
-      const news = generateNewsForCandles(newM1);
+      const news = generateNewsForCandles(newM1, symbol);
       const resampled = TimeframeResampler.resample(newM1, get().timeframe);
       const engine = get().matchingEngine;
       engine.setConfig(spec);
@@ -440,7 +465,7 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
       engine.reset();
 
       const resampled = TimeframeResampler.resample(newCandles, tf);
-      const news = generateNewsForCandles(newCandles);
+      const news = generateNewsForCandles(newCandles, targetSpec.symbol);
       const initialIdx = Math.max(0, Math.min(startIndex, resampled.length - 1));
 
       const newSessionId = 'sess_' + Date.now();
@@ -977,6 +1002,7 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
         if (get().instrument.symbol !== session.symbol || rawM1.length === 0) {
           let startPrice = 1.0850;
           if (session.symbol === 'XAUUSD') startPrice = 2650.0;
+          if (session.symbol === 'XAGUSD') startPrice = 31.85;
           if (session.symbol === 'BTCUSD') startPrice = 68500.0;
           if (session.symbol === 'USDJPY') startPrice = 155.0;
           if (session.symbol === 'DXY') startPrice = 104.5;
@@ -984,7 +1010,7 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
         }
 
         const resampled = TimeframeResampler.resample(rawM1, tf);
-        const news = generateNewsForCandles(rawM1);
+        const news = generateNewsForCandles(rawM1, session.symbol);
 
         // Parse open positions
         const openPositions: Position[] = (session.trades || [])
@@ -1142,13 +1168,14 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
         // Initialize simulation for the new session
         let startPrice = 1.0850;
         if (targetSymbol === 'XAUUSD') startPrice = 2650.0;
+        if (targetSymbol === 'XAGUSD') startPrice = 31.85;
         if (targetSymbol === 'BTCUSD') startPrice = 68500.0;
         if (targetSymbol === 'USDJPY') startPrice = 155.0;
         if (targetSymbol === 'DXY') startPrice = 104.5;
 
         const newM1 = generateRealisticCandles(targetSymbol, startPrice, 2500, 5);
         const resampled = TimeframeResampler.resample(newM1, targetTf);
-        const news = generateNewsForCandles(newM1);
+        const news = generateNewsForCandles(newM1, targetSymbol);
 
         const engine = get().matchingEngine;
         engine.setConfig(spec);

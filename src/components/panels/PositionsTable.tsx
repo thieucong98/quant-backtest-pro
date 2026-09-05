@@ -17,7 +17,8 @@ import {
   ChevronUp,
   Radio,
   Zap,
-  CheckCircle2
+  CheckCircle2,
+  Calendar
 } from 'lucide-react';
 import { INSTRUMENTS } from '../../config/instruments';
 import { useBacktestStore } from '../../store/backtestStore';
@@ -25,9 +26,10 @@ import { useBrokerStore } from '../../store/brokerStore';
 import { translations } from '../../i18n/translations';
 import { Position } from '../../types/order';
 import { BrokerPosition } from '../../types/broker';
+import { EconomicCalendarTab } from './EconomicCalendarTab';
 
 export const PositionsTable: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'open' | 'pending' | 'history' | 'logs'>('open');
+  const [activeTab, setActiveTab] = useState<'open' | 'pending' | 'history' | 'logs' | 'calendar'>('open');
   const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
   const [editingPosition, setEditingPosition] = useState<Position | BrokerPosition | null>(null);
   const [editSL, setEditSL] = useState<string>('');
@@ -40,6 +42,7 @@ export const PositionsTable: React.FC = () => {
     pendingOrders,
     closedPositions,
     strategyLogs,
+    economicNews,
     closePosition,
     setBreakeven,
     partialClose,
@@ -195,6 +198,23 @@ export const PositionsTable: React.FC = () => {
             <Terminal className="w-3.5 h-3.5" />
             <span>
               {t.strategyLogs} ({strategyLogs.length})
+            </span>
+          </button>
+
+          <button
+            onClick={() => {
+              setActiveTab('calendar');
+              setIsCollapsed(false);
+            }}
+            className={`px-2.5 sm:px-3 py-1.5 rounded-t font-medium flex items-center gap-1.5 transition-colors ${
+              activeTab === 'calendar'
+                ? 'bg-[#0e121b] text-indigo-400 border-t-2 border-indigo-500 font-semibold'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <Calendar className="w-3.5 h-3.5 text-amber-400" />
+            <span>
+              {t.economicCalendar || 'Lịch Kinh Tế'} ({economicNews.length})
             </span>
           </button>
         </div>
@@ -729,6 +749,9 @@ export const PositionsTable: React.FC = () => {
               ))}
             </div>
           )}
+
+          {/* 5. ECONOMIC CALENDAR TAB */}
+          {activeTab === 'calendar' && <EconomicCalendarTab />}
         </div>
       )}
 

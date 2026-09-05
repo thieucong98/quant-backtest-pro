@@ -33,6 +33,7 @@ import { useBrokerStore } from '../../store/brokerStore';
 import { translations } from '../../i18n/translations';
 import { Candle, ChartType, InstrumentSpec, Timeframe } from '../../types/market';
 import { MultiAssetMathEngine } from '../../engine/quantMath';
+import { snapEventToBarTime } from '../../config/newsEvents';
 import { DrawingCanvas } from './DrawingCanvas';
 import { AIBotHUD } from '../panels/AIBotHUD';
 import { VisualChartTradingOverlay } from './VisualChartTradingOverlay';
@@ -112,6 +113,9 @@ export const TradingViewChart: React.FC = () => {
     openPositions,
     markers,
     economicNews,
+    showEconomicNews,
+    economicNewsFilter,
+    selectedCalendarCurrency,
     executeMarketOrder,
     addStrategyLog,
     account,
@@ -500,24 +504,54 @@ export const TradingViewChart: React.FC = () => {
           size: 1.2
         }));
 
-      // Thêm Economic News Markers
-      const newsMarkers = economicNews
-        .filter(n => (n.timestamp > 1e11 ? Math.floor(n.timestamp / 1000) : n.timestamp) <= maxSec)
-        .map(n => ({
-          time: (n.timestamp > 1e11 ? Math.floor(n.timestamp / 1000) : n.timestamp) as Time,
-          position: 'aboveBar' as any,
-          color: n.impact === 'HIGH' ? '#f43f5e' : '#f59e0b',
-          shape: 'circle' as any,
-          text: `📰 ${n.title}`,
-          size: 1.5
-        }));
+      // Thêm Economic News Markers với Smart Bar Snapping
+      let newsMarkers: any[] = [];
+      if (showEconomicNews && economicNews.length > 0) {
+        const visibleBarSecs = effectiveCandles
+          .slice(0, currentIndex + 1)
+          .map((c: Candle) => (c.timestamp > 1e11 ? Math.floor(c.timestamp / 1000) : Math.floor(c.timestamp)));
+
+        newsMarkers = economicNews
+          .filter(n => {
+            if (selectedCalendarCurrency !== 'ALL') {
+              if (n.currency !== selectedCalendarCurrency && n.currency !== 'GLOBAL') return false;
+            }
+            if (economicNewsFilter === 'HIGH') {
+              return n.impact === 'HIGH';
+            } else if (economicNewsFilter === 'HIGH_MEDIUM') {
+              return n.impact === 'HIGH' || n.impact === 'MEDIUM';
+            }
+            return true;
+          })
+          .map(n => {
+            const rawSec = n.timestamp > 1e11 ? Math.floor(n.timestamp / 1000) : n.timestamp;
+            if (rawSec > maxSec) return null;
+            const snappedBarSec = snapEventToBarTime(rawSec, visibleBarSecs);
+            if (!snappedBarSec) return null;
+
+            const isHigh = n.impact === 'HIGH';
+            const isMedium = n.impact === 'MEDIUM';
+            const color = isHigh ? '#f43f5e' : isMedium ? '#f59e0b' : '#0ea5e9';
+            const emoji = isHigh ? '🔴' : isMedium ? '🟡' : '🔵';
+
+            return {
+              time: snappedBarSec as Time,
+              position: 'aboveBar' as any,
+              color,
+              shape: 'circle' as any,
+              text: `${emoji} ${n.currency} ${n.title}${n.actual ? ` [${n.actual}]` : ''}`,
+              size: isHigh ? 1.6 : 1.3
+            };
+          })
+          .filter(Boolean) as any[];
+      }
 
       const allMarkers = [...activeMarkers, ...newsMarkers].sort((a, b) => (a.time as number) - (b.time as number));
       mainSeriesRef.current.setMarkers(allMarkers);
     } catch (err) {
       console.error('Error rendering chart candles:', err);
     }
-  }, [effectiveCandles, currentIndex, markers, economicNews, instrument.digits, chartType]);
+  }, [effectiveCandles, currentIndex, markers, economicNews, showEconomicNews, economicNewsFilter, selectedCalendarCurrency, instrument.digits, chartType]);
 
   // Cập nhật đường giá hiển thị cho Open Positions (Hỗ trợ cả Sandbox & Live Broker Positions)
   useEffect(() => {

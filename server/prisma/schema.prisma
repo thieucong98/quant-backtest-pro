@@ -201,3 +201,26 @@ model AnalyticsSnapshot {
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 }
+
+// ─── ECONOMIC CALENDAR & EVENTS ─────────────────────────────
+
+model EconomicEvent {
+  id           String   @id @default(cuid())
+  eventId      String   @unique
+  timestamp    BigInt   // Unix timestamp ms
+  timestampSec Int      // Unix timestamp s
+  currency     String   // USD, EUR, GBP, JPY, etc.
+  country      String   // US, EU, GB, etc.
+  title        String
+  impact       String   // HIGH | MEDIUM | LOW
+  actual       String?
+  forecast     String?
+  previous     String?
+  sentiment    String?  // BULLISH | BEARISH | NEUTRAL
+  source       String?  @default("CALENDAR_ENGINE") // CALENDAR_ENGINE | FOREX_FACTORY | USER_IMPORT
+  createdAt    DateTime @default(now())
+
+  @@index([currency])
+  @@index([impact])
+  @@index([timestamp])
+}
