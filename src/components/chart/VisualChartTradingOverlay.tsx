@@ -53,36 +53,38 @@ export const VisualChartTradingOverlay: React.FC<VisualChartTradingOverlayProps>
 
   const isLiveActive = isLiveTradingMode && connectionStatus === 'CONNECTED';
 
-  // Combine positions depending on mode
-  const activePositions = isLiveActive
-    ? livePositions.map((p) => ({
-        id: String(p.ticket),
-        ticket: p.ticket,
-        symbol: p.symbol,
-        side: p.side,
-        lotSize: p.lotSize,
-        entryPrice: p.openPrice,
-        currentPrice: p.currentPrice,
-        stopLoss: p.sl,
-        takeProfit: p.tp,
-        floatingPnL: p.floatingPnL,
-        isLive: true
-      }))
-    : backtestPositions
-        .filter((p) => p.symbol === instrument.symbol)
-        .map((p) => ({
-          id: p.id,
-          ticket: p.id,
+  // Combine positions depending on mode (Memoized to prevent render loops)
+  const activePositions = React.useMemo(() => {
+    return isLiveActive
+      ? livePositions.map((p) => ({
+          id: String(p.ticket),
+          ticket: p.ticket,
           symbol: p.symbol,
           side: p.side,
           lotSize: p.lotSize,
-          entryPrice: p.entryPrice,
-          currentPrice: p.highestPriceSinceOpen, // or current
-          stopLoss: p.stopLoss,
-          takeProfit: p.takeProfit,
+          entryPrice: p.openPrice,
+          currentPrice: p.currentPrice,
+          stopLoss: p.sl,
+          takeProfit: p.tp,
           floatingPnL: p.floatingPnL,
-          isLive: false
-        }));
+          isLive: true
+        }))
+      : backtestPositions
+          .filter((p) => p.symbol === instrument.symbol)
+          .map((p) => ({
+            id: p.id,
+            ticket: p.id,
+            symbol: p.symbol,
+            side: p.side,
+            lotSize: p.lotSize,
+            entryPrice: p.entryPrice,
+            currentPrice: p.highestPriceSinceOpen, // or current
+            stopLoss: p.stopLoss,
+            takeProfit: p.takeProfit,
+            floatingPnL: p.floatingPnL,
+            isLive: false
+          }));
+  }, [isLiveActive, livePositions, backtestPositions, instrument.symbol]);
 
   const [coords, setCoords] = useState<
     Record<
@@ -111,7 +113,22 @@ export const VisualChartTradingOverlay: React.FC<VisualChartTradingOverlayProps>
       newCoords[pos.id] = { entryY, slY, tpY };
     });
 
-    setCoords(newCoords);
+    setCoords((prev) => {
+      const prevKeys = Object.keys(prev);
+      const newKeys = Object.keys(newCoords);
+      if (prevKeys.length !== newKeys.length) return newCoords;
+      for (const k of newKeys) {
+        if (
+          !prev[k] ||
+          prev[k].entryY !== newCoords[k].entryY ||
+          prev[k].slY !== newCoords[k].slY ||
+          prev[k].tpY !== newCoords[k].tpY
+        ) {
+          return newCoords;
+        }
+      }
+      return prev;
+    });
   }, [seriesApi, chartApi, activePositions, containerRef]);
 
   // Hook into chart scroll and zoom events
@@ -123,12 +140,9 @@ export const VisualChartTradingOverlay: React.FC<VisualChartTradingOverlayProps>
     timeScale.subscribeVisibleTimeRangeChange(updateCoordinates);
     timeScale.subscribeVisibleLogicalRangeChange(updateCoordinates);
 
-    const interval = setInterval(updateCoordinates, 250);
-
     return () => {
       timeScale.unsubscribeVisibleTimeRangeChange(updateCoordinates);
       timeScale.unsubscribeVisibleLogicalRangeChange(updateCoordinates);
-      clearInterval(interval);
     };
   }, [chartApi, updateCoordinates]);
 

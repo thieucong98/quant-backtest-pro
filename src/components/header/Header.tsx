@@ -21,12 +21,14 @@ import {
   Menu,
   X,
   Shield,
-  Layers
+  Layers,
+  Radio
 } from 'lucide-react';
 import { INSTRUMENTS } from '../../config/instruments';
 import { useBacktestStore } from '../../store/backtestStore';
 import { useBrokerStore } from '../../store/brokerStore';
 import { useAuthStore } from '../../store/authStore';
+import { useTunnelStore } from '../../store/tunnelStore';
 import { translations, Language } from '../../i18n/translations';
 import { AssetCategory, ChartType, DrawingToolType, Timeframe } from '../../types/market';
 import { SymbolSearchModal } from './SymbolSearchModal';
@@ -73,6 +75,9 @@ export const Header: React.FC = () => {
     setMarketWatchOpen,
     setBrokerModalOpen
   } = useBrokerStore();
+
+  const isTunnelActive = useTunnelStore(s => s.isActive);
+  const setTunnelModalOpen = useTunnelStore(s => s.setTunnelModalOpen);
 
   const { user, isAuthenticated, setAuthModalOpen } = useAuthStore();
   const t = translations[language] || translations.vi;
@@ -416,6 +421,23 @@ export const Header: React.FC = () => {
               <span>{t.dataImport}</span>
             </button>
 
+            {/* Remote Access Tunnel Button */}
+            <button
+              onClick={() => setTunnelModalOpen(true)}
+              className={`p-1.5 sm:px-2.5 sm:py-1.5 border rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all active:scale-95 ${
+                isTunnelActive
+                  ? 'bg-emerald-950/90 border-emerald-500/60 text-emerald-300 shadow-md shadow-emerald-500/20'
+                  : 'bg-slate-900/90 border-slate-700/80 text-slate-300 hover:bg-slate-800'
+              }`}
+              title={t.remoteTunnelTitle || 'Truy Cập Từ Xa / Remote Tunnel'}
+            >
+              <Globe className={`w-3.5 h-3.5 ${isTunnelActive ? 'text-emerald-400' : 'text-teal-400'}`} />
+              <span className="hidden xl:inline">{t.remoteTunnel || 'Remote'}</span>
+              {isTunnelActive && (
+                <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-xs shadow-emerald-400" />
+              )}
+            </button>
+
             {/* Shortcuts Button */}
             <button
               onClick={() => setShortcutsModalOpen(true)}
@@ -568,6 +590,23 @@ export const Header: React.FC = () => {
                 >
                   <Upload className="w-4 h-4 text-sky-400" />
                   <span>{t.dataImport}</span>
+                </button>
+
+                <button
+                  onClick={() => { setTunnelModalOpen(true); setIsMobileDrawerOpen(false); }}
+                  className={`w-full px-3 py-2 rounded-lg flex items-center justify-between transition-colors ${
+                    isTunnelActive
+                      ? 'bg-emerald-950/80 text-emerald-300 font-semibold'
+                      : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Globe className="w-4 h-4 text-teal-400" />
+                    <span>{t.remoteTunnelTitle || 'Truy Cập Từ Xa'}</span>
+                  </div>
+                  {isTunnelActive && (
+                    <span className="px-1.5 py-0.5 text-[9px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded font-bold">ONLINE</span>
+                  )}
                 </button>
 
                 <button

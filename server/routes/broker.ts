@@ -46,6 +46,7 @@ class ServerMockEngine {
   public getSymbols() {
     return {
       XAUUSD: { bid: 2724.5, ask: 2724.7, digits: 2, contract_size: 100 },
+      XAGUSD: { bid: 31.85, ask: 31.875, digits: 3, contract_size: 5000 },
       EURUSD: { bid: 1.0835, ask: 1.08362, digits: 5, contract_size: 100000 },
       BTCUSD: { bid: 94250.0, ask: 94265.0, digits: 2, contract_size: 1 }
     };

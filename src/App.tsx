@@ -11,8 +11,10 @@ import { ShortcutsModal } from './components/panels/ShortcutsModal';
 import { SessionManagerModal } from './components/panels/SessionManagerModal';
 import { AuthModal } from './components/auth/AuthModal';
 import { UserProfileModal } from './components/auth/UserProfileModal';
+import { TunnelModal } from './components/panels/TunnelModal';
 import { AIBotHUD } from './components/panels/AIBotHUD';
 import { useBacktestStore } from './store/backtestStore';
+import { useTunnelStore } from './store/tunnelStore';
 import { useAutoSave } from './hooks/useAutoSave';
 
 import { ErrorBoundary } from './components/common/ErrorBoundary';
@@ -79,6 +81,8 @@ export const App: React.FC = () => {
         if (isShortcutsModalOpen) setShortcutsModalOpen(false);
         if (isProfileModalOpen) setProfileModalOpen(false);
         if (isSessionManagerOpen) setSessionManagerOpen(false);
+        const { isTunnelModalOpen, setTunnelModalOpen } = useTunnelStore.getState();
+        if (isTunnelModalOpen) setTunnelModalOpen(false);
       }
     };
 
@@ -132,6 +136,7 @@ export const App: React.FC = () => {
         isOpen={isProfileModalOpen}
         onClose={() => setProfileModalOpen(false)}
       />
+      <TunnelModal />
     </div>
   );
 };

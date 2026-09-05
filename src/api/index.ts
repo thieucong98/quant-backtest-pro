@@ -1,6 +1,8 @@
 import { api } from './client';
 export * from './sessions';
 export * from './trades';
+export * from './tunnel';
+export * from './calendar';
 
 export const strategiesApi = {
   list: () => api.get<any[]>('/strategies'),

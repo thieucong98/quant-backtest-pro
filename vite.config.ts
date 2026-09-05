@@ -7,8 +7,25 @@ export default defineConfig({
   server: {
     port: 5173,
     host: true,
+    cors: true,
+    // Cho phép tất cả Host header từ Tunnel (Cloudflare trycloudflare.com & Localtunnel loca.lt)
+    allowedHosts: true,
+    hmr: {
+      overlay: false
+    },
     watch: {
-      ignored: ['**/scripts/installers/**', '**/*.exe', '**/mt5_gateway/**']
+      ignored: [
+        '**/server/**',
+        '**/scripts/**',
+        '**/*.db*',
+        '**/*.sqlite*',
+        '**/*.log',
+        '**/mt5_gateway/**',
+        '**/*.exe',
+        '**/*.png',
+        '**/*.webp',
+        '**/.system_generated/**'
+      ]
     },
     proxy: {
       '/api': {
