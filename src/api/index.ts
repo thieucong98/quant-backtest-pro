@@ -24,7 +24,11 @@ export const datasetsApi = {
     api.post<any>('/datasets', data),
   delete: (id: string) =>
     api.delete(`/datasets/${id}`),
-  kaggleDownload: (data: { username?: string; key?: string; maxCandles?: number; selectedTimeframes?: string[] }) =>
+  kagglePresets: () =>
+    api.get<any>('/datasets/kaggle/presets'),
+  kaggleDownloadSingle: (data: { datasetSlug: string; fileName: string; maxCandles?: number; username?: string; key?: string }) =>
+    api.post<any>('/datasets/kaggle/download-single', data),
+  kaggleDownload: (data: { datasetSlug?: string; username?: string; key?: string; maxCandles?: number; selectedTimeframes?: string[] }) =>
     api.post<any>('/datasets/kaggle/download', data),
   kaggleScanLocal: (data?: { maxCandles?: number; selectedTimeframes?: string[] }) =>
     api.post<any>('/datasets/kaggle/scan-local', data || {}),

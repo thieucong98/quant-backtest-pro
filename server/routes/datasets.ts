@@ -1,7 +1,8 @@
 import { Router, Request, Response } from 'express';
-import { prisma } from '../index.js';
+import { prisma } from '../prisma.js';
 import { authMiddleware } from './users.js';
-import { KaggleDatasetService } from '../services/kaggleService.js';
+import { KaggleDatasetService, KAGGLE_PRESETS } from '../services/kaggleService.js';
+
 
 export const datasetsRouter = Router();
 datasetsRouter.use(authMiddleware);
@@ -151,26 +152,62 @@ datasetsRouter.delete('/:id', async (req: Request, res: Response) => {
   }
 });
 
-// POST /api/datasets/kaggle/download — Download from Kaggle via Native HTTP Stream and save to DB
-datasetsRouter.post('/kaggle/download', async (req: Request, res: Response) => {
+// GET /api/datasets/kaggle/presets — Catalogue of financial datasets from Novandra Anugrah
+datasetsRouter.get('/kaggle/presets', (_req: Request, res: Response) => {
+  res.json({
+    success: true,
+    presets: KAGGLE_PRESETS
+  });
+});
+
+// POST /api/datasets/kaggle/download-single — Download a single CSV file directly from Kaggle (297KB - 8MB instant)
+datasetsRouter.post('/kaggle/download-single', async (req: Request, res: Response) => {
   try {
     const userId = await getUserId(req);
-    const username = req.body?.username || process.env.KAGGLE_USERNAME;
-    const key = req.body?.key || process.env.KAGGLE_KEY;
-    const maxCandles = Number(req.body?.maxCandles) || 20000;
-    const selectedTimeframes = req.body?.selectedTimeframes || ['M5', 'M15', 'H1', 'D1'];
+    const { datasetSlug, fileName, username, key, maxCandles } = req.body;
 
-    const zipPath = await KaggleDatasetService.downloadDataset(username, key);
-    const summary = await KaggleDatasetService.importFromZipFile(zipPath, userId, {
-      maxCandlesPerTimeframe: maxCandles,
-      selectedTimeframes
-    });
+    if (!datasetSlug || !fileName) {
+      res.status(400).json({ success: false, error: 'Vui lòng cung cấp datasetSlug và fileName!' });
+      return;
+    }
+
+    const summary = await KaggleDatasetService.importSingleFile(
+      datasetSlug,
+      fileName,
+      userId,
+      { maxCandlesPerTimeframe: Number(maxCandles) || 50000 },
+      username || process.env.KAGGLE_USERNAME,
+      key || process.env.KAGGLE_KEY
+    );
 
     res.json(summary);
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
   }
 });
+
+// POST /api/datasets/kaggle/download — Download full dataset ZIP from Kaggle via Native HTTP Stream and save to DB
+datasetsRouter.post('/kaggle/download', async (req: Request, res: Response) => {
+  try {
+    const userId = await getUserId(req);
+    const username = req.body?.username || process.env.KAGGLE_USERNAME;
+    const key = req.body?.key || process.env.KAGGLE_KEY;
+    const datasetSlug = req.body?.datasetSlug || 'novandraanugrah/xauusd-gold-price-historical-data-2004-2024';
+    const maxCandles = Number(req.body?.maxCandles) || 50000;
+    const selectedTimeframes = req.body?.selectedTimeframes || [];
+
+    const zipPath = await KaggleDatasetService.downloadDataset(username, key, datasetSlug);
+    const summary = await KaggleDatasetService.importFromZipFile(zipPath, userId, {
+      maxCandlesPerTimeframe: maxCandles,
+      selectedTimeframes
+    }, datasetSlug);
+
+    res.json(summary);
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 
 // POST /api/datasets/kaggle/scan-local — Scan local data/ directory for zip/csv
 datasetsRouter.post('/kaggle/scan-local', async (req: Request, res: Response) => {

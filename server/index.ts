@@ -18,12 +18,9 @@ import { calendarRouter } from './routes/calendar.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Polyfill BigInt JSON serialization for Prisma
-(BigInt.prototype as any).toJSON = function () {
-  return Number(this);
-};
+import { prisma } from './prisma.js';
+export { prisma };
 
-export const prisma = new PrismaClient();
 
 const app = express();
 const PORT = process.env.PORT || 3001;

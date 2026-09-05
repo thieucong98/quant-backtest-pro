@@ -29,7 +29,13 @@ import {
   Folder,
   Search,
   FileArchive,
-  Loader2
+  Loader2,
+  ChevronDown,
+  ChevronUp,
+  Key,
+  FileText,
+  Coins,
+  TrendingUp
 } from 'lucide-react';
 import { generateRealisticCandles } from '../../config/sampleData';
 import { CSVDataParser, CSVParseResult } from '../../engine/csvParser';
@@ -39,6 +45,83 @@ import { useBacktestStore } from '../../store/backtestStore';
 import { translations } from '../../i18n/translations';
 import { INSTRUMENTS } from '../../config/instruments';
 import { Timeframe } from '../../types/market';
+
+// Curated Novandra Anugrah datasets presets fallback
+const DEFAULT_KAGGLE_PRESETS = [
+  {
+    id: 'xauusd',
+    name: 'XAU/USD Gold Price Historical Data (2004 - 2026)',
+    symbol: 'XAUUSD',
+    slug: 'novandraanugrah/xauusd-gold-price-historical-data-2004-2024',
+    category: 'Forex & Commodities',
+    description: 'Báo giá vàng thể chế thực tế 20 năm (M1, M5, M15, M30, H1, H4, D1). Tải lẻ từng file (297KB) hoặc toàn bộ gói nén.',
+    files: [
+      { name: 'XAU_1d_data.csv', tf: 'D1', sizeEstimate: '297 KB (Tải tức thì)' },
+      { name: 'XAU_4h_data.csv', tf: 'H4', sizeEstimate: '1.7 MB (~1s)' },
+      { name: 'XAU_1h_data.csv', tf: 'H1', sizeEstimate: '6.5 MB (~1.5s)' },
+      { name: 'XAU_30m_data.csv', tf: 'M30', sizeEstimate: '13 MB (~2.5s)' },
+      { name: 'XAU_15m_data.csv', tf: 'M15', sizeEstimate: '26 MB (~3.5s)' },
+      { name: 'XAU_5m_data.csv', tf: 'M5', sizeEstimate: '74 MB (~6s)' },
+      { name: 'XAU_1m_data.csv', tf: 'M1', sizeEstimate: '330 MB (Full M1)' }
+    ]
+  },
+  {
+    id: 'btcusd',
+    name: 'BITCOIN Historical Datasets 2018 - 2026 (Binance API)',
+    symbol: 'BTCUSD',
+    slug: 'novandraanugrah/bitcoin-historical-datasets-2018-2026-binance-api',
+    category: 'Crypto',
+    description: 'Dữ liệu Bitcoin chuẩn từ sàn Binance đa khung thời gian từ 2018 đến nay.',
+    files: [
+      { name: 'BTCUSDT_1d_data.csv', tf: 'D1', sizeEstimate: '350 KB' },
+      { name: 'BTCUSDT_1h_data.csv', tf: 'H1', sizeEstimate: '8 MB' },
+      { name: 'BTCUSDT_15m_data.csv', tf: 'M15', sizeEstimate: '32 MB' },
+      { name: 'BTCUSDT_5m_data.csv', tf: 'M5', sizeEstimate: '90 MB' }
+    ]
+  },
+  {
+    id: 'ethusd',
+    name: 'Ethereum Price Data Binance API (2017 - Now)',
+    symbol: 'ETHUSD',
+    slug: 'novandraanugrah/ethereum-price-data-binance-api-2017-now',
+    category: 'Crypto',
+    description: 'Dữ liệu Ethereum từ 2017 đến nay, cung cấp các khung nến tiêu chuẩn.',
+    files: [
+      { name: 'ETHUSDT_1d_data.csv', tf: 'D1', sizeEstimate: '300 KB' },
+      { name: 'ETHUSDT_1h_data.csv', tf: 'H1', sizeEstimate: '7 MB' },
+      { name: 'ETHUSDT_15m_data.csv', tf: 'M15', sizeEstimate: '28 MB' },
+      { name: 'ETHUSDT_5m_data.csv', tf: 'M5', sizeEstimate: '80 MB' }
+    ]
+  },
+  {
+    id: 'nas100',
+    name: 'NASDAQ 100 (NAS100) Historical Price Data',
+    symbol: 'US100',
+    slug: 'novandraanugrah/nasdaq-100-nas100-historical-price-data',
+    category: 'Indices',
+    description: 'Chỉ số công nghệ Mỹ Nasdaq 100 với báo giá lịch sử chuẩn phân tích kỹ thuật.',
+    files: [
+      { name: 'NAS100_1d_data.csv', tf: 'D1', sizeEstimate: '280 KB' },
+      { name: 'NAS100_1h_data.csv', tf: 'H1', sizeEstimate: '5 MB' },
+      { name: 'NAS100_15m_data.csv', tf: 'M15', sizeEstimate: '20 MB' },
+      { name: 'NAS100_5m_data.csv', tf: 'M5', sizeEstimate: '50 MB' }
+    ]
+  },
+  {
+    id: 'us30',
+    name: 'Dow Jones 30 (US30) Historical Price Data',
+    symbol: 'US30',
+    slug: 'novandraanugrah/dow-jones-30-us30-historical-price-data',
+    category: 'Indices',
+    description: 'Chỉ số 30 doanh nghiệp công nghiệp hàng đầu phố Wall Dow Jones 30.',
+    files: [
+      { name: 'US30_1d_data.csv', tf: 'D1', sizeEstimate: '280 KB' },
+      { name: 'US30_1h_data.csv', tf: 'H1', sizeEstimate: '5 MB' },
+      { name: 'US30_15m_data.csv', tf: 'M15', sizeEstimate: '20 MB' },
+      { name: 'US30_5m_data.csv', tf: 'M5', sizeEstimate: '50 MB' }
+    ]
+  }
+];
 
 // Local-First dataset helpers
 const getLocalDatasets = (): any[] => {
@@ -86,7 +169,14 @@ export const DataImportModal: React.FC = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [importStatus, setImportStatus] = useState<{ success?: boolean; message?: string } | null>(null);
 
-  // Kaggle State
+  // Kaggle Hub State
+  const [kagglePresets, setKagglePresets] = useState<any[]>(DEFAULT_KAGGLE_PRESETS);
+  const [selectedPresetId, setSelectedPresetId] = useState<string>('xauusd');
+  const [customKaggleSlug, setCustomKaggleSlug] = useState<string>('novandraanugrah/xauusd-gold-price-historical-data-2004-2024');
+  const [customKaggleFile, setCustomKaggleFile] = useState<string>('XAU_1d_data.csv');
+  const [downloadingFile, setDownloadingFile] = useState<string | null>(null);
+  const [showApiConfig, setShowApiConfig] = useState<boolean>(false);
+  const currentPreset = kagglePresets.find(p => p.id === selectedPresetId);
   const [kaggleUsername, setKaggleUsername] = useState<string>(
     localStorage.getItem('quant_kaggle_username') || ''
   );
@@ -222,9 +312,22 @@ export const DataImportModal: React.FC = () => {
     }
   };
 
+  const fetchKagglePresets = async () => {
+    try {
+      const res: any = await datasetsApi.kagglePresets();
+      const data = res?.data ?? res;
+      if (data?.success && Array.isArray(data.presets) && data.presets.length > 0) {
+        setKagglePresets(data.presets);
+      }
+    } catch (e) {
+      // Keep DEFAULT_KAGGLE_PRESETS fallback
+    }
+  };
+
   useEffect(() => {
     if (isDataModalOpen) {
       fetchDBDatasets();
+      fetchKagglePresets();
     }
   }, [isDataModalOpen]);
 
@@ -491,38 +594,92 @@ export const DataImportModal: React.FC = () => {
     );
   };
 
+  const handleKaggleDownloadSingle = async (datasetSlug: string, fileName: string) => {
+    if (kaggleUsername.trim() && kaggleKey.trim()) {
+      localStorage.setItem('quant_kaggle_username', kaggleUsername.trim());
+      localStorage.setItem('quant_kaggle_key', kaggleKey.trim());
+    }
+
+    setDownloadingFile(fileName);
+    setIsKaggleLoading(true);
+    setKaggleStatusMessage(`Đang tải file ${fileName} từ Kaggle (${datasetSlug})...`);
+    setImportStatus(null);
+
+    try {
+      const res: any = await datasetsApi.kaggleDownloadSingle({
+        datasetSlug: datasetSlug.trim(),
+        fileName: fileName.trim(),
+        maxCandles: kaggleMaxCandles,
+        username: kaggleUsername.trim() || undefined,
+        key: kaggleKey.trim() || undefined
+      });
+
+      const data = res?.data ?? res;
+      if (data?.success) {
+        await fetchDBDatasets();
+        const ds = data.datasetsImported?.[0] || data.dataset;
+        const countStr = (ds?.candleCount || 0).toLocaleString();
+        const dateRangeStr = ds?.startDate && ds?.endDate
+          ? ` (${ds.startDate} -> ${ds.endDate})`
+          : '';
+        setImportStatus({
+          success: true,
+          message: `✅ Đã tải & lưu thành công ${fileName}! Đã nạp ${countStr} nến (${ds?.symbol || ''} - ${ds?.timeframe || ''})${dateRangeStr} vào Database SQLite.`
+        });
+      } else {
+        throw new Error(data?.error || 'Tải file từ Kaggle thất bại');
+      }
+    } catch (err: any) {
+      console.error('Kaggle single file download error:', err);
+      const errMsg = err.response?.data?.error || err.message || 'Lỗi khi tải file từ Kaggle.';
+      setImportStatus({
+        success: false,
+        message: `❌ Lỗi: ${errMsg}${!kaggleKey.trim() ? ' (Gợi ý: Mở "Cài đặt Kaggle API" bên dưới nếu dataset yêu cầu đăng nhập Kaggle)' : ''}`
+      });
+    } finally {
+      setIsKaggleLoading(false);
+      setDownloadingFile(null);
+      setKaggleStatusMessage('');
+    }
+  };
+
   const handleKaggleDownload = async () => {
     if (kaggleUsername.trim() && kaggleKey.trim()) {
       localStorage.setItem('quant_kaggle_username', kaggleUsername.trim());
       localStorage.setItem('quant_kaggle_key', kaggleKey.trim());
     }
 
+    const currentSlug = selectedPresetId === 'custom'
+      ? customKaggleSlug.trim()
+      : (kagglePresets.find(p => p.id === selectedPresetId)?.slug || 'novandraanugrah/xauusd-gold-price-historical-data-2004-2024');
+
     setIsKaggleLoading(true);
-    setKaggleStatusMessage('Đang kết nối và stream dataset trực tiếp từ Kaggle về server...');
+    setKaggleStatusMessage(`Đang kết nối và stream dataset từ Kaggle (${currentSlug})...`);
     setImportStatus(null);
 
     try {
-      const res = await datasetsApi.kaggleDownload({
+      const res: any = await datasetsApi.kaggleDownload({
+        datasetSlug: currentSlug,
         username: kaggleUsername.trim() || undefined,
         key: kaggleKey.trim() || undefined,
         maxCandles: kaggleMaxCandles,
         selectedTimeframes: kaggleTimeframes
       });
 
-      if (res.data?.success) {
+      const data = res?.data ?? res;
+      if (data?.success) {
         await fetchDBDatasets();
         setImportStatus({
           success: true,
-          message: t.kaggleSuccessMsg.replace('{count}', (res.data.totalCandles || 0).toLocaleString())
+          message: `✅ Đã tải và lưu thành công ${(data.totalCandles || 0).toLocaleString()} nến từ Kaggle vào Database SQLite!`
         });
-        setActiveTab('library');
       } else {
-        throw new Error(res.data?.error || 'Download failed');
+        throw new Error(data?.error || 'Download failed');
       }
     } catch (err: any) {
       setImportStatus({
         success: false,
-        message: err.response?.data?.error || err.message || 'Lỗi khi tải từ Kaggle qua API.'
+        message: `❌ ${err.response?.data?.error || err.message || 'Lỗi khi tải từ Kaggle qua API.'}`
       });
     } finally {
       setIsKaggleLoading(false);
@@ -536,20 +693,21 @@ export const DataImportModal: React.FC = () => {
     setImportStatus(null);
 
     try {
-      const res = await datasetsApi.kaggleScanLocal({
+      const res: any = await datasetsApi.kaggleScanLocal({
         maxCandles: kaggleMaxCandles,
         selectedTimeframes: kaggleTimeframes
       });
 
-      if (res.data?.success) {
+      const data = res?.data ?? res;
+      if (data?.success) {
         await fetchDBDatasets();
         setImportStatus({
           success: true,
-          message: t.kaggleSuccessMsg.replace('{count}', (res.data.totalCandles || 0).toLocaleString())
+          message: t.kaggleSuccessMsg.replace('{count}', (data.totalCandles || 0).toLocaleString())
         });
         setActiveTab('library');
       } else {
-        throw new Error(res.data?.error || 'Không tìm thấy file');
+        throw new Error(data?.error || 'Không tìm thấy file');
       }
     } catch (err: any) {
       setImportStatus({
@@ -568,17 +726,17 @@ export const DataImportModal: React.FC = () => {
     setImportStatus(null);
 
     try {
-      const res = await datasetsApi.kaggleSeedCurated();
-
-      if (res.data?.success) {
+      const res: any = await datasetsApi.kaggleSeedCurated();
+      const data = res?.data ?? res;
+      if (data?.success) {
         await fetchDBDatasets();
         setImportStatus({
           success: true,
-          message: t.kaggleSuccessMsg.replace('{count}', (res.data.totalCandles || 5000).toLocaleString())
+          message: t.kaggleSuccessMsg.replace('{count}', (data.totalCandles || 5000).toLocaleString())
         });
         setActiveTab('library');
       } else {
-        throw new Error(res.data?.error || 'Seed failed');
+        throw new Error(data?.error || 'Seed failed');
       }
     } catch (err: any) {
       setImportStatus({
@@ -601,21 +759,22 @@ export const DataImportModal: React.FC = () => {
       try {
         const base64Data = (event.target?.result as string).split(',')[1] || '';
         setKaggleStatusMessage('Đang giải nén & lưu dữ liệu vào SQLite...');
-        const res = await datasetsApi.kaggleImportZip({
+        const res: any = await datasetsApi.kaggleImportZip({
           base64Zip: base64Data,
           maxCandles: kaggleMaxCandles,
           selectedTimeframes: kaggleTimeframes
         });
 
-        if (res.data?.success) {
+        const data = res?.data ?? res;
+        if (data?.success) {
           await fetchDBDatasets();
           setImportStatus({
             success: true,
-            message: t.kaggleSuccessMsg.replace('{count}', (res.data.totalCandles || 0).toLocaleString())
+            message: t.kaggleSuccessMsg.replace('{count}', (data.totalCandles || 0).toLocaleString())
           });
           setActiveTab('library');
         } else {
-          throw new Error(res.data?.error || 'Import zip failed');
+          throw new Error(data?.error || 'Import zip failed');
         }
       } catch (err: any) {
         setImportStatus({
@@ -733,6 +892,44 @@ export const DataImportModal: React.FC = () => {
 
         {/* MODAL BODY */}
         <div className="p-5 flex-1 overflow-y-auto space-y-4">
+          {/* TOP STATUS NOTIFICATION - ALWAYS VISIBLE */}
+          {importStatus && (
+            <div
+              className={`p-3.5 rounded-xl flex items-center justify-between gap-3 text-xs font-medium animate-in fade-in slide-in-from-top-2 border ${
+                importStatus.success
+                  ? 'bg-teal-950/90 border-teal-500/50 text-teal-300 shadow-lg shadow-teal-950/40'
+                  : 'bg-rose-950/90 border-rose-500/50 text-rose-300 shadow-lg shadow-rose-950/40'
+              }`}
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                {importStatus.success ? (
+                  <CheckCircle2 className="w-5 h-5 shrink-0 text-teal-400" />
+                ) : (
+                  <AlertCircle className="w-5 h-5 shrink-0 text-rose-400" />
+                )}
+                <span className="leading-relaxed break-words">{importStatus.message}</span>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                {importStatus.success && activeTab !== 'library' && (
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('library')}
+                    className="px-2.5 py-1 bg-teal-600/30 hover:bg-teal-600/50 border border-teal-500/40 text-teal-200 rounded text-[11px] font-mono transition-all font-bold"
+                  >
+                    Xem Database ➔
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setImportStatus(null)}
+                  className="text-slate-400 hover:text-white p-1 rounded transition-colors text-xs"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* TAB 1: ONLINE CRAWLER (MULTI-BATCH UP TO 50K CANDLES) */}
           {activeTab === 'crawler' && (
             <div className="space-y-4">
@@ -1128,251 +1325,461 @@ export const DataImportModal: React.FC = () => {
             </div>
           )}
 
-          {/* TAB 5: KAGGLE GOLD HISTORICAL HUB (2004 - 2024) */}
+          {/* TAB 5: KAGGLE MARKET HUB (NOVANDRA ANUGRAH & COMMUNITY) */}
           {activeTab === 'kaggle' && (
             <div className="space-y-4">
-              {/* Institutional Header Banner */}
-              <div className="bg-gradient-to-r from-amber-950/50 via-slate-900/80 to-amber-950/30 border border-amber-500/30 p-4 rounded-xl text-xs space-y-2">
-                <div className="flex items-center justify-between flex-wrap gap-2">
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-md bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-300 font-bold text-xs">
-                      AU
+                {/* Hub Header Banner */}
+                <div className="bg-gradient-to-r from-amber-950/50 via-slate-900/90 to-amber-950/40 border border-amber-500/40 p-4 rounded-xl text-xs space-y-2.5">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-lg bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-300 font-bold text-sm shadow-inner">
+                        <Database className="w-4 h-4 text-amber-400" />
+                      </div>
+                      <div>
+                        <span className="font-bold text-amber-200 text-sm block">Kaggle Institutional Market Hub</span>
+                        <span className="text-slate-400 text-[11px]">Dữ liệu tài chính thể chế 20 năm từ novandraanugrah & cộng đồng</span>
+                      </div>
                     </div>
-                    <span className="font-bold text-amber-200 text-sm">{t.kaggleHubHeader}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-[10px] font-mono font-bold">
+                        SQLite Permanent DB
+                      </span>
+                      <span className="px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[10px] font-mono font-bold">
+                        1-Click Import
+                      </span>
+                    </div>
                   </div>
-                  <a
-                    href="https://www.kaggle.com/datasets/novandraanugrah/xauusd-gold-price-historical-data-2004-2024"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-[11px] text-amber-400 hover:text-amber-300 underline underline-offset-2 font-mono"
-                  >
-                    <span>novandraanugrah/xauusd-gold-price-historical-data-2004-2024</span>
-                    <ExternalLink className="w-3 h-3" />
-                  </a>
-                </div>
-                <p className="text-slate-300 leading-relaxed text-[11px]">
-                  {t.kaggleHubDesc}
-                </p>
-                <div className="flex items-center gap-2 pt-1 text-[11px] text-slate-400 flex-wrap">
-                  <span className="px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 text-amber-300 font-mono">SQLite Permanent DB</span>
-                  <span className="px-2 py-0.5 rounded bg-sky-500/10 border border-sky-500/20 text-sky-300 font-mono">cURL Engine (No Python needed)</span>
-                  <span className="px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 font-mono">1-Time Import Forever</span>
-                </div>
-              </div>
-
-              {/* CARD 1: INSTANT 1-CLICK CURATED 2024 GOLD SEED */}
-              <div className="bg-gradient-to-r from-emerald-950/40 via-slate-900/90 to-emerald-950/20 border border-emerald-500/30 p-4 rounded-xl flex items-center justify-between flex-wrap gap-3">
-                <div className="space-y-1 max-w-lg">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-emerald-400" />
-                    <span className="font-bold text-emerald-300 text-xs">{t.kaggleSeedQuickBtn}</span>
-                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold">Instant 0-Config</span>
-                  </div>
-                  <p className="text-[11px] text-slate-400 leading-relaxed">
-                    {t.kaggleSeedQuickDesc}
+                  <p className="text-slate-300 leading-relaxed text-[11px]">
+                    Tự động tải trực tiếp các tệp CSV nến thể chế (Vàng XAU/USD, Bitcoin, Ethereum, NASDAQ 100, Dow Jones 30). Dữ liệu được lưu vĩnh viễn vào SQLite Database — nạp 1 lần là sẵn sàng kiểm thử mãi mãi!
                   </p>
                 </div>
-                <button
-                  onClick={handleKaggleSeedCurated}
-                  disabled={isKaggleLoading}
-                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 active:scale-98 text-white rounded-lg font-bold font-mono text-xs flex items-center gap-2 transition-all shadow-md shadow-emerald-600/30 disabled:opacity-50 shrink-0"
-                >
-                  {isKaggleLoading ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Zap className="w-4 h-4 fill-current" />
-                  )}
-                  <span>Nạp Ngay Vào Database</span>
-                </button>
-              </div>
 
-              {/* SHARED SETTINGS: TIMEFRAMES & LIMIT */}
-              <div className="bg-slate-900/90 border border-slate-800 p-4 rounded-xl space-y-3">
-                <div className="flex items-center justify-between flex-wrap gap-2 text-xs">
-                  <span className="text-slate-300 font-medium">{t.kaggleTimeframesLabel}</span>
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    {['M1', 'M5', 'M15', 'M30', 'H1', 'H4', 'D1'].map(tf => {
-                      const active = kaggleTimeframes.includes(tf);
+                {/* ASSET SELECTOR PILLS */}
+                <div className="space-y-2">
+                  <span className="text-[11px] font-bold text-slate-300 uppercase tracking-wider block">
+                    1. Chọn danh mục tài sản Kaggle:
+                  </span>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
+                    {kagglePresets.map((preset) => {
+                      const active = selectedPresetId === preset.id;
                       return (
                         <button
-                          key={tf}
+                          key={preset.id}
                           type="button"
-                          onClick={() => handleToggleKaggleTf(tf)}
-                          className={`px-2.5 py-1 rounded-md text-[11px] font-mono font-bold transition-all ${
+                          onClick={() => {
+                            setSelectedPresetId(preset.id);
+                            if (preset.files?.[0]) setCustomKaggleFile(preset.files[0].name);
+                          }}
+                          className={`p-2.5 rounded-xl border text-left transition-all flex flex-col justify-between ${
                             active
-                              ? 'bg-amber-600 text-white shadow-xs'
-                              : 'bg-slate-800 text-slate-400 hover:text-slate-200'
+                              ? 'bg-amber-950/60 border-amber-500 shadow-md shadow-amber-950/40 text-white'
+                              : 'bg-slate-900/80 border-slate-800 text-slate-300 hover:border-slate-700 hover:bg-slate-850'
                           }`}
                         >
-                          {tf}
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="font-mono font-bold text-xs text-amber-300">{preset.symbol}</span>
+                            <span className={`text-[9px] px-1 py-0.2 rounded font-mono ${
+                              active ? 'bg-amber-500 text-black font-bold' : 'bg-slate-800 text-slate-400'
+                            }`}>
+                              {preset.files?.length || 0} TFs
+                            </span>
+                          </div>
+                          <span className="text-[11px] font-medium truncate block">{preset.name.split('(')[0].trim()}</span>
                         </button>
                       );
                     })}
+
+                    {/* Custom Slug Option */}
+                    <button
+                      type="button"
+                      onClick={() => setSelectedPresetId('custom')}
+                      className={`p-2.5 rounded-xl border text-left transition-all flex flex-col justify-between ${
+                        selectedPresetId === 'custom'
+                          ? 'bg-sky-950/60 border-sky-500 shadow-md shadow-sky-950/40 text-white'
+                          : 'bg-slate-900/80 border-slate-800 text-slate-300 hover:border-slate-700 hover:bg-slate-850'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="font-mono font-bold text-xs text-sky-300">CUSTOM</span>
+                        <span className="text-[9px] px-1 py-0.2 rounded bg-sky-900/50 text-sky-300 font-mono">Any</span>
+                      </div>
+                      <span className="text-[11px] font-medium truncate block">Kaggle URL khác</span>
+                    </button>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between flex-wrap gap-2 text-xs pt-1 border-t border-slate-800/80">
-                  <span className="text-slate-300 font-medium">{t.kaggleMaxCandlesLabel}</span>
-                  <select
-                    value={kaggleMaxCandles}
-                    onChange={(e) => setKaggleMaxCandles(Number(e.target.value))}
-                    className="bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-sky-300 font-mono font-bold focus:outline-hidden"
-                  >
-                    <option value={10000}>10,000 candles</option>
-                    <option value={25000}>25,000 candles</option>
-                    <option value={50000}>50,000 candles (Khuyến nghị)</option>
-                    <option value={100000}>100,000 candles</option>
-                    <option value={500000}>500,000 candles (Toàn bộ 20 năm)</option>
-                  </select>
-                </div>
-              </div>
+                {/* SELECTED ASSET DETAILS & 1-CLICK QUICK DOWNLOAD */}
+                {currentPreset && selectedPresetId !== 'custom' && (
+                  <div className="bg-slate-900/90 border border-slate-800 p-4 rounded-xl space-y-3.5 animate-in fade-in">
+                    <div className="flex items-start justify-between flex-wrap gap-2 pb-2.5 border-b border-slate-800">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-sm text-slate-100">{currentPreset.name}</span>
+                          <span className="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-mono">
+                            {currentPreset.category}
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-400 mt-1">{currentPreset.description}</p>
+                      </div>
+                      <a
+                        href={`https://www.kaggle.com/datasets/${currentPreset.slug}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 text-xs text-sky-400 hover:text-sky-300 font-mono underline underline-offset-2 shrink-0"
+                      >
+                        <span>Xem trang Kaggle</span>
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </a>
+                    </div>
 
-              {/* CARD 2: AUTOMATED cURL API DOWNLOAD */}
-              <div className="bg-slate-900/90 border border-slate-800 p-4 rounded-xl space-y-3">
-                <div className="flex items-center gap-2">
-                  <Download className="w-4 h-4 text-amber-400" />
-                  <span className="font-bold text-slate-200 text-xs">{t.kaggleAutoDownloadTitle}</span>
-                  <span className="text-[10px] px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold">API / cURL</span>
-                </div>
-                <p className="text-[11px] text-slate-400">
-                  {t.kaggleAutoDownloadDesc}
-                </p>
+                    {/* 1-Click File Downloads Grid */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-bold text-slate-300 flex items-center gap-1.5">
+                          <Zap className="w-3.5 h-3.5 text-amber-400 fill-current" />
+                          Tải 1-Click Từng Khung Thời Gian (Khuyến nghị: Nhẹ & Siêu tốc):
+                        </span>
+                        <span className="text-slate-500 text-[11px]">Tải lẻ file CSV & lưu thẳng vào Database</span>
+                      </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-[11px] text-slate-400 mb-1 font-medium">{t.kaggleUsernameLabel}</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. your_kaggle_username"
-                      value={kaggleUsername}
-                      onChange={(e) => setKaggleUsername(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-slate-200 font-mono text-xs focus:outline-hidden focus:border-amber-500"
-                    />
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        {currentPreset.files.map((file: any) => {
+                          const isThisDownloading = isKaggleLoading && downloadingFile === file.name;
+                          const isDaily = file.tf === 'D1';
+                          return (
+                            <div
+                              key={file.name}
+                              className={`p-3 rounded-xl border flex items-center justify-between gap-2.5 transition-all ${
+                                isDaily
+                                  ? 'bg-gradient-to-r from-amber-950/30 to-slate-900 border-amber-500/40 hover:border-amber-500/70'
+                                  : 'bg-slate-950/70 border-slate-800 hover:border-slate-700'
+                              }`}
+                            >
+                              <div className="flex items-center gap-2.5 min-w-0">
+                                <span className={`px-2 py-1 rounded text-xs font-mono font-bold ${
+                                  isDaily
+                                    ? 'bg-amber-500 text-black shadow-xs'
+                                    : 'bg-slate-800 text-amber-300 border border-amber-500/20'
+                                }`}>
+                                  {file.tf}
+                                </span>
+                                <div className="min-w-0">
+                                  <span className="font-mono text-xs font-bold text-slate-200 truncate block">
+                                    {file.name}
+                                  </span>
+                                  <span className="text-[10px] text-slate-400 font-mono block">
+                                    {file.sizeEstimate}
+                                  </span>
+                                </div>
+                              </div>
+
+                              <button
+                                type="button"
+                                onClick={() => handleKaggleDownloadSingle(currentPreset.slug, file.name)}
+                                disabled={isKaggleLoading}
+                                className={`px-3 py-1.5 rounded-lg font-bold font-mono text-xs flex items-center gap-1.5 transition-all shrink-0 active:scale-95 shadow-xs disabled:opacity-50 ${
+                                  isDaily
+                                    ? 'bg-amber-600 hover:bg-amber-500 text-white shadow-amber-600/30'
+                                    : 'bg-slate-800 hover:bg-amber-600 hover:text-white text-slate-200 border border-slate-700'
+                                }`}
+                              >
+                                {isThisDownloading ? (
+                                  <>
+                                    <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-300" />
+                                    <span>Đang nạp...</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Zap className="w-3.5 h-3.5 fill-current text-amber-300" />
+                                    <span>Tải 1-Click</span>
+                                  </>
+                                )}
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-[11px] text-slate-400 mb-1 font-medium">{t.kaggleKeyLabel}</label>
-                    <input
-                      type="password"
-                      placeholder="32-character Kaggle API key"
-                      value={kaggleKey}
-                      onChange={(e) => setKaggleKey(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-slate-200 font-mono text-xs focus:outline-hidden focus:border-amber-500"
-                    />
+                )}
+
+                {/* CUSTOM KAGGLE DATASET INPUT */}
+                {selectedPresetId === 'custom' && (
+                  <div className="bg-slate-900/90 border border-slate-800 p-4 rounded-xl space-y-3.5 animate-in fade-in">
+                    <div className="flex items-center gap-2">
+                      <Folder className="w-4 h-4 text-sky-400" />
+                      <span className="font-bold text-slate-200 text-xs">Nhập Kaggle Dataset Tùy Ý</span>
+                    </div>
+                    <p className="text-[11px] text-slate-400">
+                      Bạn có thể nạp bất kỳ dataset tài chính nào trên Kaggle bằng cách nhập URL hoặc slug (ví dụ: <code className="text-sky-300 font-mono">novandraanugrah/xauusd-gold-price-historical-data-2004-2024</code>).
+                    </p>
+
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-[11px] text-slate-400 mb-1 font-medium">Dataset Slug hoặc URL Kaggle:</label>
+                        <input
+                          type="text"
+                          value={customKaggleSlug}
+                          onChange={(e) => {
+                            let val = e.target.value.trim();
+                            if (val.includes('kaggle.com/datasets/')) {
+                              val = val.split('kaggle.com/datasets/')[1].split('?')[0].replace(/\/$/, '');
+                            }
+                            setCustomKaggleSlug(val);
+                          }}
+                          placeholder="e.g. novandraanugrah/xauusd-gold-price-historical-data-2004-2024"
+                          className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-slate-200 font-mono text-xs focus:outline-hidden focus:border-sky-500"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-[11px] text-slate-400 mb-1 font-medium">Tên file CSV cụ thể (Tải 1-Click lẻ):</label>
+                          <input
+                            type="text"
+                            value={customKaggleFile}
+                            onChange={(e) => setCustomKaggleFile(e.target.value)}
+                            placeholder="e.g. XAU_1d_data.csv"
+                            className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-slate-200 font-mono text-xs focus:outline-hidden focus:border-sky-500"
+                          />
+                        </div>
+
+                        <div className="flex items-end">
+                          <button
+                            type="button"
+                            onClick={() => handleKaggleDownloadSingle(customKaggleSlug, customKaggleFile)}
+                            disabled={isKaggleLoading || !customKaggleSlug.trim() || !customKaggleFile.trim()}
+                            className="w-full py-2 bg-sky-600 hover:bg-sky-500 active:scale-98 text-white rounded-lg font-bold font-mono text-xs flex items-center justify-center gap-2 transition-all shadow-md shadow-sky-600/30 disabled:opacity-50"
+                          >
+                            {isKaggleLoading && downloadingFile === customKaggleFile ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <Zap className="w-4 h-4 fill-current" />
+                            )}
+                            <span>Tải 1-Click File Này</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* CARD 2: BATCH / FULL ZIP DOWNLOAD (MULTI-TIMEFRAME) */}
+                <div className="bg-slate-900/90 border border-slate-800 p-4 rounded-xl space-y-3.5">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <div className="flex items-center gap-2">
+                      <Download className="w-4 h-4 text-amber-400" />
+                      <span className="font-bold text-slate-200 text-xs">Tải Trọn Gói Nén (Full ZIP Multi-Timeframe)</span>
+                    </div>
+                    <span className="text-[10px] text-slate-400 font-mono">Tự động giải nén & phân bổ đa khung</span>
+                  </div>
+
+                  {/* Timeframe selector */}
+                  <div className="flex items-center justify-between flex-wrap gap-2 text-xs">
+                    <span className="text-slate-300 font-medium">{t.kaggleTimeframesLabel}</span>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      {['M1', 'M5', 'M15', 'M30', 'H1', 'H4', 'D1'].map(tf => {
+                        const active = kaggleTimeframes.includes(tf);
+                        return (
+                          <button
+                            key={tf}
+                            type="button"
+                            onClick={() => handleToggleKaggleTf(tf)}
+                            className={`px-2.5 py-1 rounded-md text-[11px] font-mono font-bold transition-all ${
+                              active
+                                ? 'bg-amber-600 text-white shadow-xs'
+                                : 'bg-slate-800 text-slate-400 hover:text-slate-200'
+                            }`}
+                          >
+                            {tf}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Limit selector */}
+                  <div className="flex items-center justify-between flex-wrap gap-2 text-xs pt-2 border-t border-slate-800/80">
+                    <span className="text-slate-300 font-medium">{t.kaggleMaxCandlesLabel}</span>
+                    <select
+                      value={kaggleMaxCandles}
+                      onChange={(e) => setKaggleMaxCandles(Number(e.target.value))}
+                      className="bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-sky-300 font-mono font-bold focus:outline-hidden"
+                    >
+                      <option value={10000}>10,000 nến / khung</option>
+                      <option value={25000}>25,000 nến / khung</option>
+                      <option value={50000}>50,000 nến / khung (Khuyến nghị)</option>
+                      <option value={100000}>100,000 nến / khung</option>
+                      <option value={500000}>500,000 nến / khung (Toàn bộ 20 năm)</option>
+                    </select>
+                  </div>
+
+                  {/* Download Full Zip Button */}
+                  <div className="pt-2 flex justify-end">
+                    <button
+                      type="button"
+                      onClick={handleKaggleDownload}
+                      disabled={isKaggleLoading}
+                      className="px-4 py-2 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 active:scale-98 text-white rounded-lg font-bold font-mono text-xs flex items-center gap-2 transition-all shadow-md shadow-amber-600/30 disabled:opacity-50"
+                    >
+                      {isKaggleLoading && !downloadingFile ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Download className="w-4 h-4" />
+                      )}
+                      <span>Tải Trọn Gói ZIP từ Kaggle ({currentPreset ? currentPreset.symbol : 'Dataset'})</span>
+                    </button>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between flex-wrap gap-2 pt-1">
-                  <a
-                    href="https://www.kaggle.com/settings"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-[11px] text-sky-400 hover:text-sky-300 inline-flex items-center gap-1 font-mono"
-                  >
-                    <span>Lấy API Key tại kaggle.com/settings (Create New Token)</span>
-                    <ExternalLink className="w-3 h-3" />
-                  </a>
-
-                  <button
-                    onClick={handleKaggleDownload}
-                    disabled={isKaggleLoading}
-                    className="px-4 py-2 bg-amber-600 hover:bg-amber-500 active:scale-98 text-white rounded-lg font-bold font-mono text-xs flex items-center gap-2 transition-all shadow-md shadow-amber-600/30 disabled:opacity-50"
-                  >
-                    {isKaggleLoading ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Download className="w-4 h-4" />
-                    )}
-                    <span>{kaggleUsername && kaggleKey ? t.kaggleFetchBtn : 'Tải Stream Trực Tiếp Từ Kaggle'}</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* CARD 3: DRAG & DROP ZIP OR LOCAL DATA/ FOLDER SCAN */}
-              <div className="bg-slate-900/90 border border-slate-800 p-4 rounded-xl space-y-3">
-                <div className="flex items-center gap-2">
-                  <FileArchive className="w-4 h-4 text-sky-400" />
-                  <span className="font-bold text-slate-200 text-xs">{t.kaggleDropZipTitle}</span>
-                </div>
-                <p className="text-[11px] text-slate-400">
-                  {t.kaggleHelpNotice}
-                </p>
-
-                {/* Dropzone */}
-                <div
-                  onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-                  onDragLeave={() => setIsDragging(false)}
-                  onDrop={(e) => {
-                    e.preventDefault();
-                    setIsDragging(false);
-                    const file = e.dataTransfer.files?.[0];
-                    if (file) processKaggleZipFile(file);
-                  }}
-                  onClick={() => kaggleFileInputRef.current?.click()}
-                  className={`border-2 border-dashed rounded-xl p-5 text-center cursor-pointer transition-all ${
-                    isDragging
-                      ? 'border-amber-500 bg-amber-950/20'
-                      : 'border-slate-700/80 hover:border-slate-600 bg-slate-950/50'
-                  }`}
-                >
-                  <input
-                    ref={kaggleFileInputRef}
-                    type="file"
-                    accept=".zip,.csv"
-                    onChange={handleKaggleFileSelected}
-                    className="hidden"
-                  />
-                  <FileArchive className="w-7 h-7 text-amber-400/80 mx-auto mb-2" />
-                  <p className="text-xs text-slate-200 font-medium">
-                    {t.kaggleDropZipDesc}
-                  </p>
-                  <p className="text-[10px] text-slate-500 mt-1 font-mono">
-                    Hỗ trợ: xauusd-gold-price-historical-data-2004-2024.zip hoặc các file CSV M1, M5, H1
-                  </p>
-                </div>
-
-                <div className="flex items-center justify-between flex-wrap gap-2 pt-1 border-t border-slate-800/80">
-                  <span className="text-[11px] text-slate-400">
-                    Đã tải file zip về máy? Lưu file vào thư mục <code className="text-sky-300 font-mono">data/</code> của dự án:
-                  </span>
+                {/* CARD 3: KAGGLE API CREDENTIALS (OPTIONAL ACCORDION) */}
+                <div className="bg-slate-900/90 border border-slate-800 rounded-xl overflow-hidden">
                   <button
                     type="button"
-                    onClick={handleKaggleScanLocal}
-                    disabled={isKaggleLoading}
-                    className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 active:scale-98 text-slate-200 hover:text-white rounded-lg font-mono text-xs flex items-center gap-1.5 transition-all border border-slate-700 disabled:opacity-50"
+                    onClick={() => setShowApiConfig(!showApiConfig)}
+                    className="w-full p-3.5 flex items-center justify-between text-left hover:bg-slate-850 transition-colors"
                   >
-                    <Folder className="w-3.5 h-3.5 text-sky-400" />
-                    <span>{t.kaggleScanFolderBtn}</span>
+                    <div className="flex items-center gap-2">
+                      <Key className="w-4 h-4 text-amber-400" />
+                      <span className="font-bold text-slate-200 text-xs">
+                        Cấu hình Kaggle API Token (Tùy chọn — Dành cho Crypto Binance & Private Datasets)
+                      </span>
+                      {kaggleKey && (
+                        <span className="px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 text-[10px] font-mono font-bold">
+                          Đã lưu Token
+                        </span>
+                      )}
+                    </div>
+                    {showApiConfig ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
                   </button>
+
+                  {showApiConfig && (
+                    <div className="p-4 pt-1 space-y-3 border-t border-slate-800/80 animate-in fade-in">
+                      <p className="text-[11px] text-slate-400 leading-relaxed">
+                        Dataset XAU/USD Gold hỗ trợ tải công khai trực tiếp không cần API Key. Đối với các dataset Binance API (BTC, ETH) hoặc khi bị giới hạn lượt tải, bạn có thể lấy API token miễn phí từ tài khoản Kaggle của mình.
+                      </p>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-[11px] text-slate-400 mb-1 font-medium">{t.kaggleUsernameLabel}</label>
+                          <input
+                            type="text"
+                            placeholder="e.g. your_kaggle_username"
+                            value={kaggleUsername}
+                            onChange={(e) => setKaggleUsername(e.target.value)}
+                            className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-slate-200 font-mono text-xs focus:outline-hidden focus:border-amber-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] text-slate-400 mb-1 font-medium">{t.kaggleKeyLabel}</label>
+                          <input
+                            type="password"
+                            placeholder="32-character Kaggle API key"
+                            value={kaggleKey}
+                            onChange={(e) => setKaggleKey(e.target.value)}
+                            className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-slate-200 font-mono text-xs focus:outline-hidden focus:border-amber-500"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between flex-wrap gap-2 pt-1">
+                        <a
+                          href="https://www.kaggle.com/settings"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[11px] text-sky-400 hover:text-sky-300 inline-flex items-center gap-1 font-mono"
+                        >
+                          <span>Lấy API Key tại kaggle.com/settings (Nút "Create New Token")</span>
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                      </div>
+                    </div>
+                  )}
                 </div>
+
+                {/* CARD 4: INSTANT SEED & LOCAL FILE DROPZONE */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {/* Instant 2024 Seed */}
+                  <div className="bg-gradient-to-r from-emerald-950/40 via-slate-900/90 to-emerald-950/20 border border-emerald-500/30 p-4 rounded-xl flex flex-col justify-between space-y-3">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 text-emerald-400" />
+                        <span className="font-bold text-emerald-300 text-xs">⚡ Nạp Nhanh 5,000 Nến Vàng Thật 2024</span>
+                      </div>
+                      <p className="text-[11px] text-slate-400 leading-relaxed">
+                        Nạp ngay bộ nến thể chế XAUUSD thực tế chuẩn xác của năm 2024 vào Database để kiểm thử tức thì (0-network required).
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleKaggleSeedCurated}
+                      disabled={isKaggleLoading}
+                      className="w-full py-2 bg-emerald-600 hover:bg-emerald-500 active:scale-98 text-white rounded-lg font-bold font-mono text-xs flex items-center justify-center gap-2 transition-all shadow-md shadow-emerald-600/30 disabled:opacity-50"
+                    >
+                      {isKaggleLoading ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Zap className="w-4 h-4 fill-current" />
+                      )}
+                      <span>Nạp Ngay 5,000 Nến Vào SQLite</span>
+                    </button>
+                  </div>
+
+                  {/* Local Folder Scan & File Drop */}
+                  <div className="bg-slate-900/90 border border-slate-800 p-4 rounded-xl flex flex-col justify-between space-y-3">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <FileArchive className="w-4 h-4 text-sky-400" />
+                        <span className="font-bold text-slate-200 text-xs">File ZIP Máy Tính Hoặc Thư Mục data/</span>
+                      </div>
+                      <p className="text-[11px] text-slate-400 leading-relaxed">
+                        Đã tải ZIP từ trình duyệt về máy? Thả file vào ô hoặc nhấn nút quét thư mục <code className="text-sky-300 font-mono">data/</code>.
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <input
+                        ref={kaggleFileInputRef}
+                        type="file"
+                        accept=".zip,.csv"
+                        onChange={handleKaggleFileSelected}
+                        className="hidden"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => kaggleFileInputRef.current?.click()}
+                        disabled={isKaggleLoading}
+                        className="flex-1 py-2 bg-slate-800 hover:bg-slate-700 active:scale-98 text-slate-200 hover:text-white rounded-lg font-mono text-xs flex items-center justify-center gap-1.5 transition-all border border-slate-700 disabled:opacity-50"
+                      >
+                        <Upload className="w-3.5 h-3.5 text-slate-400" />
+                        <span>Chọn File ZIP/CSV</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleKaggleScanLocal}
+                        disabled={isKaggleLoading}
+                        className="flex-1 py-2 bg-slate-800 hover:bg-slate-700 active:scale-98 text-slate-200 hover:text-white rounded-lg font-mono text-xs flex items-center justify-center gap-1.5 transition-all border border-slate-700 disabled:opacity-50"
+                      >
+                        <Folder className="w-3.5 h-3.5 text-sky-400" />
+                        <span>Quét data/</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* PROGRESS / LOADING INDICATOR */}
+                {isKaggleLoading && (
+                  <div className="p-3.5 bg-amber-950/70 border border-amber-500/50 rounded-xl flex items-center gap-3 text-xs text-amber-200 animate-pulse shadow-lg shadow-amber-950/30">
+                    <Loader2 className="w-5 h-5 animate-spin text-amber-400 shrink-0" />
+                    <div className="min-w-0">
+                      <span className="font-mono font-bold block">Đang xử lý dữ liệu:</span>
+                      <span className="font-mono text-amber-300 text-[11px] truncate block">{kaggleStatusMessage || 'Đang kết nối tới Kaggle và lưu vào SQLite...'}</span>
+                    </div>
+                  </div>
+                )}
               </div>
-
-              {/* PROGRESS / LOADING STATE */}
-              {isKaggleLoading && (
-                <div className="p-3 bg-amber-950/60 border border-amber-500/40 rounded-xl flex items-center gap-3 text-xs text-amber-200 animate-pulse">
-                  <Loader2 className="w-4 h-4 animate-spin text-amber-400 shrink-0" />
-                  <span className="font-mono">{kaggleStatusMessage || 'Đang xử lý dữ liệu...'}</span>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* STATUS NOTIFICATION */}
-          {importStatus && (
-            <div
-              className={`p-3 rounded-xl flex items-center gap-2 text-xs font-medium animate-in fade-in ${
-                importStatus.success
-                  ? 'bg-teal-950/80 border border-teal-500/40 text-teal-300'
-                  : 'bg-rose-950/80 border border-rose-500/40 text-rose-300'
-              }`}
-            >
-              {importStatus.success ? (
-                <CheckCircle2 className="w-4 h-4 shrink-0 text-teal-400" />
-              ) : (
-                <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
-              )}
-              <span>{importStatus.message}</span>
-            </div>
-          )}
+            )}
         </div>
       </div>
     </div>

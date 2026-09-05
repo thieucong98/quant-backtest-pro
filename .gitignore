@@ -35,3 +35,5 @@ mt5_gateway/python_embed/
 mt5_gateway/__pycache__/
 scratch/
 scripts/installers/
+server/data/
+*.zip
