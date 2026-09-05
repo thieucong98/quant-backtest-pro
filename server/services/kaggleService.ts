@@ -1,11 +1,10 @@
 import fs from 'fs';
 import path from 'path';
-import { exec } from 'child_process';
-import { promisify } from 'util';
+import { Readable } from 'node:stream';
+import { pipeline } from 'node:stream/promises';
 import AdmZip from 'adm-zip';
 import { prisma } from '../index.js';
 
-const execAsync = promisify(exec);
 
 export interface KaggleImportOptions {
   maxCandlesPerTimeframe?: number;
@@ -184,13 +183,15 @@ export async function ensureUserId(userId?: string): Promise<string> {
 
 export class KaggleDatasetService {
   /**
-   * 1. Download Kaggle Dataset via cURL with API credentials
+   * 1. Download Kaggle Dataset via Native Node.js Stream (Zero external process dependency)
+   * Supports both authenticated (Basic Auth) and unauthenticated direct download for public datasets.
    */
-  public static async downloadViaCurl(
-    username: string,
-    key: string,
+  public static async downloadDataset(
+    username?: string,
+    key?: string,
     datasetSlug = 'novandraanugrah/xauusd-gold-price-historical-data-2004-2024',
-    destFolder = path.resolve(process.cwd(), 'data')
+    destFolder = path.resolve(process.cwd(), 'data'),
+    onProgress?: (downloadedBytes: number, totalBytes: number) => void
   ): Promise<string> {
     if (!fs.existsSync(destFolder)) {
       fs.mkdirSync(destFolder, { recursive: true });
@@ -199,25 +200,80 @@ export class KaggleDatasetService {
     const zipDest = path.join(destFolder, 'xauusd-gold-price-historical-data-2004-2024.zip');
     const apiUrl = `https://www.kaggle.com/api/v1/datasets/download/${datasetSlug}`;
 
-    console.log(`[KAGGLE DOWNLOAD] Starting curl download from ${apiUrl} to ${zipDest}...`);
+    console.log(`[KAGGLE DOWNLOAD] Initiating native Node.js HTTP stream from ${apiUrl}...`);
 
-    // Kaggle requires Basic auth: username:key
-    const cmd = `curl -f -L -u "${username}:${key}" -o "${zipDest}" "${apiUrl}"`;
+    const headers: Record<string, string> = {
+      'User-Agent': 'QuantBacktestPro/1.2.0 (Node.js Native Stream Engine)'
+    };
 
-    try {
-      const { stdout, stderr } = await execAsync(cmd, { maxBuffer: 1024 * 1024 * 20 });
-      if (stderr) console.log(`[KAGGLE CURL LOG]`, stderr);
-    } catch (error: any) {
-      console.error('[KAGGLE CURL ERROR]', error.message);
-      throw new Error(`Kaggle API download thất bại: ${error.message}. Vui lòng kiểm tra lại Username & API Key hoặc tải trực tiếp file zip trên Kaggle!`);
+    if (username && key && username.trim() && key.trim()) {
+      const basicAuth = Buffer.from(`${username.trim()}:${key.trim()}`).toString('base64');
+      headers['Authorization'] = `Basic ${basicAuth}`;
+      console.log(`[KAGGLE DOWNLOAD] Authenticating with Kaggle Basic Auth (${username.trim()})...`);
+    } else {
+      console.log(`[KAGGLE DOWNLOAD] Downloading public dataset anonymously...`);
     }
 
-    if (!fs.existsSync(zipDest) || fs.statSync(zipDest).size < 1000) {
-      throw new Error('File ZIP tải về không hợp lệ hoặc rỗng. Hãy kiểm tra thông tin Kaggle API credentials.');
+    const res = await fetch(apiUrl, {
+      method: 'GET',
+      headers,
+      redirect: 'follow'
+    });
+
+    if (!res.ok) {
+      if (res.status === 401) {
+        throw new Error('Kaggle API 401 Unauthorized: Username hoặc API Key không chính xác.');
+      } else if (res.status === 403) {
+        throw new Error('Kaggle API 403 Forbidden: Tài khoản chưa chấp nhận điều khoản dataset hoặc bị hạn chế.');
+      } else if (res.status === 404) {
+        throw new Error(`Kaggle API 404 Not Found: Không tìm thấy dataset '${datasetSlug}'.`);
+      } else {
+        throw new Error(`Kaggle API HTTP ${res.status}: ${res.statusText}`);
+      }
+    }
+
+    if (!res.body) {
+      throw new Error('Kaggle API response không chứa stream dữ liệu!');
+    }
+
+    const totalBytes = Number(res.headers.get('content-length')) || 0;
+    console.log(`[KAGGLE DOWNLOAD] Stream connected (${totalBytes ? (totalBytes / 1024 / 1024).toFixed(1) + ' MB' : 'chunked'}). Piping to disk: ${zipDest}`);
+
+    const fileStream = fs.createWriteStream(zipDest);
+    const nodeStream = Readable.fromWeb(res.body as any);
+
+    let downloaded = 0;
+    nodeStream.on('data', (chunk: Buffer) => {
+      downloaded += chunk.length;
+      if (onProgress && totalBytes > 0) {
+        onProgress(downloaded, totalBytes);
+      }
+    });
+
+    await pipeline(nodeStream, fileStream);
+
+    const stats = fs.statSync(zipDest);
+    console.log(`[KAGGLE DOWNLOAD] Download complete: ${zipDest} (${(stats.size / 1024 / 1024).toFixed(1)} MB)`);
+
+    if (stats.size < 1000) {
+      throw new Error('File ZIP tải về có kích thước bất thường. Vui lòng kiểm tra lại đường truyền hoặc API Key!');
     }
 
     return zipDest;
   }
+
+  /**
+   * Backward-compatible alias for downloadViaCurl
+   */
+  public static async downloadViaCurl(
+    username?: string,
+    key?: string,
+    datasetSlug = 'novandraanugrah/xauusd-gold-price-historical-data-2004-2024',
+    destFolder = path.resolve(process.cwd(), 'data')
+  ): Promise<string> {
+    return this.downloadDataset(username, key, datasetSlug, destFolder);
+  }
+
 
   /**
    * 2. Import datasets from a ZIP file into SQLite Database

@@ -492,25 +492,19 @@ export const DataImportModal: React.FC = () => {
   };
 
   const handleKaggleDownload = async () => {
-    if (!kaggleUsername.trim() || !kaggleKey.trim()) {
-      setImportStatus({
-        success: false,
-        message: 'Vui lòng nhập Kaggle Username và API Key.'
-      });
-      return;
+    if (kaggleUsername.trim() && kaggleKey.trim()) {
+      localStorage.setItem('quant_kaggle_username', kaggleUsername.trim());
+      localStorage.setItem('quant_kaggle_key', kaggleKey.trim());
     }
 
-    localStorage.setItem('quant_kaggle_username', kaggleUsername.trim());
-    localStorage.setItem('quant_kaggle_key', kaggleKey.trim());
-
     setIsKaggleLoading(true);
-    setKaggleStatusMessage('Đang kết nối Kaggle API qua cURL engine...');
+    setKaggleStatusMessage('Đang kết nối và stream dataset trực tiếp từ Kaggle về server...');
     setImportStatus(null);
 
     try {
       const res = await datasetsApi.kaggleDownload({
-        username: kaggleUsername.trim(),
-        key: kaggleKey.trim(),
+        username: kaggleUsername.trim() || undefined,
+        key: kaggleKey.trim() || undefined,
         maxCandles: kaggleMaxCandles,
         selectedTimeframes: kaggleTimeframes
       });
@@ -1280,7 +1274,7 @@ export const DataImportModal: React.FC = () => {
 
                   <button
                     onClick={handleKaggleDownload}
-                    disabled={isKaggleLoading || !kaggleUsername || !kaggleKey}
+                    disabled={isKaggleLoading}
                     className="px-4 py-2 bg-amber-600 hover:bg-amber-500 active:scale-98 text-white rounded-lg font-bold font-mono text-xs flex items-center gap-2 transition-all shadow-md shadow-amber-600/30 disabled:opacity-50"
                   >
                     {isKaggleLoading ? (
@@ -1288,7 +1282,7 @@ export const DataImportModal: React.FC = () => {
                     ) : (
                       <Download className="w-4 h-4" />
                     )}
-                    <span>{t.kaggleFetchBtn}</span>
+                    <span>{kaggleUsername && kaggleKey ? t.kaggleFetchBtn : 'Tải Stream Trực Tiếp Từ Kaggle'}</span>
                   </button>
                 </div>
               </div>

@@ -151,7 +151,7 @@ datasetsRouter.delete('/:id', async (req: Request, res: Response) => {
   }
 });
 
-// POST /api/datasets/kaggle/download — Download from Kaggle via cURL and save to DB
+// POST /api/datasets/kaggle/download — Download from Kaggle via Native HTTP Stream and save to DB
 datasetsRouter.post('/kaggle/download', async (req: Request, res: Response) => {
   try {
     const userId = await getUserId(req);
@@ -160,15 +160,7 @@ datasetsRouter.post('/kaggle/download', async (req: Request, res: Response) => {
     const maxCandles = Number(req.body?.maxCandles) || 20000;
     const selectedTimeframes = req.body?.selectedTimeframes || ['M5', 'M15', 'H1', 'D1'];
 
-    if (!username || !key) {
-      res.status(400).json({
-        success: false,
-        error: 'Vui lòng cung cấp Kaggle Username và API Key (hoặc cấu hình trong .env)!'
-      });
-      return;
-    }
-
-    const zipPath = await KaggleDatasetService.downloadViaCurl(username, key);
+    const zipPath = await KaggleDatasetService.downloadDataset(username, key);
     const summary = await KaggleDatasetService.importFromZipFile(zipPath, userId, {
       maxCandlesPerTimeframe: maxCandles,
       selectedTimeframes
