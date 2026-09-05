@@ -36,7 +36,7 @@ import { useBacktestStore } from '../../store/backtestStore';
 import { useBrokerStore } from '../../store/brokerStore';
 import { useAuthStore } from '../../store/authStore';
 import { useTunnelStore } from '../../store/tunnelStore';
-import { translations, Language } from '../../i18n/translations';
+import { getTranslation, formatText } from '../../i18n';
 import { AssetCategory, ChartType, DrawingToolType, Timeframe } from '../../types/market';
 import { SymbolSearchModal } from './SymbolSearchModal';
 import { BrokerConnectionModal } from '../panels/BrokerConnectionModal';
@@ -97,7 +97,7 @@ export const Header: React.FC = () => {
   const setTunnelModalOpen = useTunnelStore(s => s.setTunnelModalOpen);
 
   const { user, isAuthenticated, setAuthModalOpen } = useAuthStore();
-  const t = translations[language] || translations.vi;
+  const t = getTranslation(language);
 
   const timeframes: Timeframe[] = ['M1', 'M5', 'M15', 'M30', 'H1', 'H4', 'D1'];
 
@@ -162,10 +162,10 @@ export const Header: React.FC = () => {
                 ? 'bg-indigo-600 text-white border-indigo-500 shadow-sm'
                 : 'bg-slate-900/90 text-slate-300 border-slate-700/80 hover:border-indigo-500/50 hover:bg-slate-800'
             }`}
-            title="Mở Bảng giá Market Watch"
+            title={t.marketWatchTooltip}
           >
             <Layers className="w-3.5 h-3.5 text-indigo-400" />
-            <span className="hidden 2xl:inline text-[11px] font-bold">Market Watch</span>
+            <span className="hidden 2xl:inline text-[11px] font-bold">{t.marketWatchTitle}</span>
           </button>
 
           {/* Timeframe Selector (Responsive: Compact on small screens) */}
@@ -315,15 +315,15 @@ export const Header: React.FC = () => {
                   ? 'bg-slate-900 border-amber-500/40 text-amber-300 hover:border-amber-400/80 hover:bg-slate-850'
                   : 'bg-slate-900/60 border-slate-800 text-slate-500 hover:text-slate-300 hover:border-slate-700'
               }`}
-              title={t.calendarDisplayMode || 'Cài đặt hiển thị lịch kinh tế trên biểu đồ'}
+              title={t.calendarDisplayMode}
             >
               <Calendar className={`w-3.5 h-3.5 ${showEconomicNews ? 'text-amber-400' : 'text-slate-500'}`} />
               <span className="hidden 2xl:inline text-[11px] font-mono">
                 {showEconomicNews ? (
-                  economicNewsDisplayMode === 'AUTO' ? 'Lịch: Auto' :
-                  economicNewsDisplayMode === 'COMPACT' ? 'Lịch: Gọn' :
-                  economicNewsDisplayMode === 'CLUSTERED' ? 'Lịch: Gộp' : 'Lịch: Đầy đủ'
-                ) : 'Lịch: TẮT'}
+                  economicNewsDisplayMode === 'AUTO' ? t.calendarModeAutoShort :
+                  economicNewsDisplayMode === 'COMPACT' ? t.calendarModeCompactShort :
+                  economicNewsDisplayMode === 'CLUSTERED' ? t.calendarModeClusteredShort : t.calendarModeFullShort
+                ) : t.calendarModeOffShort}
               </span>
               <span className={`w-1.5 h-1.5 rounded-full ${
                 showEconomicNews
@@ -345,7 +345,7 @@ export const Header: React.FC = () => {
                     <div className="flex items-center gap-2">
                       <Calendar className="w-4 h-4 text-amber-400" />
                       <span className="font-bold text-slate-100 text-xs">
-                        {t.calendarDisplayMode || 'Lịch Kinh Tế Trên Biểu Đồ'}
+                        {t.calendarDisplayMode}
                       </span>
                     </div>
                     <button
@@ -356,7 +356,7 @@ export const Header: React.FC = () => {
                           : 'bg-slate-800 text-slate-400 border-slate-700'
                       }`}
                     >
-                      {showEconomicNews ? 'BẬT' : 'TẮT'}
+                      {showEconomicNews ? t.btnOn : t.btnOff}
                     </button>
                   </div>
 
@@ -369,10 +369,10 @@ export const Header: React.FC = () => {
                         </span>
                         <div className="grid grid-cols-2 gap-1 font-mono text-[11px]">
                           {[
-                            { id: 'AUTO' as const, label: '🧠 ' + (t.calendarModeAuto?.split('(')[0] || 'Auto Smart'), desc: 'Theo timeframe' },
-                            { id: 'COMPACT' as const, label: '🏷️ ' + (t.calendarModeCompact?.split('(')[0] || 'Tối giản'), desc: 'Chỉ chấm tròn' },
-                            { id: 'CLUSTERED' as const, label: '📦 ' + (t.calendarModeClustered?.split('(')[0] || 'Gộp cụm'), desc: '1 badge / nến' },
-                            { id: 'FULL' as const, label: '📜 ' + (t.calendarModeFull?.split('(')[0] || 'Đầy đủ'), desc: 'Chi tiết tin' }
+                            { id: 'AUTO' as const, label: '🧠 ' + (t.calendarModeAuto?.split('(')[0]?.trim() || 'Auto Smart'), desc: t.timeframe },
+                            { id: 'COMPACT' as const, label: '🏷️ ' + (t.calendarModeCompact?.split('(')[0]?.trim() || 'Compact'), desc: t.calendarCompactDesc },
+                            { id: 'CLUSTERED' as const, label: '📦 ' + (t.calendarModeClustered?.split('(')[0]?.trim() || 'Clustered'), desc: t.calendarClusteredDesc },
+                            { id: 'FULL' as const, label: '📜 ' + (t.calendarModeFull?.split('(')[0]?.trim() || 'Full'), desc: t.calendarFullDesc }
                           ].map(mode => (
                             <button
                               key={mode.id}
@@ -404,7 +404,7 @@ export const Header: React.FC = () => {
                                 : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:text-slate-200'
                             }`}
                           >
-                            🔴 Chỉ Tin Đỏ
+                            {t.calendarFilterOnlyRed}
                           </button>
                           <button
                             onClick={() => setEconomicNewsFilter('HIGH_MEDIUM')}
@@ -414,7 +414,7 @@ export const Header: React.FC = () => {
                                 : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:text-slate-200'
                             }`}
                           >
-                            🟡 Đỏ + Vàng
+                            {t.calendarFilterRedYellow}
                           </button>
                           <button
                             onClick={() => setEconomicNewsFilter('ALL')}
@@ -424,7 +424,7 @@ export const Header: React.FC = () => {
                                 : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:text-slate-200'
                             }`}
                           >
-                            Tất Cả
+                            {t.calendarFilterAllShort}
                           </button>
                         </div>
                       </div>
@@ -439,7 +439,10 @@ export const Header: React.FC = () => {
                             className="accent-indigo-500 rounded cursor-pointer w-3.5 h-3.5"
                           />
                           <span className="text-[11px] text-slate-300">
-                            Chỉ tin liên quan <span className="text-amber-300 font-mono font-bold">{instrument.symbol}</span> ({relevantCurrencies.filter(c => c !== 'GLOBAL').join(', ')})
+                            {formatText(t.calendarOnlyRelatedSymbol, {
+                              symbol: instrument.symbol,
+                              currencies: relevantCurrencies.filter(c => c !== 'GLOBAL').join(', ')
+                            })}
                           </span>
                         </label>
                       </div>
@@ -462,7 +465,7 @@ export const Header: React.FC = () => {
                   ? 'bg-emerald-950/80 border-emerald-500/60 text-emerald-300 shadow-md shadow-emerald-500/10'
                   : 'bg-slate-900/90 border-slate-700/80 text-slate-300 hover:border-slate-600'
               }`}
-              title="Quản lý kết nối Sàn Giao Dịch (Exness, MT5, XTB, Binance)"
+              title={t.brokerSettingsTooltip}
             >
               <div
                 className={`w-2 h-2 rounded-full ${
@@ -494,7 +497,7 @@ export const Header: React.FC = () => {
                     ? 'bg-rose-950/90 border-rose-500/60 text-rose-300 shadow-sm shadow-rose-500/20'
                     : 'bg-indigo-950/90 border-indigo-500/60 text-indigo-300'
                 }`}
-                title={isLiveActive ? 'Chuyển về Replay Sandbox' : 'Chuyển sang Live Broker Mode'}
+                title={isLiveActive ? t.switchToSandboxTooltip : t.switchToLiveTooltip}
               >
                 {isLiveActive ? '🔴 LIVE' : '🔄 REPLAY'}
               </button>
@@ -563,10 +566,10 @@ export const Header: React.FC = () => {
                     ? 'bg-indigo-600 text-white border-indigo-500 shadow-sm'
                     : 'bg-slate-900/90 text-slate-300 border-slate-700/80 hover:bg-slate-800 hover:border-slate-600'
                 }`}
-                title={t.moreToolsDesc || 'Công cụ mở rộng và tiện ích'}
+                title={t.moreToolsDesc}
               >
                 <MoreHorizontal className="w-3.5 h-3.5 text-slate-300" />
-                <span className="text-xs font-semibold">{t.moreTools || 'Công cụ'}</span>
+                <span className="text-xs font-semibold">{t.moreTools}</span>
                 {isTunnelActive && (
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-xs shadow-emerald-400 animate-pulse" />
                 )}
@@ -581,8 +584,8 @@ export const Header: React.FC = () => {
                   />
                   <div className="absolute right-0 mt-2 w-64 bg-[#111622] border border-slate-700/80 rounded-xl shadow-2xl p-1.5 z-50 animate-in fade-in zoom-in-95 font-sans text-xs space-y-1">
                     <div className="px-2.5 py-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider font-mono border-b border-slate-800/80 mb-1 flex items-center justify-between">
-                      <span>{t.moreTools || 'Công cụ mở rộng'}</span>
-                      <span className="text-[9px] text-indigo-400 font-normal">Pro Suite</span>
+                      <span>{t.moreTools}</span>
+                      <span className="text-[9px] text-indigo-400 font-normal">{t.moreToolsProSuite}</span>
                     </div>
 
                     {/* Sessions */}
@@ -599,7 +602,7 @@ export const Header: React.FC = () => {
                         </div>
                         <div>
                           <div className="text-xs font-semibold text-slate-200 group-hover:text-indigo-300">{t.sessions}</div>
-                          <div className="text-[10px] text-slate-500">{t.sessionManagerDesc?.slice(0, 30) || 'Quản lý phiên replay'}...</div>
+                          <div className="text-[10px] text-slate-500">{t.moreToolsSessionsDesc}</div>
                         </div>
                       </div>
                     </button>
@@ -618,7 +621,7 @@ export const Header: React.FC = () => {
                         </div>
                         <div>
                           <div className="text-xs font-semibold text-slate-200 group-hover:text-emerald-300">{t.analytics}</div>
-                          <div className="text-[10px] text-slate-500">Báo cáo hiệu suất & Win Rate</div>
+                          <div className="text-[10px] text-slate-500">{t.moreToolsAnalyticsDesc}</div>
                         </div>
                       </div>
                     </button>
@@ -637,7 +640,7 @@ export const Header: React.FC = () => {
                         </div>
                         <div>
                           <div className="text-xs font-semibold text-slate-200 group-hover:text-sky-300">{t.dataImport}</div>
-                          <div className="text-[10px] text-slate-500">Import CSV & Crawl dữ liệu</div>
+                          <div className="text-[10px] text-slate-500">{t.moreToolsDataDesc}</div>
                         </div>
                       </div>
                     </button>
@@ -846,7 +849,7 @@ export const Header: React.FC = () => {
                 >
                   <div className="flex items-center gap-2.5">
                     <Globe className="w-4 h-4 text-teal-400" />
-                    <span>{t.remoteTunnelTitle || 'Truy Cập Từ Xa'}</span>
+                    <span>{t.remoteTunnelTitle}</span>
                   </div>
                   {isTunnelActive && (
                     <span className="px-1.5 py-0.5 text-[9px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded font-bold">ONLINE</span>

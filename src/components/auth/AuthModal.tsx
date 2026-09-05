@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { useBacktestStore } from '../../store/backtestStore';
-import { translations } from '../../i18n/translations';
+import { getTranslation } from '../../i18n';
 
 export const AuthModal: React.FC = () => {
   const {
@@ -33,7 +33,7 @@ export const AuthModal: React.FC = () => {
   } = useAuthStore();
 
   const { language } = useBacktestStore();
-  const t = translations[language] || translations.vi;
+  const t = getTranslation(language);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   X,
   Upload,
@@ -42,86 +42,10 @@ import { CSVDataParser, CSVParseResult } from '../../engine/csvParser';
 import { DataCrawler, CrawlProgress } from '../../engine/dataCrawler';
 import { datasetsApi } from '../../api';
 import { useBacktestStore } from '../../store/backtestStore';
-import { translations } from '../../i18n/translations';
+import { getTranslation, formatText } from '../../i18n';
 import { INSTRUMENTS } from '../../config/instruments';
 import { Timeframe } from '../../types/market';
-
-// Curated Novandra Anugrah datasets presets fallback
-const DEFAULT_KAGGLE_PRESETS = [
-  {
-    id: 'xauusd',
-    name: 'XAU/USD Gold Price Historical Data (2004 - 2026)',
-    symbol: 'XAUUSD',
-    slug: 'novandraanugrah/xauusd-gold-price-historical-data-2004-2024',
-    category: 'Forex & Commodities',
-    description: 'Báo giá vàng thể chế thực tế 20 năm (M1, M5, M15, M30, H1, H4, D1). Tải lẻ từng file (297KB) hoặc toàn bộ gói nén.',
-    files: [
-      { name: 'XAU_1d_data.csv', tf: 'D1', sizeEstimate: '297 KB (Tải tức thì)' },
-      { name: 'XAU_4h_data.csv', tf: 'H4', sizeEstimate: '1.7 MB (~1s)' },
-      { name: 'XAU_1h_data.csv', tf: 'H1', sizeEstimate: '6.5 MB (~1.5s)' },
-      { name: 'XAU_30m_data.csv', tf: 'M30', sizeEstimate: '13 MB (~2.5s)' },
-      { name: 'XAU_15m_data.csv', tf: 'M15', sizeEstimate: '26 MB (~3.5s)' },
-      { name: 'XAU_5m_data.csv', tf: 'M5', sizeEstimate: '74 MB (~6s)' },
-      { name: 'XAU_1m_data.csv', tf: 'M1', sizeEstimate: '330 MB (Full M1)' }
-    ]
-  },
-  {
-    id: 'btcusd',
-    name: 'BITCOIN Historical Datasets 2018 - 2026 (Binance API)',
-    symbol: 'BTCUSD',
-    slug: 'novandraanugrah/bitcoin-historical-datasets-2018-2026-binance-api',
-    category: 'Crypto',
-    description: 'Dữ liệu Bitcoin chuẩn từ sàn Binance đa khung thời gian từ 2018 đến nay.',
-    files: [
-      { name: 'BTCUSDT_1d_data.csv', tf: 'D1', sizeEstimate: '350 KB' },
-      { name: 'BTCUSDT_1h_data.csv', tf: 'H1', sizeEstimate: '8 MB' },
-      { name: 'BTCUSDT_15m_data.csv', tf: 'M15', sizeEstimate: '32 MB' },
-      { name: 'BTCUSDT_5m_data.csv', tf: 'M5', sizeEstimate: '90 MB' }
-    ]
-  },
-  {
-    id: 'ethusd',
-    name: 'Ethereum Price Data Binance API (2017 - Now)',
-    symbol: 'ETHUSD',
-    slug: 'novandraanugrah/ethereum-price-data-binance-api-2017-now',
-    category: 'Crypto',
-    description: 'Dữ liệu Ethereum từ 2017 đến nay, cung cấp các khung nến tiêu chuẩn.',
-    files: [
-      { name: 'ETHUSDT_1d_data.csv', tf: 'D1', sizeEstimate: '300 KB' },
-      { name: 'ETHUSDT_1h_data.csv', tf: 'H1', sizeEstimate: '7 MB' },
-      { name: 'ETHUSDT_15m_data.csv', tf: 'M15', sizeEstimate: '28 MB' },
-      { name: 'ETHUSDT_5m_data.csv', tf: 'M5', sizeEstimate: '80 MB' }
-    ]
-  },
-  {
-    id: 'nas100',
-    name: 'NASDAQ 100 (NAS100) Historical Price Data',
-    symbol: 'US100',
-    slug: 'novandraanugrah/nasdaq-100-nas100-historical-price-data',
-    category: 'Indices',
-    description: 'Chỉ số công nghệ Mỹ Nasdaq 100 với báo giá lịch sử chuẩn phân tích kỹ thuật.',
-    files: [
-      { name: 'NAS100_1d_data.csv', tf: 'D1', sizeEstimate: '280 KB' },
-      { name: 'NAS100_1h_data.csv', tf: 'H1', sizeEstimate: '5 MB' },
-      { name: 'NAS100_15m_data.csv', tf: 'M15', sizeEstimate: '20 MB' },
-      { name: 'NAS100_5m_data.csv', tf: 'M5', sizeEstimate: '50 MB' }
-    ]
-  },
-  {
-    id: 'us30',
-    name: 'Dow Jones 30 (US30) Historical Price Data',
-    symbol: 'US30',
-    slug: 'novandraanugrah/dow-jones-30-us30-historical-price-data',
-    category: 'Indices',
-    description: 'Chỉ số 30 doanh nghiệp công nghiệp hàng đầu phố Wall Dow Jones 30.',
-    files: [
-      { name: 'US30_1d_data.csv', tf: 'D1', sizeEstimate: '280 KB' },
-      { name: 'US30_1h_data.csv', tf: 'H1', sizeEstimate: '5 MB' },
-      { name: 'US30_15m_data.csv', tf: 'M15', sizeEstimate: '20 MB' },
-      { name: 'US30_5m_data.csv', tf: 'M5', sizeEstimate: '50 MB' }
-    ]
-  }
-];
+import { TranslationDict } from '../../i18n/types';
 
 // Local-First dataset helpers
 const getLocalDatasets = (): any[] => {
@@ -150,6 +74,96 @@ const deleteLocalDataset = (id: string) => {
   } catch (e) {}
 };
 
+interface KagglePresetFile {
+  tf: string;
+  name: string;
+  sizeEstimate: string;
+}
+
+interface KagglePreset {
+  id: string;
+  symbol: string;
+  name: string;
+  category: string;
+  slug: string;
+  description: string;
+  totalCandlesEst: string;
+  files: KagglePresetFile[];
+}
+
+const getKagglePresets = (t: TranslationDict): KagglePreset[] => [
+  {
+    id: 'xauusd',
+    symbol: 'XAUUSD',
+    name: 'XAU/USD Gold Price Historical Data (2004 - 2026)',
+    category: 'Forex & Commodities',
+    slug: 'novandraanugrah/xauusd-gold-price-historical-data-2004-2024',
+    description: t.kaggleDescGold,
+    totalCandlesEst: '20 Years Multi-TF',
+    files: [
+      { tf: 'D1', name: 'XAU_1d_data.csv', sizeEstimate: `297 KB (${t.kaggleInstantDownloadTag})` },
+      { tf: 'H4', name: 'XAU_4h_data.csv', sizeEstimate: '1.7 MB (~1s)' },
+      { tf: 'H1', name: 'XAU_1h_data.csv', sizeEstimate: '6.5 MB (~1.5s)' },
+      { tf: 'M30', name: 'XAU_30m_data.csv', sizeEstimate: '13 MB (~2.5s)' },
+      { tf: 'M15', name: 'XAU_15m_data.csv', sizeEstimate: '26 MB (~3.5s)' },
+      { tf: 'M5', name: 'XAU_5m_data.csv', sizeEstimate: '74 MB (~6s)' },
+      { tf: 'M1', name: 'XAU_1m_data.csv', sizeEstimate: `330 MB (${t.kaggleFullM1Tag})` }
+    ]
+  },
+  {
+    id: 'btcusd',
+    symbol: 'BTCUSD',
+    name: 'Bitcoin Historical Crypto Market Data (Binance & Aggregated)',
+    category: 'Crypto',
+    slug: 'mczielinski/bitcoin-historical-data',
+    description: t.kaggleDescBtc,
+    totalCandlesEst: '10+ Years Multi-TF',
+    files: [
+      { tf: 'M1', name: 'bitstampUSD_1-min_data_2012-01-01_to_2021-03-31.csv', sizeEstimate: '317 MB' },
+      { tf: 'D1', name: 'BTC-Daily.csv', sizeEstimate: `120 KB (${t.kaggleInstantDownloadTag})` }
+    ]
+  },
+  {
+    id: 'ethusd',
+    symbol: 'ETHUSD',
+    name: 'Ethereum Price Dataset (Binance 1-min & Daily)',
+    category: 'Crypto',
+    slug: 'prasoonk/ethereum-historical-dataset',
+    description: t.kaggleDescEth,
+    totalCandlesEst: '8 Years Multi-TF',
+    files: [
+      { tf: 'D1', name: 'ETH-Daily.csv', sizeEstimate: `85 KB (${t.kaggleInstantDownloadTag})` },
+      { tf: 'H1', name: 'ETH-Hourly.csv', sizeEstimate: '2.1 MB (~1s)' }
+    ]
+  },
+  {
+    id: 'us100',
+    symbol: 'US100',
+    name: 'NASDAQ 100 Index Historical 1-Min & Daily Bars',
+    category: 'Indices',
+    slug: 'novandraanugrah/us100-nasdaq-historical-data',
+    description: t.kaggleDescUs100,
+    totalCandlesEst: '15 Years Multi-TF',
+    files: [
+      { tf: 'D1', name: 'US100_1d_data.csv', sizeEstimate: `210 KB (${t.kaggleInstantDownloadTag})` },
+      { tf: 'H1', name: 'US100_1h_data.csv', sizeEstimate: '5.2 MB (~1.5s)' }
+    ]
+  },
+  {
+    id: 'us30',
+    symbol: 'US30',
+    name: 'Dow Jones 30 Index Multi-Timeframe Historical Data',
+    category: 'Indices',
+    slug: 'novandraanugrah/us30-dow-jones-historical-data',
+    description: t.kaggleDescUs30,
+    totalCandlesEst: '15 Years Multi-TF',
+    files: [
+      { tf: 'D1', name: 'US30_1d_data.csv', sizeEstimate: `205 KB (${t.kaggleInstantDownloadTag})` },
+      { tf: 'H1', name: 'US30_1h_data.csv', sizeEstimate: '5.1 MB (~1.5s)' }
+    ]
+  }
+];
+
 export const DataImportModal: React.FC = () => {
   const {
     isDataModalOpen,
@@ -160,7 +174,7 @@ export const DataImportModal: React.FC = () => {
     language
   } = useBacktestStore();
 
-  const t = translations[language] || translations.vi;
+  const t = getTranslation(language);
 
   const [activeTab, setActiveTab] = useState<'crawler' | 'library' | 'kaggle' | 'csv' | 'presets'>('kaggle');
   const [isParsing, setIsParsing] = useState(false);
@@ -170,13 +184,34 @@ export const DataImportModal: React.FC = () => {
   const [importStatus, setImportStatus] = useState<{ success?: boolean; message?: string } | null>(null);
 
   // Kaggle Hub State
-  const [kagglePresets, setKagglePresets] = useState<any[]>(DEFAULT_KAGGLE_PRESETS);
+  const defaultPresets = useMemo(() => getKagglePresets(t), [t]);
+  const [serverPresets, setServerPresets] = useState<any[] | null>(null);
+  const kagglePresets = useMemo(() => {
+    if (!serverPresets) return defaultPresets;
+    return serverPresets.map((sp: any) => {
+      const local = defaultPresets.find((dp) => dp.id === sp.id || dp.symbol === sp.symbol);
+      if (local) {
+        return {
+          ...sp,
+          description: local.description,
+          files: sp.files?.map((f: any) => {
+            const localFile = local.files?.find((lf) => lf.name === f.name || lf.tf === f.tf);
+            return {
+              ...f,
+              sizeEstimate: localFile ? localFile.sizeEstimate : f.sizeEstimate
+            };
+          }) || sp.files
+        };
+      }
+      return sp;
+    });
+  }, [serverPresets, defaultPresets]);
   const [selectedPresetId, setSelectedPresetId] = useState<string>('xauusd');
   const [customKaggleSlug, setCustomKaggleSlug] = useState<string>('novandraanugrah/xauusd-gold-price-historical-data-2004-2024');
   const [customKaggleFile, setCustomKaggleFile] = useState<string>('XAU_1d_data.csv');
   const [downloadingFile, setDownloadingFile] = useState<string | null>(null);
   const [showApiConfig, setShowApiConfig] = useState<boolean>(false);
-  const currentPreset = kagglePresets.find(p => p.id === selectedPresetId);
+  const currentPreset = kagglePresets.find((p: any) => p.id === selectedPresetId);
   const [kaggleUsername, setKaggleUsername] = useState<string>(
     localStorage.getItem('quant_kaggle_username') || ''
   );
@@ -294,7 +329,7 @@ export const DataImportModal: React.FC = () => {
         const serverList = await datasetsApi.list();
         if (serverList && Array.isArray(serverList) && serverList.length > 0) {
           const merged = [...serverList];
-          localList.forEach((local) => {
+          localList.forEach((local: any) => {
             if (!merged.some((s) => s.id === local.id)) {
               merged.push(local);
             }
@@ -317,7 +352,7 @@ export const DataImportModal: React.FC = () => {
       const res: any = await datasetsApi.kagglePresets();
       const data = res?.data ?? res;
       if (data?.success && Array.isArray(data.presets) && data.presets.length > 0) {
-        setKagglePresets(data.presets);
+        setServerPresets(data.presets);
       }
     } catch (e) {
       // Keep DEFAULT_KAGGLE_PRESETS fallback
@@ -602,7 +637,7 @@ export const DataImportModal: React.FC = () => {
 
     setDownloadingFile(fileName);
     setIsKaggleLoading(true);
-    setKaggleStatusMessage(`Đang tải file ${fileName} từ Kaggle (${datasetSlug})...`);
+    setKaggleStatusMessage(formatText(t.kaggleStatusDownloading, { fileName, datasetSlug }));
     setImportStatus(null);
 
     try {
@@ -624,17 +659,17 @@ export const DataImportModal: React.FC = () => {
           : '';
         setImportStatus({
           success: true,
-          message: `✅ Đã tải & lưu thành công ${fileName}! Đã nạp ${countStr} nến (${ds?.symbol || ''} - ${ds?.timeframe || ''})${dateRangeStr} vào Database SQLite.`
+          message: `✅ ${formatText(t.kaggleStatusSuccessSingle, { fileName, count: countStr, symbol: ds?.symbol || '', tf: ds?.timeframe || '', dateRange: dateRangeStr })}`
         });
       } else {
-        throw new Error(data?.error || 'Tải file từ Kaggle thất bại');
+        throw new Error(data?.error || t.kaggleStatusErrorSingle);
       }
     } catch (err: any) {
       console.error('Kaggle single file download error:', err);
-      const errMsg = err.response?.data?.error || err.message || 'Lỗi khi tải file từ Kaggle.';
+      const errMsg = err.response?.data?.error || err.message || t.kaggleStatusErrorSingle;
       setImportStatus({
         success: false,
-        message: `❌ Lỗi: ${errMsg}${!kaggleKey.trim() ? ' (Gợi ý: Mở "Cài đặt Kaggle API" bên dưới nếu dataset yêu cầu đăng nhập Kaggle)' : ''}`
+        message: `❌ ${errMsg}`
       });
     } finally {
       setIsKaggleLoading(false);
@@ -654,7 +689,7 @@ export const DataImportModal: React.FC = () => {
       : (kagglePresets.find(p => p.id === selectedPresetId)?.slug || 'novandraanugrah/xauusd-gold-price-historical-data-2004-2024');
 
     setIsKaggleLoading(true);
-    setKaggleStatusMessage(`Đang kết nối và stream dataset từ Kaggle (${currentSlug})...`);
+    setKaggleStatusMessage(formatText(t.kaggleStatusStreaming, { slug: currentSlug }));
     setImportStatus(null);
 
     try {
@@ -671,15 +706,15 @@ export const DataImportModal: React.FC = () => {
         await fetchDBDatasets();
         setImportStatus({
           success: true,
-          message: `✅ Đã tải và lưu thành công ${(data.totalCandles || 0).toLocaleString()} nến từ Kaggle vào Database SQLite!`
+          message: `✅ ${formatText(t.kaggleStatusSuccessBatch, { count: (data.totalCandles || 0).toLocaleString() })}`
         });
       } else {
-        throw new Error(data?.error || 'Download failed');
+        throw new Error(data?.error || t.kaggleStatusErrorApi);
       }
     } catch (err: any) {
       setImportStatus({
         success: false,
-        message: `❌ ${err.response?.data?.error || err.message || 'Lỗi khi tải từ Kaggle qua API.'}`
+        message: `❌ ${err.response?.data?.error || err.message || t.kaggleStatusErrorApi}`
       });
     } finally {
       setIsKaggleLoading(false);
@@ -689,7 +724,7 @@ export const DataImportModal: React.FC = () => {
 
   const handleKaggleScanLocal = async () => {
     setIsKaggleLoading(true);
-    setKaggleStatusMessage('Đang quét thư mục data/ trên máy chủ...');
+    setKaggleStatusMessage(t.kaggleStatusScanningData);
     setImportStatus(null);
 
     try {
@@ -703,16 +738,16 @@ export const DataImportModal: React.FC = () => {
         await fetchDBDatasets();
         setImportStatus({
           success: true,
-          message: t.kaggleSuccessMsg.replace('{count}', (data.totalCandles || 0).toLocaleString())
+          message: formatText(t.kaggleSuccessMsg, { count: (data.totalCandles || 0).toLocaleString() })
         });
         setActiveTab('library');
       } else {
-        throw new Error(data?.error || 'Không tìm thấy file');
+        throw new Error(data?.error || t.kaggleStatusNotFoundData);
       }
     } catch (err: any) {
       setImportStatus({
         success: false,
-        message: err.response?.data?.error || err.message || 'Không tìm thấy file Kaggle trong thư mục data/.'
+        message: err.response?.data?.error || err.message || t.kaggleStatusNotFoundData
       });
     } finally {
       setIsKaggleLoading(false);
@@ -722,7 +757,7 @@ export const DataImportModal: React.FC = () => {
 
   const handleKaggleSeedCurated = async () => {
     setIsKaggleLoading(true);
-    setKaggleStatusMessage('Đang lưu 5,000 nến vàng thật 2024 vào Database...');
+    setKaggleStatusMessage(t.kaggleStatusSeeding5k);
     setImportStatus(null);
 
     try {
@@ -732,16 +767,16 @@ export const DataImportModal: React.FC = () => {
         await fetchDBDatasets();
         setImportStatus({
           success: true,
-          message: t.kaggleSuccessMsg.replace('{count}', (data.totalCandles || 5000).toLocaleString())
+          message: formatText(t.kaggleSuccessMsg, { count: (data.totalCandles || 5000).toLocaleString() })
         });
         setActiveTab('library');
       } else {
-        throw new Error(data?.error || 'Seed failed');
+        throw new Error(data?.error || t.kaggleStatusError5k);
       }
     } catch (err: any) {
       setImportStatus({
         success: false,
-        message: err.response?.data?.error || err.message || 'Lỗi khi nạp dữ liệu nến vàng thật 2024.'
+        message: err.response?.data?.error || err.message || t.kaggleStatusError5k
       });
     } finally {
       setIsKaggleLoading(false);
@@ -751,14 +786,14 @@ export const DataImportModal: React.FC = () => {
 
   const processKaggleZipFile = (file: File) => {
     setIsKaggleLoading(true);
-    setKaggleStatusMessage(`Đang nạp file ${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB)...`);
+    setKaggleStatusMessage(formatText(t.kaggleStatusLoadingFile, { fileName: file.name, size: (file.size / 1024 / 1024).toFixed(1) }));
     setImportStatus(null);
 
     const reader = new FileReader();
     reader.onload = async (event) => {
       try {
         const base64Data = (event.target?.result as string).split(',')[1] || '';
-        setKaggleStatusMessage('Đang giải nén & lưu dữ liệu vào SQLite...');
+        setKaggleStatusMessage(t.kaggleStatusExtractingZip);
         const res: any = await datasetsApi.kaggleImportZip({
           base64Zip: base64Data,
           maxCandles: kaggleMaxCandles,
@@ -770,16 +805,16 @@ export const DataImportModal: React.FC = () => {
           await fetchDBDatasets();
           setImportStatus({
             success: true,
-            message: t.kaggleSuccessMsg.replace('{count}', (data.totalCandles || 0).toLocaleString())
+            message: formatText(t.kaggleSuccessMsg, { count: (data.totalCandles || 0).toLocaleString() })
           });
           setActiveTab('library');
         } else {
-          throw new Error(data?.error || 'Import zip failed');
+          throw new Error(data?.error || t.kaggleStatusErrorZip);
         }
       } catch (err: any) {
         setImportStatus({
           success: false,
-          message: err.response?.data?.error || err.message || 'Lỗi khi giải nén & lưu file Kaggle ZIP.'
+          message: err.response?.data?.error || err.message || t.kaggleStatusErrorZip
         });
       } finally {
         setIsKaggleLoading(false);
@@ -1337,7 +1372,7 @@ export const DataImportModal: React.FC = () => {
                       </div>
                       <div>
                         <span className="font-bold text-amber-200 text-sm block">Kaggle Institutional Market Hub</span>
-                        <span className="text-slate-400 text-[11px]">Dữ liệu tài chính thể chế 20 năm từ novandraanugrah & cộng đồng</span>
+                        <span className="text-slate-400 text-[11px]">{t.kaggleHubSubtitle}</span>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -1350,14 +1385,14 @@ export const DataImportModal: React.FC = () => {
                     </div>
                   </div>
                   <p className="text-slate-300 leading-relaxed text-[11px]">
-                    Tự động tải trực tiếp các tệp CSV nến thể chế (Vàng XAU/USD, Bitcoin, Ethereum, NASDAQ 100, Dow Jones 30). Dữ liệu được lưu vĩnh viễn vào SQLite Database — nạp 1 lần là sẵn sàng kiểm thử mãi mãi!
+                    {t.kaggleHubLeadText}
                   </p>
                 </div>
 
                 {/* ASSET SELECTOR PILLS */}
                 <div className="space-y-2">
                   <span className="text-[11px] font-bold text-slate-300 uppercase tracking-wider block">
-                    1. Chọn danh mục tài sản Kaggle:
+                    {t.kaggleSelectAssetCategory}
                   </span>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
                     {kagglePresets.map((preset) => {
@@ -1403,7 +1438,7 @@ export const DataImportModal: React.FC = () => {
                         <span className="font-mono font-bold text-xs text-sky-300">CUSTOM</span>
                         <span className="text-[9px] px-1 py-0.2 rounded bg-sky-900/50 text-sky-300 font-mono">Any</span>
                       </div>
-                      <span className="text-[11px] font-medium truncate block">Kaggle URL khác</span>
+                      <span className="text-[11px] font-medium truncate block">{t.kaggleCustomUrlOption}</span>
                     </button>
                   </div>
                 </div>
@@ -1427,7 +1462,7 @@ export const DataImportModal: React.FC = () => {
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1.5 text-xs text-sky-400 hover:text-sky-300 font-mono underline underline-offset-2 shrink-0"
                       >
-                        <span>Xem trang Kaggle</span>
+                        <span>{t.kaggleViewOnKaggle}</span>
                         <ExternalLink className="w-3.5 h-3.5" />
                       </a>
                     </div>
@@ -1437,9 +1472,9 @@ export const DataImportModal: React.FC = () => {
                       <div className="flex items-center justify-between text-xs">
                         <span className="font-bold text-slate-300 flex items-center gap-1.5">
                           <Zap className="w-3.5 h-3.5 text-amber-400 fill-current" />
-                          Tải 1-Click Từng Khung Thời Gian (Khuyến nghị: Nhẹ & Siêu tốc):
+                          {t.kaggleQuickDownloadHeader}
                         </span>
-                        <span className="text-slate-500 text-[11px]">Tải lẻ file CSV & lưu thẳng vào Database</span>
+                        <span className="text-slate-500 text-[11px]">{t.kaggleQuickDownloadSubtitle}</span>
                       </div>
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -1486,12 +1521,12 @@ export const DataImportModal: React.FC = () => {
                                 {isThisDownloading ? (
                                   <>
                                     <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-300" />
-                                    <span>Đang nạp...</span>
+                                    <span>{t.kaggleLoadingBtn}</span>
                                   </>
                                 ) : (
                                   <>
                                     <Zap className="w-3.5 h-3.5 fill-current text-amber-300" />
-                                    <span>Tải 1-Click</span>
+                                    <span>{t.kaggle1ClickDownloadBtn}</span>
                                   </>
                                 )}
                               </button>
@@ -1508,15 +1543,15 @@ export const DataImportModal: React.FC = () => {
                   <div className="bg-slate-900/90 border border-slate-800 p-4 rounded-xl space-y-3.5 animate-in fade-in">
                     <div className="flex items-center gap-2">
                       <Folder className="w-4 h-4 text-sky-400" />
-                      <span className="font-bold text-slate-200 text-xs">Nhập Kaggle Dataset Tùy Ý</span>
+                      <span className="font-bold text-slate-200 text-xs">{t.kaggleCustomDatasetTitle}</span>
                     </div>
                     <p className="text-[11px] text-slate-400">
-                      Bạn có thể nạp bất kỳ dataset tài chính nào trên Kaggle bằng cách nhập URL hoặc slug (ví dụ: <code className="text-sky-300 font-mono">novandraanugrah/xauusd-gold-price-historical-data-2004-2024</code>).
+                      {t.kaggleCustomDatasetDesc}
                     </p>
 
                     <div className="space-y-3">
                       <div>
-                        <label className="block text-[11px] text-slate-400 mb-1 font-medium">Dataset Slug hoặc URL Kaggle:</label>
+                        <label className="block text-[11px] text-slate-400 mb-1 font-medium">{t.kaggleDatasetSlugLabel}</label>
                         <input
                           type="text"
                           value={customKaggleSlug}
@@ -1534,7 +1569,7 @@ export const DataImportModal: React.FC = () => {
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
-                          <label className="block text-[11px] text-slate-400 mb-1 font-medium">Tên file CSV cụ thể (Tải 1-Click lẻ):</label>
+                          <label className="block text-[11px] text-slate-400 mb-1 font-medium">{t.kaggleSpecificCsvLabel}</label>
                           <input
                             type="text"
                             value={customKaggleFile}
@@ -1556,7 +1591,7 @@ export const DataImportModal: React.FC = () => {
                             ) : (
                               <Zap className="w-4 h-4 fill-current" />
                             )}
-                            <span>Tải 1-Click File Này</span>
+                            <span>{t.kaggleDownloadThisFileBtn}</span>
                           </button>
                         </div>
                       </div>
@@ -1569,9 +1604,9 @@ export const DataImportModal: React.FC = () => {
                   <div className="flex items-center justify-between flex-wrap gap-2">
                     <div className="flex items-center gap-2">
                       <Download className="w-4 h-4 text-amber-400" />
-                      <span className="font-bold text-slate-200 text-xs">Tải Trọn Gói Nén (Full ZIP Multi-Timeframe)</span>
+                      <span className="font-bold text-slate-200 text-xs">{t.kaggleFullZipTitle}</span>
                     </div>
-                    <span className="text-[10px] text-slate-400 font-mono">Tự động giải nén & phân bổ đa khung</span>
+                    <span className="text-[10px] text-slate-400 font-mono">{t.kaggleFullZipSubtitle}</span>
                   </div>
 
                   {/* Timeframe selector */}
@@ -1606,11 +1641,11 @@ export const DataImportModal: React.FC = () => {
                       onChange={(e) => setKaggleMaxCandles(Number(e.target.value))}
                       className="bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-sky-300 font-mono font-bold focus:outline-hidden"
                     >
-                      <option value={10000}>10,000 nến / khung</option>
-                      <option value={25000}>25,000 nến / khung</option>
-                      <option value={50000}>50,000 nến / khung (Khuyến nghị)</option>
-                      <option value={100000}>100,000 nến / khung</option>
-                      <option value={500000}>500,000 nến / khung (Toàn bộ 20 năm)</option>
+                      <option value={10000}>{formatText(t.kaggleCandlesPerTimeframe, { count: '10,000' })}</option>
+                      <option value={25000}>{formatText(t.kaggleCandlesPerTimeframe, { count: '25,000' })}</option>
+                      <option value={50000}>{formatText(t.kaggleRecommendedOption, { count: '50,000' })}</option>
+                      <option value={100000}>{formatText(t.kaggleCandlesPerTimeframe, { count: '100,000' })}</option>
+                      <option value={500000}>{formatText(t.kaggleEntire20YearsOption, { count: '500,000' })}</option>
                     </select>
                   </div>
 
@@ -1627,7 +1662,7 @@ export const DataImportModal: React.FC = () => {
                       ) : (
                         <Download className="w-4 h-4" />
                       )}
-                      <span>Tải Trọn Gói ZIP từ Kaggle ({currentPreset ? currentPreset.symbol : 'Dataset'})</span>
+                      <span>{formatText(t.kaggleDownloadFullZipBtn, { symbol: currentPreset ? currentPreset.symbol : 'Dataset' })}</span>
                     </button>
                   </div>
                 </div>
@@ -1642,11 +1677,11 @@ export const DataImportModal: React.FC = () => {
                     <div className="flex items-center gap-2">
                       <Key className="w-4 h-4 text-amber-400" />
                       <span className="font-bold text-slate-200 text-xs">
-                        Cấu hình Kaggle API Token (Tùy chọn — Dành cho Crypto Binance & Private Datasets)
+                        {t.kaggleApiTokenAccordionTitle}
                       </span>
                       {kaggleKey && (
                         <span className="px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 text-[10px] font-mono font-bold">
-                          Đã lưu Token
+                          {t.kaggleTokenSavedBadge}
                         </span>
                       )}
                     </div>
@@ -1656,7 +1691,7 @@ export const DataImportModal: React.FC = () => {
                   {showApiConfig && (
                     <div className="p-4 pt-1 space-y-3 border-t border-slate-800/80 animate-in fade-in">
                       <p className="text-[11px] text-slate-400 leading-relaxed">
-                        Dataset XAU/USD Gold hỗ trợ tải công khai trực tiếp không cần API Key. Đối với các dataset Binance API (BTC, ETH) hoặc khi bị giới hạn lượt tải, bạn có thể lấy API token miễn phí từ tài khoản Kaggle của mình.
+                        {t.kaggleApiTokenDesc}
                       </p>
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -1689,7 +1724,7 @@ export const DataImportModal: React.FC = () => {
                           rel="noopener noreferrer"
                           className="text-[11px] text-sky-400 hover:text-sky-300 inline-flex items-center gap-1 font-mono"
                         >
-                          <span>Lấy API Key tại kaggle.com/settings (Nút "Create New Token")</span>
+                          <span>{t.kaggleGetApiKeyLink}</span>
                           <ExternalLink className="w-3 h-3" />
                         </a>
                       </div>
@@ -1704,10 +1739,10 @@ export const DataImportModal: React.FC = () => {
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
                         <Sparkles className="w-4 h-4 text-emerald-400" />
-                        <span className="font-bold text-emerald-300 text-xs">⚡ Nạp Nhanh 5,000 Nến Vàng Thật 2024</span>
+                        <span className="font-bold text-emerald-300 text-xs">{t.kaggleSeedQuickBtn}</span>
                       </div>
                       <p className="text-[11px] text-slate-400 leading-relaxed">
-                        Nạp ngay bộ nến thể chế XAUUSD thực tế chuẩn xác của năm 2024 vào Database để kiểm thử tức thì (0-network required).
+                        {t.kaggleSeedQuickDesc}
                       </p>
                     </div>
                     <button
@@ -1721,7 +1756,7 @@ export const DataImportModal: React.FC = () => {
                       ) : (
                         <Zap className="w-4 h-4 fill-current" />
                       )}
-                      <span>Nạp Ngay 5,000 Nến Vào SQLite</span>
+                      <span>{t.kaggleFetchBtn}</span>
                     </button>
                   </div>
 
@@ -1730,10 +1765,10 @@ export const DataImportModal: React.FC = () => {
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
                         <FileArchive className="w-4 h-4 text-sky-400" />
-                        <span className="font-bold text-slate-200 text-xs">File ZIP Máy Tính Hoặc Thư Mục data/</span>
+                        <span className="font-bold text-slate-200 text-xs">{t.kaggleLocalZipOrDataTitle}</span>
                       </div>
                       <p className="text-[11px] text-slate-400 leading-relaxed">
-                        Đã tải ZIP từ trình duyệt về máy? Thả file vào ô hoặc nhấn nút quét thư mục <code className="text-sky-300 font-mono">data/</code>.
+                        {t.kaggleLocalZipOrDataDesc}
                       </p>
                     </div>
 
@@ -1752,7 +1787,7 @@ export const DataImportModal: React.FC = () => {
                         className="flex-1 py-2 bg-slate-800 hover:bg-slate-700 active:scale-98 text-slate-200 hover:text-white rounded-lg font-mono text-xs flex items-center justify-center gap-1.5 transition-all border border-slate-700 disabled:opacity-50"
                       >
                         <Upload className="w-3.5 h-3.5 text-slate-400" />
-                        <span>Chọn File ZIP/CSV</span>
+                        <span>{t.kaggleSelectFileBtn}</span>
                       </button>
 
                       <button
@@ -1762,7 +1797,7 @@ export const DataImportModal: React.FC = () => {
                         className="flex-1 py-2 bg-slate-800 hover:bg-slate-700 active:scale-98 text-slate-200 hover:text-white rounded-lg font-mono text-xs flex items-center justify-center gap-1.5 transition-all border border-slate-700 disabled:opacity-50"
                       >
                         <Folder className="w-3.5 h-3.5 text-sky-400" />
-                        <span>Quét data/</span>
+                        <span>{t.kaggleScanFolderBtn}</span>
                       </button>
                     </div>
                   </div>
@@ -1773,8 +1808,8 @@ export const DataImportModal: React.FC = () => {
                   <div className="p-3.5 bg-amber-950/70 border border-amber-500/50 rounded-xl flex items-center gap-3 text-xs text-amber-200 animate-pulse shadow-lg shadow-amber-950/30">
                     <Loader2 className="w-5 h-5 animate-spin text-amber-400 shrink-0" />
                     <div className="min-w-0">
-                      <span className="font-mono font-bold block">Đang xử lý dữ liệu:</span>
-                      <span className="font-mono text-amber-300 text-[11px] truncate block">{kaggleStatusMessage || 'Đang kết nối tới Kaggle và lưu vào SQLite...'}</span>
+                      <span className="font-mono font-bold block">{t.kaggleProcessingStatus}</span>
+                      <span className="font-mono text-amber-300 text-[11px] truncate block">{kaggleStatusMessage || t.kaggleConnectingStatus}</span>
                     </div>
                   </div>
                 )}

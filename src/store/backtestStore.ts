@@ -275,7 +275,7 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
   initialMatchingEngine.events = {
     onOrderFilled: (order, pos) => {
       soundFx.playOrderFilled();
-      get().addStrategyLog('SIGNAL', `Khớp lệnh ${pos.side} ${pos.lotSize}L @ ${pos.entryPrice}`);
+      get().addStrategyLog('SIGNAL', `Order filled: ${pos.side} ${pos.lotSize}L @ ${pos.entryPrice}`);
       syncCurrentSessionToStorage(get);
     },
     onPositionClosed: (pos, reason) => {
@@ -285,7 +285,7 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
         soundFx.playStopLoss();
       }
       const pnlStr = pos.realizedPnL >= 0 ? `+$${pos.realizedPnL}` : `-$${Math.abs(pos.realizedPnL)}`;
-      get().addStrategyLog('INFO', `Đóng lệnh ${pos.side} (${reason}) @ ${pos.closePrice} | PnL: ${pnlStr}`);
+      get().addStrategyLog('INFO', `Position closed: ${pos.side} (${reason}) @ ${pos.closePrice} | PnL: ${pnlStr}`);
       syncCurrentSessionToStorage(get);
     },
     onLog: (msg) => {
@@ -441,7 +441,7 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
       });
 
       syncCurrentSessionToStorage(get);
-      get().addStrategyLog('INFO', `Đã chuyển sang mã giao dịch ${symbol} — Bắt đầu phiên mới`);
+      get().addStrategyLog('INFO', `Switched symbol to ${symbol} — Started new session`);
     },
 
     setTimeframe: (tf) => {
@@ -457,6 +457,7 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
         candles: resampled,
         currentIndex: newIdx
       });
+      syncCurrentSessionToStorage(get);
     },
 
     loadCandles: (newCandles: Candle[], startIndex = 0, targetSymbol?: string, targetTimeframe?: Timeframe) => {
@@ -496,7 +497,7 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
       });
 
       syncCurrentSessionToStorage(get);
-      get().addStrategyLog('INFO', `Đã nạp ${newCandles.length.toLocaleString()} nến cho ${targetSpec.symbol} (${tf}) — Sẵn sàng backtest`);
+      get().addStrategyLog('INFO', `Loaded ${newCandles.length.toLocaleString()} candles for ${targetSpec.symbol} (${tf}) — Ready for backtest`);
     },
 
     updateLiveCandle: (tick: { symbol: string; bid: number; ask: number; last?: number; timestamp: number }) => {
@@ -928,9 +929,9 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
       if (strat) {
         const res = get().strategyRunner.compile(strat.code, strat.parameters);
         if (res.success) {
-          get().addStrategyLog('INFO', `Đã nạp & biên dịch thành công: "${strat.name}"`);
+          get().addStrategyLog('INFO', `Loaded & compiled strategy successfully: "${strat.name}"`);
         } else {
-          get().addStrategyLog('ERROR', `Lỗi biên dịch chiến lược: ${res.error}`);
+          get().addStrategyLog('ERROR', `Strategy compilation error: ${res.error}`);
         }
       }
       set({ activeStrategy: strat });
@@ -939,7 +940,7 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
     toggleAutoTrading: (enabled) => {
       const next = enabled !== undefined ? enabled : !get().autoTradingEnabled;
       set({ autoTradingEnabled: next });
-      get().addStrategyLog('INFO', `Tự động giao dịch AI: ${next ? 'ĐÃ BẬT' : 'ĐÃ TẮT'}`);
+      get().addStrategyLog('INFO', `AI Auto-Trading: ${next ? 'ON' : 'OFF'}`);
     },
 
     addStrategyLog: (type, message) => {
@@ -972,7 +973,7 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
           // Resume last active session with full trade/state restoration
           const lastSession = sessions[0];
           await get().loadSessionById(lastSession.id);
-          get().addStrategyLog('INFO', `Đã kết nối server — Đã khôi phục phiên: "${lastSession.name}"`);
+          get().addStrategyLog('INFO', `Connected to server — Restored session: "${lastSession.name}"`);
         } else {
           // Create a new session
           const { instrument, timeframe, account } = get();
@@ -982,7 +983,7 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
             initialBalance: account.initialBalance
           });
           set({ activeSessionId: newSession.id });
-          get().addStrategyLog('INFO', `Đã tạo phiên mới — ID: ${newSession.id}`);
+          get().addStrategyLog('INFO', `Created new session — ID: ${newSession.id}`);
         }
       } catch (err: any) {
         console.warn('[Session Init Error]', err);
@@ -1112,7 +1113,7 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
             color: p.side === 'BUY' ? '#26a69a' : '#ef5350',
             shape: (p.side === 'BUY' ? 'arrowUp' : 'arrowDown') as 'arrowUp' | 'arrowDown',
             text: p.side,
-            tooltip: `${p.side} ${p.lotSize}L (Đã đóng PnL: $${p.realizedPnL})`
+            tooltip: `${p.side} ${p.lotSize}L (Closed PnL: $${p.realizedPnL})`
           }))
         ];
 
@@ -1149,7 +1150,7 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
 
         syncCurrentSessionToStorage(get);
 
-        get().addStrategyLog('INFO', `Đã tải phiên "${session.name}" — ${openPositions.length} vị thế mở, ${closedPositions.length} vị thế đã đóng`);
+        get().addStrategyLog('INFO', `Loaded session "${session.name}" — ${openPositions.length} open positions, ${closedPositions.length} closed positions`);
         return true;
       } catch (err: any) {
         console.error('[Load Session Error]', err);
@@ -1206,7 +1207,7 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
           equityCurve: [{ timestamp: resampled[0]?.timestamp || 0, balance: targetBalance, equity: targetBalance }]
         });
 
-        get().addStrategyLog('INFO', `Đã tạo phiên mới: "${sessionName}" với vốn ban đầu $${targetBalance.toLocaleString()}`);
+        get().addStrategyLog('INFO', `Created new session: "${sessionName}" with initial balance $${targetBalance.toLocaleString()}`);
         return newSession.id;
       } catch (err: any) {
         console.error('[Create Session Error]', err);
@@ -1250,7 +1251,7 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
           }
         });
 
-        get().addStrategyLog('INFO', `Phiên #${activeSessionId.substring(0, 8)} đã được lưu trữ hoàn thành (Net PnL: $${report.netProfit})`);
+        get().addStrategyLog('INFO', `Session #${activeSessionId.substring(0, 8)} archived successfully (Net PnL: $${report.netProfit})`);
       } catch (err: any) {
         console.error('[Complete Session Error]', err);
       }
@@ -1259,7 +1260,7 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
     deleteSessionById: async (sessionId: string) => {
       try {
         await sessionsApi.delete(sessionId);
-        get().addStrategyLog('INFO', `Đã xóa phiên #${sessionId.substring(0, 8)} khỏi cơ sở dữ liệu`);
+        get().addStrategyLog('INFO', `Deleted session #${sessionId.substring(0, 8)} from database`);
 
         // If active session was deleted, create a new one
         if (get().activeSessionId === sessionId) {
@@ -1275,7 +1276,7 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
     deleteBulkSessions: async (ids: string[]) => {
       try {
         await sessionsApi.bulkDelete(ids);
-        get().addStrategyLog('INFO', `Đã xóa ${ids.length} phiên giao dịch khỏi cơ sở dữ liệu`);
+        get().addStrategyLog('INFO', `Deleted ${ids.length} trading sessions from database`);
 
         if (get().activeSessionId && ids.includes(get().activeSessionId!)) {
           await get().createNewSession();
@@ -1322,7 +1323,7 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
           localStorage.removeItem('quant_active_session_cache');
           localStorage.removeItem('quant_backtest_active_session');
         }
-        get().addStrategyLog('INFO', `Đã đặt lại phiên #${sid.substring(0, 8)} về trạng thái ban đầu`);
+        get().addStrategyLog('INFO', `Reset session #${sid.substring(0, 8)} to initial state`);
       } catch (err: any) {
         console.error('[Reset Active Session Error]', err);
       }
@@ -1350,7 +1351,7 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
         localStorage.removeItem('quant_active_session_cache');
         localStorage.removeItem('quant_backtest_active_session');
       }
-      get().addStrategyLog('INFO', `Đã dọn sạch không gian làm việc về số dư ban đầu $${initialBalance.toLocaleString()}`);
+      get().addStrategyLog('INFO', `Reset workspace to initial balance $${initialBalance.toLocaleString()}`);
     },
 
     setSessionManagerOpen: (open) => set({ isSessionManagerOpen: open }),

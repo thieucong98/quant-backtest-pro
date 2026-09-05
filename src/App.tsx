@@ -16,6 +16,7 @@ import { AIBotHUD } from './components/panels/AIBotHUD';
 import { useBacktestStore } from './store/backtestStore';
 import { useTunnelStore } from './store/tunnelStore';
 import { useAutoSave } from './hooks/useAutoSave';
+import { getTranslation } from './i18n';
 
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 
@@ -40,8 +41,11 @@ export const App: React.FC = () => {
     setShortcutsModalOpen,
     setProfileModalOpen,
     setSessionManagerOpen,
-    initSession
+    initSession,
+    language
   } = useBacktestStore();
+
+  const t = getTranslation(language);
 
   // Initialize auto-save connection
   useAutoSave();
@@ -110,7 +114,7 @@ export const App: React.FC = () => {
 
       {/* 2. MAIN CENTER: CHART & DRAWINGS */}
       <main className="flex-1 relative w-full h-full min-h-0 bg-[#0b0e14]">
-        <ErrorBoundary fallbackTitle="Không thể tải biểu đồ TradingView">
+        <ErrorBoundary fallbackTitle={t.errorBoundaryChartTitle}>
           <TradingViewChart />
         </ErrorBoundary>
       </main>

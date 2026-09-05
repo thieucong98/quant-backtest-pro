@@ -23,7 +23,7 @@ import {
 import { INSTRUMENTS } from '../../config/instruments';
 import { useBacktestStore } from '../../store/backtestStore';
 import { useBrokerStore } from '../../store/brokerStore';
-import { translations } from '../../i18n/translations';
+import { getTranslation } from '../../i18n';
 import { Position } from '../../types/order';
 import { BrokerPosition } from '../../types/broker';
 import { EconomicCalendarTab } from './EconomicCalendarTab';
@@ -73,7 +73,7 @@ export const PositionsTable: React.FC = () => {
 
   const isLiveActive = isLiveTradingMode && connectionStatus === 'CONNECTED';
 
-  const t = translations[language] || translations.vi;
+  const t = getTranslation(language);
   const currentCandle = candles[currentIndex];
 
   const formatPrice = (symbol: string, price?: number) => {
@@ -214,7 +214,7 @@ export const PositionsTable: React.FC = () => {
           >
             <Calendar className="w-3.5 h-3.5 text-amber-400" />
             <span>
-              {t.economicCalendar || 'Lịch Kinh Tế'} ({economicNews.length})
+              {t.economicCalendar} ({economicNews.length})
             </span>
           </button>
         </div>

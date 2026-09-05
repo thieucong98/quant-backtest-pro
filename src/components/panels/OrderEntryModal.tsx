@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, ShieldAlert, ArrowUpRight, ArrowDownRight, Calculator, Zap, Globe } from 'lucide-react';
 import { useBacktestStore } from '../../store/backtestStore';
 import { useBrokerStore } from '../../store/brokerStore';
-import { translations } from '../../i18n/translations';
+import { getTranslation, formatText } from '../../i18n';
 import { OrderSide, OrderType } from '../../types/order';
 
 export const OrderEntryModal: React.FC = () => {
@@ -30,7 +30,7 @@ export const OrderEntryModal: React.FC = () => {
   const isLiveActive = isLiveTradingMode && connectionStatus === 'CONNECTED';
   const activeAccount = isLiveActive && brokerAccount ? brokerAccount : backtestAccount;
 
-  const t = translations[language] || translations.vi;
+  const t = getTranslation(language);
 
   const currentCandle = candles[currentIndex];
 
@@ -116,10 +116,10 @@ export const OrderEntryModal: React.FC = () => {
           'QuantPro Live'
         );
         if (res.success) {
-          useBacktestStore.getState().addStrategyLog('INFO', `🔴 [LIVE EXNESS MT5] Khớp lệnh ${side} ${lotSize}L ${instrument.symbol} (Ticket #${res.ticket || 'OK'})`);
+          useBacktestStore.getState().addStrategyLog('INFO', formatText(t.liveOrderFilledLog, { side, lot: lotSize, symbol: instrument.symbol, ticket: res.ticket || 'OK' }));
           setOrderModalOpen(false);
         } else {
-          alert(`Không thể đặt lệnh sàn: ${res.message || 'Unknown error'}`);
+          alert(formatText(t.liveOrderFailedAlert, { message: res.message || 'Unknown error' }));
         }
       } else {
         const price = parseFloat(pendingPrice);
@@ -135,10 +135,10 @@ export const OrderEntryModal: React.FC = () => {
           'QuantPro Pending'
         );
         if (res.success) {
-          useBacktestStore.getState().addStrategyLog('INFO', `🟡 [LIVE MT5 PENDING] Đã đặt lệnh ${orderType} ${lotSize}L @ ${price} (Ticket #${res.ticket || 'OK'})`);
+          useBacktestStore.getState().addStrategyLog('INFO', formatText(t.livePendingPlacedLog, { orderType, lot: lotSize, price, ticket: res.ticket || 'OK' }));
           setOrderModalOpen(false);
         } else {
-          alert(`Không thể đặt lệnh chờ: ${res.message || 'Unknown error'}`);
+          alert(formatText(t.livePendingFailedAlert, { message: res.message || 'Unknown error' }));
         }
       }
       return;

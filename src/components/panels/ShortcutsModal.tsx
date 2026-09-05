@@ -1,7 +1,7 @@
 import React from 'react';
 import { X, Keyboard } from 'lucide-react';
 import { useBacktestStore } from '../../store/backtestStore';
-import { translations } from '../../i18n/translations';
+import { getTranslation } from '../../i18n';
 
 interface ShortcutsModalProps {
   isOpen: boolean;
@@ -10,7 +10,7 @@ interface ShortcutsModalProps {
 
 export const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose }) => {
   const { language } = useBacktestStore();
-  const t = translations[language] || translations.en;
+  const t = getTranslation(language);
 
   if (!isOpen) return null;
 

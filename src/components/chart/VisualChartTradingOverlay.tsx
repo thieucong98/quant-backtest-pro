@@ -5,6 +5,7 @@ import { useBacktestStore } from '../../store/backtestStore';
 import { useBrokerStore } from '../../store/brokerStore';
 import { InstrumentSpec } from '../../types/market';
 import { MultiAssetMathEngine } from '../../engine/quantMath';
+import { getTranslation } from '../../i18n';
 
 interface VisualChartTradingOverlayProps {
   chartApi: IChartApi | null;
@@ -37,8 +38,11 @@ export const VisualChartTradingOverlay: React.FC<VisualChartTradingOverlayProps>
     setBreakeven: setBacktestBE,
     partialClose: partialCloseBacktest,
     closePosition: closeBacktestPosition,
-    account: backtestAccount
+    account: backtestAccount,
+    language
   } = useBacktestStore();
+
+  const t = getTranslation(language);
 
   const {
     isLiveTradingMode,
@@ -279,7 +283,7 @@ export const VisualChartTradingOverlay: React.FC<VisualChartTradingOverlayProps>
                       ? setLiveBreakeven(pos.ticket)
                       : setBacktestBE(pos.id)
                   }
-                  title="Dời Stop Loss về Break-Even"
+                  title={t.moveSLBreakEven}
                   className="px-1.5 py-0.5 text-[10px] font-bold bg-amber-500/20 text-amber-300 hover:bg-amber-500/40 rounded transition-colors"
                 >
                   BE
@@ -292,7 +296,7 @@ export const VisualChartTradingOverlay: React.FC<VisualChartTradingOverlayProps>
                       ? partialCloseLive(pos.ticket, 50)
                       : partialCloseBacktest(pos.id, 50)
                   }
-                  title="Đóng 50% khối lượng"
+                  title={t.closeHalfVolume}
                   className="px-1.5 py-0.5 text-[10px] font-bold bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/40 rounded transition-colors"
                 >
                   50%
@@ -305,7 +309,7 @@ export const VisualChartTradingOverlay: React.FC<VisualChartTradingOverlayProps>
                       ? closeLivePosition(pos.ticket)
                       : closeBacktestPosition(pos.id)
                   }
-                  title="Đóng toàn bộ vị thế"
+                  title={t.closeAllPositions}
                   className="p-0.5 text-rose-400 hover:bg-rose-500/30 rounded transition-colors"
                 >
                   <X className="w-3 h-3" />

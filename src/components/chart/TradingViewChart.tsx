@@ -30,7 +30,7 @@ import {
 } from 'lucide-react';
 import { useBacktestStore } from '../../store/backtestStore';
 import { useBrokerStore } from '../../store/brokerStore';
-import { translations } from '../../i18n/translations';
+import { getTranslation, formatText } from '../../i18n';
 import { Candle, ChartType, InstrumentSpec, Timeframe } from '../../types/market';
 import { MultiAssetMathEngine } from '../../engine/quantMath';
 import { snapEventToBarTime, getCurrenciesForSymbol } from '../../config/newsEvents';
@@ -149,7 +149,7 @@ export const TradingViewChart: React.FC = () => {
   } = useBrokerStore();
 
   const isLiveActive = isLiveTradingMode && brokerStatus === 'CONNECTED';
-  const t = translations[language] || translations.vi;
+  const t = getTranslation(language);
 
   // Real-time second clock for live candle countdown
   const [nowSec, setNowSec] = useState<number>(() => Math.floor(Date.now() / 1000));
@@ -741,14 +741,14 @@ export const TradingViewChart: React.FC = () => {
     if (isLiveActive && brokerStatus === 'CONNECTED') {
       const res = await executeLiveMarketOrder(instrument.symbol, side, quickLot, slPrice, tpPrice);
       if (res.success) {
-        addStrategyLog('INFO', `🔴 [LIVE QUICK TRADE] Khớp lệnh ${side} ${quickLot}L ${instrument.symbol} (#${res.ticket || 'OK'})`);
+        addStrategyLog('INFO', formatText(t.quickTradeLiveFilled, { side, lot: quickLot, symbol: instrument.symbol, ticket: res.ticket || 'OK' }));
       } else {
-        alert(`Không thể đặt lệnh ${side} trên sàn: ${res.message || 'Lỗi khớp lệnh MT5'}`);
+        alert(formatText(t.quickTradeLiveFailed, { side, message: res.message || 'Error' }));
       }
       return;
     } else {
       executeMarketOrder(side, quickLot, slPrice, tpPrice);
-      addStrategyLog('INFO', `🔵 [SANDBOX QUICK TRADE] Khớp lệnh ${side} ${quickLot}L ${instrument.symbol}`);
+      addStrategyLog('INFO', formatText(t.quickTradeSandboxFilled, { side, lot: quickLot, symbol: instrument.symbol }));
     }
   };
 

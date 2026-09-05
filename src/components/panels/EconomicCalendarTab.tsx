@@ -12,7 +12,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { useBacktestStore } from '../../store/backtestStore';
-import { translations } from '../../i18n/translations';
+import { getTranslation, formatText } from '../../i18n';
 import { EconomicNewsEvent } from '../../config/newsEvents';
 
 const COUNTRY_FLAGS: Record<string, string> = {
@@ -52,7 +52,7 @@ export const EconomicCalendarTab: React.FC = () => {
     language
   } = useBacktestStore();
 
-  const t = translations[language] || translations.vi;
+  const t = getTranslation(language);
   const [searchQuery, setSearchQuery] = useState('');
 
   const currentCandle = candles[currentIndex];
@@ -119,7 +119,7 @@ export const EconomicCalendarTab: React.FC = () => {
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
-              {t.calendarFilterAll || 'Tất Cả'}
+              {t.calendarFilterAllShort}
             </button>
             <button
               onClick={() => setEconomicNewsFilter('HIGH')}
@@ -130,7 +130,7 @@ export const EconomicCalendarTab: React.FC = () => {
               }`}
             >
               <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
-              {t.calendarFilterHigh || 'Tin Đỏ (HIGH)'}
+              {t.calendarFilterOnlyRed}
             </button>
             <button
               onClick={() => setEconomicNewsFilter('HIGH_MEDIUM')}
@@ -141,13 +141,13 @@ export const EconomicCalendarTab: React.FC = () => {
               }`}
             >
               <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-              {t.calendarFilterHighMed || 'Đỏ + Vàng'}
+              {t.calendarFilterRedYellow}
             </button>
           </div>
 
           {/* Currency Dropdown */}
           <div className="flex items-center gap-1.5">
-            <span className="text-slate-500 text-[11px]">Tiền tệ:</span>
+            <span className="text-slate-500 text-[11px]">{t.calendarCurrency}:</span>
             <select
               value={selectedCalendarCurrency}
               onChange={(e) => setSelectedCalendarCurrency(e.target.value)}
@@ -155,7 +155,7 @@ export const EconomicCalendarTab: React.FC = () => {
             >
               {availableCurrencies.map((curr) => (
                 <option key={curr} value={curr}>
-                  {curr === 'ALL' ? 'Tất Cả Tiền Tệ' : `${COUNTRY_FLAGS[curr] || ''} ${curr}`}
+                  {curr === 'ALL' ? t.calendarAllCurrencies : `${COUNTRY_FLAGS[curr] || ''} ${curr}`}
                 </option>
               ))}
             </select>
@@ -166,7 +166,7 @@ export const EconomicCalendarTab: React.FC = () => {
             <Search className="w-3 h-3 absolute left-2 top-2 text-slate-500" />
             <input
               type="text"
-              placeholder="Tìm kiếm sự kiện..."
+              placeholder={t.calendarSearchPlaceholder}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="bg-slate-900 border border-slate-800 text-slate-200 rounded pl-6 pr-2 py-1 text-[11px] w-36 sm:w-44 focus:outline-none focus:border-indigo-500 placeholder-slate-600"
@@ -178,11 +178,11 @@ export const EconomicCalendarTab: React.FC = () => {
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 text-[11px]">
             <span className="text-emerald-400 font-semibold flex items-center gap-1">
-              <CheckCircle2 className="w-3 h-3" /> {pastCount} đã qua
+              <CheckCircle2 className="w-3 h-3" /> {formatText(t.calendarPassedCount, { count: pastCount })}
             </span>
             <span className="text-slate-600">|</span>
             <span className="text-amber-400 font-semibold flex items-center gap-1">
-              <Clock className="w-3 h-3" /> {upcomingCount} sắp tới
+              <Clock className="w-3 h-3" /> {formatText(t.calendarUpcomingCount, { count: upcomingCount })}
             </span>
           </div>
 
@@ -193,10 +193,10 @@ export const EconomicCalendarTab: React.FC = () => {
               className="bg-slate-900 border border-slate-800 text-amber-300 rounded px-2 py-1 text-[11px] font-mono focus:outline-none focus:border-amber-500"
               title={t.calendarDisplayMode}
             >
-              <option value="AUTO">🧠 Auto Smart</option>
-              <option value="COMPACT">🏷️ Tối Giản (Icon)</option>
-              <option value="CLUSTERED">📦 Gộp Cụm</option>
-              <option value="FULL">📜 Chi Tiết</option>
+              <option value="AUTO">🧠 {t.calendarModeAuto?.split('(')[0]?.trim() || 'Auto Smart'}</option>
+              <option value="COMPACT">🏷️ {t.calendarModeCompact?.split('(')[0]?.trim() || 'Compact'}</option>
+              <option value="CLUSTERED">📦 {t.calendarModeClustered?.split('(')[0]?.trim() || 'Clustered'}</option>
+              <option value="FULL">📜 {t.calendarModeFull?.split('(')[0]?.trim() || 'Full'}</option>
             </select>
           )}
 
@@ -207,10 +207,10 @@ export const EconomicCalendarTab: React.FC = () => {
                 ? 'bg-indigo-950/80 border-indigo-500/50 text-indigo-300'
                 : 'bg-slate-900 border-slate-800 text-slate-500 hover:text-slate-400'
             }`}
-            title={t.calendarShowOnChart || 'Hiển thị trên biểu đồ'}
+            title={t.calendarShowOnChart}
           >
             {showEconomicNews ? <Eye className="w-3 h-3 text-indigo-400" /> : <EyeOff className="w-3 h-3 text-slate-500" />}
-            <span>{showEconomicNews ? 'Biểu Đồ: BẬT' : 'Biểu Đồ: TẮT'}</span>
+            <span>{showEconomicNews ? t.calendarChartToggleActive : t.calendarChartToggleInactive}</span>
           </button>
         </div>
       </div>
@@ -220,20 +220,20 @@ export const EconomicCalendarTab: React.FC = () => {
         {filteredEvents.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-slate-500">
             <AlertCircle className="w-6 h-6 mb-2 text-slate-600" />
-            <p>{t.calendarNoEvents || 'Không có sự kiện kinh tế nào phù hợp với bộ lọc.'}</p>
+            <p>{t.calendarNoEvents}</p>
           </div>
         ) : (
           <table className="w-full text-left border-collapse min-w-[760px]">
             <thead>
               <tr className="border-b border-slate-800 text-slate-400 bg-slate-900/50 sticky top-0 text-[11px]">
-                <th className="py-1.5 px-3">Thời Gian (UTC)</th>
-                <th className="py-1.5 px-2">Tiền Tệ</th>
-                <th className="py-1.5 px-2 text-center">Tác Động</th>
-                <th className="py-1.5 px-3">Sự Kiện Kinh Tế</th>
-                <th className="py-1.5 px-2 text-right">Công Bố (Actual)</th>
-                <th className="py-1.5 px-2 text-right">Dự Báo (Forecast)</th>
-                <th className="py-1.5 px-2 text-right">Kỳ Trước (Prev)</th>
-                <th className="py-1.5 px-3 text-center">Trạng Thái</th>
+                <th className="py-1.5 px-3">{t.calendarTimeUTC}</th>
+                <th className="py-1.5 px-2">{t.calendarCurrency}</th>
+                <th className="py-1.5 px-2 text-center">{t.calendarImpact}</th>
+                <th className="py-1.5 px-3">{t.calendarEvent}</th>
+                <th className="py-1.5 px-2 text-right">{t.calendarActual}</th>
+                <th className="py-1.5 px-2 text-right">{t.calendarForecast}</th>
+                <th className="py-1.5 px-2 text-right">{t.calendarPrevious}</th>
+                <th className="py-1.5 px-3 text-center">{t.calendarStatus}</th>
               </tr>
             </thead>
             <tbody>
@@ -289,12 +289,12 @@ export const EconomicCalendarTab: React.FC = () => {
                           {ev.title}
                         </span>
                         {ev.sentiment === 'BULLISH' && (
-                          <span title="Tác động tích cực (Bullish)">
+                          <span title={t.calendarBullishImpact}>
                             <TrendingUp className="w-3 h-3 text-emerald-400 shrink-0" />
                           </span>
                         )}
                         {ev.sentiment === 'BEARISH' && (
-                          <span title="Tác động tiêu cực (Bearish)">
+                          <span title={t.calendarBearishImpact}>
                             <TrendingDown className="w-3 h-3 text-rose-400 shrink-0" />
                           </span>
                         )}
@@ -314,7 +314,7 @@ export const EconomicCalendarTab: React.FC = () => {
                           {ev.actual || '---'}
                         </span>
                       ) : (
-                        <span className="text-slate-500 font-normal">Chưa có</span>
+                        <span className="text-slate-500 font-normal">{t.calendarNotAvailable}</span>
                       )}
                     </td>
                     <td className="py-1.5 px-2 text-right text-slate-400">
@@ -326,11 +326,11 @@ export const EconomicCalendarTab: React.FC = () => {
                     <td className="py-1.5 px-3 text-center whitespace-nowrap">
                       {isPast ? (
                         <span className="text-[10px] text-emerald-400 bg-emerald-950/60 border border-emerald-500/30 px-1.5 py-0.5 rounded font-semibold">
-                          ✅ Đã qua
+                          ✅ {t.calendarStatusPassed}
                         </span>
                       ) : (
                         <span className="text-[10px] text-amber-400 bg-amber-950/60 border border-amber-500/30 px-1.5 py-0.5 rounded font-semibold">
-                          ⏳ Sắp diễn ra
+                          ⏳ {t.calendarStatusUpcoming}
                         </span>
                       )}
                     </td>

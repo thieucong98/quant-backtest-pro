@@ -14,7 +14,7 @@ import {
   Sliders
 } from 'lucide-react';
 import { useBacktestStore } from '../../store/backtestStore';
-import { translations } from '../../i18n/translations';
+import { getTranslation } from '../../i18n';
 
 export const AIBotHUD: React.FC = () => {
   const {
@@ -28,7 +28,7 @@ export const AIBotHUD: React.FC = () => {
     language
   } = useBacktestStore();
 
-  const t = translations[language] || translations.vi;
+  const t = getTranslation(language);
   const [isMinimized, setIsMinimized] = useState(true);
 
   // Chỉ hiển thị khi có activeStrategy

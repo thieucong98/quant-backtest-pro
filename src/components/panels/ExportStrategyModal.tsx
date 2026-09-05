@@ -17,7 +17,7 @@ import {
 import { AIStrategyDefinition } from '../../types/strategy';
 import { StrategyExporter, ExportPlatform, EXPORT_PLATFORMS } from '../../engine/strategyExporter';
 import { useBacktestStore } from '../../store/backtestStore';
-import { translations } from '../../i18n/translations';
+import { getTranslation } from '../../i18n';
 import { DEFAULT_LLM_CONFIG, LLMConfig } from '../../engine/aiService';
 import { useAuthStore } from '../../store/authStore';
 
@@ -35,7 +35,7 @@ export const ExportStrategyModal: React.FC<ExportStrategyModalProps> = ({
   strategy
 }) => {
   const { instrument, language } = useBacktestStore();
-  const t = translations[language] || translations.vi;
+  const t = getTranslation(language);
 
   const [activePlatform, setActivePlatform] = useState<ExportPlatform>('pine');
   const [generatedCode, setGeneratedCode] = useState<string>('');

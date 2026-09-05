@@ -51,9 +51,9 @@ export const KAGGLE_PRESETS: KaggleDatasetPreset[] = [
     symbol: 'XAUUSD',
     slug: 'novandraanugrah/xauusd-gold-price-historical-data-2004-2024',
     category: 'Forex & Commodities',
-    description: 'Báo giá vàng thể chế thực tế 20 năm (M1, M5, M15, M30, H1, H4, D1). Tải lẻ từng file (297KB) hoặc toàn bộ gói nén.',
+    description: '20-year institutional gold quotes (M1, M5, M15, M30, H1, H4, D1). Download individual files or full package.',
     files: [
-      { name: 'XAU_1d_data.csv', tf: 'D1', sizeEstimate: '297 KB (Tải tức thì)' },
+      { name: 'XAU_1d_data.csv', tf: 'D1', sizeEstimate: '297 KB (Instant)' },
       { name: 'XAU_4h_data.csv', tf: 'H4', sizeEstimate: '1.7 MB (~1s)' },
       { name: 'XAU_1h_data.csv', tf: 'H1', sizeEstimate: '6.5 MB (~1.5s)' },
       { name: 'XAU_30m_data.csv', tf: 'M30', sizeEstimate: '13 MB (~2.5s)' },
@@ -68,7 +68,7 @@ export const KAGGLE_PRESETS: KaggleDatasetPreset[] = [
     symbol: 'BTCUSD',
     slug: 'novandraanugrah/bitcoin-historical-datasets-2018-2026-binance-api',
     category: 'Crypto',
-    description: 'Dữ liệu Bitcoin chuẩn từ sàn Binance đa khung thời gian từ 2018 đến nay.',
+    description: 'Standard Bitcoin historical dataset from Binance API across multiple timeframes.',
     files: [
       { name: 'BTCUSDT_1d_data.csv', tf: 'D1', sizeEstimate: '350 KB' },
       { name: 'BTCUSDT_1h_data.csv', tf: 'H1', sizeEstimate: '8 MB' },
@@ -82,7 +82,7 @@ export const KAGGLE_PRESETS: KaggleDatasetPreset[] = [
     symbol: 'ETHUSD',
     slug: 'novandraanugrah/ethereum-price-data-binance-api-2017-now',
     category: 'Crypto',
-    description: 'Dữ liệu Ethereum từ 2017 đến nay, cung cấp các khung nến tiêu chuẩn.',
+    description: 'Ethereum price dataset from 2017 to present with standard candlestick timeframes.',
     files: [
       { name: 'ETHUSDT_1d_data.csv', tf: 'D1', sizeEstimate: '300 KB' },
       { name: 'ETHUSDT_1h_data.csv', tf: 'H1', sizeEstimate: '7 MB' },
@@ -91,12 +91,12 @@ export const KAGGLE_PRESETS: KaggleDatasetPreset[] = [
     ]
   },
   {
-    id: 'nas100',
+    id: 'us100',
     name: 'NASDAQ 100 (NAS100) Historical Price Data',
     symbol: 'US100',
     slug: 'novandraanugrah/nasdaq-100-nas100-historical-price-data',
     category: 'Indices',
-    description: 'Chỉ số công nghệ Mỹ Nasdaq 100 với báo giá lịch sử chuẩn phân tích kỹ thuật.',
+    description: 'US Tech 100 (Nasdaq 100) historical market data for technical analysis.',
     files: [
       { name: 'NAS100_1d_data.csv', tf: 'D1', sizeEstimate: '280 KB' },
       { name: 'NAS100_1h_data.csv', tf: 'H1', sizeEstimate: '6 MB' },
@@ -110,7 +110,7 @@ export const KAGGLE_PRESETS: KaggleDatasetPreset[] = [
     symbol: 'US30',
     slug: 'novandraanugrah/dow-jones-30-us30-historical-price-data',
     category: 'Indices',
-    description: 'Chỉ số trung bình công nghiệp Dow Jones 30 qua các chu kỳ thị trường lớn.',
+    description: 'Dow Jones Industrial Average (US30) historical price data across market cycles.',
     files: [
       { name: 'US30_1d_data.csv', tf: 'D1', sizeEstimate: '280 KB' },
       { name: 'US30_1h_data.csv', tf: 'H1', sizeEstimate: '6 MB' },

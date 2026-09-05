@@ -82,10 +82,10 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ chart, series }) =
     addDrawing(newDrawing);
     setIsDrawing(false);
     setCurrentPoints([]);
-    setActiveTool('cursor'); // Reset về con trỏ sau khi vẽ
+    setActiveTool('cursor'); // Reset to cursor tool after completing drawing
   };
 
-  // Render các nét vẽ trên Canvas
+  // Render drawings on Canvas
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || !chart || !series) return;

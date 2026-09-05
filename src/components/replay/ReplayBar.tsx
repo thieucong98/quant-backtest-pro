@@ -15,7 +15,7 @@ import {
   FastForward
 } from 'lucide-react';
 import { useBacktestStore } from '../../store/backtestStore';
-import { translations } from '../../i18n/translations';
+import { getTranslation } from '../../i18n';
 
 export const ReplayBar: React.FC = () => {
   const {
@@ -35,7 +35,7 @@ export const ReplayBar: React.FC = () => {
     language
   } = useBacktestStore();
 
-  const t = translations[language] || translations.vi;
+  const t = getTranslation(language);
 
   const [isTimePickerOpen, setIsTimePickerOpen] = useState(false);
   const [selectedDateTime, setSelectedDateTime] = useState('');

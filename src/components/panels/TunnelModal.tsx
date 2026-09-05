@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { useTunnelStore } from '../../store/tunnelStore';
 import { useBacktestStore } from '../../store/backtestStore';
-import { translations } from '../../i18n/translations';
+import { getTranslation } from '../../i18n';
 
 export const TunnelModal: React.FC = () => {
   const isTunnelModalOpen = useTunnelStore(s => s.isTunnelModalOpen);
@@ -35,7 +35,7 @@ export const TunnelModal: React.FC = () => {
   const setPin = useTunnelStore(s => s.setPin);
 
   const { language } = useBacktestStore();
-  const t = translations[language] || translations.en;
+  const t = getTranslation(language);
 
   const [selectedProvider, setSelectedProvider] = useState<'CLOUDFLARE' | 'LOCALTUNNEL'>('CLOUDFLARE');
   const [pinInput, setPinInput] = useState(pin || '');
@@ -110,16 +110,16 @@ export const TunnelModal: React.FC = () => {
             </div>
             <div>
               <h2 className="text-base font-semibold text-slate-100 flex items-center gap-2">
-                {t.remoteTunnelTitle || 'Quản Lý Tunnel & Truy Cập Từ Xa'}
+                {t.remoteTunnelTitle}
                 {isActive && (
                   <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5 shadow-xs shadow-emerald-500/20">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                    {t.tunnelOnlineBadge || 'ONLINE'}
+                    {t.tunnelOnlineBadge}
                   </span>
                 )}
               </h2>
               <p className="text-xs text-slate-400">
-                {t.remoteTunnelDesc || 'Mở cổng kết nối HTTPS an toàn ra Internet để truy cập từ điện thoại/tablet.'}
+                {t.remoteTunnelDesc}
               </p>
             </div>
           </div>
@@ -137,7 +137,7 @@ export const TunnelModal: React.FC = () => {
             <div className="p-3.5 bg-rose-500/10 border border-rose-500/30 rounded-xl flex items-start gap-3 text-rose-300 text-xs animate-in fade-in">
               <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
               <div>
-                <p className="font-semibold">Lỗi khởi tạo Tunnel</p>
+                <p className="font-semibold">{t.tunnelInitError}</p>
                 <p className="opacity-90">{error}</p>
               </div>
             </div>
@@ -152,7 +152,7 @@ export const TunnelModal: React.FC = () => {
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-emerald-400 font-semibold flex items-center gap-1.5">
                     <Zap className="w-3.5 h-3.5" />
-                    {t.publicUrlLabel || 'Đường Link Công Khai (HTTPS):'}
+                    {t.publicUrlLabel}
                   </span>
                   <span className="text-[11px] text-slate-400">
                     Uptime: <strong className="text-slate-200 font-mono">{uptimeDisplay}</strong>
@@ -169,17 +169,17 @@ export const TunnelModal: React.FC = () => {
                   <button
                     onClick={handleCopy}
                     className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-medium flex items-center gap-1.5 transition border border-slate-700 active:scale-95"
-                    title={t.copyLink || 'Sao chép link'}
+                    title={t.copyLink}
                   >
                     {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 text-slate-400" />}
-                    <span>{copied ? (t.linkCopied || 'Đã chép') : (t.copyLink || 'Copy')}</span>
+                    <span>{copied ? t.linkCopied : t.copyLink}</span>
                   </button>
                   <a
                     href={publicUrl}
                     target="_blank"
                     rel="noreferrer"
                     className="p-2 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 rounded-lg transition active:scale-95 flex items-center justify-center"
-                    title="Mở tab mới"
+                    title={t.openNewTab}
                   >
                     <ExternalLink className="w-4 h-4" />
                   </a>
@@ -202,17 +202,17 @@ export const TunnelModal: React.FC = () => {
                 <div className="space-y-2 text-center sm:text-left">
                   <h4 className="text-xs font-semibold text-slate-200 flex items-center justify-center sm:justify-start gap-1.5">
                     <Smartphone className="w-4 h-4 text-emerald-400" />
-                    {t.scanQrCode || 'Quét mã QR để mở trên Điện thoại / Tablet'}
+                    {t.scanQrCode}
                   </h4>
                   <p className="text-[11px] text-slate-400 leading-relaxed">
-                    Dùng camera điện thoại (iOS / Android) quét mã QR để mở trực tiếp QuantBacktest Pro trên thiết bị di động. Tất cả tính năng đặt lệnh, chart và replay đều được đồng bộ thời gian thực!
+                    {t.tunnelQrHint}
                   </p>
                   <div className="flex flex-wrap items-center gap-2 pt-1">
                     <span className="px-2 py-0.5 text-[10px] bg-slate-800 border border-slate-700 rounded text-slate-300">
-                      Cổng nội bộ: <strong>:{port}</strong>
+                      {t.tunnelLocalPort}: <strong>:{port}</strong>
                     </span>
                     <span className="px-2 py-0.5 text-[10px] bg-indigo-950/60 border border-indigo-800/40 rounded text-indigo-300">
-                      Giao thức: <strong>{provider}</strong>
+                      {t.tunnelProtocol}: <strong>{provider}</strong>
                     </span>
                   </div>
                 </div>
@@ -225,7 +225,7 @@ export const TunnelModal: React.FC = () => {
               <div className="space-y-1.5">
                 <label className="text-xs font-medium text-slate-300 flex items-center gap-1.5">
                   <Server className="w-3.5 h-3.5 text-indigo-400" />
-                  {t.tunnelProvider || 'Nhà cung cấp Tunnel:'}
+                  {t.tunnelProvider}
                 </label>
                 <div className="grid grid-cols-2 gap-3">
                   <button
@@ -237,7 +237,7 @@ export const TunnelModal: React.FC = () => {
                       <span className="text-xs font-bold text-slate-200">Cloudflare Argo</span>
                       {selectedProvider === 'CLOUDFLARE' && <span className="w-2 h-2 rounded-full bg-indigo-400" />}
                     </div>
-                    <p className="text-[10px] text-slate-400">Tốc độ cao, mã hóa HTTPS, 100% không cần token.</p>
+                    <p className="text-[10px] text-slate-400">{t.tunnelCloudflareDesc}</p>
                   </button>
 
                   <button
@@ -249,7 +249,7 @@ export const TunnelModal: React.FC = () => {
                       <span className="text-xs font-bold text-slate-200">Localtunnel</span>
                       {selectedProvider === 'LOCALTUNNEL' && <span className="w-2 h-2 rounded-full bg-indigo-400" />}
                     </div>
-                    <p className="text-[10px] text-slate-400">Node.js thuần, hoạt động trực tiếp qua loca.lt.</p>
+                    <p className="text-[10px] text-slate-400">{t.tunnelLocaltunnelDesc}</p>
                   </button>
                 </div>
               </div>
@@ -259,15 +259,15 @@ export const TunnelModal: React.FC = () => {
                 <label className="text-xs font-medium text-slate-300 flex items-center justify-between">
                   <span className="flex items-center gap-1.5">
                     <Shield className="w-3.5 h-3.5 text-amber-400" />
-                    {t.securityPin || 'Mã PIN Bảo Vệ (Tùy chọn):'}
+                    {t.securityPin}
                   </span>
-                  <span className="text-[10px] text-slate-500">Bảo mật khi chia sẻ link</span>
+                  <span className="text-[10px] text-slate-500">{t.tunnelPinHint}</span>
                 </label>
                 <div className="relative">
                   <input
                     type="text"
                     maxLength={8}
-                    placeholder="VD: 8888 (Để trống nếu không cần)"
+                    placeholder={t.tunnelPinPlaceholder}
                     value={pinInput}
                     onChange={(e) => setPinInput(e.target.value)}
                     className="w-full bg-slate-950/70 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 font-mono pl-9"
@@ -280,12 +280,12 @@ export const TunnelModal: React.FC = () => {
               <div className="p-3.5 bg-slate-950/30 border border-slate-800/80 rounded-xl space-y-2">
                 <div className="text-[11px] text-slate-300 font-semibold flex items-center gap-1.5">
                   <Zap className="w-3.5 h-3.5 text-amber-400" />
-                  Đặc quyền khi bật Remote Tunnel:
+                  {t.tunnelPerksTitle}
                 </div>
                 <ul className="text-[11px] text-slate-400 space-y-1 list-disc list-inside">
-                  <li>Truy cập toàn bộ đồ thị TradingView & nạp nến M1/M5 từ bên ngoài.</li>
-                  <li>Tương thích 100% giao dịch Live Broker & MT5 Gateway.</li>
-                  <li>Tự động chuyển tiếp API Backend & Database SQLite an toàn.</li>
+                  <li>{t.tunnelPerk1}</li>
+                  <li>{t.tunnelPerk2}</li>
+                  <li>{t.tunnelPerk3}</li>
                 </ul>
               </div>
             </div>
@@ -296,7 +296,7 @@ export const TunnelModal: React.FC = () => {
         <div className="p-4 border-t border-slate-800 bg-slate-950/60 flex items-center justify-between">
           <div className="flex items-center gap-2 text-xs text-slate-400">
             <span className={`w-2 h-2 rounded-full ${isActive ? 'bg-emerald-400 shadow-xs shadow-emerald-400/50' : 'bg-slate-500'}`} />
-            <span>{isActive ? (t.tunnelActive || 'Tunnel Đang Hoạt Động') : (t.tunnelInactive || 'Tunnel Đang Tắt')}</span>
+            <span>{isActive ? t.tunnelActive : t.tunnelInactive}</span>
           </div>
 
           <div className="flex items-center gap-2">
@@ -305,7 +305,7 @@ export const TunnelModal: React.FC = () => {
               onClick={() => setTunnelModalOpen(false)}
               className="px-4 py-2 text-xs font-medium text-slate-400 hover:text-slate-200 transition"
             >
-              Đóng
+              {t.closeModalBtn}
             </button>
 
             <button
@@ -317,17 +317,17 @@ export const TunnelModal: React.FC = () => {
               {isLoading ? (
                 <>
                   <RefreshCw className="w-4 h-4 animate-spin" />
-                  <span>Đang khởi tạo...</span>
+                  <span>{t.tunnelInitializing}</span>
                 </>
               ) : isActive ? (
                 <>
                   <X className="w-4 h-4" />
-                  <span>{t.stopTunnel || 'Tắt Tunnel'}</span>
+                  <span>{t.stopTunnel}</span>
                 </>
               ) : (
                 <>
                   <Radio className="w-4 h-4" />
-                  <span>{t.startTunnel || 'Bật Tunnel Công Khai'}</span>
+                  <span>{t.startTunnel}</span>
                 </>
               )}
             </button>

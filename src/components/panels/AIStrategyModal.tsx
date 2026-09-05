@@ -42,7 +42,7 @@ import {
   HeatmapCell
 } from '../../engine/strategyOptimizer';
 import { useBacktestStore } from '../../store/backtestStore';
-import { translations, formatDate } from '../../i18n/translations';
+import { getTranslation, formatDate } from '../../i18n';
 import { AIStrategyDefinition } from '../../types/strategy';
 import { strategiesApi } from '../../api';
 import { ExportStrategyModal } from './ExportStrategyModal';
@@ -107,7 +107,7 @@ export const AIStrategyModal: React.FC = () => {
     strategyRunner
   } = useBacktestStore();
 
-  const t = translations[language] || translations.vi;
+  const t = getTranslation(language);
 
   const [activeTab, setActiveTab] = useState<'studio' | 'optimizer' | 'my-strategies' | 'templates' | 'settings'>('studio');
 
@@ -396,7 +396,7 @@ export const AIStrategyModal: React.FC = () => {
         parameters: activeStrategy?.parameters || {},
         enabled: true
       });
-      setDbSaveMessage(t.savedToDBSuccess || 'Đã lưu vào DB thành công!');
+      setDbSaveMessage(t.savedToDBSuccess);
       setTimeout(() => setDbSaveMessage(null), 3000);
       addStrategyLog('INFO', `Saved strategy "${strategyName}" to database`);
     } catch (err: any) {
@@ -472,11 +472,11 @@ export const AIStrategyModal: React.FC = () => {
       });
 
       await fetchMyStrategies();
-      setDbSaveMessage(t.importStrategySuccess || 'Đã import chiến lược thành công!');
+      setDbSaveMessage(t.importStrategySuccess);
       setTimeout(() => setDbSaveMessage(null), 3000);
       addStrategyLog('INFO', `[Strategy Import] Successfully imported strategy "${importedName}"`);
     } catch (err: any) {
-      alert(t.importStrategyError || 'Lỗi khi đọc file chiến lược: ' + err.message);
+      alert(t.importStrategyError + (err?.message ? ': ' + err.message : ''));
     } finally {
       if (fileInputRef.current) fileInputRef.current.value = '';
     }

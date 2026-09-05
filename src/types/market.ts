@@ -27,18 +27,18 @@ export interface InstrumentSpec {
   symbol: string;
   name: string;
   category: AssetCategory;
-  contractSize: number;       // VD: 100,000 (FX), 100 (Gold), 5,000 (Silver), 1 (BTC)
-  pipSize: number;            // VD: 0.0001 (EURUSD), 0.1 (XAU), 1.0 (BTC), 0.01 (USDJPY)
-  digits: number;             // Số chữ số thập phân hiển thị
-  minLot: number;             // VD: 0.01 lot
-  maxLot: number;             // VD: 100.0 lot
-  lotStep: number;            // VD: 0.01
-  defaultSpreadPips: number;  // Spread mô phỏng mặc định
+  contractSize: number;       // e.g. 100,000 (FX), 100 (Gold), 5,000 (Silver), 1 (BTC)
+  pipSize: number;            // e.g. 0.0001 (EURUSD), 0.1 (XAU), 1.0 (BTC), 0.01 (USDJPY)
+  digits: number;             // Number of decimal places to display
+  minLot: number;             // e.g. 0.01 lot
+  maxLot: number;             // e.g. 100.0 lot
+  lotStep: number;            // e.g. 0.01
+  defaultSpreadPips: number;  // Default simulated spread in pips
   commissionType: 'PER_LOT' | 'PERCENTAGE';
-  commissionValue: number;    // $7/lot hoặc 0.05%
-  swapLongPips: number;       // Phí qua đêm Long
-  swapShortPips: number;      // Phí qua đêm Short
-  leverage: number;           // Đòn bẩy tài khoản (1:100, 1:500...)
+  commissionValue: number;    // e.g. $7/lot or 0.05%
+  swapLongPips: number;       // Long swap in pips
+  swapShortPips: number;      // Short swap in pips
+  leverage: number;           // Account leverage (e.g. 1:100, 1:500)
   marginCurrency: 'USD' | 'BASE';
 }
 

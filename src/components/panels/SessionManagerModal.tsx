@@ -20,7 +20,7 @@ import {
 import { useBacktestStore } from '../../store/backtestStore';
 import { sessionsApi, SessionListItem } from '../../api/sessions';
 import { INSTRUMENTS } from '../../config/instruments';
-import { translations, formatDate } from '../../i18n/translations';
+import { getTranslation, formatDate } from '../../i18n';
 
 export const SessionManagerModal: React.FC = () => {
   const {
@@ -37,7 +37,7 @@ export const SessionManagerModal: React.FC = () => {
     language
   } = useBacktestStore();
 
-  const t = translations[language] || translations.en;
+  const t = getTranslation(language);
 
   const [sessions, setSessions] = useState<SessionListItem[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);

@@ -637,5 +637,144 @@ export interface TranslationDict {
   kaggleMaxCandlesLabel: string;
   kaggleSuccessMsg: string;
   kaggleHelpNotice: string;
+
+  // Quick buttons, Header & Navigation extras
+  calendarModeAutoShort: string;
+  calendarModeCompactShort: string;
+  calendarModeClusteredShort: string;
+  calendarModeFullShort: string;
+  calendarModeOffShort: string;
+  btnOn: string;
+  btnOff: string;
+  marketWatchTitle: string;
+  marketWatchTooltip: string;
+  calendarCompactDesc: string;
+  calendarClusteredDesc: string;
+  calendarFullDesc: string;
+  calendarFilterOnlyRed: string;
+  calendarFilterRedYellow: string;
+  calendarFilterAllShort: string;
+  calendarOnlyRelatedSymbol: string;
+  brokerSettingsTooltip: string;
+  switchToSandboxTooltip: string;
+  switchToLiveTooltip: string;
+  moreToolsProSuite: string;
+  moreToolsSessionsDesc: string;
+  moreToolsAnalyticsDesc: string;
+  moreToolsDataDesc: string;
+  moreToolsShortcutsHint: string;
+
+  // Economic Calendar Tab
+  calendarTimeUTC: string;
+  calendarCurrency: string;
+  calendarAllCurrencies: string;
+  calendarSearchPlaceholder: string;
+  calendarPassedCount: string;
+  calendarUpcomingCount: string;
+  calendarStatusPassed: string;
+  calendarStatusUpcoming: string;
+  calendarChartToggleActive: string;
+  calendarChartToggleInactive: string;
+  calendarBullishImpact: string;
+  calendarBearishImpact: string;
+  calendarNotAvailable: string;
+
+  // Kaggle Institutional Hub & Data Import
+  kaggleHubSubtitle: string;
+  kaggleHubLeadText: string;
+  kaggleSelectAssetCategory: string;
+  kaggleCustomUrlOption: string;
+  kaggleViewOnKaggle: string;
+  kaggleQuickDownloadHeader: string;
+  kaggleQuickDownloadSubtitle: string;
+  kaggle1ClickDownloadBtn: string;
+  kaggleLoadingBtn: string;
+  kaggleInstantDownloadTag: string;
+  kaggleFullM1Tag: string;
+  kaggleCustomDatasetTitle: string;
+  kaggleCustomDatasetDesc: string;
+  kaggleDatasetSlugLabel: string;
+  kaggleSpecificCsvLabel: string;
+  kaggleDownloadThisFileBtn: string;
+  kaggleFullZipTitle: string;
+  kaggleFullZipSubtitle: string;
+  kaggleCandlesPerTimeframe: string;
+  kaggleRecommendedOption: string;
+  kaggleEntire20YearsOption: string;
+  kaggleDownloadFullZipBtn: string;
+  kaggleApiTokenAccordionTitle: string;
+  kaggleTokenSavedBadge: string;
+  kaggleApiTokenDesc: string;
+  kaggleGetApiKeyLink: string;
+  kaggleLocalZipOrDataTitle: string;
+  kaggleLocalZipOrDataDesc: string;
+  kaggleSelectFileBtn: string;
+  kaggleProcessingStatus: string;
+  kaggleConnectingStatus: string;
+  kaggleStatusDownloading: string;
+  kaggleStatusSuccessSingle: string;
+  kaggleStatusErrorSingle: string;
+  kaggleStatusStreaming: string;
+  kaggleStatusSuccessBatch: string;
+  kaggleStatusErrorApi: string;
+  kaggleStatusScanningData: string;
+  kaggleStatusNotFoundData: string;
+  kaggleStatusSeeding5k: string;
+  kaggleStatusError5k: string;
+  kaggleStatusLoadingFile: string;
+  kaggleStatusExtractingZip: string;
+  kaggleStatusErrorZip: string;
+  kaggleDescGold: string;
+  kaggleDescBtc: string;
+  kaggleDescEth: string;
+  kaggleDescUs100: string;
+  kaggleDescUs30: string;
+
+  // Market Watch Drawer
+  marketWatchTabAll: string;
+  marketWatchTabFavorites: string;
+  marketWatchTabMetals: string;
+  marketWatchTabForex: string;
+  marketWatchTabIndices: string;
+  marketWatchSearchPlaceholder: string;
+  marketWatchNoSymbols: string;
+  marketWatchTotalSymbols: string;
+  marketWatchSyncChart: string;
+  closeTooltip: string;
+
+  // Chart Overlay & Error Boundary
+  moveSLBreakEven: string;
+  closeHalfVolume: string;
+  closeAllPositions: string;
+  errorBoundaryDefaultTitle: string;
+  chartRenderErrorDesc: string;
+  reloadChartBtn: string;
+  errorBoundaryChartTitle: string;
+
+  // Remote Tunnel
+  tunnelInitError: string;
+  openNewTab: string;
+  tunnelQrHint: string;
+  tunnelLocalPort: string;
+  tunnelProtocol: string;
+  tunnelCloudflareDesc: string;
+  tunnelLocaltunnelDesc: string;
+  tunnelPinHint: string;
+  tunnelPinPlaceholder: string;
+  tunnelPerksTitle: string;
+  tunnelPerk1: string;
+  tunnelPerk2: string;
+  tunnelPerk3: string;
+  tunnelInitializing: string;
+
+  // Broker & Trade Execution Logs / Alerts
+  checkGatewayBtn: string;
+  quickTradeLiveFilled: string;
+  quickTradeLiveFailed: string;
+  quickTradeSandboxFilled: string;
+  liveOrderFilledLog: string;
+  liveOrderFailedAlert: string;
+  livePendingPlacedLog: string;
+  livePendingFailedAlert: string;
 }
 

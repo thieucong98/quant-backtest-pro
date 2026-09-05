@@ -17,8 +17,10 @@ import {
   Layers
 } from 'lucide-react';
 import { useBrokerStore } from '../../store/brokerStore';
+import { useBacktestStore } from '../../store/backtestStore';
 import { BrokerType, PositionMode } from '../../types/broker';
 import { brokerApi } from '../../api/broker';
+import { getTranslation } from '../../i18n';
 
 export const BrokerConnectionModal: React.FC = () => {
   const {
@@ -36,6 +38,9 @@ export const BrokerConnectionModal: React.FC = () => {
     isLiveTradingMode,
     setLiveTradingMode
   } = useBrokerStore();
+
+  const language = useBacktestStore((s) => s.language);
+  const t = getTranslation(language);
 
   const [activeTab, setActiveTab] = useState<'mt5' | 'xtb' | 'binance' | 'settings'>('mt5');
   const [isLocalGateway, setIsLocalGateway] = useState<boolean>(
@@ -234,7 +239,7 @@ export const BrokerConnectionModal: React.FC = () => {
                 <button
                   onClick={() => checkHealth()}
                   className="p-1.5 hover:bg-slate-800/80 rounded-lg text-slate-400 hover:text-white transition-colors"
-                  title="Kiểm tra lại kết nối Gateway"
+                  title={t.checkGatewayBtn}
                 >
                   <RefreshCw className={`w-4 h-4 ${healthStatus === 'checking' ? 'animate-spin' : ''}`} />
                 </button>

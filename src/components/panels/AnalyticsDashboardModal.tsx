@@ -36,7 +36,7 @@ import {
 } from 'lucide-react';
 import { AnalyticsEngine, MonteCarloResult, DayHourHeatmapCell, MonthlyCalendarGroup, DailyCalendarCell, PerformanceReport } from '../../engine/analytics';
 import { useBacktestStore } from '../../store/backtestStore';
-import { translations, formatDate } from '../../i18n/translations';
+import { getTranslation, formatDate } from '../../i18n';
 import { analyticsApi, sessionsApi } from '../../api';
 
 export const AnalyticsDashboardModal: React.FC = () => {
@@ -75,7 +75,7 @@ export const AnalyticsDashboardModal: React.FC = () => {
     isServerOnline
   } = useBacktestStore();
 
-  const t = translations[language] || translations.vi;
+  const t = getTranslation(language);
 
   // Close dropdown on outside click
   useEffect(() => {

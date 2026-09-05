@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { useBacktestStore } from '../../store/backtestStore';
-import { translations } from '../../i18n/translations';
+import { getTranslation } from '../../i18n';
 
 interface UserProfileModalProps {
   isOpen: boolean;
@@ -24,7 +24,7 @@ interface UserProfileModalProps {
 export const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onClose }) => {
   const { user, logout } = useAuthStore();
   const { language } = useBacktestStore();
-  const t = translations[language] || translations.vi;
+  const t = getTranslation(language);
 
   if (!isOpen || !user) return null;
 

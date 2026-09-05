@@ -3,7 +3,7 @@ import { Search, X, Check, ArrowRight, Zap, Coins, DollarSign, BarChart2 } from 
 import { INSTRUMENTS } from '../../config/instruments';
 import { AssetCategory } from '../../types/market';
 import { useBacktestStore } from '../../store/backtestStore';
-import { translations } from '../../i18n/translations';
+import { getTranslation } from '../../i18n';
 
 interface SymbolSearchModalProps {
   isOpen: boolean;
@@ -19,7 +19,7 @@ export const SymbolSearchModal: React.FC<SymbolSearchModalProps> = ({
   onSelectSymbol
 }) => {
   const { language } = useBacktestStore();
-  const t = translations[language] || translations.en;
+  const t = getTranslation(language);
 
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<AssetCategory | 'ALL'>('ALL');

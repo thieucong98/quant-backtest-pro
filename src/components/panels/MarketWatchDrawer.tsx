@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import { useBrokerStore } from '../../store/brokerStore';
 import { useBacktestStore } from '../../store/backtestStore';
-import { translations } from '../../i18n/translations';
+import { getTranslation, formatText } from '../../i18n';
 import { AssetCategory } from '../../types/market';
 import { INSTRUMENTS } from '../../config/instruments';
 
@@ -41,7 +41,7 @@ export const MarketWatchDrawer: React.FC = () => {
     language
   } = useBacktestStore();
 
-  const t = translations[language] || translations.vi;
+  const t = getTranslation(language);
 
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
@@ -146,7 +146,7 @@ export const MarketWatchDrawer: React.FC = () => {
           </div>
           <div>
             <div className="text-xs font-bold text-slate-100 flex items-center gap-1.5">
-              <span>Bảng Giá Thị Trường (Market Watch)</span>
+              <span>{t.marketWatchTitle}</span>
               {connectionStatus === 'CONNECTED' && (
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
               )}
@@ -160,7 +160,7 @@ export const MarketWatchDrawer: React.FC = () => {
         <button
           onClick={() => setMarketWatchOpen(false)}
           className="p-1.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors"
-          title="Đóng"
+          title={t.closeTooltip}
         >
           <X className="w-4 h-4" />
         </button>
@@ -174,7 +174,7 @@ export const MarketWatchDrawer: React.FC = () => {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Tìm theo mã (XAUUSD, EURUSD, BTC...)"
+            placeholder={t.marketWatchSearchPlaceholder}
             className="w-full pl-8 pr-7 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 font-mono"
           />
           {search && (
@@ -190,12 +190,12 @@ export const MarketWatchDrawer: React.FC = () => {
         {/* CATEGORY TABS */}
         <div className="flex items-center gap-1 mt-2 overflow-x-auto pb-1 text-[11px] font-mono no-scrollbar">
           {[
-            { id: 'ALL', label: 'TẤT CẢ' },
-            { id: 'FAVORITES', label: '⭐ YÊU THÍCH' },
-            { id: 'METALS', label: '🥇 VÀNG/BẠC' },
-            { id: 'FOREX', label: '💱 TIỀN TỆ' },
+            { id: 'ALL', label: t.marketWatchTabAll },
+            { id: 'FAVORITES', label: t.marketWatchTabFavorites },
+            { id: 'METALS', label: t.marketWatchTabMetals },
+            { id: 'FOREX', label: t.marketWatchTabForex },
             { id: 'CRYPTO', label: '⚡ CRYPTO' },
-            { id: 'INDICES', label: '📊 CHỈ SỐ' }
+            { id: 'INDICES', label: t.marketWatchTabIndices }
           ].map((cat) => (
             <button
               key={cat.id}
@@ -216,7 +216,7 @@ export const MarketWatchDrawer: React.FC = () => {
       <div className="flex-1 overflow-y-auto p-2 space-y-1 font-mono text-xs">
         {filteredSymbols.length === 0 ? (
           <div className="py-12 text-center text-slate-500 text-xs">
-            Không tìm thấy cặp giao dịch phù hợp
+            {t.marketWatchNoSymbols}
           </div>
         ) : (
           filteredSymbols.map((sym) => {
@@ -303,13 +303,13 @@ export const MarketWatchDrawer: React.FC = () => {
       <div className="p-3 bg-slate-950 border-t border-slate-800 text-[11px] text-slate-400 flex items-center justify-between font-mono">
         <div className="flex items-center gap-1.5">
           <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
-          <span>Tổng số: {filteredSymbols.length} cặp</span>
+          <span>{formatText(t.marketWatchTotalSymbols, { count: filteredSymbols.length })}</span>
         </div>
         <button
           onClick={() => handleSelectSymbol(instrument.symbol)}
           className="text-indigo-400 hover:text-indigo-300 font-semibold"
         >
-          Đồng bộ biểu đồ ⚡
+          {t.marketWatchSyncChart}
         </button>
       </div>
     </div>
