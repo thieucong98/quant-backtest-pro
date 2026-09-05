@@ -304,6 +304,8 @@ export const en: TranslationDict = {
   "importSuccessCount": "Successfully imported {count} clean historical bars!",
   "keyboardShortcutsTitle": "Pro Trader Keyboard Shortcuts",
   "keyboardShortcutsDesc": "Boost your backtesting workflow efficiency with institutional hotkeys.",
+  "moreTools": "Tools",
+  "moreToolsDesc": "More Tools & Pro Utilities",
   "shortcutSpace": "Play / Pause Replay playback loop",
   "shortcutF": "Step Forward 1 candle (+1)",
   "shortcutB": "Open Quick Order Ticket modal",

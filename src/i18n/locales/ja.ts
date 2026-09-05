@@ -304,6 +304,8 @@ export const ja: TranslationDict = {
   "importSuccessCount": "{count}本のローソク足を正常に読み込みました！",
   "keyboardShortcutsTitle": "ショートカットキー一覧",
   "keyboardShortcutsDesc": "プロ仕様のショートカットキーでバックテスト効率を大幅に向上させます。",
+  "moreTools": "ツール",
+  "moreToolsDesc": "拡張ツール＆プロ機能",
   "shortcutSpace": "リプレイの再生 / 一時停止",
   "shortcutF": "1本進める (Step Forward +1)",
   "shortcutB": "クイック発注ウィンドウを開く",

@@ -304,6 +304,8 @@ export const zh: TranslationDict = {
   "importSuccessCount": "成功导入 {count} 根干净的历史K线！",
   "keyboardShortcutsTitle": "专业交易员全局快捷键",
   "keyboardShortcutsDesc": "使用量化交易员专属快捷键，倍增回测与操作效率。",
+  "moreTools": "工具",
+  "moreToolsDesc": "扩展工具与专业套件",
   "shortcutSpace": "播放 / 暂停 K线回放循环",
   "shortcutF": "单步前进 1 根K线 (+1)",
   "shortcutB": "打开快捷下单面板",

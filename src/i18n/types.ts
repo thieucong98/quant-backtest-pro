@@ -323,6 +323,8 @@ export interface TranslationDict {
   // Shortcuts Modal
   keyboardShortcutsTitle: string;
   keyboardShortcutsDesc: string;
+  moreTools: string;
+  moreToolsDesc: string;
   shortcutSpace: string;
   shortcutF: string;
   shortcutB: string;

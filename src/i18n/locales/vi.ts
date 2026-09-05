@@ -304,6 +304,8 @@ export const vi: TranslationDict = {
   "importSuccessCount": "Đã nạp thành công {count} nến lịch sử sạch!",
   "keyboardShortcutsTitle": "Danh Sách Phím Tắt Tiện Ích",
   "keyboardShortcutsDesc": "Tăng tốc độ thao tác và nâng cao hiệu suất kiểm thử định lượng bằng các phím tắt chuyên nghiệp.",
+  "moreTools": "Công cụ",
+  "moreToolsDesc": "Công cụ mở rộng và tiện ích phân tích",
   "shortcutSpace": "Play / Pause vòng lặp Replay phát nến",
   "shortcutF": "Tới 1 nến tiếp theo (Step Forward +1)",
   "shortcutB": "Mở cửa sổ Đặt lệnh Nhanh (Order Ticket)",

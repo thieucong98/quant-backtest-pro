@@ -27,7 +27,8 @@ import {
   Eye,
   EyeOff,
   Filter,
-  Sparkles
+  Sparkles,
+  MoreHorizontal
 } from 'lucide-react';
 import { INSTRUMENTS } from '../../config/instruments';
 import { getCurrenciesForSymbol } from '../../config/newsEvents';
@@ -46,6 +47,7 @@ export const Header: React.FC = () => {
   const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false);
   const [isChartTypeDropdownOpen, setIsChartTypeDropdownOpen] = useState(false);
   const [isCalendarMenuOpen, setIsCalendarMenuOpen] = useState(false);
+  const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
 
   const {
@@ -126,21 +128,21 @@ export const Header: React.FC = () => {
     <>
       <header className="h-13 bg-[#101520] border-b border-slate-800/90 px-3 flex items-center justify-between select-none z-30 relative shadow-sm">
         {/* LEFT: BRAND, SYMBOL TICKER & TIMEFRAMES */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 md:gap-2 shrink-0">
           {/* Brand */}
-          <div className="flex items-center gap-2 pr-2 border-r border-slate-800">
+          <div className="flex items-center gap-2 pr-2 border-r border-slate-800 shrink-0">
             <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-md shadow-indigo-500/25 shrink-0">
               <TrendingUp className="w-4 h-4 text-white" />
             </div>
             <span className="font-bold text-xs tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent hidden sm:inline font-mono">
-              QuantBacktest<span className="text-indigo-400 font-mono text-[10px] ml-1 px-1 py-0.2 rounded bg-indigo-950/80 border border-indigo-500/40 font-bold">PRO</span>
+              QuantBacktest<span className="text-indigo-400 font-mono text-[10px] ml-1 px-1 py-0.2 rounded bg-indigo-950/80 border border-indigo-500/40 font-bold hidden 2xl:inline">PRO</span>
             </span>
           </div>
 
           {/* Clean Symbol Button (TradingView Style) */}
           <button
             onClick={() => setIsSymbolModalOpen(true)}
-            className="flex items-center gap-1.5 bg-slate-900/90 hover:bg-slate-800 px-2 py-1.5 rounded-lg border border-slate-700/80 hover:border-indigo-500/50 text-xs font-bold transition-all shadow-xs group"
+            className="flex items-center gap-1.5 bg-slate-900/90 hover:bg-slate-800 px-2 py-1.5 rounded-lg border border-slate-700/80 hover:border-indigo-500/50 text-xs font-bold transition-all shadow-xs group shrink-0"
             title={t.searchSymbol}
           >
             <div className="flex items-center gap-1.5">
@@ -155,7 +157,7 @@ export const Header: React.FC = () => {
           {/* Market Watch Toggle Button */}
           <button
             onClick={() => setMarketWatchOpen(!isMarketWatchOpen)}
-            className={`flex items-center gap-1.5 px-2 py-1.5 rounded-lg border text-xs font-mono transition-all ${
+            className={`hidden sm:flex items-center gap-1.5 px-2 py-1.5 rounded-lg border text-xs font-mono transition-all shrink-0 ${
               isMarketWatchOpen
                 ? 'bg-indigo-600 text-white border-indigo-500 shadow-sm'
                 : 'bg-slate-900/90 text-slate-300 border-slate-700/80 hover:border-indigo-500/50 hover:bg-slate-800'
@@ -163,17 +165,17 @@ export const Header: React.FC = () => {
             title="Mở Bảng giá Market Watch"
           >
             <Layers className="w-3.5 h-3.5 text-indigo-400" />
-            <span className="hidden lg:inline text-[11px] font-bold">Market Watch</span>
+            <span className="hidden 2xl:inline text-[11px] font-bold">Market Watch</span>
           </button>
 
           {/* Timeframe Selector (Responsive: Compact on small screens) */}
-          <div className="hidden sm:flex items-center bg-slate-900/90 rounded-lg p-0.5 border border-slate-800">
-            <Clock className="w-3 h-3 text-slate-500 ml-1.5 mr-0.5 hidden md:inline" />
+          <div className="hidden sm:flex items-center bg-slate-900/90 rounded-lg p-0.5 border border-slate-800 shrink-0">
+            <Clock className="w-3 h-3 text-slate-500 ml-1 mr-0.5 hidden 2xl:inline" />
             {timeframes.map(tf => (
               <button
                 key={tf}
                 onClick={() => setTimeframe(tf)}
-                className={`px-1.5 md:px-2 py-1 rounded text-xs font-mono font-medium transition-all ${
+                className={`px-1.5 2xl:px-2 py-1 rounded text-xs font-mono font-medium transition-all ${
                   timeframe === tf
                     ? 'bg-indigo-600 text-white font-bold shadow-xs'
                     : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
@@ -185,7 +187,7 @@ export const Header: React.FC = () => {
           </div>
 
           {/* Chart Type Selector Dropdown (TradingView Style) */}
-          <div className="relative">
+          <div className="relative shrink-0 hidden sm:block">
             <button
               onClick={() => setIsChartTypeDropdownOpen(!isChartTypeDropdownOpen)}
               className="flex items-center gap-1.5 bg-slate-900/90 hover:bg-slate-800 px-2 py-1.5 rounded-lg border border-slate-800 hover:border-slate-700 text-xs font-mono transition-all"
@@ -200,7 +202,7 @@ export const Header: React.FC = () => {
                 {chartType === 'hollow' && '🕳️'}
                 {chartType === 'baseline' && '📉'}
               </span>
-              <span className="hidden md:inline text-slate-200 font-bold text-[11px]">
+              <span className="hidden 2xl:inline text-slate-200 font-bold text-[11px]">
                 {chartType === 'candlestick' && t.candleShort}
                 {chartType === 'bar' && t.barShort}
                 {chartType === 'line' && t.lineShort}
@@ -305,7 +307,7 @@ export const Header: React.FC = () => {
           </div>
 
           {/* Economic Calendar Quick Controls */}
-          <div className="relative">
+          <div className="relative shrink-0 hidden sm:block">
             <button
               onClick={() => setIsCalendarMenuOpen(!isCalendarMenuOpen)}
               className={`h-8 px-2.5 rounded-lg border text-xs font-medium flex items-center gap-1.5 transition-all shadow-2xs ${
@@ -316,7 +318,7 @@ export const Header: React.FC = () => {
               title={t.calendarDisplayMode || 'Cài đặt hiển thị lịch kinh tế trên biểu đồ'}
             >
               <Calendar className={`w-3.5 h-3.5 ${showEconomicNews ? 'text-amber-400' : 'text-slate-500'}`} />
-              <span className="hidden xl:inline text-[11px] font-mono">
+              <span className="hidden 2xl:inline text-[11px] font-mono">
                 {showEconomicNews ? (
                   economicNewsDisplayMode === 'AUTO' ? 'Lịch: Auto' :
                   economicNewsDisplayMode === 'COMPACT' ? 'Lịch: Gọn' :
@@ -450,9 +452,9 @@ export const Header: React.FC = () => {
         </div>
 
         {/* RIGHT: ACCOUNT METRICS & ACTIONS */}
-        <div className="flex items-center gap-1.5 md:gap-2">
+        <div className="flex items-center gap-1.5 md:gap-2 shrink-0">
           {/* LIVE BROKER MODE SWITCHER & CONNECTION HUD */}
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 shrink-0">
             <button
               onClick={() => setBrokerModalOpen(true)}
               className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all active:scale-95 ${
@@ -471,13 +473,13 @@ export const Header: React.FC = () => {
                     : 'bg-slate-500'
                 }`}
               />
-              <span className="font-mono font-bold text-[11px]">
+              <span className="font-mono font-bold text-[11px] hidden sm:inline">
                 {brokerStatus === 'CONNECTED'
                   ? `${activeBroker === 'MT5_EXNESS' ? 'EXNESS' : activeBroker} #${brokerAccount?.login || ''}`
                   : 'Broker'}
               </span>
               {brokerStatus === 'CONNECTED' && pingLatency > 0 && (
-                <span className="text-[10px] text-emerald-400 font-mono hidden md:inline">
+                <span className="text-[10px] text-emerald-400 font-mono hidden xl:inline">
                   {pingLatency}ms
                 </span>
               )}
@@ -501,18 +503,18 @@ export const Header: React.FC = () => {
 
           {/* Smart Live Account Widget (Desktop & Laptop) */}
           <div 
-            className="hidden xl:flex items-center bg-slate-900/90 px-3 py-1.5 rounded-lg border border-slate-800 text-xs font-mono select-none"
+            className="hidden xl:flex items-center bg-slate-900/90 px-2.5 py-1.5 rounded-lg border border-slate-800 text-xs font-mono select-none shrink-0"
             title={`${t.balanceLabel}: $${activeBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })} • ${t.equityLabel}: $${activeEquity.toLocaleString('en-US', { minimumFractionDigits: 2 })} • ${t.floatingPnLLabel}: ${floatingPnL >= 0 ? '+' : ''}$${floatingPnL.toFixed(2)}`}
           >
             {floatingPnL === 0 ? (
               <div className="flex items-center gap-1.5">
-                <span className="text-slate-500 font-medium">{t.balanceLabel}:</span>
+                <span className="text-slate-500 font-medium hidden 2xl:inline">{t.balanceLabel}:</span>
                 <span className="font-bold text-slate-200">${activeBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
               </div>
             ) : (
               <div className="flex items-center gap-2">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-slate-500 font-medium">{t.equityLabel}:</span>
+                  <span className="text-slate-500 font-medium hidden 2xl:inline">{t.equityLabel}:</span>
                   <span className={`font-bold ${activeEquity >= activeBalance ? 'text-teal-400' : 'text-rose-400'}`}>
                     ${activeEquity.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                   </span>
@@ -533,82 +535,164 @@ export const Header: React.FC = () => {
             <span className="hidden sm:inline">{t.orderEntry}</span>
           </button>
 
-          {/* Desktop Action Buttons Group */}
-          <div className="hidden lg:flex items-center gap-1.5">
+          {/* Desktop & Laptop Action Buttons Group */}
+          <div className="hidden xl:flex items-center gap-1.5 shrink-0">
             {/* AI Strategy Studio Button */}
             <button
               onClick={() => setAIModalOpen(true)}
-              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition-all active:scale-95 ${
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition-all active:scale-95 shrink-0 ${
                 autoTradingEnabled
                   ? 'bg-purple-950/90 border-purple-500 text-purple-200 shadow-lg shadow-purple-500/25 animate-pulse'
                   : 'bg-slate-900/90 border-slate-700/80 text-slate-300 hover:bg-slate-800'
               }`}
+              title="AI Strategy Studio"
             >
               <BrainCircuit className="w-3.5 h-3.5 text-purple-400" />
-              <span>AI Studio</span>
+              <span className="hidden 2xl:inline">AI Studio</span>
               {autoTradingEnabled && (
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
               )}
             </button>
 
-            {/* Sessions Manager Button */}
-            <button
-              onClick={() => setSessionManagerOpen(true)}
-              className="p-1.5 sm:px-2.5 sm:py-1.5 bg-slate-900/90 hover:bg-slate-800 text-slate-300 border border-slate-700/80 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors"
-              title={t.sessionManagerTitle}
-            >
-              <FolderOpen className="w-3.5 h-3.5 text-indigo-400" />
-              <span>{t.sessions}</span>
-            </button>
+            {/* MORE TOOLS DROPDOWN (Sessions, Analytics, Data Manager, Remote Access, Shortcuts) */}
+            <div className="relative shrink-0">
+              <button
+                onClick={() => setIsMoreMenuOpen(!isMoreMenuOpen)}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-all active:scale-95 ${
+                  isMoreMenuOpen
+                    ? 'bg-indigo-600 text-white border-indigo-500 shadow-sm'
+                    : 'bg-slate-900/90 text-slate-300 border-slate-700/80 hover:bg-slate-800 hover:border-slate-600'
+                }`}
+                title={t.moreToolsDesc || 'Công cụ mở rộng và tiện ích'}
+              >
+                <MoreHorizontal className="w-3.5 h-3.5 text-slate-300" />
+                <span className="text-xs font-semibold">{t.moreTools || 'Công cụ'}</span>
+                {isTunnelActive && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-xs shadow-emerald-400 animate-pulse" />
+                )}
+                <ChevronDown className={`w-3 h-3 text-slate-400 transition-transform ${isMoreMenuOpen ? 'rotate-180' : ''}`} />
+              </button>
 
-            {/* Analytics Report Button */}
-            <button
-              onClick={() => setAnalyticsModalOpen(true)}
-              className="p-1.5 sm:px-2.5 sm:py-1.5 bg-slate-900/90 hover:bg-slate-800 text-slate-300 border border-slate-700/80 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors"
-              title={t.analytics}
-            >
-              <BarChart3 className="w-3.5 h-3.5 text-emerald-400" />
-              <span>{t.analytics.split('&')[0].trim()}</span>
-            </button>
+              {isMoreMenuOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setIsMoreMenuOpen(false)}
+                  />
+                  <div className="absolute right-0 mt-2 w-64 bg-[#111622] border border-slate-700/80 rounded-xl shadow-2xl p-1.5 z-50 animate-in fade-in zoom-in-95 font-sans text-xs space-y-1">
+                    <div className="px-2.5 py-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider font-mono border-b border-slate-800/80 mb-1 flex items-center justify-between">
+                      <span>{t.moreTools || 'Công cụ mở rộng'}</span>
+                      <span className="text-[9px] text-indigo-400 font-normal">Pro Suite</span>
+                    </div>
 
-            {/* Data Import Button */}
-            <button
-              onClick={() => setDataModalOpen(true)}
-              className="p-1.5 sm:px-2.5 sm:py-1.5 bg-slate-900/90 hover:bg-slate-800 text-slate-300 border border-slate-700/80 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors"
-              title={t.dataImport}
-            >
-              <Upload className="w-3.5 h-3.5 text-sky-400" />
-              <span>{t.dataImport}</span>
-            </button>
+                    {/* Sessions */}
+                    <button
+                      onClick={() => {
+                        setSessionManagerOpen(true);
+                        setIsMoreMenuOpen(false);
+                      }}
+                      className="w-full px-2.5 py-2 rounded-lg flex items-center justify-between text-slate-300 hover:bg-slate-800/80 hover:text-white transition-all text-left group"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-7 h-7 rounded-md bg-indigo-950/80 border border-indigo-500/30 flex items-center justify-center text-indigo-400 group-hover:scale-105 transition-transform">
+                          <FolderOpen className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <div className="text-xs font-semibold text-slate-200 group-hover:text-indigo-300">{t.sessions}</div>
+                          <div className="text-[10px] text-slate-500">{t.sessionManagerDesc?.slice(0, 30) || 'Quản lý phiên replay'}...</div>
+                        </div>
+                      </div>
+                    </button>
 
-            {/* Remote Access Tunnel Button */}
-            <button
-              onClick={() => setTunnelModalOpen(true)}
-              className={`p-1.5 sm:px-2.5 sm:py-1.5 border rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all active:scale-95 ${
-                isTunnelActive
-                  ? 'bg-emerald-950/90 border-emerald-500/60 text-emerald-300 shadow-md shadow-emerald-500/20'
-                  : 'bg-slate-900/90 border-slate-700/80 text-slate-300 hover:bg-slate-800'
-              }`}
-              title={t.remoteTunnelTitle || 'Truy Cập Từ Xa / Remote Tunnel'}
-            >
-              <Globe className={`w-3.5 h-3.5 ${isTunnelActive ? 'text-emerald-400' : 'text-teal-400'}`} />
-              <span className="hidden xl:inline">{t.remoteTunnel || 'Remote'}</span>
-              {isTunnelActive && (
-                <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-xs shadow-emerald-400" />
+                    {/* Analytics */}
+                    <button
+                      onClick={() => {
+                        setAnalyticsModalOpen(true);
+                        setIsMoreMenuOpen(false);
+                      }}
+                      className="w-full px-2.5 py-2 rounded-lg flex items-center justify-between text-slate-300 hover:bg-slate-800/80 hover:text-white transition-all text-left group"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-7 h-7 rounded-md bg-emerald-950/80 border border-emerald-500/30 flex items-center justify-center text-emerald-400 group-hover:scale-105 transition-transform">
+                          <BarChart3 className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <div className="text-xs font-semibold text-slate-200 group-hover:text-emerald-300">{t.analytics}</div>
+                          <div className="text-[10px] text-slate-500">Báo cáo hiệu suất & Win Rate</div>
+                        </div>
+                      </div>
+                    </button>
+
+                    {/* Data Manager */}
+                    <button
+                      onClick={() => {
+                        setDataModalOpen(true);
+                        setIsMoreMenuOpen(false);
+                      }}
+                      className="w-full px-2.5 py-2 rounded-lg flex items-center justify-between text-slate-300 hover:bg-slate-800/80 hover:text-white transition-all text-left group"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-7 h-7 rounded-md bg-sky-950/80 border border-sky-500/30 flex items-center justify-center text-sky-400 group-hover:scale-105 transition-transform">
+                          <Upload className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <div className="text-xs font-semibold text-slate-200 group-hover:text-sky-300">{t.dataImport}</div>
+                          <div className="text-[10px] text-slate-500">Import CSV & Crawl dữ liệu</div>
+                        </div>
+                      </div>
+                    </button>
+
+                    {/* Remote Access */}
+                    <button
+                      onClick={() => {
+                        setTunnelModalOpen(true);
+                        setIsMoreMenuOpen(false);
+                      }}
+                      className="w-full px-2.5 py-2 rounded-lg flex items-center justify-between text-slate-300 hover:bg-slate-800/80 hover:text-white transition-all text-left group"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-7 h-7 rounded-md bg-teal-950/80 border border-teal-500/30 flex items-center justify-center text-teal-400 group-hover:scale-105 transition-transform">
+                          <Globe className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-xs font-semibold text-slate-200 group-hover:text-teal-300">{t.remoteTunnel || 'Remote Access'}</span>
+                            {isTunnelActive && (
+                              <span className="px-1 py-0.2 rounded text-[9px] font-mono font-bold bg-emerald-950 text-emerald-300 border border-emerald-500/50">
+                                ONLINE
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-[10px] text-slate-500">Cloudflare Tunnel p2p</div>
+                        </div>
+                      </div>
+                    </button>
+
+                    {/* Shortcuts */}
+                    <div className="pt-1 border-t border-slate-800/80">
+                      <button
+                        onClick={() => {
+                          setShortcutsModalOpen(true);
+                          setIsMoreMenuOpen(false);
+                        }}
+                        className="w-full px-2.5 py-1.5 rounded-lg flex items-center justify-between text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 transition-colors text-left"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Keyboard className="w-3.5 h-3.5 text-slate-400" />
+                          <span className="text-xs">{t.shortcuts}</span>
+                        </div>
+                        <span className="text-[10px] font-mono text-slate-500 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800">
+                          Shift + ?
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+                </>
               )}
-            </button>
-
-            {/* Shortcuts Button */}
-            <button
-              onClick={() => setShortcutsModalOpen(true)}
-              className="p-1.5 bg-slate-900/90 hover:bg-slate-800 text-slate-400 hover:text-slate-200 border border-slate-700/80 rounded-lg transition-colors"
-              title={t.shortcuts}
-            >
-              <Keyboard className="w-3.5 h-3.5" />
-            </button>
+            </div>
 
             {/* Language Switcher */}
-            <div className="relative">
+            <div className="relative shrink-0">
               <button
                 onClick={() => setIsLangDropdownOpen(!isLangDropdownOpen)}
                 className="flex items-center gap-1 px-2 py-1.5 bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 rounded-lg text-xs font-mono text-slate-300 transition-colors"
@@ -644,14 +728,14 @@ export const Header: React.FC = () => {
           {isAuthenticated && user ? (
             <button
               onClick={() => setProfileModalOpen(true)}
-              className="flex items-center gap-2 pl-1.5 pr-2.5 py-1 bg-slate-900 hover:bg-slate-800 border border-slate-700/80 rounded-full transition-all active:scale-95"
+              className="flex items-center gap-2 pl-1.5 pr-2.5 py-1 bg-slate-900 hover:bg-slate-800 border border-slate-700/80 rounded-full transition-all active:scale-95 shrink-0"
             >
               <img
                 src={user.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80'}
                 alt={user.name}
                 className="w-5 h-5 rounded-full object-cover border border-indigo-500/50"
               />
-              <span className="text-xs font-semibold text-slate-200 hidden xl:inline max-w-[80px] truncate">
+              <span className="text-xs font-semibold text-slate-200 hidden 2xl:inline max-w-[80px] truncate">
                 {user.name}
               </span>
               <span className="px-1 py-0.2 rounded text-[9px] font-extrabold bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950">
@@ -661,17 +745,17 @@ export const Header: React.FC = () => {
           ) : (
             <button
               onClick={() => setAuthModalOpen(true, 'login')}
-              className="px-2.5 py-1.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-semibold rounded-lg text-xs shadow-md shadow-indigo-600/30 transition-all active:scale-95 flex items-center gap-1.5"
+              className="px-2.5 py-1.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-semibold rounded-lg text-xs shadow-md shadow-indigo-600/30 transition-all active:scale-95 flex items-center gap-1.5 shrink-0"
             >
               <User className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">{t.login}</span>
             </button>
           )}
 
-          {/* MOBILE HAMBURGER BUTTON (Visible on < lg) */}
+          {/* MOBILE & TABLET HAMBURGER BUTTON (Visible on < xl) */}
           <button
             onClick={() => setIsMobileDrawerOpen(true)}
-            className="lg:hidden p-1.5 bg-slate-900/90 hover:bg-slate-800 text-slate-300 border border-slate-700/80 rounded-lg transition-colors ml-0.5"
+            className="xl:hidden p-1.5 bg-slate-900/90 hover:bg-slate-800 text-slate-300 border border-slate-700/80 rounded-lg transition-colors ml-0.5 shrink-0"
             title={t.sessionManagerTitle}
           >
             <Menu className="w-4 h-4" />
