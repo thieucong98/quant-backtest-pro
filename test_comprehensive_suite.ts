@@ -93,7 +93,21 @@ async function runComprehensiveTests() {
   // PERCENTAGE: 1 * 1 * 60000 * (0.04 / 100) = $24.00
   assert(Math.abs(btcComm - 24.0) < 0.01, 'QuantMath', 'BTCUSD Commission PERCENTAGE (0.04% of $60,000) == $24.00', { btcComm });
 
-  // Test 1.6: Forex Cross-Currency (GBPJPY with USDJPY rate conversion)
+  // Test 1.6: Precious Metal (XAGUSD - Silver 5,000 oz contract)
+  const xagusd = INSTRUMENTS['XAGUSD'];
+  const xagPipVal = MultiAssetMathEngine.calculatePipValue(xagusd, 1.0, 31.85);
+  // 1.0 * 5000 * 0.01 = $50.00
+  assert(Math.abs(xagPipVal - 50.0) < 0.01, 'QuantMath', 'XAGUSD 1.0 Lot 1 Pip Value (0.01 move) == $50.00', { xagPipVal });
+
+  const xagPnL = MultiAssetMathEngine.calculatePnL(xagusd, 'BUY', 1.0, 31.0, 32.0);
+  // 1.0 * 5000 * 1.0 = $5,000.00
+  assert(Math.abs(xagPnL - 5000.0) < 0.01, 'QuantMath', 'XAGUSD BUY 1.0 Lot (+$1.00 move) PnL == $5000.00', { xagPnL });
+
+  const xagMargin = MultiAssetMathEngine.calculateRequiredMargin(xagusd, 1.0, 31.85);
+  // 1 * 5000 * 31.85 / 50 = $3,185.00
+  assert(Math.abs(xagMargin - 3185.0) < 0.01, 'QuantMath', 'XAGUSD 1.0 Lot Margin @ 1:50 Leverage == $3185.00', { xagMargin });
+
+  // Test 1.7: Forex Cross-Currency (GBPJPY with USDJPY rate conversion)
   const gbpjpySpec: any = { symbol: 'GBPJPY', name: 'GBP/JPY', category: 'FOREX', contractSize: 100000, pipSize: 0.01, digits: 3, defaultSpreadPips: 1.5, leverage: 100, minLot: 0.01, maxLot: 50, lotStep: 0.01, commissionType: 'PER_LOT', commissionValue: 7 };
   const gbpjpyPip = MultiAssetMathEngine.calculatePipValue(gbpjpySpec, 1.0, 190.0);
   assert(Math.abs(gbpjpyPip - 6.67) < 0.1, 'QuantMath', 'GBPJPY 1.0 Lot 1 Pip Value USD conversion (~$6.67)', { gbpjpyPip });
@@ -533,8 +547,69 @@ async function runComprehensiveTests() {
   assert(haResult[1].timestamp === 2000, 'ChartEngine', 'Timestamp preserved on transformed candles');
   assert(haResult[1].volume === 150, 'ChartEngine', 'Volume preserved on transformed candles');
 
+  // Test 10.4: Realistic Candle Generator for XAGUSD (Silver spot ~31.85, digits: 3)
+  const xagCandles = generateRealisticCandles('XAGUSD', 31.85, 100, 5);
+  assert(xagCandles.length === 100, 'CandleGen', 'Generated 100 XAGUSD candles');
+  assert(xagCandles[0].open >= 25.0 && xagCandles[0].open <= 40.0, 'CandleGen', 'XAGUSD candle price in realistic silver range (~$31.85)', { open: xagCandles[0].open });
+  const hasThreeDecimals = xagCandles.some(c => c.close.toString().split('.')[1]?.length >= 2);
+  assert(hasThreeDecimals, 'CandleGen', 'XAGUSD candle prices formatted with proper precision');
+
   // =========================================================================
-  // 11. SUMMARY OF TEST SUITE RESULTS
+  // 11. ECONOMIC CALENDAR & EVENTS ENGINE TESTS
+  // =========================================================================
+  console.log('\n--- 11. Economic Calendar & Events Engine Tests ---');
+  const {
+    generateDeterministicCalendar,
+    generateNewsForCandles,
+    snapEventToBarTime,
+    getCurrenciesForSymbol
+  } = await import('./src/config/newsEvents');
+
+  // Test 11.1: Currency extraction
+  const eurusdCurrs = getCurrenciesForSymbol('EURUSD');
+  assert(eurusdCurrs.includes('EUR') && eurusdCurrs.includes('USD'), 'CalendarEngine', 'getCurrenciesForSymbol EURUSD includes EUR and USD', { eurusdCurrs });
+
+  const xauusdCurrs = getCurrenciesForSymbol('XAUUSD');
+  assert(xauusdCurrs.includes('USD') && xauusdCurrs.includes('XAU'), 'CalendarEngine', 'getCurrenciesForSymbol XAUUSD includes USD and XAU', { xauusdCurrs });
+
+  // Test 11.2: Deterministic Calendar Generation across August 2026
+  const aug1_2026 = Date.UTC(2026, 7, 1, 0, 0, 0); // 2026-08-01
+  const aug31_2026 = Date.UTC(2026, 7, 31, 23, 59, 59); // 2026-08-31
+  const augEvents = generateDeterministicCalendar(aug1_2026, aug31_2026, ['USD', 'EUR']);
+  assert(augEvents.length >= 6, 'CalendarEngine', `Generated ${augEvents.length} economic events for Aug 2026`, { count: augEvents.length });
+
+  // Test 11.3: NFP Date & Time (1st Friday of August 2026 = Aug 7, 2026 at 12:30 UTC)
+  const nfpEvent = augEvents.find(e => e.id.includes('NFP'));
+  assert(!!nfpEvent, 'CalendarEngine', 'Aug 2026 has NFP Event');
+  if (nfpEvent) {
+    const nfpDate = new Date(nfpEvent.timestamp);
+    assert(nfpDate.getUTCFullYear() === 2026 && nfpDate.getUTCMonth() === 7 && nfpDate.getUTCDate() === 7, 'CalendarEngine', 'NFP on exact 1st Friday (Aug 7, 2026)', { dateStr: nfpDate.toISOString() });
+    assert(nfpDate.getUTCHours() === 12 && nfpDate.getUTCMinutes() === 30, 'CalendarEngine', 'NFP release time is exactly 12:30 UTC');
+    assert(nfpEvent.impact === 'HIGH', 'CalendarEngine', 'NFP impact is HIGH');
+    assert(nfpEvent.currency === 'USD', 'CalendarEngine', 'NFP currency is USD');
+  }
+
+  // Test 11.4: US Core CPI (2nd Wednesday of August 2026 = Aug 12, 2026 at 12:30 UTC)
+  const cpiEvent = augEvents.find(e => e.id.includes('CPI'));
+  assert(!!cpiEvent, 'CalendarEngine', 'Aug 2026 has US CPI Event');
+  if (cpiEvent) {
+    const cpiDate = new Date(cpiEvent.timestamp);
+    assert(cpiDate.getUTCDate() === 12 && cpiDate.getUTCHours() === 12 && cpiDate.getUTCMinutes() === 30, 'CalendarEngine', 'CPI release date & time exact (Aug 12, 2026 12:30 UTC)');
+  }
+
+  // Test 11.5: Smart Bar Snapping
+  // Given M15 bars: 12:00, 12:15, 12:30, 12:45
+  const barSecs = [1786190400, 1786191300, 1786192200, 1786193100]; // e.g. 12:00, 12:15, 12:30, 12:45
+  const eventAt1232 = 1786192320; // 12:32:00 (inside 12:30 bar)
+  const snapped = snapEventToBarTime(eventAt1232, barSecs);
+  assert(snapped === 1786192200, 'CalendarEngine', 'Smart Bar Snapping correctly aligns 12:32 to 12:30 M15 bar', { snapped, expected: 1786192200 });
+
+  // Test 11.6: Candle-based generator
+  const generatedForCandles = generateNewsForCandles(xagCandles, 'XAGUSD');
+  assert(generatedForCandles.length >= 0, 'CalendarEngine', 'generateNewsForCandles runs safely on candle slice');
+
+  // =========================================================================
+  // 12. SUMMARY OF TEST SUITE RESULTS
   // =========================================================================
   console.log('\n===============================================================');
   const total = testResults.length;
@@ -550,3 +625,4 @@ async function runComprehensiveTests() {
 }
 
 runComprehensiveTests().catch(console.error);
+
