@@ -544,5 +544,38 @@ export const zh: TranslationDict = {
   "strategyCompiledActive": "策略编译并激活成功！",
   "myStrategiesSub": "保存在 SQLite 数据库中的量化策略列表：",
   "deleteStrategyTitle": "删除策略",
-  "templatesSub": "选择经典算法策略模板以加载到沙箱运行器："
+  "templatesSub": "选择经典算法策略模板以加载到沙箱运行器：",
+
+  // Remote Access & Public Tunnel
+  "remoteTunnel": "远程访问",
+  "remoteTunnelTitle": "隧道与远程访问管理器",
+  "remoteTunnelDesc": "开启安全的 HTTPS 加密隧道以连接互联网，随时通过手机、平板或局域网外的设备访问交易系统。",
+  "startTunnel": "开启公网隧道",
+  "stopTunnel": "关闭隧道",
+  "publicUrlLabel": "公网 HTTPS 访问链接:",
+  "scanQrCode": "扫描二维码在手机/平板上打开",
+  "tunnelActive": "隧道运行中",
+  "tunnelInactive": "隧道已关闭",
+  "copyLink": "复制链接",
+  "linkCopied": "已成功复制链接到剪贴板！",
+  "tunnelProvider": "隧道服务商:",
+  "securityPin": "访问保护 PIN 码 (可选):",
+  "tunnelOnlineBadge": "ONLINE",
+
+  // Economic Calendar
+  "economicCalendar": "财经日历",
+  "calendarEvent": "事件/指标",
+  "calendarImpact": "重要性",
+  "calendarActual": "公布值",
+  "calendarForecast": "预测值",
+  "calendarPrevious": "前值",
+  "calendarStatus": "状态",
+  "calendarPast": "已发布",
+  "calendarUpcoming": "即将发布",
+  "calendarShowOnChart": "在图表上标记",
+  "calendarFilterAll": "所有事件",
+  "calendarFilterHigh": "仅重大事件 (红星)",
+  "calendarFilterHighMed": "重要及中等事件",
+  "calendarNoEvents": "暂无符合筛选条件的财经日历数据。"
 };
+

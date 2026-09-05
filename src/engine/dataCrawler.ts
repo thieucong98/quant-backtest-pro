@@ -245,6 +245,7 @@ export class DataCrawler {
     const cleanSym = sym.replace(/[^A-Z0-9]/g, '');
     let startPrice = 1.0850;
     if (cleanSym.includes('XAU') || cleanSym.includes('GOLD')) startPrice = 2648.50;
+    else if (cleanSym.includes('XAG') || cleanSym.includes('SILVER')) startPrice = 31.85;
     else if (cleanSym.includes('BTC')) startPrice = 68500.0;
     else if (cleanSym.includes('ETH')) startPrice = 2600.0;
     else if (cleanSym.includes('JPY')) startPrice = 153.20;

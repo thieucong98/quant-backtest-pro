@@ -544,5 +544,38 @@ export const ja: TranslationDict = {
   "strategyCompiledActive": "戦略が正常にコンパイルされ、アクティブ化されました！",
   "myStrategiesSub": "SQLiteデータベースに保存されたクオンツ戦略リスト：",
   "deleteStrategyTitle": "戦略を削除",
-  "templatesSub": "サンドボックスランナーにロードする古典的なアルゴリズム戦略テンプレートを選択："
+  "templatesSub": "サンドボックスランナーにロードする古典的なアルゴリズム戦略テンプレートを選択：",
+
+  // Remote Access & Public Tunnel
+  "remoteTunnel": "リモートアクセス",
+  "remoteTunnelTitle": "トンネル＆リモートアクセスマネージャー",
+  "remoteTunnelDesc": "暗号化された安全なHTTPSトンネルを開設し、LAN外部のスマートフォン、タブレット、PCから取引プラットフォームにアクセスします。",
+  "startTunnel": "パブリックトンネルを開始",
+  "stopTunnel": "トンネルを停止",
+  "publicUrlLabel": "公開HTTPS URL:",
+  "scanQrCode": "QRコードをスキャンしてスマートフォンで開く",
+  "tunnelActive": "トンネル稼働中",
+  "tunnelInactive": "トンネル停止中",
+  "copyLink": "リンクをコピー",
+  "linkCopied": "URLをクリップボードにコピーしました！",
+  "tunnelProvider": "トンネルプロバイダー:",
+  "securityPin": "セキュリティアクセスPIN (任意):",
+  "tunnelOnlineBadge": "ONLINE",
+
+  // Economic Calendar
+  "economicCalendar": "経済指標カレンダー",
+  "calendarEvent": "指標・イベント",
+  "calendarImpact": "影響度",
+  "calendarActual": "結果",
+  "calendarForecast": "予測",
+  "calendarPrevious": "前回",
+  "calendarStatus": "状態",
+  "calendarPast": "発表済み",
+  "calendarUpcoming": "発表予定",
+  "calendarShowOnChart": "チャート上に表示",
+  "calendarFilterAll": "すべての指標",
+  "calendarFilterHigh": "高影響度のみ (赤)",
+  "calendarFilterHighMed": "高・中影響度",
+  "calendarNoEvents": "条件に一致する経済指標はありません。"
 };
+

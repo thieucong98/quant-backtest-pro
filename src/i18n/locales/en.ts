@@ -544,5 +544,38 @@ export const en: TranslationDict = {
   "strategyCompiledActive": "Strategy compiled and activated successfully!",
   "myStrategiesSub": "List of quantitative strategies saved in SQLite database:",
   "deleteStrategyTitle": "Delete Strategy",
-  "templatesSub": "Select a classic algorithmic strategy template to load into Sandbox Runner:"
+  "templatesSub": "Select a classic algorithmic strategy template to load into Sandbox Runner:",
+
+  // Remote Access & Public Tunnel
+  "remoteTunnel": "Remote Access",
+  "remoteTunnelTitle": "Tunnel & Remote Access Manager",
+  "remoteTunnelDesc": "Open a secure, encrypted HTTPS tunnel to the Internet to access your trading platform from mobile phones, tablets, or remote computers outside your LAN.",
+  "startTunnel": "Start Public Tunnel",
+  "stopTunnel": "Stop Tunnel",
+  "publicUrlLabel": "Public HTTPS URL:",
+  "scanQrCode": "Scan QR Code to open on Mobile / Tablet",
+  "tunnelActive": "Tunnel is Active",
+  "tunnelInactive": "Tunnel is Inactive",
+  "copyLink": "Copy URL",
+  "linkCopied": "Copied URL to clipboard!",
+  "tunnelProvider": "Tunnel Provider:",
+  "securityPin": "Security Access PIN (Optional):",
+  "tunnelOnlineBadge": "ONLINE",
+
+  // Economic Calendar
+  "economicCalendar": "Economic Calendar",
+  "calendarEvent": "Event",
+  "calendarImpact": "Impact",
+  "calendarActual": "Actual",
+  "calendarForecast": "Forecast",
+  "calendarPrevious": "Previous",
+  "calendarStatus": "Status",
+  "calendarPast": "Released",
+  "calendarUpcoming": "Upcoming",
+  "calendarShowOnChart": "Show on Chart",
+  "calendarFilterAll": "All News",
+  "calendarFilterHigh": "High Impact Only (Red)",
+  "calendarFilterHighMed": "High & Medium Impact",
+  "calendarNoEvents": "No economic events matching current filters."
 };
+

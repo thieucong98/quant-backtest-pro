@@ -1,3 +1,7 @@
+---
+trigger: manual
+---
+
 # Git Commit Policy
 
 - **Luôn luôn tạo commit cục bộ (Local Commit)** sau khi hoàn thành bất kỳ tính năng, yêu cầu sửa đổi, tối ưu hay cập nhật nào.

@@ -113,6 +113,7 @@ export const DataImportModal: React.FC = () => {
   const seedDefaultDatasets = () => {
     const btc = generateRealisticCandles('BTCUSD', 68500, 5000, 5);
     const xau = generateRealisticCandles('XAUUSD', 2650, 5000, 5);
+    const xag = generateRealisticCandles('XAGUSD', 31.85, 5000, 5);
     const eur = generateRealisticCandles('EURUSD', 1.0850, 5000, 5);
     const eth = generateRealisticCandles('ETHUSD', 3500, 3000, 15);
 
@@ -137,6 +138,17 @@ export const DataImportModal: React.FC = () => {
         endDate: xau[xau.length - 1].timestamp,
         candles: xau,
         source: 'Institutional Gold (Seed)',
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: 'seed_xag',
+        symbol: 'XAGUSD',
+        timeframe: 'M5',
+        candleCount: 5000,
+        startDate: xag[0].timestamp,
+        endDate: xag[xag.length - 1].timestamp,
+        candles: xag,
+        source: 'Institutional Silver (Seed)',
         createdAt: new Date().toISOString()
       },
       {
@@ -592,6 +604,7 @@ export const DataImportModal: React.FC = () => {
                       </optgroup>
                       <optgroup label="Metals & Forex">
                         <option value="XAUUSD">XAUUSD (Gold / Spot)</option>
+                        <option value="XAGUSD">XAGUSD (Silver / Spot)</option>
                         <option value="EURUSD">EURUSD (Euro / USD)</option>
                         <option value="GBPUSD">GBPUSD (Pound / USD)</option>
                         <option value="USDJPY">USDJPY (USD / Yen)</option>

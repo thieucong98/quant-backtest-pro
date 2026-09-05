@@ -576,4 +576,36 @@ export interface TranslationDict {
   myStrategiesSub: string;
   deleteStrategyTitle: string;
   templatesSub: string;
+
+  // Remote Access & Public Tunnel
+  remoteTunnel: string;
+  remoteTunnelTitle: string;
+  remoteTunnelDesc: string;
+  startTunnel: string;
+  stopTunnel: string;
+  publicUrlLabel: string;
+  scanQrCode: string;
+  tunnelActive: string;
+  tunnelInactive: string;
+  copyLink: string;
+  linkCopied: string;
+  tunnelProvider: string;
+  securityPin: string;
+  tunnelOnlineBadge: string;
+
+  // Economic Calendar
+  economicCalendar: string;
+  calendarEvent: string;
+  calendarImpact: string;
+  calendarActual: string;
+  calendarForecast: string;
+  calendarPrevious: string;
+  calendarStatus: string;
+  calendarPast: string;
+  calendarUpcoming: string;
+  calendarShowOnChart: string;
+  calendarFilterAll: string;
+  calendarFilterHigh: string;
+  calendarFilterHighMed: string;
+  calendarNoEvents: string;
 }

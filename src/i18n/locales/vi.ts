@@ -544,5 +544,38 @@ export const vi: TranslationDict = {
   "strategyCompiledActive": "Chiến lược đã được biên dịch và kích hoạt thành công!",
   "myStrategiesSub": "Danh sách các chiến lược định lượng đã lưu trong cơ sở dữ liệu SQLite:",
   "deleteStrategyTitle": "Xóa chiến lược",
-  "templatesSub": "Chọn một mẫu chiến lược thuật toán kinh điển để nạp vào Sandbox Runner:"
+  "templatesSub": "Chọn một mẫu chiến lược thuật toán kinh điển để nạp vào Sandbox Runner:",
+
+  // Remote Access & Public Tunnel
+  "remoteTunnel": "Truy Cập Từ Xa",
+  "remoteTunnelTitle": "Quản Lý Tunnel & Truy Cập Từ Xa",
+  "remoteTunnelDesc": "Mở cổng kết nối HTTPS an toàn ra Internet để truy cập hệ thống giao dịch từ điện thoại, tablet hoặc máy tính ngoài mạng LAN.",
+  "startTunnel": "Bật Tunnel Công Khai",
+  "stopTunnel": "Tắt Tunnel",
+  "publicUrlLabel": "Đường Link Công Khai (HTTPS):",
+  "scanQrCode": "Quét mã QR để mở trên Điện thoại / Tablet",
+  "tunnelActive": "Tunnel Đang Hoạt Động",
+  "tunnelInactive": "Tunnel Đang Tắt",
+  "copyLink": "Sao chép link",
+  "linkCopied": "Đã sao chép link vào bộ nhớ tạm!",
+  "tunnelProvider": "Nhà cung cấp Tunnel:",
+  "securityPin": "Mã PIN Bảo Vệ (Tùy chọn):",
+  "tunnelOnlineBadge": "ONLINE",
+
+  // Economic Calendar
+  "economicCalendar": "Lịch Kinh Tế",
+  "calendarEvent": "Sự Kiện",
+  "calendarImpact": "Tác Động",
+  "calendarActual": "Công Bố",
+  "calendarForecast": "Dự Báo",
+  "calendarPrevious": "Kỳ Trước",
+  "calendarStatus": "Trạng Thái",
+  "calendarPast": "Đã Diễn Ra",
+  "calendarUpcoming": "Sắp Diễn Ra",
+  "calendarShowOnChart": "Hiện trên Biểu Đồ",
+  "calendarFilterAll": "Tất Cả Tin",
+  "calendarFilterHigh": "Chỉ Tin Đỏ (HIGH)",
+  "calendarFilterHighMed": "Tin Đỏ + Vàng",
+  "calendarNoEvents": "Không có sự kiện kinh tế nào phù hợp với bộ lọc."
 };
+
