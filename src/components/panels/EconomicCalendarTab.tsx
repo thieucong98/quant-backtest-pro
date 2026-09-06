@@ -9,7 +9,12 @@ import {
   Clock,
   TrendingUp,
   TrendingDown,
-  AlertCircle
+  AlertCircle,
+  RefreshCw,
+  Globe2,
+  Database,
+  Sparkles,
+  FileSpreadsheet
 } from 'lucide-react';
 import { useBacktestStore } from '../../store/backtestStore';
 import { getTranslation, formatText } from '../../i18n';
@@ -47,6 +52,8 @@ export const EconomicCalendarTab: React.FC = () => {
     toggleEconomicNews,
     setEconomicNewsFilter,
     setSelectedCalendarCurrency,
+    isSyncingCalendar,
+    syncForexFactoryEvents,
     candles,
     currentIndex,
     language
@@ -54,6 +61,70 @@ export const EconomicCalendarTab: React.FC = () => {
 
   const t = getTranslation(language);
   const [searchQuery, setSearchQuery] = useState('');
+  const [syncStatusMsg, setSyncStatusMsg] = useState<{ type: 'success' | 'warning' | 'error'; text: string } | null>(null);
+
+  const handleSyncForexFactory = async () => {
+    try {
+      const res = await syncForexFactoryEvents();
+      if (res.success) {
+        setSyncStatusMsg({
+          type: 'success',
+          text: formatText(t.calendarSyncSuccessToast, { count: res.inserted || 0 })
+        });
+      } else if (res.rateLimited) {
+        setSyncStatusMsg({
+          type: 'warning',
+          text: t.calendarSyncRateLimitedToast
+        });
+      } else {
+        setSyncStatusMsg({
+          type: 'error',
+          text: formatText(t.calendarSyncFailedToast, { error: res.message })
+        });
+      }
+    } catch (err: any) {
+      setSyncStatusMsg({
+        type: 'error',
+        text: formatText(t.calendarSyncFailedToast, { error: err.message || '' })
+      });
+    }
+    setTimeout(() => {
+      setSyncStatusMsg(null);
+    }, 6000);
+  };
+
+  const renderSourceBadge = (source?: string) => {
+    if (source === 'FOREX_FACTORY') {
+      return (
+        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-950/70 text-emerald-400 border border-emerald-500/30 whitespace-nowrap">
+          <Globe2 className="w-2.5 h-2.5" />
+          {t.calendarSourceFF}
+        </span>
+      );
+    }
+    if (source === 'HISTORICAL_REAL') {
+      return (
+        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-cyan-950/70 text-cyan-400 border border-cyan-500/30 whitespace-nowrap">
+          <Database className="w-2.5 h-2.5" />
+          {t.calendarSourceReal}
+        </span>
+      );
+    }
+    if (source === 'USER_IMPORT') {
+      return (
+        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-purple-950/70 text-purple-400 border border-purple-500/30 whitespace-nowrap">
+          <FileSpreadsheet className="w-2.5 h-2.5" />
+          {t.calendarSourceImport}
+        </span>
+      );
+    }
+    return (
+      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-slate-900/80 text-slate-400 border border-slate-800 whitespace-nowrap">
+        <Sparkles className="w-2.5 h-2.5 text-amber-400/80" />
+        {t.calendarSourcePrecision}
+      </span>
+    );
+  };
 
   const currentCandle = candles[currentIndex];
   const currentTimestampSec = currentCandle
@@ -175,7 +246,7 @@ export const EconomicCalendarTab: React.FC = () => {
         </div>
 
         {/* Right side stats & toggle */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
           <div className="flex items-center gap-2 text-[11px]">
             <span className="text-emerald-400 font-semibold flex items-center gap-1">
               <CheckCircle2 className="w-3 h-3" /> {formatText(t.calendarPassedCount, { count: pastCount })}
@@ -186,6 +257,21 @@ export const EconomicCalendarTab: React.FC = () => {
             </span>
           </div>
 
+          {/* Forex Factory Live Sync */}
+          <button
+            onClick={handleSyncForexFactory}
+            disabled={isSyncingCalendar}
+            className={`px-2.5 py-1 rounded text-[11px] font-medium border flex items-center gap-1.5 transition ${
+              isSyncingCalendar
+                ? 'bg-slate-900 border-slate-800 text-slate-500 cursor-not-allowed'
+                : 'bg-emerald-950/60 border-emerald-500/40 text-emerald-300 hover:bg-emerald-900/60 hover:text-emerald-200 shadow-sm'
+            }`}
+            title={t.calendarSyncFFBtn}
+          >
+            <RefreshCw className={`w-3 h-3 ${isSyncingCalendar ? 'animate-spin text-emerald-400' : 'text-emerald-400'}`} />
+            <span>{isSyncingCalendar ? t.calendarSyncingFFBtn : t.calendarSyncFFBtn}</span>
+          </button>
+
           {showEconomicNews && (
             <select
               value={economicNewsDisplayMode}
@@ -193,10 +279,10 @@ export const EconomicCalendarTab: React.FC = () => {
               className="bg-slate-900 border border-slate-800 text-amber-300 rounded px-2 py-1 text-[11px] font-mono focus:outline-none focus:border-amber-500"
               title={t.calendarDisplayMode}
             >
-              <option value="AUTO">🧠 {t.calendarModeAuto?.split('(')[0]?.trim() || 'Auto Smart'}</option>
-              <option value="COMPACT">🏷️ {t.calendarModeCompact?.split('(')[0]?.trim() || 'Compact'}</option>
-              <option value="CLUSTERED">📦 {t.calendarModeClustered?.split('(')[0]?.trim() || 'Clustered'}</option>
-              <option value="FULL">📜 {t.calendarModeFull?.split('(')[0]?.trim() || 'Full'}</option>
+              <option value="AUTO">🧠 {t.calendarModeAutoShort}</option>
+              <option value="COMPACT">🏷️ {t.calendarModeCompactShort}</option>
+              <option value="CLUSTERED">📦 {t.calendarModeClusteredShort}</option>
+              <option value="FULL">📜 {t.calendarModeFullShort}</option>
             </select>
           )}
 
@@ -215,6 +301,34 @@ export const EconomicCalendarTab: React.FC = () => {
         </div>
       </div>
 
+      {/* Sync Status Feedback Toast / Banner */}
+      {syncStatusMsg && (
+        <div
+          className={`px-3 py-1.5 text-[11px] flex items-center justify-between border-b transition-all ${
+            syncStatusMsg.type === 'success'
+              ? 'bg-emerald-950/80 border-emerald-500/30 text-emerald-300'
+              : syncStatusMsg.type === 'warning'
+              ? 'bg-amber-950/80 border-amber-500/30 text-amber-300'
+              : 'bg-rose-950/80 border-rose-500/30 text-rose-300'
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            {syncStatusMsg.type === 'success' ? (
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+            ) : (
+              <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+            )}
+            <span>{syncStatusMsg.text}</span>
+          </div>
+          <button
+            onClick={() => setSyncStatusMsg(null)}
+            className="text-slate-400 hover:text-slate-200 text-xs px-1"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       {/* Table Content */}
       <div className="flex-1 overflow-auto">
         {filteredEvents.length === 0 ? (
@@ -223,7 +337,7 @@ export const EconomicCalendarTab: React.FC = () => {
             <p>{t.calendarNoEvents}</p>
           </div>
         ) : (
-          <table className="w-full text-left border-collapse min-w-[760px]">
+          <table className="w-full text-left border-collapse min-w-[840px]">
             <thead>
               <tr className="border-b border-slate-800 text-slate-400 bg-slate-900/50 sticky top-0 text-[11px]">
                 <th className="py-1.5 px-3">{t.calendarTimeUTC}</th>
@@ -233,6 +347,7 @@ export const EconomicCalendarTab: React.FC = () => {
                 <th className="py-1.5 px-2 text-right">{t.calendarActual}</th>
                 <th className="py-1.5 px-2 text-right">{t.calendarForecast}</th>
                 <th className="py-1.5 px-2 text-right">{t.calendarPrevious}</th>
+                <th className="py-1.5 px-2 text-center">{t.calendarSource}</th>
                 <th className="py-1.5 px-3 text-center">{t.calendarStatus}</th>
               </tr>
             </thead>
@@ -269,17 +384,17 @@ export const EconomicCalendarTab: React.FC = () => {
                     <td className="py-1.5 px-2 text-center whitespace-nowrap">
                       {ev.impact === 'HIGH' && (
                         <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/40">
-                          🔴 HIGH
+                          🔴 {t.calendarImpactHigh}
                         </span>
                       )}
                       {ev.impact === 'MEDIUM' && (
                         <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/40">
-                          🟡 MEDIUM
+                          🟡 {t.calendarImpactMedium}
                         </span>
                       )}
                       {ev.impact === 'LOW' && (
                         <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-500/20 text-sky-400 border border-sky-500/40">
-                          🔵 LOW
+                          🔵 {t.calendarImpactLow}
                         </span>
                       )}
                     </td>
@@ -322,6 +437,9 @@ export const EconomicCalendarTab: React.FC = () => {
                     </td>
                     <td className="py-1.5 px-2 text-right text-slate-500">
                       {ev.previous || '---'}
+                    </td>
+                    <td className="py-1.5 px-2 text-center whitespace-nowrap">
+                      {renderSourceBadge(ev.source)}
                     </td>
                     <td className="py-1.5 px-3 text-center whitespace-nowrap">
                       {isPast ? (

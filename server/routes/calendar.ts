@@ -1,8 +1,57 @@
 import { Router, Request, Response } from 'express';
 import { prisma } from '../index.js';
 import { requireAuth } from './users.js';
+import { SERVER_HISTORICAL_EVENTS } from '../data/historicalCalendarData.js';
 
 export const calendarRouter = Router();
+
+// Auto-seed historical curated events if table is empty
+async function ensureHistoricalSeed() {
+  try {
+    const count = await prisma.economicEvent.count({
+      where: { source: 'HISTORICAL_REAL' }
+    });
+    if (count === 0) {
+      console.log('🌱 Seeding curated authentic historical economic events (2024)...');
+      for (const item of SERVER_HISTORICAL_EVENTS) {
+        await prisma.economicEvent.upsert({
+          where: { eventId: item.id },
+          update: {
+            timestamp: BigInt(item.timestamp),
+            timestampSec: item.timestampSec,
+            currency: item.currency,
+            country: item.country,
+            title: item.title,
+            impact: item.impact,
+            actual: item.actual,
+            forecast: item.forecast,
+            previous: item.previous,
+            sentiment: item.sentiment,
+            source: item.source
+          },
+          create: {
+            eventId: item.id,
+            timestamp: BigInt(item.timestamp),
+            timestampSec: item.timestampSec,
+            currency: item.currency,
+            country: item.country,
+            title: item.title,
+            impact: item.impact,
+            actual: item.actual,
+            forecast: item.forecast,
+            previous: item.previous,
+            sentiment: item.sentiment,
+            source: item.source
+          }
+        });
+      }
+      console.log(`✅ Seeded ${SERVER_HISTORICAL_EVENTS.length} real historical events successfully.`);
+    }
+  } catch (err: any) {
+    console.warn('[EconomicEvent Seed Warning]', err.message);
+  }
+}
+ensureHistoricalSeed();
 
 /**
  * Helper: Find first Friday of a given year and month (0-indexed month)
@@ -12,6 +61,34 @@ function getFirstFriday(year: number, month: number): Date {
   const day = d.getUTCDay();
   const diff = (5 - day + 7) % 7;
   d.setUTCDate(1 + diff);
+  return d;
+}
+
+/**
+ * Helper: Find last Friday of a given year and month (for Core PCE)
+ */
+function getLastFriday(year: number, month: number, hour = 12, minute = 30): Date {
+  const lastDay = new Date(Date.UTC(year, month + 1, 0, hour, minute, 0));
+  const day = lastDay.getUTCDay();
+  const diff = (day - 5 + 7) % 7;
+  lastDay.setUTCDate(lastDay.getUTCDate() - diff);
+  return lastDay;
+}
+
+/**
+ * Helper: Find nth business day of a month (for ISM PMI)
+ */
+function getNthBusinessDay(year: number, month: number, n: number, hour = 14, minute = 0): Date {
+  let count = 0;
+  const d = new Date(Date.UTC(year, month, 1, hour, minute, 0));
+  while (d.getUTCMonth() === month) {
+    const day = d.getUTCDay();
+    if (day !== 0 && day !== 6) {
+      count++;
+      if (count === n) return d;
+    }
+    d.setUTCDate(d.getUTCDate() + 1);
+  }
   return d;
 }
 
@@ -147,6 +224,78 @@ function generateDeterministicCalendarEvents(startTs: number, endTs: number, tar
         }
       }
 
+      // Core PCE Price Index
+      if (shouldInclude('USD')) {
+        const pceDate = getLastFriday(y, m, 12, 30);
+        const pceMs = pceDate.getTime();
+        if (pceMs >= minMs && pceMs <= maxMs) {
+          const r = seededRandom(`${monthSeed}_PCE`);
+          const pceVal = (0.1 + r * 0.3).toFixed(1);
+          events.push({
+            eventId: `ev_${y}_${m}_CORE_PCE`,
+            timestamp: BigInt(pceMs),
+            timestampSec: Math.floor(pceMs / 1000),
+            currency: 'USD',
+            country: 'US',
+            title: 'US Core PCE Price Index (m/m)',
+            impact: 'HIGH',
+            actual: `${pceVal}%`,
+            forecast: '0.2%',
+            previous: '0.2%',
+            sentiment: Number(pceVal) > 0.2 ? 'BULLISH' : 'BEARISH',
+            source: 'CALENDAR_ENGINE'
+          });
+        }
+      }
+
+      // ISM Services PMI
+      if (shouldInclude('USD')) {
+        const ismServDate = getNthBusinessDay(y, m, 3, 14, 0);
+        const ismServMs = ismServDate.getTime();
+        if (ismServMs >= minMs && ismServMs <= maxMs) {
+          const servVal = (50.5 + seededRandom(`${monthSeed}_ISM_SERV`) * 4.0).toFixed(1);
+          events.push({
+            eventId: `ev_${y}_${m}_ISM_SERV`,
+            timestamp: BigInt(ismServMs),
+            timestampSec: Math.floor(ismServMs / 1000),
+            currency: 'USD',
+            country: 'US',
+            title: 'US ISM Services PMI',
+            impact: 'HIGH',
+            actual: servVal,
+            forecast: '51.5',
+            previous: '51.4',
+            sentiment: Number(servVal) >= 50.0 ? 'BULLISH' : 'BEARISH',
+            source: 'CALENDAR_ENGINE'
+          });
+        }
+      }
+
+      // US Advance GDP (quarterly)
+      const isGdpMonth = [0, 3, 6, 9].includes(m);
+      if (shouldInclude('USD') && isGdpMonth) {
+        const gdpDate = getNthWeekday(y, m, 4, 4, 12, 30);
+        const gdpMs = gdpDate.getTime();
+        if (gdpMs >= minMs && gdpMs <= maxMs) {
+          const r = seededRandom(`${monthSeed}_GDP`);
+          const gdpVal = (1.6 + r * 2.2).toFixed(1);
+          events.push({
+            eventId: `ev_${y}_${m}_GDP`,
+            timestamp: BigInt(gdpMs),
+            timestampSec: Math.floor(gdpMs / 1000),
+            currency: 'USD',
+            country: 'US',
+            title: 'US Advance GDP (q/q)',
+            impact: 'HIGH',
+            actual: `${gdpVal}%`,
+            forecast: '2.5%',
+            previous: '2.8%',
+            sentiment: Number(gdpVal) >= 2.5 ? 'BULLISH' : 'BEARISH',
+            source: 'CALENDAR_ENGINE'
+          });
+        }
+      }
+
       // FOMC Rate Decision
       const isFomcMonth = [0, 2, 4, 5, 6, 8, 10, 11].includes(m);
       if (shouldInclude('USD') && isFomcMonth) {
@@ -199,6 +348,29 @@ function generateDeterministicCalendarEvents(startTs: number, endTs: number, tar
             actual: '4.25%',
             forecast: '4.25%',
             previous: '4.50%',
+            sentiment: 'NEUTRAL',
+            source: 'CALENDAR_ENGINE'
+          });
+        }
+      }
+
+      // Bank of England (BoE) Rate Decision (8 times/year)
+      const isBoeMonth = [1, 2, 4, 5, 7, 8, 10, 11].includes(m);
+      if (shouldInclude('GBP') && isBoeMonth) {
+        const boeDate = getNthWeekday(y, m, 4, [1, 4, 7, 10].includes(m) ? 1 : 3, 11, 0);
+        const boeMs = boeDate.getTime();
+        if (boeMs >= minMs && boeMs <= maxMs) {
+          events.push({
+            eventId: `ev_${y}_${m}_BOE_RATE`,
+            timestamp: BigInt(boeMs),
+            timestampSec: Math.floor(boeMs / 1000),
+            currency: 'GBP',
+            country: 'GB',
+            title: 'Bank of England Official Bank Rate',
+            impact: 'HIGH',
+            actual: '5.00%',
+            forecast: '5.00%',
+            previous: '5.25%',
             sentiment: 'NEUTRAL',
             source: 'CALENDAR_ENGINE'
           });
@@ -284,8 +456,46 @@ calendarRouter.get('/', async (req: Request, res: Response): Promise<void> => {
       orderBy: { timestamp: 'asc' }
     });
 
-    // 2. If DB has no events for this range, seed deterministically and persist
+    // 2. If DB has no events for this range, seed curated real historical data and precision events
     if (dbEvents.length === 0) {
+      // Seed real historical events that match range
+      for (const item of SERVER_HISTORICAL_EVENTS) {
+        if (item.timestamp >= fromMs && item.timestamp <= toMs) {
+          try {
+            await prisma.economicEvent.upsert({
+              where: { eventId: item.id },
+              update: {
+                timestamp: BigInt(item.timestamp),
+                timestampSec: item.timestampSec,
+                currency: item.currency,
+                country: item.country,
+                title: item.title,
+                impact: item.impact,
+                actual: item.actual,
+                forecast: item.forecast,
+                previous: item.previous,
+                sentiment: item.sentiment,
+                source: item.source
+              },
+              create: {
+                eventId: item.id,
+                timestamp: BigInt(item.timestamp),
+                timestampSec: item.timestampSec,
+                currency: item.currency,
+                country: item.country,
+                title: item.title,
+                impact: item.impact,
+                actual: item.actual,
+                forecast: item.forecast,
+                previous: item.previous,
+                sentiment: item.sentiment,
+                source: item.source
+              }
+            });
+          } catch {}
+        }
+      }
+
       const generated = generateDeterministicCalendarEvents(fromMs, toMs, targetCurrencies);
       if (generated.length > 0) {
         for (const item of generated) {
@@ -297,11 +507,11 @@ calendarRouter.get('/', async (req: Request, res: Response): Promise<void> => {
             });
           } catch {}
         }
-        dbEvents = await prisma.economicEvent.findMany({
-          where: whereClause,
-          orderBy: { timestamp: 'asc' }
-        });
       }
+      dbEvents = await prisma.economicEvent.findMany({
+        where: whereClause,
+        orderBy: { timestamp: 'asc' }
+      });
     }
 
     // Format response (convert BigInt to Number for JSON serialization)
@@ -332,6 +542,101 @@ calendarRouter.get('/', async (req: Request, res: Response): Promise<void> => {
     res.status(500).json({
       success: false,
       message: 'Failed to fetch economic calendar',
+      error: error.message
+    });
+  }
+});
+
+/**
+ * POST /api/calendar/sync-forexfactory
+ * Fetch live weekly economic events directly from Forex Factory official feed
+ */
+calendarRouter.post('/sync-forexfactory', async (_req: Request, res: Response): Promise<void> => {
+  try {
+    const FEED_URL = 'https://nfs.faireconomy.media/ff_calendar_thisweek.json';
+    const response = await fetch(FEED_URL, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36',
+        'Accept': 'application/json'
+      }
+    });
+
+    if (response.status === 429) {
+      res.status(200).json({
+        success: false,
+        rateLimited: true,
+        message: 'Forex Factory server rate-limited (HTTP 429). Hệ thống tự động kích hoạt Precision Engine & Bộ dữ liệu lưu trữ.'
+      });
+      return;
+    }
+
+    if (!response.ok) {
+      res.status(200).json({
+        success: false,
+        message: `Forex Factory trả về HTTP ${response.status}. Sử dụng dữ liệu Precision Engine.`
+      });
+      return;
+    }
+
+    const data: any = await response.json();
+    if (!Array.isArray(data)) {
+      res.status(400).json({ success: false, message: 'Dữ liệu Forex Factory không hợp lệ' });
+      return;
+    }
+
+    let inserted = 0;
+    for (const item of data) {
+      if (!item.title || !item.date) continue;
+      const ts = new Date(item.date).getTime();
+      if (isNaN(ts)) continue;
+
+      const currency = (item.country === 'All' ? 'GLOBAL' : item.country || 'USD').toUpperCase();
+      const rawImpact = (item.impact || 'Medium').toUpperCase();
+      const impact = rawImpact === 'HIGH' ? 'HIGH' : rawImpact === 'LOW' || rawImpact === 'HOLIDAY' ? 'LOW' : 'MEDIUM';
+      const eventId = `ff_${ts}_${currency}_${item.title.replace(/[^a-zA-Z0-9]/g, '_').slice(0, 30)}`;
+
+      await prisma.economicEvent.upsert({
+        where: { eventId },
+        update: {
+          timestamp: BigInt(ts),
+          timestampSec: Math.floor(ts / 1000),
+          currency,
+          country: currency === 'GLOBAL' ? 'GLOBAL' : currency.slice(0, 2),
+          title: item.title,
+          impact,
+          actual: item.actual || null,
+          forecast: item.forecast || null,
+          previous: item.previous || null,
+          sentiment: item.sentiment || 'NEUTRAL',
+          source: 'FOREX_FACTORY'
+        },
+        create: {
+          eventId,
+          timestamp: BigInt(ts),
+          timestampSec: Math.floor(ts / 1000),
+          currency,
+          country: currency === 'GLOBAL' ? 'GLOBAL' : currency.slice(0, 2),
+          title: item.title,
+          impact,
+          actual: item.actual || null,
+          forecast: item.forecast || null,
+          previous: item.previous || null,
+          sentiment: item.sentiment || 'NEUTRAL',
+          source: 'FOREX_FACTORY'
+        }
+      });
+      inserted++;
+    }
+
+    res.json({
+      success: true,
+      count: inserted,
+      message: `Đồng bộ thành công ${inserted} sự kiện từ Forex Factory Live Feed`
+    });
+  } catch (error: any) {
+    res.status(200).json({
+      success: false,
+      message: 'Không thể kết nối Forex Factory Live: ' + error.message,
       error: error.message
     });
   }

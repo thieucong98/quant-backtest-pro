@@ -6,6 +6,8 @@
  * currency tagging, impact levels, and smart bar snapping for Lightweight Charts.
  */
 
+import { CURATED_HISTORICAL_EVENTS } from './historicalCalendarData';
+
 export interface EconomicNewsEvent {
   id: string;
   timestamp: number;          // Unix timestamp in milliseconds (UTC)
@@ -50,6 +52,34 @@ function getFirstFriday(year: number, month: number): Date {
   const day = d.getUTCDay(); // 0 is Sunday, 5 is Friday
   const diff = (5 - day + 7) % 7;
   d.setUTCDate(1 + diff);
+  return d;
+}
+
+/**
+ * Helper: Find last Friday of a given year and month (for Core PCE)
+ */
+function getLastFriday(year: number, month: number, hour = 12, minute = 30): Date {
+  const lastDay = new Date(Date.UTC(year, month + 1, 0, hour, minute, 0));
+  const day = lastDay.getUTCDay();
+  const diff = (day - 5 + 7) % 7;
+  lastDay.setUTCDate(lastDay.getUTCDate() - diff);
+  return lastDay;
+}
+
+/**
+ * Helper: Find nth business day of a month (for ISM PMI)
+ */
+function getNthBusinessDay(year: number, month: number, n: number, hour = 14, minute = 0): Date {
+  let count = 0;
+  const d = new Date(Date.UTC(year, month, 1, hour, minute, 0));
+  while (d.getUTCMonth() === month) {
+    const day = d.getUTCDay();
+    if (day !== 0 && day !== 6) {
+      count++;
+      if (count === n) return d;
+    }
+    d.setUTCDate(d.getUTCDate() + 1);
+  }
   return d;
 }
 
@@ -106,7 +136,26 @@ export function generateDeterministicCalendar(
     return allowedCurrencies.has(curr.toUpperCase()) || allowedCurrencies.has('GLOBAL') || curr === 'GLOBAL';
   };
 
-  // Iterate across all months in the time range
+  // 1. Seed from Curated Real-World Historical Data first (2023 - 2026)
+  const coveredKeys = new Set<string>();
+  for (const item of CURATED_HISTORICAL_EVENTS) {
+    if (item.timestamp >= minMs && item.timestamp <= maxMs) {
+      if (shouldInclude(item.currency)) {
+        events.push(item);
+        const d = new Date(item.timestamp);
+        const prefix = item.title.includes('Non-Farm') ? 'NFP'
+          : item.title.includes('Unemployment Rate') ? 'UNEMP'
+          : item.title.includes('Core CPI') ? 'CPI'
+          : item.title.includes('FOMC') ? 'FOMC'
+          : item.title.includes('Bank of England') ? 'BOE'
+          : item.title.includes('ECB') ? 'ECB'
+          : item.title.slice(0, 8);
+        coveredKeys.add(`${d.getUTCFullYear()}_${d.getUTCMonth()}_${prefix}`);
+      }
+    }
+  }
+
+  // 2. Precision Calibrated Engine for date intervals not covered by curated records
   for (let y = startYear; y <= endYear; y++) {
     const mStart = y === startYear ? startMonth : 0;
     const mEnd = y === endYear ? endMonth : 11;
@@ -118,7 +167,7 @@ export function generateDeterministicCalendar(
       // 1. US NON-FARM PAYROLLS (NFP) & UNEMPLOYMENT RATE
       // 1st Friday of Month at 12:30 UTC
       // ─────────────────────────────────────────────────────────────
-      if (shouldInclude('USD')) {
+      if (shouldInclude('USD') && !coveredKeys.has(`${y}_${m}_NFP`)) {
         const nfpDate = getFirstFriday(y, m);
         const nfpMs = nfpDate.getTime();
         if (nfpMs >= minMs && nfpMs <= maxMs) {
@@ -166,7 +215,7 @@ export function generateDeterministicCalendar(
       // 2. US CONSUMER PRICE INDEX (CPI m/m & y/y)
       // 2nd Wednesday of Month at 12:30 UTC
       // ─────────────────────────────────────────────────────────────
-      if (shouldInclude('USD')) {
+      if (shouldInclude('USD') && !coveredKeys.has(`${y}_${m}_CPI`)) {
         const cpiDate = getNthWeekday(y, m, 3, 2, 12, 30); // 2nd Wednesday 12:30 UTC
         const cpiMs = cpiDate.getTime();
         if (cpiMs >= minMs && cpiMs <= maxMs) {
@@ -185,6 +234,33 @@ export function generateDeterministicCalendar(
             forecast: '0.3%',
             previous: `${prevVal}%`,
             sentiment: Number(cpiVal) > 0.3 ? 'BULLISH' : 'BEARISH',
+            source: 'CALENDAR_ENGINE'
+          });
+        }
+      }
+
+      // ─────────────────────────────────────────────────────────────
+      // 2B. US CORE PCE PRICE INDEX (Fed's Preferred Inflation Measure)
+      // Last Friday of Month at 12:30 UTC
+      // ─────────────────────────────────────────────────────────────
+      if (shouldInclude('USD')) {
+        const pceDate = getLastFriday(y, m, 12, 30);
+        const pceMs = pceDate.getTime();
+        if (pceMs >= minMs && pceMs <= maxMs) {
+          const r = seededRandom(`${monthSeed}_PCE`);
+          const pceVal = (0.1 + r * 0.3).toFixed(1);
+          events.push({
+            id: `ev_${y}_${m}_CORE_PCE`,
+            timestamp: pceMs,
+            timestampSec: Math.floor(pceMs / 1000),
+            currency: 'USD',
+            country: 'US',
+            title: 'US Core PCE Price Index (m/m)',
+            impact: 'HIGH',
+            actual: `${pceVal}%`,
+            forecast: '0.2%',
+            previous: '0.2%',
+            sentiment: Number(pceVal) > 0.2 ? 'BULLISH' : 'BEARISH',
             source: 'CALENDAR_ENGINE'
           });
         }
@@ -222,11 +298,7 @@ export function generateDeterministicCalendar(
       // 1st Business Day & 3rd Business Day at 14:00 UTC
       // ─────────────────────────────────────────────────────────────
       if (shouldInclude('USD')) {
-        const ismDate = new Date(Date.UTC(y, m, 1, 14, 0, 0));
-        // Skip weekend to Monday if on Sat/Sun
-        if (ismDate.getUTCDay() === 0) ismDate.setUTCDate(2);
-        else if (ismDate.getUTCDay() === 6) ismDate.setUTCDate(3);
-
+        const ismDate = getNthBusinessDay(y, m, 1, 14, 0);
         const ismMs = ismDate.getTime();
         if (ismMs >= minMs && ismMs <= maxMs) {
           const ismVal = (47.5 + seededRandom(`${monthSeed}_ISM`) * 5.0).toFixed(1);
@@ -245,6 +317,55 @@ export function generateDeterministicCalendar(
             source: 'CALENDAR_ENGINE'
           });
         }
+
+        // US ISM Services PMI (3rd Business Day)
+        const ismServDate = getNthBusinessDay(y, m, 3, 14, 0);
+        const ismServMs = ismServDate.getTime();
+        if (ismServMs >= minMs && ismServMs <= maxMs) {
+          const servVal = (50.5 + seededRandom(`${monthSeed}_ISM_SERV`) * 4.0).toFixed(1);
+          events.push({
+            id: `ev_${y}_${m}_ISM_SERV`,
+            timestamp: ismServMs,
+            timestampSec: Math.floor(ismServMs / 1000),
+            currency: 'USD',
+            country: 'US',
+            title: 'US ISM Services PMI',
+            impact: 'HIGH',
+            actual: servVal,
+            forecast: '51.5',
+            previous: '51.4',
+            sentiment: Number(servVal) >= 50.0 ? 'BULLISH' : 'BEARISH',
+            source: 'CALENDAR_ENGINE'
+          });
+        }
+      }
+
+      // ─────────────────────────────────────────────────────────────
+      // 4B. US ADVANCE GDP (q/q annualized)
+      // Scheduled quarterly in Jan, Apr, Jul, Oct (months 0, 3, 6, 9)
+      // ─────────────────────────────────────────────────────────────
+      const isGdpMonth = [0, 3, 6, 9].includes(m);
+      if (shouldInclude('USD') && isGdpMonth) {
+        const gdpDate = getNthWeekday(y, m, 4, 4, 12, 30);
+        const gdpMs = gdpDate.getTime();
+        if (gdpMs >= minMs && gdpMs <= maxMs) {
+          const r = seededRandom(`${monthSeed}_GDP`);
+          const gdpVal = (1.6 + r * 2.2).toFixed(1);
+          events.push({
+            id: `ev_${y}_${m}_GDP`,
+            timestamp: gdpMs,
+            timestampSec: Math.floor(gdpMs / 1000),
+            currency: 'USD',
+            country: 'US',
+            title: 'US Advance GDP (q/q)',
+            impact: 'HIGH',
+            actual: `${gdpVal}%`,
+            forecast: '2.5%',
+            previous: '2.8%',
+            sentiment: Number(gdpVal) >= 2.5 ? 'BULLISH' : 'BEARISH',
+            source: 'CALENDAR_ENGINE'
+          });
+        }
       }
 
       // ─────────────────────────────────────────────────────────────
@@ -252,7 +373,7 @@ export function generateDeterministicCalendar(
       // Scheduled 8 times/year (Jan, Mar, May, Jun, Jul, Sep, Nov, Dec) - 3rd/4th Wed 18:00 UTC
       // ─────────────────────────────────────────────────────────────
       const isFomcMonth = [0, 2, 4, 5, 6, 8, 10, 11].includes(m);
-      if (shouldInclude('USD') && isFomcMonth) {
+      if (shouldInclude('USD') && isFomcMonth && !coveredKeys.has(`${y}_${m}_FOMC`)) {
         const fomcDate = getNthWeekday(y, m, 3, 3, 18, 0); // 3rd Wednesday 18:00 UTC
         const fomcMs = fomcDate.getTime();
         if (fomcMs >= minMs && fomcMs <= maxMs) {
@@ -292,7 +413,7 @@ export function generateDeterministicCalendar(
       // Selected months (Jan, Mar, Apr, Jun, Jul, Sep, Oct, Dec) - Thursday 12:15 UTC
       // ─────────────────────────────────────────────────────────────
       const isEcbMonth = [0, 2, 3, 5, 6, 8, 9, 11].includes(m);
-      if (shouldInclude('EUR') && isEcbMonth) {
+      if (shouldInclude('EUR') && isEcbMonth && !coveredKeys.has(`${y}_${m}_ECB`)) {
         const ecbDate = getNthWeekday(y, m, 4, 2, 12, 15);
         const ecbMs = ecbDate.getTime();
         if (ecbMs >= minMs && ecbMs <= maxMs) {
@@ -327,10 +448,11 @@ export function generateDeterministicCalendar(
 
       // ─────────────────────────────────────────────────────────────
       // 7. BANK OF ENGLAND (BOE) RATE DECISION
-      // 1st or 2nd Thursday at 11:00 UTC
+      // 8 times/year (Feb, Mar, May, Jun, Aug, Sep, Nov, Dec) - Thursday 11:00 UTC
       // ─────────────────────────────────────────────────────────────
-      if (shouldInclude('GBP')) {
-        const boeDate = getNthWeekday(y, m, 4, 1, 11, 0);
+      const isBoeMonth = [1, 2, 4, 5, 7, 8, 10, 11].includes(m);
+      if (shouldInclude('GBP') && isBoeMonth && !coveredKeys.has(`${y}_${m}_BOE`)) {
+        const boeDate = getNthWeekday(y, m, 4, [1, 4, 7, 10].includes(m) ? 1 : 3, 11, 0);
         const boeMs = boeDate.getTime();
         if (boeMs >= minMs && boeMs <= maxMs) {
           events.push({

@@ -35,6 +35,7 @@ mt5_gateway/python_embed/
 mt5_gateway/__pycache__/
 scratch/
 scripts/installers/
-server/data/
+server/data/*
+!server/data/historicalCalendarData.ts
 *.zip
 scan_summary.json

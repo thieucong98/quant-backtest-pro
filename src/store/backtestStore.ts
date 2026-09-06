@@ -11,6 +11,7 @@ import { AccountState, EquityPoint, Order, OrderSide, OrderType, Position } from
 import { AIStrategyDefinition, StrategyLogMessage } from '../types/strategy';
 import { sessionsApi } from '../api/sessions';
 import { tradesApi } from '../api/trades';
+import { calendarApi } from '../api/calendar';
 import { checkServerHealth } from '../api/client';
 import { AnalyticsEngine } from '../engine/analytics';
 import { soundFx } from '../engine/audioEngine';
@@ -49,7 +50,9 @@ interface BacktestStore {
   setEconomicNewsDisplayMode: (mode: 'AUTO' | 'COMPACT' | 'CLUSTERED' | 'FULL') => void;
   setEconomicNewsOnlyCurrentPair: (onlyCurrent: boolean) => void;
   setSelectedCalendarCurrency: (currency: string) => void;
+  isSyncingCalendar: boolean;
   fetchCalendarEvents: () => Promise<void>;
+  syncForexFactoryEvents: () => Promise<{ success: boolean; message: string; inserted?: number; rateLimited?: boolean }>;
 
   // Replay Controller
   isPlaying: boolean;
@@ -399,15 +402,46 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
     setEconomicNewsDisplayMode: (mode) => set({ economicNewsDisplayMode: mode }),
     setEconomicNewsOnlyCurrentPair: (onlyCurrent) => set({ economicNewsOnlyCurrentPair: onlyCurrent }),
     setSelectedCalendarCurrency: (currency) => set({ selectedCalendarCurrency: currency }),
+    isSyncingCalendar: false,
     fetchCalendarEvents: async () => {
       try {
-        const { rawM1Candles, instrument } = get();
+        const { rawM1Candles, instrument, isServerOnline } = get();
         if (rawM1Candles.length === 0) return;
         const first = rawM1Candles[0].timestamp;
         const last = rawM1Candles[rawM1Candles.length - 1].timestamp;
+        if (isServerOnline) {
+          try {
+            const serverEvents = await calendarApi.getEvents({
+              from: first,
+              to: last,
+              symbol: instrument.symbol
+            });
+            if (serverEvents && serverEvents.length > 0) {
+              set({ economicNews: serverEvents });
+              return;
+            }
+          } catch (err) {
+            console.warn('[Calendar] Server fetch failed, falling back to precision engine:', err);
+          }
+        }
         const events = generateNewsForCandles(rawM1Candles, instrument.symbol);
         set({ economicNews: events });
       } catch {}
+    },
+    syncForexFactoryEvents: async () => {
+      set({ isSyncingCalendar: true });
+      try {
+        const res = await calendarApi.syncForexFactory();
+        await get().fetchCalendarEvents();
+        set({ isSyncingCalendar: false });
+        return res;
+      } catch (err: any) {
+        set({ isSyncingCalendar: false });
+        return {
+          success: false,
+          message: err?.message || 'Failed to sync Forex Factory'
+        };
+      }
     },
 
     isPlaying: false,

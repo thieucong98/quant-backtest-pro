@@ -701,6 +701,19 @@ export interface TranslationDict {
   calendarBullishImpact: string;
   calendarBearishImpact: string;
   calendarNotAvailable: string;
+  calendarSource: string;
+  calendarSourceFF: string;
+  calendarSourceReal: string;
+  calendarSourcePrecision: string;
+  calendarSourceImport: string;
+  calendarSyncFFBtn: string;
+  calendarSyncingFFBtn: string;
+  calendarSyncSuccessToast: string;
+  calendarSyncRateLimitedToast: string;
+  calendarSyncFailedToast: string;
+  calendarImpactHigh: string;
+  calendarImpactMedium: string;
+  calendarImpactLow: string;
 
   // Kaggle Institutional Hub & Data Import
   kaggleHubSubtitle: string;

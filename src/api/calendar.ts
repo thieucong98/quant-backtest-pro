@@ -41,5 +41,9 @@ export const calendarApi = {
 
   importData: async (data: { csvContent?: string; jsonEvents?: EconomicNewsEvent[] }): Promise<{ success: boolean; count: number; message: string }> => {
     return api.post('/calendar/import', data);
+  },
+
+  syncForexFactory: async (): Promise<{ success: boolean; message: string; inserted?: number; rateLimited?: boolean }> => {
+    return api.post('/calendar/sync-forexfactory', {});
   }
 };
