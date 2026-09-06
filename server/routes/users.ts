@@ -5,7 +5,11 @@ import { prisma } from '../index.js';
 
 export const usersRouter = Router();
 
-const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret';
+const isProduction = process.env.NODE_ENV === 'production';
+if (isProduction && (!process.env.JWT_SECRET || process.env.JWT_SECRET === 'dev-secret')) {
+  console.error('[SECURITY CRITICAL] JWT_SECRET must be set to a strong random value in production!');
+}
+const JWT_SECRET = process.env.JWT_SECRET || (isProduction ? 'prod-secret-fallback-override-required' : 'dev-secret');
 
 // Middleware: Strict JWT requirement for private endpoints
 export function requireAuth(req: Request, res: Response, next: Function) {
@@ -45,8 +49,11 @@ export function optionalAuth(req: Request, _res: Response, next: Function) {
 
 export const authMiddleware = requireAuth;
 
-// Helper: Get or create default dev user
+// Helper: Get or create default dev user (only in development)
 export async function getOrCreateDefaultUser() {
+  if (process.env.NODE_ENV === 'production') {
+    return null;
+  }
   const DEFAULT_EMAIL = 'admin@quantbacktest.pro';
   let user = await prisma.user.findUnique({ where: { email: DEFAULT_EMAIL } });
   if (!user) {

@@ -29,14 +29,14 @@ function sanitizeGatewayUrl(urlStr?: string): string {
   }
 }
 
-// In-memory active broker session config on server
-let activeBrokerSession: {
+// User-isolated in-memory broker session management
+interface UserBrokerSession {
   brokerType: string;
   gatewayUrl: string;
   account: string;
   server: string;
   lastConnected: number;
-} | null = null;
+}
 
 // ==============================================================================
 // INTERNAL NODE.JS MOCK BROKER ENGINE (Fallback when Python Gateway is offline)
@@ -94,13 +94,32 @@ class ServerMockEngine {
   }
 }
 
-const internalMock = new ServerMockEngine();
+interface UserBrokerContext {
+  session: UserBrokerSession | null;
+  mockEngine: ServerMockEngine;
+}
+
+const userBrokerContexts = new Map<string, UserBrokerContext>();
+
+function getUserContext(req: Request): UserBrokerContext {
+  const userId = (req as any).userId || 'default-user';
+  let ctx = userBrokerContexts.get(userId);
+  if (!ctx) {
+    ctx = {
+      session: null,
+      mockEngine: new ServerMockEngine()
+    };
+    userBrokerContexts.set(userId, ctx);
+  }
+  return ctx;
+}
 
 /**
  * Health check & Ping MT5 Gateway / Broker
  */
 brokerRouter.get('/health', async (req: Request, res: Response) => {
-  const rawUrl = (req.query.gatewayUrl as string) || activeBrokerSession?.gatewayUrl;
+  const userCtx = getUserContext(req);
+  const rawUrl = (req.query.gatewayUrl as string) || userCtx.session?.gatewayUrl;
   const gatewayUrl = sanitizeGatewayUrl(rawUrl);
   const startTime = Date.now();
 
@@ -130,7 +149,7 @@ brokerRouter.get('/health', async (req: Request, res: Response) => {
       gatewayData: {
         status: 'online',
         mode: 'internal_mock',
-        is_connected: internalMock.connected,
+        is_connected: userCtx.mockEngine.connected,
         version: '2.0.0 (Node Mock Fallback)'
       }
     });
@@ -141,8 +160,9 @@ brokerRouter.get('/health', async (req: Request, res: Response) => {
  * Connect to Broker / MT5 Terminal
  */
 brokerRouter.post('/connect', async (req: Request, res: Response) => {
+  const userCtx = getUserContext(req);
   const { brokerType, gatewayUrl, account, password, server, path } = req.body;
-  const targetUrl = sanitizeGatewayUrl(gatewayUrl || activeBrokerSession?.gatewayUrl);
+  const targetUrl = sanitizeGatewayUrl(gatewayUrl || userCtx.session?.gatewayUrl);
 
   try {
     const controller = new AbortController();
@@ -163,32 +183,32 @@ brokerRouter.post('/connect', async (req: Request, res: Response) => {
 
     const data = await response.json();
     if (response.ok) {
-      activeBrokerSession = {
+      userCtx.session = {
         brokerType: brokerType || 'MT5_EXNESS',
         gatewayUrl: targetUrl,
         account: account || '84920184',
         server: server || 'Exness-MT5Real',
         lastConnected: Date.now()
       };
-      return res.json({ success: true, session: activeBrokerSession, data });
+      return res.json({ success: true, session: userCtx.session, data });
     }
   } catch {
     // Use Internal Mock
-    internalMock.connected = true;
-    if (account) internalMock.accountInfo.login = parseInt(account, 10);
-    if (server) internalMock.accountInfo.server = server;
-    activeBrokerSession = {
+    userCtx.mockEngine.connected = true;
+    if (account) userCtx.mockEngine.accountInfo.login = parseInt(account, 10);
+    if (server) userCtx.mockEngine.accountInfo.server = server;
+    userCtx.session = {
       brokerType: brokerType || 'MT5_EXNESS',
       gatewayUrl: targetUrl,
-      account: String(internalMock.accountInfo.login),
-      server: internalMock.accountInfo.server,
+      account: String(userCtx.mockEngine.accountInfo.login),
+      server: userCtx.mockEngine.accountInfo.server,
       lastConnected: Date.now()
     };
     return res.json({
       success: true,
       mode: 'mock',
-      account: internalMock.accountInfo,
-      message: `Connected to ${internalMock.accountInfo.server} #${internalMock.accountInfo.login}`
+      account: userCtx.mockEngine.accountInfo,
+      message: `Connected to ${userCtx.mockEngine.accountInfo.server} #${userCtx.mockEngine.accountInfo.login}`
     });
   }
 });
@@ -197,13 +217,14 @@ brokerRouter.post('/connect', async (req: Request, res: Response) => {
  * Disconnect from Broker
  */
 brokerRouter.post('/disconnect', async (req: Request, res: Response) => {
-  const gatewayUrl = sanitizeGatewayUrl(req.body.gatewayUrl || activeBrokerSession?.gatewayUrl);
+  const userCtx = getUserContext(req);
+  const gatewayUrl = sanitizeGatewayUrl(req.body.gatewayUrl || userCtx.session?.gatewayUrl);
 
   try {
     await fetch(`${gatewayUrl}/disconnect`, { method: 'POST' });
   } catch {}
-  internalMock.connected = false;
-  activeBrokerSession = null;
+  userCtx.mockEngine.connected = false;
+  userCtx.session = null;
   return res.json({ success: true, message: 'Disconnected' });
 });
 
@@ -211,6 +232,8 @@ brokerRouter.post('/disconnect', async (req: Request, res: Response) => {
  * Get Account Info
  */
 brokerRouter.get('/account', async (req: Request, res: Response) => {
+  const userCtx = getUserContext(req);
+  const { session: activeBrokerSession, mockEngine: internalMock } = userCtx;
   const gatewayUrl = sanitizeGatewayUrl(req.query.gatewayUrl as string || activeBrokerSession?.gatewayUrl);
 
   try {
@@ -225,6 +248,8 @@ brokerRouter.get('/account', async (req: Request, res: Response) => {
  * Get Open Positions
  */
 brokerRouter.get('/positions', async (req: Request, res: Response) => {
+  const userCtx = getUserContext(req);
+  const { session: activeBrokerSession, mockEngine: internalMock } = userCtx;
   const gatewayUrl = sanitizeGatewayUrl(req.query.gatewayUrl as string || activeBrokerSession?.gatewayUrl);
 
   try {
@@ -238,6 +263,8 @@ brokerRouter.get('/positions', async (req: Request, res: Response) => {
  * Get Pending Orders
  */
 brokerRouter.get('/orders', async (req: Request, res: Response) => {
+  const userCtx = getUserContext(req);
+  const { session: activeBrokerSession, mockEngine: internalMock } = userCtx;
   const gatewayUrl = sanitizeGatewayUrl(req.query.gatewayUrl as string || activeBrokerSession?.gatewayUrl);
 
   try {
@@ -251,6 +278,8 @@ brokerRouter.get('/orders', async (req: Request, res: Response) => {
  * Get History Deals
  */
 brokerRouter.get('/history', async (req: Request, res: Response) => {
+  const userCtx = getUserContext(req);
+  const { session: activeBrokerSession, mockEngine: internalMock } = userCtx;
   const gatewayUrl = sanitizeGatewayUrl(req.query.gatewayUrl as string || activeBrokerSession?.gatewayUrl);
 
   try {
@@ -264,6 +293,8 @@ brokerRouter.get('/history', async (req: Request, res: Response) => {
  * Send Live Order
  */
 brokerRouter.post('/order/send', async (req: Request, res: Response) => {
+  const userCtx = getUserContext(req);
+  const { session: activeBrokerSession, mockEngine: internalMock } = userCtx;
   const gatewayUrl = sanitizeGatewayUrl(req.body.gatewayUrl || activeBrokerSession?.gatewayUrl);
 
   try {
@@ -329,6 +360,8 @@ brokerRouter.post('/order/send', async (req: Request, res: Response) => {
  * Modify Order SL/TP
  */
 brokerRouter.post('/order/modify', async (req: Request, res: Response) => {
+  const userCtx = getUserContext(req);
+  const { session: activeBrokerSession, mockEngine: internalMock } = userCtx;
   const gatewayUrl = sanitizeGatewayUrl(req.body.gatewayUrl || activeBrokerSession?.gatewayUrl);
 
   try {
@@ -361,6 +394,8 @@ brokerRouter.post('/order/modify', async (req: Request, res: Response) => {
  * Close Position (Full or Partial)
  */
 brokerRouter.post('/order/close', async (req: Request, res: Response) => {
+  const userCtx = getUserContext(req);
+  const { session: activeBrokerSession, mockEngine: internalMock } = userCtx;
   const gatewayUrl = sanitizeGatewayUrl(req.body.gatewayUrl || activeBrokerSession?.gatewayUrl);
 
   try {
@@ -407,6 +442,8 @@ brokerRouter.post('/order/close', async (req: Request, res: Response) => {
  * Cancel Pending Order
  */
 brokerRouter.post('/order/cancel', async (req: Request, res: Response) => {
+  const userCtx = getUserContext(req);
+  const { session: activeBrokerSession, mockEngine: internalMock } = userCtx;
   const gatewayUrl = sanitizeGatewayUrl(req.body.gatewayUrl || activeBrokerSession?.gatewayUrl);
   const ticket = Number(req.query.ticket || req.body.ticket);
 
@@ -428,6 +465,8 @@ brokerRouter.post('/order/cancel', async (req: Request, res: Response) => {
  * Get Historical Candles from Broker
  */
 brokerRouter.get('/candles', async (req: Request, res: Response) => {
+  const userCtx = getUserContext(req);
+  const { session: activeBrokerSession, mockEngine: internalMock } = userCtx;
   const gatewayUrl = sanitizeGatewayUrl(req.query.gatewayUrl as string || activeBrokerSession?.gatewayUrl);
   const symbol = (req.query.symbol as string) || 'XAUUSD';
   const timeframe = (req.query.timeframe as string) || 'M5';
@@ -474,7 +513,8 @@ brokerRouter.get('/candles', async (req: Request, res: Response) => {
  * Get All Symbols List with Categories
  */
 brokerRouter.get('/symbols/all', async (req: Request, res: Response) => {
-  const gatewayUrl = sanitizeGatewayUrl(req.query.gatewayUrl as string || activeBrokerSession?.gatewayUrl);
+  const userCtx = getUserContext(req);
+  const gatewayUrl = sanitizeGatewayUrl(req.query.gatewayUrl as string || userCtx.session?.gatewayUrl);
 
   try {
     const response = await fetch(`${gatewayUrl}/symbols/all`);

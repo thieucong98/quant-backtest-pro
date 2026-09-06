@@ -47,11 +47,62 @@ app.use(cors({
   credentials: true
 }));
 
+// Enterprise HTTP Security Headers (OWASP Recommended)
+app.use((_req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  if (process.env.NODE_ENV === 'production') {
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  }
+  next();
+});
+
+// In-memory rate-limiter for Brute-force & DDoS Mitigation
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+function rateLimiter(options: { windowMs: number; max: number; message: string }) {
+  return (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    const ip = (req.ip || req.socket.remoteAddress || 'unknown').replace(/^.*:/, '');
+    const key = `${req.baseUrl || ''}${req.path}_${ip}`;
+    const now = Date.now();
+    const entry = rateLimitMap.get(key);
+
+    if (!entry || now > entry.resetAt) {
+      rateLimitMap.set(key, { count: 1, resetAt: now + options.windowMs });
+      return next();
+    }
+
+    if (entry.count >= options.max) {
+      res.setHeader('Retry-After', Math.ceil((entry.resetAt - now) / 1000));
+      return res.status(429).json({ error: options.message });
+    }
+
+    entry.count++;
+    next();
+  };
+}
+
+const authLimiter = rateLimiter({
+  windowMs: 60 * 1000,
+  max: 15,
+  message: 'Quá nhiều yêu cầu xác thực. Vui lòng thử lại sau 1 phút.'
+});
+
+const pinLimiter = rateLimiter({
+  windowMs: 60 * 1000,
+  max: 10,
+  message: 'Quá nhiều lần thử mã PIN. Vui lòng đợi 1 phút trước khi thử lại.'
+});
+
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Enforce Remote Tunnel PIN if configured
 app.use('/api', verifyTunnelPin);
+app.use('/api/tunnel/verify-pin', pinLimiter);
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/register', authLimiter);
 
 // Health check
 app.get('/api/health', (_req, res) => {

@@ -26,6 +26,9 @@ jobs:
       - name: Build & TypeScript Verification
         run: npm run build
 
+      - name: Verify 100% i18n Parity (Zero Hardcoded Strings)
+        run: npm run check:i18n
+
       - name: Run Automated Comprehensive Test Suite
         run: npm test
 

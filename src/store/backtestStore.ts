@@ -17,21 +17,13 @@ import { AnalyticsEngine } from '../engine/analytics';
 import { soundFx } from '../engine/audioEngine';
 import { useAuthStore } from './authStore';
 import { idbStorage } from '../storage/idbStorage';
+import { createPropFirmSlice, PropFirmSlice } from './slices/createPropFirmSlice';
 
-interface BacktestStore {
+interface BacktestStore extends PropFirmSlice {
   // Session Persistence
   activeSessionId: string | null;
   isServerOnline: boolean;
   isSessionManagerOpen: boolean;
-
-  // Prop Firm Simulator Mode
-  isPropFirmMode: boolean;
-  propFirmDailyLossLimit: number;
-  propFirmMaxDrawdownLimit: number;
-  propFirmProfitTarget: number;
-  propFirmStartingDayBalance: number;
-  togglePropFirmMode: (enabled?: boolean) => void;
-  setPropFirmLimits: (dailyLoss: number, maxDD: number, target: number) => void;
 
   // Instrument & Data
   instrument: InstrumentSpec;
@@ -377,14 +369,8 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
     isSessionManagerOpen: false,
     guestTradeCount: 0,
 
-    // Prop Firm Simulator Mode
-    isPropFirmMode: true,
-    propFirmDailyLossLimit: 5,
-    propFirmMaxDrawdownLimit: 10,
-    propFirmProfitTarget: 10,
-    propFirmStartingDayBalance: cachedInit?.balance || 10000,
-    togglePropFirmMode: (enabled) => set(s => ({ isPropFirmMode: enabled !== undefined ? enabled : !s.isPropFirmMode })),
-    setPropFirmLimits: (dailyLoss, maxDD, target) => set({ propFirmDailyLossLimit: dailyLoss, propFirmMaxDrawdownLimit: maxDD, propFirmProfitTarget: target }),
+    // Prop Firm Simulator Slice
+    ...createPropFirmSlice(set, get, cachedInit?.balance || 10000),
 
     instrument: initialInstrument,
     timeframe: cachedInit?.timeframe || 'M5',

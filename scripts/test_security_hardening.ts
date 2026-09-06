@@ -53,7 +53,40 @@ async function runSecuritySuite() {
   const protoRes = sandbox.compile(protoExploit);
   assert('Prototype pollution attempt (prototype) rejected at compile time', !protoRes.success && !!protoRes.error);
 
-  // Test 1.3: Valid strategy compiles and executes safely
+  // Test 1.3: Dynamic string concatenation attempt rejected
+  const concatExploit = `
+    return {
+      onCandle: () => {
+        const x = this['c' + 'onstructor'];
+      }
+    };
+  `;
+  const concatRes = sandbox.compile(concatExploit);
+  assert('Dynamic property concatenation escape attempt rejected', !concatRes.success && !!concatRes.error);
+
+  // Test 1.4: Hex/Unicode escape attempt rejected
+  const escapeExploit = `
+    return {
+      onCandle: () => {
+        const x = '\\x77\\x69\\x6e\\x64\\x6f\\x77';
+      }
+    };
+  `;
+  const escapeRes = sandbox.compile(escapeExploit);
+  assert('Obfuscated hex/unicode escape sequence rejected', !escapeRes.success && !!escapeRes.error);
+
+  // Test 1.5: Unbounded loop DoS attempt rejected
+  const loopExploit = `
+    return {
+      onCandle: () => {
+        while(true) {}
+      }
+    };
+  `;
+  const loopRes = sandbox.compile(loopExploit);
+  assert('Unbounded infinite loop (while(true)) rejected', !loopRes.success && !!loopRes.error);
+
+  // Test 1.6: Valid strategy compiles and executes safely
   const validStrategy = `
     return {
       onCandle: (candle, indicators, account, api) => {

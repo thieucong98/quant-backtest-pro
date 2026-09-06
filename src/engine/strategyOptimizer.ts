@@ -2,6 +2,7 @@ import { Candle, InstrumentSpec } from '../types/market';
 import { PerformanceReport, AnalyticsEngine } from './analytics';
 import { IndicatorCalculator } from './indicators';
 import { OrderMatchingEngine } from './orderMatchingEngine';
+import { validateStrategyCode } from './strategySandbox';
 
 export interface OptimizationRange {
   min: number;
@@ -190,6 +191,11 @@ export class StrategyOptimizerEngine {
 
     if (totalCombinations === 0 || candles.length < 5) {
       throw new Error('Dữ liệu nến không đủ hoặc dải tham số không hợp lệ để tối ưu hóa.');
+    }
+
+    const validation = validateStrategyCode(strategyCode);
+    if (!validation.valid) {
+      throw new Error(validation.error);
     }
 
     // Chuẩn bị mã hàm thực thi chiến lược
@@ -437,11 +443,30 @@ export class StrategyOptimizerEngine {
         const document = undefined;
         const localStorage = undefined;
         const sessionStorage = undefined;
+        const indexedDB = undefined;
         const fetch = undefined;
         const WebSocket = undefined;
         const XMLHttpRequest = undefined;
         const globalThis = undefined;
         const self = undefined;
+        const top = undefined;
+        const parent = undefined;
+        const frames = undefined;
+        const opener = undefined;
+        const location = undefined;
+        const navigator = undefined;
+        const Reflect = undefined;
+        const Proxy = undefined;
+        const Worker = undefined;
+        const SharedWorker = undefined;
+        const ServiceWorker = undefined;
+        const setTimeout = undefined;
+        const setInterval = undefined;
+        const setImmediate = undefined;
+        const alert = undefined;
+        const prompt = undefined;
+        const confirm = undefined;
+        const postMessage = undefined;
       `;
       const factory = new Function(sandboxPreamble + functionBody);
       const stratInstance = factory();

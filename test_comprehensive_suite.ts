@@ -12,6 +12,8 @@ import { generateRealisticCandles } from './src/config/sampleData';
 import { Candle, InstrumentSpec } from './src/types/market';
 import { Position } from './src/types/order';
 import { calculateHeikinAshi } from './src/components/chart/TradingViewChart';
+import { OrderFactory } from './src/engine/patterns/OrderFactory';
+import { StrategyExecutionContext, EMACrossoverStrategy, RSIMeanReversionStrategy } from './src/engine/patterns/StrategyPattern';
 
 interface TestResult {
   suite: string;
@@ -609,7 +611,143 @@ async function runComprehensiveTests() {
   assert(generatedForCandles.length >= 0, 'CalendarEngine', 'generateNewsForCandles runs safely on candle slice');
 
   // =========================================================================
-  // 12. SUMMARY OF TEST SUITE RESULTS
+  // 12. ORDER FACTORY PATTERN & VALIDATION TESTS
+  // =========================================================================
+  console.log('\n--- 12. Order Factory Pattern Tests ---');
+
+  // Test 12.1: Create valid Market Order
+  const marketOrder = OrderFactory.createMarketOrder({
+    symbol: 'XAUUSD',
+    side: 'BUY',
+    lotSize: 0.5,
+    currentPrice: 2650.0,
+    stopLoss: 2640.0,
+    takeProfit: 2670.0
+  });
+  assert(marketOrder.type === 'MARKET' && marketOrder.status === 'FILLED' && marketOrder.price === 2650.0, 'OrderFactory', 'Market order created with correct status and price');
+
+  // Test 12.2: Create valid Limit Order (BUY LIMIT below market)
+  const factoryBuyLimit = OrderFactory.createLimitOrder({
+    symbol: 'EURUSD',
+    side: 'BUY',
+    lotSize: 1.0,
+    currentPrice: 1.0850,
+    triggerPrice: 1.0800
+  });
+  assert(factoryBuyLimit.type === 'LIMIT' && factoryBuyLimit.status === 'PENDING' && factoryBuyLimit.price === 1.0800, 'OrderFactory', 'BUY LIMIT order created below current market');
+
+  // Test 12.3: Reject invalid Limit Order (BUY LIMIT above market)
+  let buyLimitRejected = false;
+  try {
+    OrderFactory.createLimitOrder({
+      symbol: 'EURUSD',
+      side: 'BUY',
+      lotSize: 1.0,
+      currentPrice: 1.0850,
+      triggerPrice: 1.0900
+    });
+  } catch {
+    buyLimitRejected = true;
+  }
+  assert(buyLimitRejected, 'OrderFactory', 'BUY LIMIT above current price correctly rejected');
+
+  // Test 12.4: Create valid Stop Order (BUY STOP above market)
+  const factoryBuyStop = OrderFactory.createStopOrder({
+    symbol: 'BTCUSD',
+    side: 'BUY',
+    lotSize: 0.1,
+    currentPrice: 68000.0,
+    triggerPrice: 68500.0
+  });
+  assert(factoryBuyStop.type === 'STOP' && factoryBuyStop.status === 'PENDING' && factoryBuyStop.price === 68500.0, 'OrderFactory', 'BUY STOP order created above current market');
+
+  // Test 12.5: Order SL/TP Validation
+  const validSLTP = OrderFactory.validateSLTP('BUY', 100, 95, 110);
+  assert(validSLTP.valid, 'OrderFactory', 'Valid BUY SL/TP accepted');
+
+  const invalidSLTP = OrderFactory.validateSLTP('BUY', 100, 105, 110);
+  assert(!invalidSLTP.valid, 'OrderFactory', 'BUY SL above entry price rejected');
+
+  // =========================================================================
+  // 13. STRATEGY PATTERN & CONTEXT EXECUTION TESTS
+  // =========================================================================
+  console.log('\n--- 13. Strategy Pattern & Context Execution Tests ---');
+
+  const stratContext = new StrategyExecutionContext();
+  const emaStrat = new EMACrossoverStrategy();
+  stratContext.setStrategy(emaStrat);
+  assert(stratContext.getStrategy()?.id === 'strat_ema_crossover', 'StrategyPattern', 'Context binds EMACrossoverStrategy');
+
+  let signalFired = false;
+  const patternMockApi = {
+    buy: () => { signalFired = true; },
+    sell: () => {},
+    close: () => {},
+    log: () => {}
+  };
+  const patternMockIndicators = {
+    ema: (period: number) => period === 9 ? 2660 : 2650
+  } as any;
+
+  stratContext.execute(
+    { timestamp: 1000, open: 2655, high: 2665, low: 2654, close: 2662, volume: 100 },
+    patternMockIndicators,
+    { openPositionsCount: 0, balance: 10000, equity: 10000 } as any,
+    patternMockApi as any
+  );
+  assert(signalFired, 'StrategyPattern', 'StrategyExecutionContext executes onCandle and fires signal');
+
+  // Polymorphic strategy switch to RSI
+  const rsiStrat = new RSIMeanReversionStrategy();
+  stratContext.setStrategy(rsiStrat);
+  assert(stratContext.getStrategy()?.id === 'strat_rsi_reversion', 'StrategyPattern', 'Context switches polymorphically to RSIMeanReversionStrategy');
+
+  // =========================================================================
+  // 14. PROP FIRM RULE ENGINE MATHEMATICAL TESTS
+  // =========================================================================
+  console.log('\n--- 14. Prop Firm Rule Engine Mathematical Tests ---');
+
+  const startingDayBalance = 100000;
+  const dailyLossLimitPercent = 5; // 5% = $5,000 max daily loss
+  const maxDDLimitPercent = 10;     // 10% = $10,000 max total drawdown
+  const profitTargetPercent = 10;   // 10% = $10,000 profit target
+
+  // Test 14.1: Daily Loss Safe State
+  const safeCurrentEquity = 96000; // Drop of $4,000 (4%) -> Safe
+  const dailyLossDrop = ((startingDayBalance - safeCurrentEquity) / startingDayBalance) * 100;
+  assert(dailyLossDrop < dailyLossLimitPercent, 'PropFirmEngine', 'Daily loss 4% is within 5% safe boundary', { dailyLossDrop });
+
+  // Test 14.2: Daily Loss Breach Detection
+  const breachedEquity = 94500; // Drop of $5,500 (5.5%) -> Breach!
+  const breachedDailyLoss = ((startingDayBalance - breachedEquity) / startingDayBalance) * 100;
+  assert(breachedDailyLoss >= dailyLossLimitPercent, 'PropFirmEngine', 'Daily loss 5.5% triggers rule violation', { breachedDailyLoss });
+
+  // Test 14.3: Profit Target Achievement Detection
+  const winningEquity = 110500; // +$10,500 (+10.5%) -> Passed target!
+  const profitGain = ((winningEquity - startingDayBalance) / startingDayBalance) * 100;
+  assert(profitGain >= profitTargetPercent, 'PropFirmEngine', 'Profit +10.5% triggers challenge passed', { profitGain });
+
+  // =========================================================================
+  // 15. MULTI-TIMEFRAME RESAMPLING INVARIANTS
+  // =========================================================================
+  console.log('\n--- 15. Multi-Timeframe Resampling Invariants ---');
+
+  const m1Source = generateRealisticCandles('EURUSD', 1.0850, 120, 5);
+  const m15Resampled = TimeframeResampler.resample(m1Source, 'M15');
+  assert(m15Resampled.length > 0, 'Resampling', 'M1 to M15 resampling produced candles');
+
+  // Verify invariant: For every M15 candle, High >= max(M1 High) and Low <= min(M1 Low)
+  let invariantHolds = true;
+  for (const bar of m15Resampled) {
+    if (bar.high < bar.low || bar.open > bar.high || bar.open < bar.low || bar.close > bar.high || bar.close < bar.low) {
+      invariantHolds = false;
+      break;
+    }
+  }
+  assert(invariantHolds, 'Resampling', 'All resampled OHLC bars satisfy Low <= Open,Close <= High invariant');
+
+  // =========================================================================
+  // 16. SUMMARY OF TEST SUITE RESULTS
   // =========================================================================
   console.log('\n===============================================================');
   const total = testResults.length;

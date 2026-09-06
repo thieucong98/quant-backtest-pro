@@ -209,63 +209,158 @@ return {
   }
 ];
 
+export function validateStrategyCode(code: string): { valid: boolean; error?: string } {
+  const rawCode = code.trim();
+  const uncommented = rawCode
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/\/\/.*/g, '')
+    .trim();
+
+  // 1. Obfuscation detection: Block hex/unicode escape sequences often used to hide dangerous keywords
+  const escapePatterns = [
+    /\\x[0-9a-fA-F]{2}/,
+    /\\u[0-9a-fA-F]{4}/,
+    /\\u\{[0-9a-fA-F]+\}/
+  ];
+  for (const p of escapePatterns) {
+    if (p.test(uncommented)) {
+      return {
+        valid: false,
+        error: 'Security Violation: Escape sequences (\\x, \\u) are prohibited in quant strategies.'
+      };
+    }
+  }
+
+  // 2. Dynamic property indexing with concatenation: e.g. ['c' + 'onstructor'] or ["win" + "dow"]
+  if (/\[\s*['"`][^'"`\]]*['"`]\s*\+/.test(uncommented) || /\+\s*['"`][^'"`\]]*['"`]\s*\]/.test(uncommented)) {
+    return {
+      valid: false,
+      error: 'Security Violation: Dynamic property string concatenation is prohibited in quant strategies.'
+    };
+  }
+
+  // 3. Infinite loop / denial-of-service patterns
+  if (/while\s*\(\s*(true|1)\s*\)/i.test(uncommented) || /for\s*\(\s*;\s*;\s*\)/.test(uncommented)) {
+    return {
+      valid: false,
+      error: 'Security Violation: Unbounded loops (while(true) / for(;;)) are prohibited.'
+    };
+  }
+
+  // 4. Forbidden keywords and prototype traversal identifiers
+  const forbiddenPatterns = [
+    /\bconstructor\b/i,
+    /\bprototype\b/i,
+    /__proto__/i,
+    /\beval\s*\(/i,
+    /\bFunction\s*\(/,
+    /\bwindow\b/i,
+    /\bdocument\b/i,
+    /\blocalStorage\b/i,
+    /\bsessionStorage\b/i,
+    /\bindexedDB\b/i,
+    /\bcookie\b/i,
+    /\bfetch\b/i,
+    /\bXMLHttpRequest\b/i,
+    /\bWebSocket\b/i,
+    /\bimport\b/i,
+    /\bimportScripts\b/i,
+    /\bglobalThis\b/i,
+    /\bprocess\b/i,
+    /\bReflect\b/i,
+    /\bProxy\b/i,
+    /\bgetPrototypeOf\b/i,
+    /\bsetPrototypeOf\b/i,
+    /\blookupGetter\b/i,
+    /\blookupSetter\b/i,
+    /\bdefineGetter\b/i,
+    /\bdefineSetter\b/i,
+    /\bWorker\b/i,
+    /\bSharedWorker\b/i,
+    /\bServiceWorker\b/i,
+    /\btop\b/i,
+    /\bparent\b/i,
+    /\bframes\b/i,
+    /\bopener\b/i,
+    /\blocation\b/i,
+    /\bnavigator\b/i,
+    /\bsetTimeout\b/i,
+    /\bsetInterval\b/i,
+    /\bsetImmediate\b/i,
+    /\balert\b/i,
+    /\bconfirm\b/i,
+    /\bprompt\b/i,
+    /\bpostMessage\b/i
+  ];
+
+  for (const pattern of forbiddenPatterns) {
+    if (pattern.test(uncommented)) {
+      return {
+        valid: false,
+        error: `Security Violation: Restricted token detected (${pattern}). Prototype access, DOM, network, and storage are strictly forbidden.`
+      };
+    }
+  }
+
+  return { valid: true };
+}
+
 export class StrategyRunner {
   private compiledStrategy: any = null;
   private parameters: Record<string, any> = {};
+  private consecutiveErrorCount: number = 0;
 
   public compile(code: string, parameters: Record<string, any> = {}): { success: boolean; error?: string } {
     try {
       this.parameters = { slPips: 20, tpPips: 40, lotSize: 0.1, ...parameters };
+      this.consecutiveErrorCount = 0;
       const rawCode = code.trim();
 
-      // Kiểm tra xem code đã có câu lệnh return hay chưa (bỏ qua comments)
-      // Loại bỏ comment để kiểm tra cú pháp
+      const validation = validateStrategyCode(rawCode);
+      if (!validation.valid) {
+        throw new Error(validation.error);
+      }
+
       const uncommented = rawCode
         .replace(/\/\*[\s\S]*?\*\//g, '')
         .replace(/\/\/.*/g, '')
         .trim();
-
-      // Security Inspection: Block prototype traversal and dangerous globals
-      const forbiddenPatterns = [
-        /\bconstructor\b/i,
-        /\bprototype\b/i,
-        /__proto__/i,
-        /\beval\s*\(/i,
-        /\bFunction\s*\(/,
-        /\bwindow\b/i,
-        /\bdocument\b/i,
-        /\blocalStorage\b/i,
-        /\bsessionStorage\b/i,
-        /\bfetch\b/i,
-        /\bXMLHttpRequest\b/i,
-        /\bWebSocket\b/i,
-        /\bimport\b/i,
-        /\bglobalThis\b/i,
-        /\bprocess\b/i
-      ];
-
-      for (const pattern of forbiddenPatterns) {
-        if (pattern.test(uncommented)) {
-          throw new Error(`Security Violation: Phát hiện từ khóa tiềm ẩn rủi ro (${pattern}). Không được phép truy cập prototype/DOM/storage!`);
-        }
-      }
 
       let functionBody = rawCode;
       if (!uncommented.startsWith('return')) {
         functionBody = `return (${rawCode});`;
       }
 
-      // Khởi tạo hàm thực thi được bọc trong Security Sandbox Scope
+      // Complete shadow environment of all host globals
       const sandboxPreamble = `
         const window = undefined;
         const document = undefined;
         const localStorage = undefined;
         const sessionStorage = undefined;
+        const indexedDB = undefined;
         const fetch = undefined;
         const WebSocket = undefined;
         const XMLHttpRequest = undefined;
         const globalThis = undefined;
         const self = undefined;
+        const top = undefined;
+        const parent = undefined;
+        const frames = undefined;
+        const opener = undefined;
+        const location = undefined;
+        const navigator = undefined;
+        const Reflect = undefined;
+        const Proxy = undefined;
+        const Worker = undefined;
+        const SharedWorker = undefined;
+        const ServiceWorker = undefined;
+        const setTimeout = undefined;
+        const setInterval = undefined;
+        const setImmediate = undefined;
+        const alert = undefined;
+        const prompt = undefined;
+        const confirm = undefined;
+        const postMessage = undefined;
       `;
       const factory = new Function(sandboxPreamble + functionBody);
       this.compiledStrategy = factory();
@@ -294,12 +389,27 @@ export class StrategyRunner {
     api: StrategyExecutionAPI
   ): void {
     if (!this.compiledStrategy || typeof this.compiledStrategy.onCandle !== 'function') return;
+    if (this.consecutiveErrorCount >= 5) {
+      // Auto-halt faulty strategy to prevent freeze/log flooding
+      return;
+    }
 
+    const startTime = performance.now();
     try {
       this.compiledStrategy.parameters = this.parameters;
       this.compiledStrategy.onCandle(candle, indicators, account, api);
+      this.consecutiveErrorCount = 0;
+
+      const elapsed = performance.now() - startTime;
+      if (elapsed > 50) {
+        console.warn(`[STRATEGY SANDBOX WARNING] Execution took ${elapsed.toFixed(1)}ms on candle ${candle.timestamp}`);
+      }
     } catch (err: any) {
+      this.consecutiveErrorCount++;
       api.log(`[LỖI CHIẾN LƯỢC AI] ${err.message}`);
+      if (this.consecutiveErrorCount >= 5) {
+        api.log('[LỖI CHIẾN LƯỢC AI] Đã tạm dừng chiến lược do vượt quá 5 lỗi liên tiếp.');
+      }
     }
   }
 }

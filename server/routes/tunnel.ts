@@ -156,12 +156,30 @@ async function startLocaltunnel(port: number, subdomain?: string): Promise<strin
  * Middleware: Verify PIN for requests coming through remote tunnel
  */
 export function verifyTunnelPin(req: Request, res: Response, next: Function) {
+  // Allow unauthenticated status and PIN verification endpoints
+  if (
+    req.path === '/status' ||
+    req.path === '/verify-pin' ||
+    req.path === '/health' ||
+    req.path === '/tunnel/status' ||
+    req.path === '/tunnel/verify-pin'
+  ) {
+    return next();
+  }
+
   if (tunnelState.active && tunnelState.pin) {
-    const forwardedHost = req.headers['x-forwarded-host'] || req.headers['host'] || '';
-    const isRemote = typeof forwardedHost === 'string' && (
+    const forwardedHost = String(req.headers['x-forwarded-host'] || req.headers['host'] || '').toLowerCase();
+    const hasCloudflareHeaders = Boolean(req.headers['cf-ray'] || req.headers['cf-connecting-ip'] || req.headers['cf-visitor']);
+    const hasTunnelHost = (
       forwardedHost.includes('trycloudflare.com') ||
-      forwardedHost.includes('localtunnel.me')
+      forwardedHost.includes('localtunnel.me') ||
+      forwardedHost.includes('loca.lt')
     );
+
+    // Check if remote client connection
+    const rawIp = (req.ip || req.socket.remoteAddress || '').replace(/^.*:/, '');
+    const isLocalDirect = (rawIp === '127.0.0.1' || rawIp === '1' || rawIp === 'localhost') && !hasCloudflareHeaders && !hasTunnelHost;
+    const isRemote = !isLocalDirect;
 
     if (isRemote) {
       const clientPin = req.headers['x-tunnel-pin'] || req.query.pin;
