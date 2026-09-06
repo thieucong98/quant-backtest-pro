@@ -14,6 +14,7 @@ import { getTranslation } from '../../i18n';
 interface PriceScaleContextMenuProps {
   x: number;
   y: number;
+  currentRatio?: number | null;
   onClose: () => void;
   onResetPriceScale: () => void;
   onOpenSettings?: () => void;
@@ -22,6 +23,7 @@ interface PriceScaleContextMenuProps {
 export const PriceScaleContextMenu: React.FC<PriceScaleContextMenuProps> = ({
   x,
   y,
+  currentRatio,
   onClose,
   onResetPriceScale,
   onOpenSettings
@@ -96,6 +98,10 @@ export const PriceScaleContextMenu: React.FC<PriceScaleContextMenuProps> = ({
   };
 
   const isRegularMode = !isLogScale && !isPercentageScale && !isIndexedScale;
+  const openSubmenuToRight = pos.left < 260;
+  const submenuClass = openSubmenuToRight
+    ? "absolute left-full top-0 w-60 bg-[#131722]/98 backdrop-blur-xl border border-[#2a2e39] rounded-lg shadow-2xl py-1 text-xs ml-1 animate-in fade-in"
+    : "absolute right-full top-0 w-60 bg-[#131722]/98 backdrop-blur-xl border border-[#2a2e39] rounded-lg shadow-2xl py-1 text-xs mr-1 animate-in fade-in";
 
   return (
     <div
@@ -145,7 +151,12 @@ export const PriceScaleContextMenu: React.FC<PriceScaleContextMenuProps> = ({
           <div className="w-3.5 flex items-center justify-center">
             {isPriceRatioLocked && <Check className="w-3.5 h-3.5 text-indigo-400" />}
           </div>
-          <span>{t.lockPriceToBarRatio}</span>
+          <span>
+            {t.lockPriceToBarRatio}
+            {currentRatio !== undefined && currentRatio !== null
+              ? ` ${currentRatio >= 1 ? currentRatio.toFixed(2) : currentRatio.toFixed(4)}`
+              : ''}
+          </span>
         </div>
         <Lock className={`w-3 h-3 ${isPriceRatioLocked ? 'text-amber-400' : 'text-slate-600'}`} />
       </button>
@@ -261,7 +272,13 @@ export const PriceScaleContextMenu: React.FC<PriceScaleContextMenuProps> = ({
         onMouseEnter={() => setActiveSubmenu('labels')}
         onMouseLeave={() => setActiveSubmenu(null)}
       >
-        <div className="w-full flex items-center justify-between px-3 py-1.5 text-slate-200 hover:bg-[#2a2e39] hover:text-white transition-colors cursor-pointer">
+        <div
+          onClick={(e) => {
+            e.stopPropagation();
+            setActiveSubmenu(activeSubmenu === 'labels' ? null : 'labels');
+          }}
+          className="w-full flex items-center justify-between px-3 py-1.5 text-slate-200 hover:bg-[#2a2e39] hover:text-white transition-colors cursor-pointer"
+        >
           <div className="flex items-center gap-2 pl-3.5">
             <span>{t.labelsSubmenu}</span>
           </div>
@@ -269,7 +286,7 @@ export const PriceScaleContextMenu: React.FC<PriceScaleContextMenuProps> = ({
         </div>
 
         {activeSubmenu === 'labels' && (
-          <div className="absolute right-full top-0 w-60 bg-[#131722]/98 backdrop-blur-xl border border-[#2a2e39] rounded-lg shadow-2xl py-1 text-xs mr-1 animate-in fade-in">
+          <div className={submenuClass}>
             <button
               type="button"
               onClick={() => toggleScaleLabel('symbolName')}
@@ -320,7 +337,13 @@ export const PriceScaleContextMenu: React.FC<PriceScaleContextMenuProps> = ({
         onMouseEnter={() => setActiveSubmenu('lines')}
         onMouseLeave={() => setActiveSubmenu(null)}
       >
-        <div className="w-full flex items-center justify-between px-3 py-1.5 text-slate-200 hover:bg-[#2a2e39] hover:text-white transition-colors cursor-pointer">
+        <div
+          onClick={(e) => {
+            e.stopPropagation();
+            setActiveSubmenu(activeSubmenu === 'lines' ? null : 'lines');
+          }}
+          className="w-full flex items-center justify-between px-3 py-1.5 text-slate-200 hover:bg-[#2a2e39] hover:text-white transition-colors cursor-pointer"
+        >
           <div className="flex items-center gap-2 pl-3.5">
             <span>{t.linesSubmenu}</span>
           </div>
@@ -328,7 +351,7 @@ export const PriceScaleContextMenu: React.FC<PriceScaleContextMenuProps> = ({
         </div>
 
         {activeSubmenu === 'lines' && (
-          <div className="absolute right-full top-0 w-60 bg-[#131722]/98 backdrop-blur-xl border border-[#2a2e39] rounded-lg shadow-2xl py-1 text-xs mr-1 animate-in fade-in">
+          <div className={submenuClass}>
             <button
               type="button"
               onClick={() => toggleScaleLine('lastPrice')}

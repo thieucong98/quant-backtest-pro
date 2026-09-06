@@ -126,6 +126,7 @@ interface BacktestStore {
   // Modals & Language
   language: 'vi' | 'en' | 'ja' | 'zh';
   isOrderModalOpen: boolean;
+  initialOrderPrice: number | null;
   isAnalyticsModalOpen: boolean;
   isAIModalOpen: boolean;
   aiModalTab: 'studio' | 'optimizer' | 'my-strategies' | 'templates' | 'settings';
@@ -196,6 +197,7 @@ interface BacktestStore {
   // Modal & Lang Toggles
   setLanguage: (lang: 'vi' | 'en' | 'ja' | 'zh') => void;
   setOrderModalOpen: (open: boolean) => void;
+  openOrderModalWithPrice: (price?: number | null) => void;
   setAnalyticsModalOpen: (open: boolean) => void;
   setAIModalOpen: (open: boolean, tab?: 'studio' | 'optimizer' | 'my-strategies' | 'templates' | 'settings') => void;
   setDataModalOpen: (open: boolean) => void;
@@ -498,6 +500,7 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
 
     language: (typeof localStorage !== 'undefined' ? (localStorage.getItem('quant_lang') as any) : 'vi') || 'vi',
     isOrderModalOpen: false,
+    initialOrderPrice: null,
     isAnalyticsModalOpen: false,
     isAIModalOpen: false,
     aiModalTab: 'studio',
@@ -1501,7 +1504,8 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
       }
       set({ language: lang });
     },
-    setOrderModalOpen: (open) => set({ isOrderModalOpen: open }),
+    setOrderModalOpen: (open) => set((state) => ({ isOrderModalOpen: open, initialOrderPrice: open ? state.initialOrderPrice : null })),
+    openOrderModalWithPrice: (price) => set({ isOrderModalOpen: true, initialOrderPrice: price ?? null }),
     setAnalyticsModalOpen: (open) => set({ isAnalyticsModalOpen: open }),
     setAIModalOpen: (open, tab) =>
       set((state) => ({

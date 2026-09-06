@@ -9,6 +9,7 @@ export const OrderEntryModal: React.FC = () => {
   const {
     isOrderModalOpen,
     setOrderModalOpen,
+    initialOrderPrice,
     instrument,
     account: backtestAccount,
     candles,
@@ -46,10 +47,13 @@ export const OrderEntryModal: React.FC = () => {
   const [trailingStop, setTrailingStop] = useState<string>('');
 
   useEffect(() => {
-    if (currentCandle) {
+    if (initialOrderPrice !== undefined && initialOrderPrice !== null) {
+      setPendingPrice(initialOrderPrice.toFixed(instrument.digits));
+      setOrderType('LIMIT');
+    } else if (currentCandle) {
       setPendingPrice(currentCandle.close.toFixed(instrument.digits));
     }
-  }, [currentCandle, instrument]);
+  }, [initialOrderPrice, isOrderModalOpen, currentCandle, instrument]);
 
   if (!isOrderModalOpen) return null;
 

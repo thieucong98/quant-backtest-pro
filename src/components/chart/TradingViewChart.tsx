@@ -10,7 +10,8 @@ import {
   BaselineData,
   Time,
   LineStyle,
-  PriceScaleMode
+  PriceScaleMode,
+  MouseEventParams
 } from 'lightweight-charts';
 import {
   ArrowUpRight,
@@ -93,6 +94,17 @@ export const TradingViewChart: React.FC = () => {
   // Price lines references for open positions and SL/TP
   const priceLinesRef = useRef<any[]>([]);
 
+  // Bid/Ask and High/Low lines references
+  const bidLineRef = useRef<any>(null);
+  const askLineRef = useRef<any>(null);
+  const highLineRef = useRef<any>(null);
+  const lowLineRef = useRef<any>(null);
+
+  // Price-to-bar ratio and Crosshair [+] button states
+  const lockedRatioRef = useRef<number | null>(null);
+  const [currentRatio, setCurrentRatio] = useState<number | null>(null);
+  const [crosshairPos, setCrosshairPos] = useState<{ y: number; price: number } | null>(null);
+
   // Quick Trade Dock State (Mặc định mở trên desktop, thu gọn trên mobile)
   const [quickLot, setQuickLot] = useState<number>(0.1);
   const [useAutoSL, setUseAutoSL] = useState<boolean>(true);
@@ -138,6 +150,8 @@ export const TradingViewChart: React.FC = () => {
     scaleChartOnly,
     isIndexedScale,
     showScalePlusButton,
+    scaleLabels,
+    scaleLines,
     resetPriceScaleTrigger,
     showCountdown,
     showWatermark,
@@ -152,7 +166,9 @@ export const TradingViewChart: React.FC = () => {
     togglePriceScalePosition,
     toggleScaleChartOnly,
     setScaleMode,
-    triggerResetPriceScale
+    triggerResetPriceScale,
+    openOrderModalWithPrice,
+    setShortcutsModalOpen
   } = useBacktestStore();
 
   const {
@@ -448,7 +464,15 @@ export const TradingViewChart: React.FC = () => {
     }
   }, [priceScalePosition]);
 
-  // Cập nhật Price Scale Modes (Logarithmic, Percentage, Indexed to 100, Invert Scale, Auto Scale)
+  // Dữ liệu nến Heikin-Ashi tính toán trước
+  const effectiveCandles = useMemo(() => {
+    if (chartType === 'heikin-ashi') {
+      return calculateHeikinAshi(candles);
+    }
+    return candles;
+  }, [candles, chartType]);
+
+  // Cập nhật Price Scale Modes (Logarithmic, Percentage, Indexed to 100, Invert Scale, Auto Scale, Scale Chart Only)
   useEffect(() => {
     if (!chartRef.current) return;
     const currentScale = chartRef.current.priceScale(priceScalePosition);
@@ -461,9 +485,13 @@ export const TradingViewChart: React.FC = () => {
     currentScale.applyOptions({
       mode,
       invertScale: isInvertedScale,
-      autoScale: isAutoScale
+      autoScale: isAutoScale,
+      scaleMargins: {
+        top: scaleChartOnly ? 0.12 : 0.05,
+        bottom: scaleChartOnly ? 0.20 : 0.05
+      }
     });
-  }, [isLogScale, isPercentageScale, isIndexedScale, isInvertedScale, isAutoScale, priceScalePosition]);
+  }, [isLogScale, isPercentageScale, isIndexedScale, isInvertedScale, isAutoScale, priceScalePosition, scaleChartOnly]);
 
   // Đồng bộ trạng thái AutoScale khi người dùng kéo dãn thước giá bằng chuột
   useEffect(() => {
@@ -488,17 +516,272 @@ export const TradingViewChart: React.FC = () => {
     pScale.applyOptions({
       autoScale: true,
       scaleMargins: {
-        top: 0.1,
-        bottom: 0.2
+        top: 0.12,
+        bottom: 0.20
       }
     });
 
-    try {
-      chartRef.current.timeScale().resetTimeScale();
-    } catch (e) {}
+    if (isPriceRatioLocked) {
+      togglePriceRatioLocked();
+    }
 
     setAutoScale(true);
-  }, [priceScalePosition, setAutoScale]);
+  }, [priceScalePosition, setAutoScale, isPriceRatioLocked, togglePriceRatioLocked]);
+
+  // Tính toán tỷ lệ Price-to-Bar thực tế
+  const computePriceToBarRatio = useCallback(() => {
+    if (!chartRef.current || !mainSeriesRef.current || !chartContainerRef.current) return null;
+    const logicalRange = chartRef.current.timeScale().getVisibleLogicalRange();
+    if (!logicalRange) return null;
+    const barsCount = Math.max(1, logicalRange.to - logicalRange.from);
+
+    const containerHeight = chartContainerRef.current.clientHeight;
+    const topPrice = mainSeriesRef.current.coordinateToPrice(0);
+    const bottomPrice = mainSeriesRef.current.coordinateToPrice(containerHeight);
+    if (topPrice === null || bottomPrice === null) return null;
+
+    const priceDiff = Math.abs(topPrice - bottomPrice);
+    if (priceDiff <= 0 || isNaN(priceDiff)) return null;
+    return priceDiff / barsCount;
+  }, []);
+
+  // Lắng nghe thay đổi vùng nến hiển thị để cập nhật tỷ lệ khung hình
+  useEffect(() => {
+    if (!chartRef.current) return;
+    const handleRangeChange = () => {
+      const r = computePriceToBarRatio();
+      if (r !== null) setCurrentRatio(r);
+    };
+
+    chartRef.current.timeScale().subscribeVisibleLogicalRangeChange(handleRangeChange);
+    return () => {
+      chartRef.current?.timeScale().unsubscribeVisibleLogicalRangeChange(handleRangeChange);
+    };
+  }, [computePriceToBarRatio]);
+
+  // Khóa / Mở khóa tỷ lệ giá trên nến (Lock price to bar ratio)
+  useEffect(() => {
+    if (!mainSeriesRef.current || !chartRef.current) return;
+
+    if (isPriceRatioLocked) {
+      const r = computePriceToBarRatio();
+      if (r !== null && r > 0) {
+        lockedRatioRef.current = r;
+        setCurrentRatio(r);
+      }
+
+      mainSeriesRef.current.applyOptions({
+        autoscaleInfoProvider: (original: () => any) => {
+          const base = original();
+          if (!base || !base.priceRange || !lockedRatioRef.current || !chartRef.current) return base;
+
+          const logicalRange = chartRef.current.timeScale().getVisibleLogicalRange();
+          const barsCount = logicalRange ? Math.max(1, logicalRange.to - logicalRange.from) : 50;
+          const targetSpan = barsCount * lockedRatioRef.current;
+          const midPrice = (base.priceRange.maxValue + base.priceRange.minValue) / 2;
+
+          return {
+            priceRange: {
+              minValue: midPrice - targetSpan / 2,
+              maxValue: midPrice + targetSpan / 2
+            },
+            margins: base.margins
+          };
+        }
+      });
+    } else {
+      lockedRatioRef.current = null;
+      mainSeriesRef.current.applyOptions({
+        autoscaleInfoProvider: undefined
+      });
+    }
+  }, [isPriceRatioLocked, computePriceToBarRatio]);
+
+  // Tính toán Live Bid, Ask & Pip Value ước tính
+  const currentCandle = candles[currentIndex];
+  const currentLiveTick = liveTicks[instrument.symbol];
+  const currentBid = isLiveActive && currentLiveTick ? currentLiveTick.bid : (currentCandle?.close || 0);
+  const spreadValue = isLiveActive && currentLiveTick ? (currentLiveTick.ask - currentLiveTick.bid) : (instrument.defaultSpreadPips * instrument.pipSize);
+  const currentAsk = isLiveActive && currentLiveTick ? currentLiveTick.ask : (currentBid + spreadValue);
+
+  // Đồng bộ Series Options (Labels & Lines)
+  useEffect(() => {
+    if (!mainSeriesRef.current) return;
+    mainSeriesRef.current.applyOptions({
+      lastValueVisible: scaleLabels.lastPrice,
+      priceLineVisible: scaleLines.lastPrice,
+      title: scaleLabels.symbolName ? instrument.symbol : ''
+    });
+  }, [scaleLabels.lastPrice, scaleLabels.symbolName, scaleLines.lastPrice, instrument.symbol]);
+
+  // Đồng bộ Đường giá & Nhãn Bid / Ask
+  useEffect(() => {
+    if (!mainSeriesRef.current) return;
+    const shouldShowBidAsk = scaleLabels.bidAsk || scaleLines.bidAsk;
+
+    if (shouldShowBidAsk && currentBid > 0 && currentAsk > 0) {
+      if (!bidLineRef.current) {
+        bidLineRef.current = mainSeriesRef.current.createPriceLine({
+          price: currentBid,
+          color: '#38bdf8',
+          lineWidth: 1,
+          lineStyle: LineStyle.Dotted,
+          axisLabelVisible: scaleLabels.bidAsk,
+          lineVisible: scaleLines.bidAsk,
+          title: 'Bid'
+        });
+      } else {
+        bidLineRef.current.applyOptions({
+          price: currentBid,
+          axisLabelVisible: scaleLabels.bidAsk,
+          lineVisible: scaleLines.bidAsk
+        });
+      }
+
+      if (!askLineRef.current) {
+        askLineRef.current = mainSeriesRef.current.createPriceLine({
+          price: currentAsk,
+          color: '#f97316',
+          lineWidth: 1,
+          lineStyle: LineStyle.Dotted,
+          axisLabelVisible: scaleLabels.bidAsk,
+          lineVisible: scaleLines.bidAsk,
+          title: 'Ask'
+        });
+      } else {
+        askLineRef.current.applyOptions({
+          price: currentAsk,
+          axisLabelVisible: scaleLabels.bidAsk,
+          lineVisible: scaleLines.bidAsk
+        });
+      }
+    } else {
+      if (bidLineRef.current) {
+        try { mainSeriesRef.current.removePriceLine(bidLineRef.current); } catch (e) {}
+        bidLineRef.current = null;
+      }
+      if (askLineRef.current) {
+        try { mainSeriesRef.current.removePriceLine(askLineRef.current); } catch (e) {}
+        askLineRef.current = null;
+      }
+    }
+  }, [scaleLabels.bidAsk, scaleLines.bidAsk, currentBid, currentAsk]);
+
+  // Đồng bộ Đường giá & Nhãn High / Low
+  useEffect(() => {
+    if (!mainSeriesRef.current) return;
+    const shouldShowHighLow = scaleLabels.highLow || scaleLines.highLow;
+
+    if (shouldShowHighLow && effectiveCandles.length > 0 && currentIndex >= 0) {
+      const visibleCandles = effectiveCandles.slice(0, currentIndex + 1);
+      let sessionHigh = -Infinity;
+      let sessionLow = Infinity;
+      const startLookback = Math.max(0, visibleCandles.length - 150);
+      for (let i = startLookback; i < visibleCandles.length; i++) {
+        if (visibleCandles[i].high > sessionHigh) sessionHigh = visibleCandles[i].high;
+        if (visibleCandles[i].low < sessionLow) sessionLow = visibleCandles[i].low;
+      }
+
+      if (sessionHigh !== -Infinity && sessionLow !== Infinity) {
+        if (!highLineRef.current) {
+          highLineRef.current = mainSeriesRef.current.createPriceLine({
+            price: sessionHigh,
+            color: '#10b981',
+            lineWidth: 1,
+            lineStyle: LineStyle.Dashed,
+            axisLabelVisible: scaleLabels.highLow,
+            lineVisible: scaleLines.highLow,
+            title: 'High'
+          });
+        } else {
+          highLineRef.current.applyOptions({
+            price: sessionHigh,
+            axisLabelVisible: scaleLabels.highLow,
+            lineVisible: scaleLines.highLow
+          });
+        }
+
+        if (!lowLineRef.current) {
+          lowLineRef.current = mainSeriesRef.current.createPriceLine({
+            price: sessionLow,
+            color: '#f43f5e',
+            lineWidth: 1,
+            lineStyle: LineStyle.Dashed,
+            axisLabelVisible: scaleLabels.highLow,
+            lineVisible: scaleLines.highLow,
+            title: 'Low'
+          });
+        } else {
+          lowLineRef.current.applyOptions({
+            price: sessionLow,
+            axisLabelVisible: scaleLabels.highLow,
+            lineVisible: scaleLines.highLow
+          });
+        }
+      }
+    } else {
+      if (highLineRef.current) {
+        try { mainSeriesRef.current.removePriceLine(highLineRef.current); } catch (e) {}
+        highLineRef.current = null;
+      }
+      if (lowLineRef.current) {
+        try { mainSeriesRef.current.removePriceLine(lowLineRef.current); } catch (e) {}
+        lowLineRef.current = null;
+      }
+    }
+  }, [scaleLabels.highLow, scaleLines.highLow, effectiveCandles, currentIndex]);
+
+  // Lắng nghe Crosshair & Mousemove để hiển thị nút [+] đặt lệnh nhanh trên thước giá
+  useEffect(() => {
+    const container = chartContainerRef.current;
+    if (!container) return;
+
+    const updateCrosshairPrice = (yCoord: number) => {
+      if (!mainSeriesRef.current || !chartRef.current) return;
+      const price = mainSeriesRef.current.coordinateToPrice(yCoord);
+      if (price !== null && !isNaN(price)) {
+        setCrosshairPos({
+          y: yCoord,
+          price: Number(price.toFixed(instrument.digits))
+        });
+      } else {
+        setCrosshairPos(null);
+      }
+    };
+
+    const handleNativeMove = (e: MouseEvent) => {
+      const rect = container.getBoundingClientRect();
+      const mouseY = e.clientY - rect.top;
+      if (mouseY < 20 || mouseY > rect.height - 35) {
+        setCrosshairPos(null);
+        return;
+      }
+      updateCrosshairPrice(mouseY);
+    };
+
+    const handleNativeLeave = () => {
+      setCrosshairPos(null);
+    };
+
+    container.addEventListener('mousemove', handleNativeMove);
+    container.addEventListener('mouseleave', handleNativeLeave);
+
+    const handleCrosshairMove = (param: MouseEventParams) => {
+      if (param.point) {
+        updateCrosshairPrice(param.point.y);
+      }
+    };
+
+    if (chartRef.current) {
+      chartRef.current.subscribeCrosshairMove(handleCrosshairMove);
+    }
+
+    return () => {
+      container.removeEventListener('mousemove', handleNativeMove);
+      container.removeEventListener('mouseleave', handleNativeLeave);
+      chartRef.current?.unsubscribeCrosshairMove(handleCrosshairMove);
+    };
+  }, [instrument.digits]);
 
   // Lắng nghe trigger Reset Price Scale từ Store
   useEffect(() => {
@@ -557,6 +840,8 @@ export const TradingViewChart: React.FC = () => {
     if (isOverPriceScale) {
       e.preventDefault();
       e.stopPropagation();
+      const r = computePriceToBarRatio();
+      if (r !== null) setCurrentRatio(r);
       setContextMenuPos({ x: e.clientX, y: e.clientY });
     }
   };
@@ -611,14 +896,6 @@ export const TradingViewChart: React.FC = () => {
       }
     });
   }, [instrument]);
-
-  // Dữ liệu nến Heikin-Ashi tính toán trước
-  const effectiveCandles = useMemo(() => {
-    if (chartType === 'heikin-ashi') {
-      return calculateHeikinAshi(candles);
-    }
-    return candles;
-  }, [candles, chartType]);
 
   // Cập nhật dữ liệu nến khi Replay thay đổi (O(1) Incremental Update)
   useEffect(() => {
@@ -964,13 +1241,6 @@ export const TradingViewChart: React.FC = () => {
       addStrategyLog('INFO', formatText(t.quickTradeSandboxFilled, { side, lot: quickLot, symbol: instrument.symbol }));
     }
   };
-
-  // Tính toán Live Bid, Ask & Pip Value ước tính
-  const currentCandle = candles[currentIndex];
-  const currentLiveTick = liveTicks[instrument.symbol];
-  const currentBid = isLiveActive && currentLiveTick ? currentLiveTick.bid : (currentCandle?.close || 0);
-  const spreadValue = isLiveActive && currentLiveTick ? (currentLiveTick.ask - currentLiveTick.bid) : (instrument.defaultSpreadPips * instrument.pipSize);
-  const currentAsk = isLiveActive && currentLiveTick ? currentLiveTick.ask : (currentBid + spreadValue);
 
   const pipDollarValue = currentCandle
     ? MultiAssetMathEngine.calculatePipValue(instrument, quickLot, currentBid)
@@ -1446,7 +1716,34 @@ export const TradingViewChart: React.FC = () => {
       </div>
 
       {/* Chart Canvas */}
-      <div ref={chartContainerRef} className="w-full h-full relative" />
+      <div
+        ref={chartContainerRef}
+        className="w-full h-full relative"
+      >
+        {/* INTERACTIVE PLUS BUTTON ON PRICE SCALE */}
+        {showScalePlusButton && crosshairPos && crosshairPos.y > 25 && (
+          <div
+            style={{
+              top: `${crosshairPos.y}px`,
+              [priceScalePosition === 'right' ? 'right' : 'left']: '4px',
+              transform: 'translateY(-50%)'
+            }}
+            className="absolute z-30 pointer-events-auto"
+          >
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                openOrderModalWithPrice(crosshairPos.price);
+              }}
+              title={`${t.plusButtonScale} @ ${crosshairPos.price}`}
+              className="w-5 h-5 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white flex items-center justify-center shadow-lg border border-indigo-400/50 hover:scale-110 active:scale-95 transition-all cursor-pointer group"
+            >
+              <Plus className="w-3.5 h-3.5 group-hover:rotate-90 transition-transform duration-200" />
+            </button>
+          </div>
+        )}
+      </div>
 
       {/* Visual Chart Trading (Interactive Drag & Drop SL/TP) */}
       <VisualChartTradingOverlay
@@ -1464,8 +1761,10 @@ export const TradingViewChart: React.FC = () => {
         <PriceScaleContextMenu
           x={contextMenuPos.x}
           y={contextMenuPos.y}
+          currentRatio={currentRatio}
           onClose={() => setContextMenuPos(null)}
           onResetPriceScale={handleResetPriceScale}
+          onOpenSettings={() => setShortcutsModalOpen(true)}
         />
       )}
     </div>
