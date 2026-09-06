@@ -16,9 +16,24 @@ Welcome to **QuantBacktest Pro** codebase. All AI coding agents, assistants, and
 
 ---
 
-## 2. Git Commit Policy
-- **Local Commits Only**: Always create a clean, descriptive local git commit after completing work.
-- **NEVER RUN `git push`**: Do not push to remote origin unless explicitly instructed by the user.
+## 2. Professional Git Flow & Branching Standards (MANDATORY)
+- **MANDATORY NEW BRANCH CHECKOUT BEFORE IMPLEMENTATION**:
+  - NEVER implement new features, non-trivial enhancements, or bugfixes directly on `main`.
+  - ALWAYS create and switch to a dedicated branch before making code changes:
+    - `feature/<short-name>`: for new features or user-facing capabilities (e.g. `feature/trailing-sl`, `feature/monte-carlo-export`).
+    - `fix/<short-name>`: for bug fixes or corrections (e.g. `fix/calendar-timezone`, `fix/tunnel-cors`).
+    - `refactor/<short-name>`: for architecture or design pattern refactoring (e.g. `refactor/oms-slice`, `refactor/store-modularization`).
+    - `perf/<short-name>`: for performance optimizations (e.g. `perf/chart-canvas-render`, `perf/resampling-cache`).
+    - `test/<short-name>`: for adding or updating test suites.
+    - `docs/<short-name>`: for standalone documentation updates.
+- **Professional Git Flow Lifecycle**:
+  - Step 1: Ensure base branch is clean (`git status`).
+  - Step 2: Create & checkout dedicated branch: `git checkout -b <type>/<name>`.
+  - Step 3: Implement changes and verify all Quality Gates (`npx tsc --noEmit`, `npm run check:i18n`, `npm test`, `npm run build`).
+  - Step 4: Commit atomically with Conventional Commits format (`feat(...)`, `fix(...)`, `refactor(...)`, etc.).
+  - Step 5: Merge into base branch or prepare pull request cleanly per user instructions.
+- **Local Commits Only**: Always create clean, descriptive local git commits after completing work.
+- **NEVER RUN `git push`**: Do not push to remote origin unless explicitly instructed by the user (e.g. "push code").
 
 ---
 
