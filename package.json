@@ -5,6 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:all": "concurrently -n \"API,WEB\" -c \"magenta.bold,cyan.bold\" --kill-others-on-fail \"npm run server\" \"npm run dev\"",
+    "start:all": "concurrently -n \"API,WEB\" -c \"magenta.bold,cyan.bold\" --kill-others-on-fail \"npm run server:start\" \"npm run dev\"",
+    "dev:full": "concurrently -n \"API,WEB,MT5\" -c \"magenta.bold,cyan.bold,green.bold\" --kill-others-on-fail \"npm run server\" \"npm run dev\" \"cd mt5_gateway && python app.py\"",
     "build": "tsc && vite build",
     "preview": "vite preview",
     "test": "npx tsx test_comprehensive_suite.ts",
@@ -31,6 +34,7 @@
     "@types/react-dom": "^18.3.5",
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.20",
+    "concurrently": "^10.0.5",
     "postcss": "^8.5.2",
     "puppeteer": "^25.8.0",
     "tailwindcss": "^3.4.17",

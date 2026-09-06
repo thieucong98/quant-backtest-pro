@@ -184,12 +184,20 @@ git clone https://github.com/thieucong98/quant-backtest-pro.git
 cd quant-backtest-pro
 npm install
 
-# 2. Start development servers
-# Terminal 1: Start Frontend Client (Vite)
-npm run dev
+# 2. Start Full-Stack Environment (Frontend + Backend API)
+# Option A: Single Unified Command (Concurrent terminal runner)
+npm run dev:all
 
-# Terminal 2: Start Backend SQLite API (Node.js + Prisma)
-npm run server:start
+# Option B: Native Platform Launchers (Launches MT5 Gateway + API + Frontend)
+# On Windows:
+.\start_all.bat
+
+# On Linux / macOS / WSL:
+chmod +x start_all.sh && ./start_all.sh
+
+# Or start services in separate terminals:
+# Terminal 1: npm run dev
+# Terminal 2: npm run server:start
 ```
 
 Open your browser at:

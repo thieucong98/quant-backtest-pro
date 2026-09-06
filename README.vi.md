@@ -184,12 +184,20 @@ git clone https://github.com/thieucong98/quant-backtest-pro.git
 cd quant-backtest-pro
 npm install
 
-# 2. Khởi chạy máy chủ phát triển
-# Terminal 1: Chạy Frontend Client (Vite)
-npm run dev
+# 2. Khởi chạy toàn bộ môi trường (Frontend + Backend API)
+# Cách A: 1 Lệnh duy nhất (Chạy đồng thời với hiển thị log hợp nhất)
+npm run dev:all
 
-# Terminal 2: Chạy Backend SQLite API (Node.js + Prisma)
-npm run server:start
+# Cách B: Dùng script khởi chạy tự động đa nền tảng
+# Trên Windows:
+.\start_all.bat
+
+# Trên Linux / macOS / WSL:
+chmod +x start_all.sh && ./start_all.sh
+
+# Hoặc khởi chạy thủ công trên 2 cửa sổ riêng:
+# Cửa sổ 1: npm run dev
+# Cửa sổ 2: npm run server:start
 ```
 
 Mở trình duyệt tại địa chỉ:
