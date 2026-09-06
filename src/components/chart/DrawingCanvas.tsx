@@ -236,8 +236,22 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({ chart, series }) =
     const handleVisibleTimeRangeChange = () => render();
     timeScale.subscribeVisibleTimeRangeChange(handleVisibleTimeRangeChange);
 
+    // ResizeObserver: đảm bảo canvas vẽ luôn cập nhật kích thước chuẩn xác theo container
+    const resizeObserver = new ResizeObserver(() => {
+      if (canvas && canvas.parentElement) {
+        canvas.width = canvas.parentElement.clientWidth || 800;
+        canvas.height = canvas.parentElement.clientHeight || 600;
+        render();
+      }
+    });
+
+    if (canvas.parentElement) {
+      resizeObserver.observe(canvas.parentElement);
+    }
+
     return () => {
       timeScale.unsubscribeVisibleTimeRangeChange(handleVisibleTimeRangeChange);
+      resizeObserver.disconnect();
     };
   }, [drawings, isDrawing, currentPoints, activeTool, chart, series, instrument]);
 

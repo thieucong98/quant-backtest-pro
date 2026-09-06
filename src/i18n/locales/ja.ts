@@ -744,7 +744,12 @@ export const ja: TranslationDict = {
   "liveOrderFilledLog": "🔴 [LIVE MT5] 約定 {side} {lot}L {symbol} (Ticket #{ticket})",
   "liveOrderFailedAlert": "ブローカー注文を実行できません: {error}",
   "livePendingPlacedLog": "🟡 [LIVE MT5 PENDING] 待機注文 {type} {lot}L @ {price} (Ticket #{ticket})",
-  "livePendingFailedAlert": "待機注文を設定できません: {error}"
+  "livePendingFailedAlert": "待機注文を設定できません: {error}",
+
+  // Bottom Dock Resizer & Layout Reset
+  "dragToResizePanel": "ドラッグして高さを調整 (ダブルクリックで初期化)",
+  "resetPanelHeight": "パネルの高さとチャート比率をリセット",
+  "panelHeightDefault": "初期設定"
 };
 
 

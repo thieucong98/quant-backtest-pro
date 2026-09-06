@@ -18,7 +18,8 @@ import {
   Radio,
   Zap,
   CheckCircle2,
-  Calendar
+  Calendar,
+  RotateCcw
 } from 'lucide-react';
 import { INSTRUMENTS } from '../../config/instruments';
 import { useBacktestStore } from '../../store/backtestStore';
@@ -27,10 +28,10 @@ import { getTranslation } from '../../i18n';
 import { Position } from '../../types/order';
 import { BrokerPosition } from '../../types/broker';
 import { EconomicCalendarTab } from './EconomicCalendarTab';
+import { BottomPanelSplitter } from './BottomPanelSplitter';
 
 export const PositionsTable: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'open' | 'pending' | 'history' | 'logs' | 'calendar'>('open');
-  const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
   const [editingPosition, setEditingPosition] = useState<Position | BrokerPosition | null>(null);
   const [editSL, setEditSL] = useState<string>('');
   const [editTP, setEditTP] = useState<string>('');
@@ -52,7 +53,11 @@ export const PositionsTable: React.FC = () => {
     instrument,
     candles,
     currentIndex,
-    language
+    language,
+    bottomPanelHeight,
+    isBottomPanelCollapsed,
+    setBottomPanelCollapsed,
+    resetBottomPanelHeight
   } = useBacktestStore();
 
   const {
@@ -123,17 +128,21 @@ export const PositionsTable: React.FC = () => {
 
   return (
     <div
-      className={`bg-[#0e121b] border-t border-slate-800 flex flex-col z-20 select-none transition-all duration-300 ${
-        isCollapsed ? 'h-9' : 'h-44 sm:h-48 md:h-56'
+      style={{ height: isBottomPanelCollapsed ? 36 : bottomPanelHeight }}
+      className={`bg-[#0e121b] border-t border-slate-800 flex flex-col z-20 select-none ${
+        isBottomPanelCollapsed ? 'transition-[height] duration-200 ease-out' : ''
       }`}
     >
+      {/* RESIZABLE SPLITTER (TradingView style) */}
+      <BottomPanelSplitter />
+
       {/* TABS HEADER */}
       <div className="h-9 bg-[#111622] border-b border-slate-800 flex items-center justify-between px-2 sm:px-3 gap-2 overflow-x-auto">
         <div className="flex items-center gap-1 text-xs shrink-0">
           <button
             onClick={() => {
               setActiveTab('open');
-              setIsCollapsed(false);
+              if (isBottomPanelCollapsed) setBottomPanelCollapsed(false);
             }}
             className={`px-2.5 sm:px-3 py-1.5 rounded-t font-medium flex items-center gap-1.5 transition-colors ${
               activeTab === 'open'
@@ -153,7 +162,7 @@ export const PositionsTable: React.FC = () => {
           <button
             onClick={() => {
               setActiveTab('pending');
-              setIsCollapsed(false);
+              if (isBottomPanelCollapsed) setBottomPanelCollapsed(false);
             }}
             className={`px-2.5 sm:px-3 py-1.5 rounded-t font-medium flex items-center gap-1.5 transition-colors ${
               activeTab === 'pending'
@@ -170,7 +179,7 @@ export const PositionsTable: React.FC = () => {
           <button
             onClick={() => {
               setActiveTab('history');
-              setIsCollapsed(false);
+              if (isBottomPanelCollapsed) setBottomPanelCollapsed(false);
             }}
             className={`px-2.5 sm:px-3 py-1.5 rounded-t font-medium flex items-center gap-1.5 transition-colors ${
               activeTab === 'history'
@@ -187,7 +196,7 @@ export const PositionsTable: React.FC = () => {
           <button
             onClick={() => {
               setActiveTab('logs');
-              setIsCollapsed(false);
+              if (isBottomPanelCollapsed) setBottomPanelCollapsed(false);
             }}
             className={`px-2.5 sm:px-3 py-1.5 rounded-t font-medium flex items-center gap-1.5 transition-colors ${
               activeTab === 'logs'
@@ -204,7 +213,7 @@ export const PositionsTable: React.FC = () => {
           <button
             onClick={() => {
               setActiveTab('calendar');
-              setIsCollapsed(false);
+              if (isBottomPanelCollapsed) setBottomPanelCollapsed(false);
             }}
             className={`px-2.5 sm:px-3 py-1.5 rounded-t font-medium flex items-center gap-1.5 transition-colors ${
               activeTab === 'calendar'
@@ -220,9 +229,9 @@ export const PositionsTable: React.FC = () => {
         </div>
 
         {/* Action buttons & collapse toggle */}
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-1.5 shrink-0">
           {/* Quick Close All */}
-          {openCount > 0 && activeTab === 'open' && !isCollapsed && (
+          {openCount > 0 && activeTab === 'open' && !isBottomPanelCollapsed && (
             <button
               onClick={() => {
                 if (isLiveActive) {
@@ -238,19 +247,29 @@ export const PositionsTable: React.FC = () => {
             </button>
           )}
 
+          {/* Reset to Default Height & Aspect Ratio */}
+          <button
+            onClick={resetBottomPanelHeight}
+            className="p-1 text-slate-400 hover:text-indigo-400 hover:bg-slate-800 rounded transition-colors"
+            title={t.resetPanelHeight}
+            aria-label={t.resetPanelHeight}
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+          </button>
+
           {/* Toggle Collapse Button */}
           <button
-            onClick={() => setIsCollapsed(!isCollapsed)}
+            onClick={() => setBottomPanelCollapsed(!isBottomPanelCollapsed)}
             className="p-1 text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded transition-colors"
-            title={isCollapsed ? t.expandTable : t.collapseTable}
+            title={isBottomPanelCollapsed ? t.expandTable : t.collapseTable}
           >
-            {isCollapsed ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+            {isBottomPanelCollapsed ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
           </button>
         </div>
       </div>
 
       {/* TABS CONTENT */}
-      {!isCollapsed && (
+      {!isBottomPanelCollapsed && (
         <div className="flex-1 overflow-auto text-xs font-mono">
           {/* 1. OPEN POSITIONS TAB */}
           {activeTab === 'open' && (

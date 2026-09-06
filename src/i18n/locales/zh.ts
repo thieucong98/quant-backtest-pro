@@ -744,7 +744,12 @@ export const zh: TranslationDict = {
   "liveOrderFilledLog": "🔴 [LIVE MT5] 成交 {side} {lot}L {symbol} (Ticket #{ticket})",
   "liveOrderFailedAlert": "无法下达经纪商订单: {error}",
   "livePendingPlacedLog": "🟡 [LIVE MT5 PENDING] 已挂单 {type} {lot}L @ {price} (Ticket #{ticket})",
-  "livePendingFailedAlert": "无法设置挂单: {error}"
+  "livePendingFailedAlert": "无法设置挂单: {error}",
+
+  // Bottom Dock Resizer & Layout Reset
+  "dragToResizePanel": "拖动以调整高度 (双击重置默认)",
+  "resetPanelHeight": "恢复默认高度与图表比例",
+  "panelHeightDefault": "默认"
 };
 
 

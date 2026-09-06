@@ -744,7 +744,12 @@ export const en: TranslationDict = {
   "liveOrderFilledLog": "🔴 [LIVE MT5] Executed {side} {lot}L {symbol} (Ticket #{ticket})",
   "liveOrderFailedAlert": "Unable to place broker order: {error}",
   "livePendingPlacedLog": "🟡 [LIVE MT5 PENDING] Placed order {type} {lot}L @ {price} (Ticket #{ticket})",
-  "livePendingFailedAlert": "Unable to place pending order: {error}"
+  "livePendingFailedAlert": "Unable to place pending order: {error}",
+
+  // Bottom Dock Resizer & Layout Reset
+  "dragToResizePanel": "Drag to resize panel (Double-click to reset)",
+  "resetPanelHeight": "Reset panel height & chart aspect ratio",
+  "panelHeightDefault": "Default"
 };
 
 

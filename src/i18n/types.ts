@@ -776,5 +776,10 @@ export interface TranslationDict {
   liveOrderFailedAlert: string;
   livePendingPlacedLog: string;
   livePendingFailedAlert: string;
+
+  // Bottom Dock Resizer & Layout Reset
+  dragToResizePanel: string;
+  resetPanelHeight: string;
+  panelHeightDefault: string;
 }
 

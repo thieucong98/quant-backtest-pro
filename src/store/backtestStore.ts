@@ -101,6 +101,10 @@ interface BacktestStore {
   isShortcutsModalOpen: boolean;
   isProfileModalOpen: boolean;
 
+  // Bottom Dock Resizer & Layout
+  bottomPanelHeight: number;
+  isBottomPanelCollapsed: boolean;
+
   // Engine references
   matchingEngine: OrderMatchingEngine;
   strategyRunner: StrategyRunner;
@@ -165,6 +169,11 @@ interface BacktestStore {
   setDataModalOpen: (open: boolean) => void;
   setShortcutsModalOpen: (open: boolean) => void;
   setProfileModalOpen: (open: boolean) => void;
+
+  // Bottom Dock Resizer Actions
+  setBottomPanelHeight: (height: number) => void;
+  setBottomPanelCollapsed: (collapsed: boolean) => void;
+  resetBottomPanelHeight: () => void;
 }
 
 // Helper: Sync current session state to both Local Cache (0ms) and Database API (Throttled for 200k+ candles)
@@ -238,6 +247,35 @@ const syncCurrentSessionToStorage = async (get: () => BacktestStore, forceImmedi
     } catch (e) {}
   }
 };
+
+/**
+ * Tính toán độ cao mặc định của Bottom Dock theo responsive màn hình & tỉ lệ khung hình
+ */
+export function getResponsiveBottomPanelHeight(): number {
+  if (typeof window === 'undefined') return 224;
+  const vh = window.innerHeight;
+  const vw = window.innerWidth;
+
+  if (vw < 640 || vh < 600) {
+    return 150; // Mobile / màn hình nhỏ
+  } else if (vw < 1024 || vh < 750) {
+    return 180; // Tablet / Laptop nhỏ (1366x768 scale 125%)
+  } else if (vh < 900) {
+    return 210; // Laptop tiêu chuẩn / 1080p
+  } else {
+    return 240; // Desktop lớn (Full HD / 2K / 4K)
+  }
+}
+
+export function clampBottomPanelHeight(height: number): number {
+  if (typeof window === 'undefined') return height;
+  const minHeight = 40; // Tối thiểu: ngang thanh tab header
+  const maxHeight = Math.max(minHeight, Math.floor(window.innerHeight * 0.72)); // Tối đa 72% chiều cao màn hình
+  return Math.min(Math.max(height, minHeight), maxHeight);
+}
+
+const STORAGE_BOTTOM_PANEL_HEIGHT_KEY = 'quant_bottom_panel_height';
+const STORAGE_BOTTOM_PANEL_COLLAPSED_KEY = 'quant_bottom_panel_collapsed';
 
 // Helper: Load cached snapshot on startup
 const loadInitialCachedSession = () => {
@@ -384,6 +422,24 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
     isDataModalOpen: false,
     isShortcutsModalOpen: false,
     isProfileModalOpen: false,
+
+    // Bottom Dock Resizer State
+    bottomPanelHeight: (() => {
+      if (typeof localStorage !== 'undefined') {
+        const saved = localStorage.getItem(STORAGE_BOTTOM_PANEL_HEIGHT_KEY);
+        if (saved) {
+          const parsed = parseInt(saved, 10);
+          if (!isNaN(parsed) && parsed >= 40) return clampBottomPanelHeight(parsed);
+        }
+      }
+      return getResponsiveBottomPanelHeight();
+    })(),
+    isBottomPanelCollapsed: (() => {
+      if (typeof localStorage !== 'undefined') {
+        return localStorage.getItem(STORAGE_BOTTOM_PANEL_COLLAPSED_KEY) === 'true';
+      }
+      return false;
+    })(),
 
     matchingEngine: initialMatchingEngine,
     strategyRunner: initialStrategyRunner,
@@ -1372,6 +1428,34 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
       })),
     setDataModalOpen: (open) => set({ isDataModalOpen: open }),
     setShortcutsModalOpen: (open) => set({ isShortcutsModalOpen: open }),
-    setProfileModalOpen: (open) => set({ isProfileModalOpen: open })
+    setProfileModalOpen: (open) => set({ isProfileModalOpen: open }),
+
+    // --- BOTTOM DOCK RESIZER ACTIONS ---
+    setBottomPanelHeight: (height: number) => {
+      const clamped = clampBottomPanelHeight(height);
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem(STORAGE_BOTTOM_PANEL_HEIGHT_KEY, String(clamped));
+      }
+      set({ bottomPanelHeight: clamped, isBottomPanelCollapsed: false });
+    },
+    setBottomPanelCollapsed: (collapsed: boolean) => {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem(STORAGE_BOTTOM_PANEL_COLLAPSED_KEY, String(collapsed));
+      }
+      set({ isBottomPanelCollapsed: collapsed });
+    },
+    resetBottomPanelHeight: () => {
+      const defaultHeight = getResponsiveBottomPanelHeight();
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem(STORAGE_BOTTOM_PANEL_HEIGHT_KEY, String(defaultHeight));
+        localStorage.setItem(STORAGE_BOTTOM_PANEL_COLLAPSED_KEY, 'false');
+      }
+      set({ bottomPanelHeight: defaultHeight, isBottomPanelCollapsed: false });
+
+      // Dispatch event to recalibrate chart layout & aspect ratio
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('quant:reset-chart-layout'));
+      }
+    }
   };
 });

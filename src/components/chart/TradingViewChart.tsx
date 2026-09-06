@@ -332,10 +332,42 @@ export const TradingViewChart: React.FC = () => {
       }
     };
 
+    // ResizeObserver: Instantly adapts chart width/height when bottom dock is dragged
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.target === chartContainerRef.current && chartRef.current) {
+          const { width, height } = entry.contentRect;
+          if (width > 0 && height > 0) {
+            chartRef.current.applyOptions({ width, height });
+          }
+        }
+      }
+    });
+
+    if (chartContainerRef.current) {
+      resizeObserver.observe(chartContainerRef.current);
+    }
+
+    // Auto-calibration event listener when user clicks "Reset Default Height & Aspect Ratio"
+    const handleResetLayout = () => {
+      if (chartRef.current && chartContainerRef.current) {
+        const width = chartContainerRef.current.clientWidth;
+        const height = chartContainerRef.current.clientHeight;
+        chartRef.current.applyOptions({ width, height });
+        try {
+          chartRef.current.priceScale('right').applyOptions({ autoScale: true });
+          chartRef.current.timeScale().fitContent();
+        } catch (e) {}
+      }
+    };
+
     window.addEventListener('resize', handleResize);
+    window.addEventListener('quant:reset-chart-layout', handleResetLayout);
 
     return () => {
       window.removeEventListener('resize', handleResize);
+      window.removeEventListener('quant:reset-chart-layout', handleResetLayout);
+      resizeObserver.disconnect();
       chart.remove();
     };
   }, []);

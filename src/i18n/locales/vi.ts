@@ -744,7 +744,12 @@ export const vi: TranslationDict = {
   "liveOrderFilledLog": "🔴 [LIVE MT5] Khớp lệnh {side} {lot}L {symbol} (Ticket #{ticket})",
   "liveOrderFailedAlert": "Không thể đặt lệnh sàn: {error}",
   "livePendingPlacedLog": "🟡 [LIVE MT5 PENDING] Đã đặt lệnh {type} {lot}L @ {price} (Ticket #{ticket})",
-  "livePendingFailedAlert": "Không thể đặt lệnh chờ: {error}"
+  "livePendingFailedAlert": "Không thể đặt lệnh chờ: {error}",
+
+  // Bottom Dock Resizer & Layout Reset
+  "dragToResizePanel": "Kéo để chỉnh độ cao (Nhấp đúp để reset mặc định)",
+  "resetPanelHeight": "Khôi phục độ cao & khung hình mặc định",
+  "panelHeightDefault": "Mặc định"
 };
 
 
