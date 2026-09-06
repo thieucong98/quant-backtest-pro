@@ -672,8 +672,8 @@ export const vi: TranslationDict = {
   "calendarNotAvailable": "Chưa có",
   "calendarSource": "Nguồn",
   "calendarSourceFF": "Forex Factory (Live)",
-  "calendarSourceReal": "Dữ Liệu Thật (Curated)",
-  "calendarSourcePrecision": "Mô Hình Chuẩn (Precision)",
+  "calendarSourceReal": "Investing.com / BLS (Thật)",
+  "calendarSourcePrecision": "Lịch Định Kỳ (Scheduled)",
   "calendarSourceImport": "Dữ Liệu Nhập (User)",
   "calendarSyncFFBtn": "Đồng bộ Forex Factory",
   "calendarSyncingFFBtn": "Đang đồng bộ...",
@@ -683,6 +683,9 @@ export const vi: TranslationDict = {
   "calendarImpactHigh": "CAO",
   "calendarImpactMedium": "TRUNG BÌNH",
   "calendarImpactLow": "THẤP",
+  "calendarSortNewestFirst": "Mới nhất",
+  "calendarSortOldestFirst": "Cũ nhất",
+  "calendarSortOrderToggle": "Đổi thứ tự sắp xếp (Mới nhất / Cũ nhất)",
 
   // Kaggle Institutional Hub & Data Import
   "kaggleHubSubtitle": "Dữ liệu tài chính thể chế 20 năm từ novandraanugrah & cộng đồng",

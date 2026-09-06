@@ -714,6 +714,9 @@ export interface TranslationDict {
   calendarImpactHigh: string;
   calendarImpactMedium: string;
   calendarImpactLow: string;
+  calendarSortNewestFirst: string;
+  calendarSortOldestFirst: string;
+  calendarSortOrderToggle: string;
 
   // Kaggle Institutional Hub & Data Import
   kaggleHubSubtitle: string;

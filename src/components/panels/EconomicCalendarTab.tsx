@@ -14,7 +14,8 @@ import {
   Globe2,
   Database,
   Sparkles,
-  FileSpreadsheet
+  FileSpreadsheet,
+  ArrowUpDown
 } from 'lucide-react';
 import { useBacktestStore } from '../../store/backtestStore';
 import { getTranslation, formatText } from '../../i18n';
@@ -61,6 +62,7 @@ export const EconomicCalendarTab: React.FC = () => {
 
   const t = getTranslation(language);
   const [searchQuery, setSearchQuery] = useState('');
+  const [calendarSortOrder, setCalendarSortOrder] = useState<'DESC' | 'ASC'>('DESC');
   const [syncStatusMsg, setSyncStatusMsg] = useState<{ type: 'success' | 'warning' | 'error'; text: string } | null>(null);
 
   const handleSyncForexFactory = async () => {
@@ -120,7 +122,7 @@ export const EconomicCalendarTab: React.FC = () => {
     }
     return (
       <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-slate-900/80 text-slate-400 border border-slate-800 whitespace-nowrap">
-        <Sparkles className="w-2.5 h-2.5 text-amber-400/80" />
+        <Calendar className="w-2.5 h-2.5 text-slate-400" />
         {t.calendarSourcePrecision}
       </span>
     );
@@ -140,9 +142,9 @@ export const EconomicCalendarTab: React.FC = () => {
     return ['ALL', ...Array.from(set).sort()];
   }, [economicNews]);
 
-  // Filtered news events
+  // Filtered news events (sorted by calendarSortOrder: DESC newest first by default)
   const filteredEvents = useMemo(() => {
-    return economicNews.filter((ev) => {
+    const list = economicNews.filter((ev) => {
       // 1. Currency filter
       if (selectedCalendarCurrency !== 'ALL') {
         if (ev.currency !== selectedCalendarCurrency && ev.currency !== 'GLOBAL') return false;
@@ -167,7 +169,13 @@ export const EconomicCalendarTab: React.FC = () => {
 
       return true;
     });
-  }, [economicNews, selectedCalendarCurrency, economicNewsFilter, searchQuery]);
+
+    return [...list].sort((a, b) => {
+      return calendarSortOrder === 'DESC'
+        ? b.timestamp - a.timestamp
+        : a.timestamp - b.timestamp;
+    });
+  }, [economicNews, selectedCalendarCurrency, economicNewsFilter, searchQuery, calendarSortOrder]);
 
   const pastCount = useMemo(() => {
     return filteredEvents.filter((e) => e.timestampSec <= currentTimestampSec).length;
@@ -243,6 +251,16 @@ export const EconomicCalendarTab: React.FC = () => {
               className="bg-slate-900 border border-slate-800 text-slate-200 rounded pl-6 pr-2 py-1 text-[11px] w-36 sm:w-44 focus:outline-none focus:border-indigo-500 placeholder-slate-600"
             />
           </div>
+
+          {/* Sort Order Toggle */}
+          <button
+            onClick={() => setCalendarSortOrder((prev) => (prev === 'DESC' ? 'ASC' : 'DESC'))}
+            className="px-2 py-1 rounded text-[11px] font-medium border flex items-center gap-1.5 transition bg-slate-900 border-slate-800 text-slate-300 hover:text-slate-100 hover:border-slate-700 shadow-sm"
+            title={t.calendarSortOrderToggle}
+          >
+            <ArrowUpDown className="w-3 h-3 text-indigo-400" />
+            <span>{calendarSortOrder === 'DESC' ? t.calendarSortNewestFirst : t.calendarSortOldestFirst}</span>
+          </button>
         </div>
 
         {/* Right side stats & toggle */}
@@ -340,7 +358,19 @@ export const EconomicCalendarTab: React.FC = () => {
           <table className="w-full text-left border-collapse min-w-[840px]">
             <thead>
               <tr className="border-b border-slate-800 text-slate-400 bg-slate-900/50 sticky top-0 text-[11px]">
-                <th className="py-1.5 px-3">{t.calendarTimeUTC}</th>
+                <th
+                  className="py-1.5 px-3 cursor-pointer hover:text-slate-200 select-none"
+                  onClick={() => setCalendarSortOrder((prev) => (prev === 'DESC' ? 'ASC' : 'DESC'))}
+                  title={t.calendarSortOrderToggle}
+                >
+                  <div className="flex items-center gap-1.5">
+                    <span>{t.calendarTimeUTC}</span>
+                    <ArrowUpDown className="w-3 h-3 text-indigo-400" />
+                    <span className="text-[10px] text-indigo-400 font-mono">
+                      {calendarSortOrder === 'DESC' ? '↓' : '↑'}
+                    </span>
+                  </div>
+                </th>
                 <th className="py-1.5 px-2">{t.calendarCurrency}</th>
                 <th className="py-1.5 px-2 text-center">{t.calendarImpact}</th>
                 <th className="py-1.5 px-3">{t.calendarEvent}</th>

@@ -95,16 +95,6 @@ function getNthWeekday(year: number, month: number, targetDayOfWeek: number, nth
   return d;
 }
 
-/**
- * Deterministic pseudo-random number based on a seed string
- */
-function seededRandom(seed: string): number {
-  let h = 2166136261 >>> 0;
-  for (let i = 0; i < seed.length; i++) {
-    h = Math.imul(h ^ seed.charCodeAt(i), 16777619);
-  }
-  return ((h >>> 0) % 10000) / 10000;
-}
 
 /**
  * Generate accurate, deterministic economic events for any given date range
@@ -143,71 +133,71 @@ export function generateDeterministicCalendar(
       if (shouldInclude(item.currency)) {
         events.push(item);
         const d = new Date(item.timestamp);
+        const dayKey = `${d.getUTCFullYear()}_${d.getUTCMonth()}_${d.getUTCDate()}_CLAIMS`;
+        coveredKeys.add(dayKey);
         const prefix = item.title.includes('Non-Farm') ? 'NFP'
           : item.title.includes('Unemployment Rate') ? 'UNEMP'
           : item.title.includes('Core CPI') ? 'CPI'
           : item.title.includes('FOMC') ? 'FOMC'
           : item.title.includes('Bank of England') ? 'BOE'
           : item.title.includes('ECB') ? 'ECB'
+          : item.title.includes('PCE') ? 'CORE_PCE'
+          : item.title.includes('ISM Manufacturing') ? 'ISM_MFG'
+          : item.title.includes('ISM Services') ? 'ISM_SERV'
+          : item.title.includes('Jobless Claims') ? 'CLAIMS'
+          : item.title.includes('GDP') ? 'GDP'
+          : item.title.includes('Retail Sales') ? 'RETAIL'
+          : item.title.includes('Bank of Japan') ? 'BOJ'
           : item.title.slice(0, 8);
         coveredKeys.add(`${d.getUTCFullYear()}_${d.getUTCMonth()}_${prefix}`);
       }
     }
   }
 
-  // 2. Precision Calibrated Engine for date intervals not covered by curated records
+  // 2. Calendar Schedule for dates not covered by curated records
+  // Authentic Data Rule: NO fake or predicted economic numbers are generated.
+  // Unreleased or uncurated events show undefined actual/forecast/previous.
   for (let y = startYear; y <= endYear; y++) {
     const mStart = y === startYear ? startMonth : 0;
     const mEnd = y === endYear ? endMonth : 11;
 
     for (let m = mStart; m <= mEnd; m++) {
-      const monthSeed = `${y}_${m}`;
-
       // ─────────────────────────────────────────────────────────────
       // 1. US NON-FARM PAYROLLS (NFP) & UNEMPLOYMENT RATE
       // 1st Friday of Month at 12:30 UTC
       // ─────────────────────────────────────────────────────────────
-      if (shouldInclude('USD') && !coveredKeys.has(`${y}_${m}_NFP`)) {
+      if (shouldInclude('USD')) {
         const nfpDate = getFirstFriday(y, m);
         const nfpMs = nfpDate.getTime();
         if (nfpMs >= minMs && nfpMs <= maxMs) {
-          const r = seededRandom(`${monthSeed}_NFP`);
-          const forecastK = 180 + Math.floor(r * 80);
-          const actualK = forecastK + Math.floor((seededRandom(`${monthSeed}_NFP_ACT`) - 0.45) * 100);
-          const prevK = 175 + Math.floor(seededRandom(`${monthSeed}_NFP_PREV`) * 70);
-          const sentiment = actualK > forecastK ? 'BULLISH' : actualK < forecastK ? 'BEARISH' : 'NEUTRAL';
-
-          events.push({
-            id: `ev_${y}_${m}_NFP`,
-            timestamp: nfpMs,
-            timestampSec: Math.floor(nfpMs / 1000),
-            currency: 'USD',
-            country: 'US',
-            title: 'US Non-Farm Employment Change (NFP)',
-            impact: 'HIGH',
-            actual: `${actualK}K`,
-            forecast: `${forecastK}K`,
-            previous: `${prevK}K`,
-            sentiment,
-            source: 'CALENDAR_ENGINE'
-          });
+          if (!coveredKeys.has(`${y}_${m}_NFP`)) {
+            events.push({
+              id: `ev_${y}_${m}_NFP`,
+              timestamp: nfpMs,
+              timestampSec: Math.floor(nfpMs / 1000),
+              currency: 'USD',
+              country: 'US',
+              title: 'US Non-Farm Employment Change (NFP)',
+              impact: 'HIGH',
+              sentiment: 'NEUTRAL',
+              source: 'CALENDAR_ENGINE'
+            });
+          }
 
           // US Unemployment Rate (same time as NFP)
-          const unempRate = (3.7 + seededRandom(`${monthSeed}_UNEMP`) * 0.5).toFixed(1);
-          events.push({
-            id: `ev_${y}_${m}_UNEMP`,
-            timestamp: nfpMs + 1000,
-            timestampSec: Math.floor((nfpMs + 1000) / 1000),
-            currency: 'USD',
-            country: 'US',
-            title: 'US Unemployment Rate',
-            impact: 'HIGH',
-            actual: `${unempRate}%`,
-            forecast: '3.9%',
-            previous: '3.9%',
-            sentiment: Number(unempRate) <= 3.8 ? 'BULLISH' : 'BEARISH',
-            source: 'CALENDAR_ENGINE'
-          });
+          if (!coveredKeys.has(`${y}_${m}_UNEMP`)) {
+            events.push({
+              id: `ev_${y}_${m}_UNEMP`,
+              timestamp: nfpMs + 1000,
+              timestampSec: Math.floor((nfpMs + 1000) / 1000),
+              currency: 'USD',
+              country: 'US',
+              title: 'US Unemployment Rate',
+              impact: 'HIGH',
+              sentiment: 'NEUTRAL',
+              source: 'CALENDAR_ENGINE'
+            });
+          }
         }
       }
 
@@ -219,9 +209,6 @@ export function generateDeterministicCalendar(
         const cpiDate = getNthWeekday(y, m, 3, 2, 12, 30); // 2nd Wednesday 12:30 UTC
         const cpiMs = cpiDate.getTime();
         if (cpiMs >= minMs && cpiMs <= maxMs) {
-          const r = seededRandom(`${monthSeed}_CPI`);
-          const cpiVal = (0.2 + r * 0.3).toFixed(1);
-          const prevVal = (0.3 + seededRandom(`${monthSeed}_CPI_P`) * 0.2).toFixed(1);
           events.push({
             id: `ev_${y}_${m}_CPI`,
             timestamp: cpiMs,
@@ -230,10 +217,7 @@ export function generateDeterministicCalendar(
             country: 'US',
             title: 'US Core CPI (m/m)',
             impact: 'HIGH',
-            actual: `${cpiVal}%`,
-            forecast: '0.3%',
-            previous: `${prevVal}%`,
-            sentiment: Number(cpiVal) > 0.3 ? 'BULLISH' : 'BEARISH',
+            sentiment: 'NEUTRAL',
             source: 'CALENDAR_ENGINE'
           });
         }
@@ -243,12 +227,10 @@ export function generateDeterministicCalendar(
       // 2B. US CORE PCE PRICE INDEX (Fed's Preferred Inflation Measure)
       // Last Friday of Month at 12:30 UTC
       // ─────────────────────────────────────────────────────────────
-      if (shouldInclude('USD')) {
+      if (shouldInclude('USD') && !coveredKeys.has(`${y}_${m}_CORE_PCE`)) {
         const pceDate = getLastFriday(y, m, 12, 30);
         const pceMs = pceDate.getTime();
         if (pceMs >= minMs && pceMs <= maxMs) {
-          const r = seededRandom(`${monthSeed}_PCE`);
-          const pceVal = (0.1 + r * 0.3).toFixed(1);
           events.push({
             id: `ev_${y}_${m}_CORE_PCE`,
             timestamp: pceMs,
@@ -257,10 +239,7 @@ export function generateDeterministicCalendar(
             country: 'US',
             title: 'US Core PCE Price Index (m/m)',
             impact: 'HIGH',
-            actual: `${pceVal}%`,
-            forecast: '0.2%',
-            previous: '0.2%',
-            sentiment: Number(pceVal) > 0.2 ? 'BULLISH' : 'BEARISH',
+            sentiment: 'NEUTRAL',
             source: 'CALENDAR_ENGINE'
           });
         }
@@ -270,12 +249,10 @@ export function generateDeterministicCalendar(
       // 3. US RETAIL SALES (m/m)
       // 2nd Thursday of Month at 12:30 UTC
       // ─────────────────────────────────────────────────────────────
-      if (shouldInclude('USD')) {
+      if (shouldInclude('USD') && !coveredKeys.has(`${y}_${m}_RETAIL`)) {
         const retailDate = getNthWeekday(y, m, 4, 2, 12, 30);
         const retailMs = retailDate.getTime();
         if (retailMs >= minMs && retailMs <= maxMs) {
-          const r = seededRandom(`${monthSeed}_RETAIL`);
-          const retVal = (0.1 + r * 0.6).toFixed(1);
           events.push({
             id: `ev_${y}_${m}_RETAIL`,
             timestamp: retailMs,
@@ -284,10 +261,7 @@ export function generateDeterministicCalendar(
             country: 'US',
             title: 'US Core Retail Sales (m/m)',
             impact: 'MEDIUM',
-            actual: `${retVal}%`,
-            forecast: '0.2%',
-            previous: '0.3%',
-            sentiment: Number(retVal) >= 0.2 ? 'BULLISH' : 'BEARISH',
+            sentiment: 'NEUTRAL',
             source: 'CALENDAR_ENGINE'
           });
         }
@@ -298,45 +272,41 @@ export function generateDeterministicCalendar(
       // 1st Business Day & 3rd Business Day at 14:00 UTC
       // ─────────────────────────────────────────────────────────────
       if (shouldInclude('USD')) {
-        const ismDate = getNthBusinessDay(y, m, 1, 14, 0);
-        const ismMs = ismDate.getTime();
-        if (ismMs >= minMs && ismMs <= maxMs) {
-          const ismVal = (47.5 + seededRandom(`${monthSeed}_ISM`) * 5.0).toFixed(1);
-          events.push({
-            id: `ev_${y}_${m}_ISM_MFG`,
-            timestamp: ismMs,
-            timestampSec: Math.floor(ismMs / 1000),
-            currency: 'USD',
-            country: 'US',
-            title: 'US ISM Manufacturing PMI',
-            impact: 'HIGH',
-            actual: ismVal,
-            forecast: '49.5',
-            previous: '48.7',
-            sentiment: Number(ismVal) >= 50.0 ? 'BULLISH' : 'BEARISH',
-            source: 'CALENDAR_ENGINE'
-          });
+        if (!coveredKeys.has(`${y}_${m}_ISM_MFG`)) {
+          const ismDate = getNthBusinessDay(y, m, 1, 14, 0);
+          const ismMs = ismDate.getTime();
+          if (ismMs >= minMs && ismMs <= maxMs) {
+            events.push({
+              id: `ev_${y}_${m}_ISM_MFG`,
+              timestamp: ismMs,
+              timestampSec: Math.floor(ismMs / 1000),
+              currency: 'USD',
+              country: 'US',
+              title: 'US ISM Manufacturing PMI',
+              impact: 'HIGH',
+              sentiment: 'NEUTRAL',
+              source: 'CALENDAR_ENGINE'
+            });
+          }
         }
 
         // US ISM Services PMI (3rd Business Day)
-        const ismServDate = getNthBusinessDay(y, m, 3, 14, 0);
-        const ismServMs = ismServDate.getTime();
-        if (ismServMs >= minMs && ismServMs <= maxMs) {
-          const servVal = (50.5 + seededRandom(`${monthSeed}_ISM_SERV`) * 4.0).toFixed(1);
-          events.push({
-            id: `ev_${y}_${m}_ISM_SERV`,
-            timestamp: ismServMs,
-            timestampSec: Math.floor(ismServMs / 1000),
-            currency: 'USD',
-            country: 'US',
-            title: 'US ISM Services PMI',
-            impact: 'HIGH',
-            actual: servVal,
-            forecast: '51.5',
-            previous: '51.4',
-            sentiment: Number(servVal) >= 50.0 ? 'BULLISH' : 'BEARISH',
-            source: 'CALENDAR_ENGINE'
-          });
+        if (!coveredKeys.has(`${y}_${m}_ISM_SERV`)) {
+          const ismServDate = getNthBusinessDay(y, m, 3, 14, 0);
+          const ismServMs = ismServDate.getTime();
+          if (ismServMs >= minMs && ismServMs <= maxMs) {
+            events.push({
+              id: `ev_${y}_${m}_ISM_SERV`,
+              timestamp: ismServMs,
+              timestampSec: Math.floor(ismServMs / 1000),
+              currency: 'USD',
+              country: 'US',
+              title: 'US ISM Services PMI',
+              impact: 'HIGH',
+              sentiment: 'NEUTRAL',
+              source: 'CALENDAR_ENGINE'
+            });
+          }
         }
       }
 
@@ -345,12 +315,10 @@ export function generateDeterministicCalendar(
       // Scheduled quarterly in Jan, Apr, Jul, Oct (months 0, 3, 6, 9)
       // ─────────────────────────────────────────────────────────────
       const isGdpMonth = [0, 3, 6, 9].includes(m);
-      if (shouldInclude('USD') && isGdpMonth) {
+      if (shouldInclude('USD') && isGdpMonth && !coveredKeys.has(`${y}_${m}_GDP`)) {
         const gdpDate = getNthWeekday(y, m, 4, 4, 12, 30);
         const gdpMs = gdpDate.getTime();
         if (gdpMs >= minMs && gdpMs <= maxMs) {
-          const r = seededRandom(`${monthSeed}_GDP`);
-          const gdpVal = (1.6 + r * 2.2).toFixed(1);
           events.push({
             id: `ev_${y}_${m}_GDP`,
             timestamp: gdpMs,
@@ -359,10 +327,7 @@ export function generateDeterministicCalendar(
             country: 'US',
             title: 'US Advance GDP (q/q)',
             impact: 'HIGH',
-            actual: `${gdpVal}%`,
-            forecast: '2.5%',
-            previous: '2.8%',
-            sentiment: Number(gdpVal) >= 2.5 ? 'BULLISH' : 'BEARISH',
+            sentiment: 'NEUTRAL',
             source: 'CALENDAR_ENGINE'
           });
         }
@@ -377,7 +342,6 @@ export function generateDeterministicCalendar(
         const fomcDate = getNthWeekday(y, m, 3, 3, 18, 0); // 3rd Wednesday 18:00 UTC
         const fomcMs = fomcDate.getTime();
         if (fomcMs >= minMs && fomcMs <= maxMs) {
-          const rateVal = (5.25 + (seededRandom(`${monthSeed}_FOMC`) > 0.7 ? 0.25 : 0)).toFixed(2);
           events.push({
             id: `ev_${y}_${m}_FOMC_RATE`,
             timestamp: fomcMs,
@@ -386,9 +350,6 @@ export function generateDeterministicCalendar(
             country: 'US',
             title: 'Federal Reserve FOMC Rate Decision',
             impact: 'HIGH',
-            actual: `${rateVal}%`,
-            forecast: `${rateVal}%`,
-            previous: '5.25%',
             sentiment: 'NEUTRAL',
             source: 'CALENDAR_ENGINE'
           });
@@ -425,9 +386,6 @@ export function generateDeterministicCalendar(
             country: 'EU',
             title: 'ECB Main Refinancing Rate',
             impact: 'HIGH',
-            actual: '4.25%',
-            forecast: '4.25%',
-            previous: '4.50%',
             sentiment: 'NEUTRAL',
             source: 'CALENDAR_ENGINE'
           });
@@ -441,6 +399,7 @@ export function generateDeterministicCalendar(
             country: 'EU',
             title: 'ECB Monetary Policy Statement & Press',
             impact: 'HIGH',
+            sentiment: 'NEUTRAL',
             source: 'CALENDAR_ENGINE'
           });
         }
@@ -463,9 +422,6 @@ export function generateDeterministicCalendar(
             country: 'GB',
             title: 'Bank of England Official Bank Rate',
             impact: 'HIGH',
-            actual: '5.00%',
-            forecast: '5.00%',
-            previous: '5.25%',
             sentiment: 'NEUTRAL',
             source: 'CALENDAR_ENGINE'
           });
@@ -476,7 +432,7 @@ export function generateDeterministicCalendar(
       // 8. BANK OF JAPAN (BOJ) POLICY RATE
       // Specific Fridays at 03:00 UTC
       // ─────────────────────────────────────────────────────────────
-      if (shouldInclude('JPY')) {
+      if (shouldInclude('JPY') && !coveredKeys.has(`${y}_${m}_BOJ`)) {
         const bojDate = getNthWeekday(y, m, 5, 3, 3, 0);
         const bojMs = bojDate.getTime();
         if (bojMs >= minMs && bojMs <= maxMs) {
@@ -488,9 +444,6 @@ export function generateDeterministicCalendar(
             country: 'JP',
             title: 'Bank of Japan Policy Rate & Outlook',
             impact: 'HIGH',
-            actual: '0.25%',
-            forecast: '0.25%',
-            previous: '0.10%',
             sentiment: 'NEUTRAL',
             source: 'CALENDAR_ENGINE'
           });
@@ -507,9 +460,8 @@ export function generateDeterministicCalendar(
             const claimsDate = getNthWeekday(y, m, 4, week, 12, 30);
             if (claimsDate.getUTCMonth() === m) {
               const claimsMs = claimsDate.getTime();
-              if (claimsMs >= minMs && claimsMs <= maxMs) {
-                const r = seededRandom(`${monthSeed}_CLAIMS_${week}`);
-                const claimsVal = 210 + Math.floor(r * 30);
+              const dayKey = `${claimsDate.getUTCFullYear()}_${claimsDate.getUTCMonth()}_${claimsDate.getUTCDate()}_CLAIMS`;
+              if (claimsMs >= minMs && claimsMs <= maxMs && !coveredKeys.has(dayKey)) {
                 events.push({
                   id: `ev_${y}_${m}_CLAIMS_${week}`,
                   timestamp: claimsMs,
@@ -518,10 +470,7 @@ export function generateDeterministicCalendar(
                   country: 'US',
                   title: 'US Initial Jobless Claims',
                   impact: 'MEDIUM',
-                  actual: `${claimsVal}K`,
-                  forecast: '220K',
-                  previous: '215K',
-                  sentiment: claimsVal < 220 ? 'BULLISH' : 'BEARISH',
+                  sentiment: 'NEUTRAL',
                   source: 'CALENDAR_ENGINE'
                 });
               }

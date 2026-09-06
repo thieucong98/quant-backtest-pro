@@ -678,5 +678,94 @@ export const CURATED_HISTORICAL_EVENTS: HistoricalCalendarItem[] = [
     previous: '3.40%',
     sentiment: 'BEARISH',
     source: 'HISTORICAL_REAL'
+  },
+
+  // ════════════════════════════════════════════════════════════════════════
+  // 2026 AUTHENTIC EVENTS (Investing.com & US BLS Official Releases)
+  // ════════════════════════════════════════════════════════════════════════
+  {
+    id: 'real_2026_09_04_NFP',
+    timestamp: utcMs(2026, 9, 4, 12, 30),
+    timestampSec: Math.floor(utcMs(2026, 9, 4, 12, 30) / 1000),
+    currency: 'USD',
+    country: 'US',
+    title: 'US Non-Farm Employment Change (NFP)',
+    impact: 'HIGH',
+    actual: '162K',
+    forecast: '55K',
+    previous: '21K',
+    sentiment: 'BULLISH',
+    source: 'HISTORICAL_REAL'
+  },
+  {
+    id: 'real_2026_09_04_UNEMP',
+    timestamp: utcMs(2026, 9, 4, 12, 30) + 1000,
+    timestampSec: Math.floor((utcMs(2026, 9, 4, 12, 30) + 1000) / 1000),
+    currency: 'USD',
+    country: 'US',
+    title: 'US Unemployment Rate',
+    impact: 'HIGH',
+    actual: '4.1%',
+    forecast: '4.1%',
+    previous: '4.3%',
+    sentiment: 'BULLISH',
+    source: 'HISTORICAL_REAL'
+  },
+  {
+    id: 'real_2026_09_03_ISM_SERV',
+    timestamp: utcMs(2026, 9, 3, 14, 0),
+    timestampSec: Math.floor(utcMs(2026, 9, 3, 14, 0) / 1000),
+    currency: 'USD',
+    country: 'US',
+    title: 'US ISM Services PMI',
+    impact: 'HIGH',
+    actual: '51.4',
+    forecast: '51.5',
+    previous: '51.4',
+    sentiment: 'NEUTRAL',
+    source: 'HISTORICAL_REAL'
+  },
+  {
+    id: 'real_2026_09_03_CLAIMS',
+    timestamp: utcMs(2026, 9, 3, 12, 30),
+    timestampSec: Math.floor(utcMs(2026, 9, 3, 12, 30) / 1000),
+    currency: 'USD',
+    country: 'US',
+    title: 'US Initial Jobless Claims',
+    impact: 'MEDIUM',
+    actual: '206K',
+    forecast: '205K',
+    previous: '204K',
+    sentiment: 'BEARISH',
+    source: 'HISTORICAL_REAL'
+  },
+  {
+    id: 'real_2026_09_01_ISM_MFG',
+    timestamp: utcMs(2026, 9, 1, 14, 0),
+    timestampSec: Math.floor(utcMs(2026, 9, 1, 14, 0) / 1000),
+    currency: 'USD',
+    country: 'US',
+    title: 'US ISM Manufacturing PMI',
+    impact: 'HIGH',
+    actual: '54.6',
+    forecast: '55.2',
+    previous: '55.6',
+    sentiment: 'BEARISH',
+    source: 'HISTORICAL_REAL'
+  },
+  {
+    id: 'real_2026_08_28_CORE_PCE',
+    timestamp: utcMs(2026, 8, 28, 12, 30),
+    timestampSec: Math.floor(utcMs(2026, 8, 28, 12, 30) / 1000),
+    currency: 'USD',
+    country: 'US',
+    title: 'US Core PCE Price Index (m/m)',
+    impact: 'HIGH',
+    actual: '0.2%',
+    forecast: '0.2%',
+    previous: '0.2%',
+    sentiment: 'NEUTRAL',
+    source: 'HISTORICAL_REAL'
   }
 ];
+
