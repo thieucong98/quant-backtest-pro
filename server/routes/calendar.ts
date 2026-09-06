@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { prisma } from '../index.js';
+import { requireAuth } from './users.js';
 
 export const calendarRouter = Router();
 
@@ -340,7 +341,7 @@ calendarRouter.get('/', async (req: Request, res: Response): Promise<void> => {
  * POST /api/calendar/sync
  * Bulk save / upsert calendar events
  */
-calendarRouter.post('/sync', async (req: Request, res: Response): Promise<void> => {
+calendarRouter.post('/sync', requireAuth, async (req: Request, res: Response): Promise<void> => {
   try {
     const { events } = req.body;
     if (!Array.isArray(events)) {
@@ -392,7 +393,7 @@ calendarRouter.post('/sync', async (req: Request, res: Response): Promise<void> 
  * POST /api/calendar/import
  * Import Forex Factory format CSV or JSON
  */
-calendarRouter.post('/import', async (req: Request, res: Response): Promise<void> => {
+calendarRouter.post('/import', requireAuth, async (req: Request, res: Response): Promise<void> => {
   try {
     const { csvContent, jsonEvents } = req.body;
     const parsedEvents: any[] = [];

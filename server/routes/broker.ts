@@ -1,6 +1,33 @@
 import { Router, Request, Response } from 'express';
+import { authMiddleware } from './users.js';
 
 export const brokerRouter = Router();
+brokerRouter.use(authMiddleware);
+
+/**
+ * SSRF Protection: Sanitize & restrict gatewayUrl to local loopback interface
+ */
+function sanitizeGatewayUrl(urlStr?: string): string {
+  const fallback = 'http://127.0.0.1:8765';
+  if (!urlStr || typeof urlStr !== 'string') return fallback;
+
+  try {
+    const parsed = new URL(urlStr.trim());
+    const hostname = parsed.hostname.toLowerCase();
+    const isLoopback = hostname === '127.0.0.1' || hostname === 'localhost' || hostname === '::1';
+    if (!isLoopback) {
+      console.warn(`[BROKER SSRF BLOCKED] Rejected non-loopback gateway URL: ${urlStr}`);
+      return fallback;
+    }
+    const port = parseInt(parsed.port, 10);
+    if (isNaN(port) || port < 1 || port > 65535) {
+      return fallback;
+    }
+    return `${parsed.protocol}//${parsed.hostname}:${port}`;
+  } catch {
+    return fallback;
+  }
+}
 
 // In-memory active broker session config on server
 let activeBrokerSession: {
@@ -73,7 +100,8 @@ const internalMock = new ServerMockEngine();
  * Health check & Ping MT5 Gateway / Broker
  */
 brokerRouter.get('/health', async (req: Request, res: Response) => {
-  const gatewayUrl = (req.query.gatewayUrl as string) || activeBrokerSession?.gatewayUrl || 'http://127.0.0.1:8765';
+  const rawUrl = (req.query.gatewayUrl as string) || activeBrokerSession?.gatewayUrl;
+  const gatewayUrl = sanitizeGatewayUrl(rawUrl);
   const startTime = Date.now();
 
   try {
@@ -114,7 +142,7 @@ brokerRouter.get('/health', async (req: Request, res: Response) => {
  */
 brokerRouter.post('/connect', async (req: Request, res: Response) => {
   const { brokerType, gatewayUrl, account, password, server, path } = req.body;
-  const targetUrl = gatewayUrl || 'http://127.0.0.1:8765';
+  const targetUrl = sanitizeGatewayUrl(gatewayUrl || activeBrokerSession?.gatewayUrl);
 
   try {
     const controller = new AbortController();
@@ -169,7 +197,7 @@ brokerRouter.post('/connect', async (req: Request, res: Response) => {
  * Disconnect from Broker
  */
 brokerRouter.post('/disconnect', async (req: Request, res: Response) => {
-  const gatewayUrl = req.body.gatewayUrl || activeBrokerSession?.gatewayUrl || 'http://127.0.0.1:8765';
+  const gatewayUrl = sanitizeGatewayUrl(req.body.gatewayUrl || activeBrokerSession?.gatewayUrl);
 
   try {
     await fetch(`${gatewayUrl}/disconnect`, { method: 'POST' });
@@ -183,7 +211,7 @@ brokerRouter.post('/disconnect', async (req: Request, res: Response) => {
  * Get Account Info
  */
 brokerRouter.get('/account', async (req: Request, res: Response) => {
-  const gatewayUrl = (req.query.gatewayUrl as string) || activeBrokerSession?.gatewayUrl || 'http://127.0.0.1:8765';
+  const gatewayUrl = sanitizeGatewayUrl(req.query.gatewayUrl as string || activeBrokerSession?.gatewayUrl);
 
   try {
     const response = await fetch(`${gatewayUrl}/account`);
@@ -197,7 +225,7 @@ brokerRouter.get('/account', async (req: Request, res: Response) => {
  * Get Open Positions
  */
 brokerRouter.get('/positions', async (req: Request, res: Response) => {
-  const gatewayUrl = (req.query.gatewayUrl as string) || activeBrokerSession?.gatewayUrl || 'http://127.0.0.1:8765';
+  const gatewayUrl = sanitizeGatewayUrl(req.query.gatewayUrl as string || activeBrokerSession?.gatewayUrl);
 
   try {
     const response = await fetch(`${gatewayUrl}/positions`);
@@ -210,7 +238,7 @@ brokerRouter.get('/positions', async (req: Request, res: Response) => {
  * Get Pending Orders
  */
 brokerRouter.get('/orders', async (req: Request, res: Response) => {
-  const gatewayUrl = (req.query.gatewayUrl as string) || activeBrokerSession?.gatewayUrl || 'http://127.0.0.1:8765';
+  const gatewayUrl = sanitizeGatewayUrl(req.query.gatewayUrl as string || activeBrokerSession?.gatewayUrl);
 
   try {
     const response = await fetch(`${gatewayUrl}/orders`);
@@ -223,7 +251,7 @@ brokerRouter.get('/orders', async (req: Request, res: Response) => {
  * Get History Deals
  */
 brokerRouter.get('/history', async (req: Request, res: Response) => {
-  const gatewayUrl = (req.query.gatewayUrl as string) || activeBrokerSession?.gatewayUrl || 'http://127.0.0.1:8765';
+  const gatewayUrl = sanitizeGatewayUrl(req.query.gatewayUrl as string || activeBrokerSession?.gatewayUrl);
 
   try {
     const response = await fetch(`${gatewayUrl}/history`);
@@ -236,7 +264,7 @@ brokerRouter.get('/history', async (req: Request, res: Response) => {
  * Send Live Order
  */
 brokerRouter.post('/order/send', async (req: Request, res: Response) => {
-  const gatewayUrl = req.body.gatewayUrl || activeBrokerSession?.gatewayUrl || 'http://127.0.0.1:8765';
+  const gatewayUrl = sanitizeGatewayUrl(req.body.gatewayUrl || activeBrokerSession?.gatewayUrl);
 
   try {
     const response = await fetch(`${gatewayUrl}/order/send`, {
@@ -301,7 +329,7 @@ brokerRouter.post('/order/send', async (req: Request, res: Response) => {
  * Modify Order SL/TP
  */
 brokerRouter.post('/order/modify', async (req: Request, res: Response) => {
-  const gatewayUrl = req.body.gatewayUrl || activeBrokerSession?.gatewayUrl || 'http://127.0.0.1:8765';
+  const gatewayUrl = sanitizeGatewayUrl(req.body.gatewayUrl || activeBrokerSession?.gatewayUrl);
 
   try {
     const response = await fetch(`${gatewayUrl}/order/modify`, {
@@ -333,7 +361,7 @@ brokerRouter.post('/order/modify', async (req: Request, res: Response) => {
  * Close Position (Full or Partial)
  */
 brokerRouter.post('/order/close', async (req: Request, res: Response) => {
-  const gatewayUrl = req.body.gatewayUrl || activeBrokerSession?.gatewayUrl || 'http://127.0.0.1:8765';
+  const gatewayUrl = sanitizeGatewayUrl(req.body.gatewayUrl || activeBrokerSession?.gatewayUrl);
 
   try {
     const response = await fetch(`${gatewayUrl}/order/close`, {
@@ -379,7 +407,7 @@ brokerRouter.post('/order/close', async (req: Request, res: Response) => {
  * Cancel Pending Order
  */
 brokerRouter.post('/order/cancel', async (req: Request, res: Response) => {
-  const gatewayUrl = req.body.gatewayUrl || activeBrokerSession?.gatewayUrl || 'http://127.0.0.1:8765';
+  const gatewayUrl = sanitizeGatewayUrl(req.body.gatewayUrl || activeBrokerSession?.gatewayUrl);
   const ticket = Number(req.query.ticket || req.body.ticket);
 
   try {
@@ -400,7 +428,7 @@ brokerRouter.post('/order/cancel', async (req: Request, res: Response) => {
  * Get Historical Candles from Broker
  */
 brokerRouter.get('/candles', async (req: Request, res: Response) => {
-  const gatewayUrl = (req.query.gatewayUrl as string) || activeBrokerSession?.gatewayUrl || 'http://127.0.0.1:8765';
+  const gatewayUrl = sanitizeGatewayUrl(req.query.gatewayUrl as string || activeBrokerSession?.gatewayUrl);
   const symbol = (req.query.symbol as string) || 'XAUUSD';
   const timeframe = (req.query.timeframe as string) || 'M5';
   const count = parseInt(req.query.count as string, 10) || 500;
@@ -446,7 +474,7 @@ brokerRouter.get('/candles', async (req: Request, res: Response) => {
  * Get All Symbols List with Categories
  */
 brokerRouter.get('/symbols/all', async (req: Request, res: Response) => {
-  const gatewayUrl = (req.query.gatewayUrl as string) || activeBrokerSession?.gatewayUrl || 'http://127.0.0.1:8765';
+  const gatewayUrl = sanitizeGatewayUrl(req.query.gatewayUrl as string || activeBrokerSession?.gatewayUrl);
 
   try {
     const response = await fetch(`${gatewayUrl}/symbols/all`);

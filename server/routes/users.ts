@@ -7,17 +7,43 @@ export const usersRouter = Router();
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret';
 
-// Middleware: Extract user from JWT
-export async function authMiddleware(req: Request, _res: Response, next: Function) {
+// Middleware: Strict JWT requirement for private endpoints
+export function requireAuth(req: Request, res: Response, next: Function) {
   try {
-    const token = req.headers.authorization?.replace('Bearer ', '');
+    const authHeader = req.headers.authorization;
+    const token = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : null;
+    if (!token) {
+      res.status(401).json({ error: 'Yêu cầu đăng nhập. Vui lòng cung cấp Bearer token hợp lệ.' });
+      return;
+    }
+    const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
+    if (!decoded?.userId) {
+      res.status(401).json({ error: 'Token không hợp lệ hoặc đã hết hạn.' });
+      return;
+    }
+    (req as any).userId = decoded.userId;
+    next();
+  } catch (err: any) {
+    res.status(401).json({ error: 'Token không hợp lệ hoặc đã hết hạn.' });
+  }
+}
+
+// Optional Auth (parse token if present, continue otherwise)
+export function optionalAuth(req: Request, _res: Response, next: Function) {
+  try {
+    const authHeader = req.headers.authorization;
+    const token = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : null;
     if (token) {
       const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
-      (req as any).userId = decoded.userId;
+      if (decoded?.userId) {
+        (req as any).userId = decoded.userId;
+      }
     }
-  } catch { /* ignore invalid tokens */ }
+  } catch {}
   next();
 }
+
+export const authMiddleware = requireAuth;
 
 // Helper: Get or create default dev user
 export async function getOrCreateDefaultUser() {
@@ -196,10 +222,29 @@ usersRouter.put('/settings', authMiddleware, async (req: Request, res: Response)
       return;
     }
 
+    // Whitelist allowed settings fields to prevent Mass Assignment
+    const allowedFields = [
+      'language',
+      'llmProvider',
+      'llmApiKey',
+      'llmModel',
+      'llmBaseUrl',
+      'theme',
+      'defaultLot',
+      'autoSLPips',
+      'autoTPPips'
+    ];
+    const safeData: Record<string, any> = {};
+    for (const key of allowedFields) {
+      if (req.body[key] !== undefined) {
+        safeData[key] = req.body[key];
+      }
+    }
+
     const settings = await prisma.userSettings.upsert({
       where: { userId },
-      update: req.body,
-      create: { userId, ...req.body }
+      update: safeData,
+      create: { userId, ...safeData }
     });
 
     res.json(settings);

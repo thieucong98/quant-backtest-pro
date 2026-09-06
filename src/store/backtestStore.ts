@@ -15,6 +15,7 @@ import { checkServerHealth } from '../api/client';
 import { AnalyticsEngine } from '../engine/analytics';
 import { soundFx } from '../engine/audioEngine';
 import { useAuthStore } from './authStore';
+import { idbStorage } from '../storage/idbStorage';
 
 interface BacktestStore {
   // Session Persistence
@@ -256,9 +257,7 @@ const syncCurrentSessionToStorage = async (get: () => BacktestStore, forceImmedi
       equityCurve: sampleEquity,
       savedAt: Date.now()
     };
-    if (typeof localStorage !== 'undefined') {
-      localStorage.setItem('quant_active_session_cache', JSON.stringify(localSnapshot));
-    }
+    idbStorage.setItem('quant_active_session_cache', localSnapshot);
   } catch (e) {}
 
   // 2. Async database persistence (if online)
@@ -1108,6 +1107,12 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
           return;
         }
 
+        // Auto-authenticate default demo trader if not yet logged in
+        const auth = useAuthStore.getState();
+        if (!auth.isAuthenticated) {
+          await auth.loginDemoTrader();
+        }
+
         // Check for active session
         const sessions = await sessionsApi.list('ACTIVE');
         if (sessions.length > 0) {
@@ -1464,6 +1469,7 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
           localStorage.removeItem('quant_active_session_cache');
           localStorage.removeItem('quant_backtest_active_session');
         }
+        idbStorage.removeItem('quant_active_session_cache');
         get().addStrategyLog('INFO', `Reset session #${sid.substring(0, 8)} to initial state`);
       } catch (err: any) {
         console.error('[Reset Active Session Error]', err);

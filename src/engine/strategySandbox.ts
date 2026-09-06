@@ -225,6 +225,31 @@ export class StrategyRunner {
         .replace(/\/\/.*/g, '')
         .trim();
 
+      // Security Inspection: Block prototype traversal and dangerous globals
+      const forbiddenPatterns = [
+        /\bconstructor\b/i,
+        /\bprototype\b/i,
+        /__proto__/i,
+        /\beval\s*\(/i,
+        /\bFunction\s*\(/,
+        /\bwindow\b/i,
+        /\bdocument\b/i,
+        /\blocalStorage\b/i,
+        /\bsessionStorage\b/i,
+        /\bfetch\b/i,
+        /\bXMLHttpRequest\b/i,
+        /\bWebSocket\b/i,
+        /\bimport\b/i,
+        /\bglobalThis\b/i,
+        /\bprocess\b/i
+      ];
+
+      for (const pattern of forbiddenPatterns) {
+        if (pattern.test(uncommented)) {
+          throw new Error(`Security Violation: Phát hiện từ khóa tiềm ẩn rủi ro (${pattern}). Không được phép truy cập prototype/DOM/storage!`);
+        }
+      }
+
       let functionBody = rawCode;
       if (!uncommented.startsWith('return')) {
         functionBody = `return (${rawCode});`;

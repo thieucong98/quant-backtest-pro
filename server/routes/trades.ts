@@ -5,21 +5,19 @@ import { authMiddleware } from './users.js';
 export const tradesRouter = Router();
 tradesRouter.use(authMiddleware);
 
-async function getUserId(req: Request): Promise<string> {
-  if ((req as any).userId) return (req as any).userId;
-  let user = await prisma.user.findFirst();
-  if (!user) {
-    user = await prisma.user.create({
-      data: { email: 'dev@quantbacktest.com', name: 'Dev User', tier: 'PRO' }
-    });
+// Helper: get userId from authenticated request
+function getUserId(req: Request): string {
+  const userId = (req as any).userId;
+  if (!userId) {
+    throw new Error('Unauthorized: Thiếu định danh người dùng hợp lệ');
   }
-  return user.id;
+  return userId;
 }
 
 // GET /api/trades/history — Cross-session trade history
 tradesRouter.get('/history', async (req: Request, res: Response) => {
   try {
-    const userId = await getUserId(req);
+    const userId = getUserId(req);
     const symbol = req.query.symbol as string | undefined;
     const status = req.query.status as string | undefined;
     const limit = parseInt(req.query.limit as string) || 100;
@@ -77,16 +75,26 @@ tradesRouter.get('/session/:sessionId', async (req: Request, res: Response) => {
 // POST /api/trades — Create single trade
 tradesRouter.post('/', async (req: Request, res: Response) => {
   try {
-    const userId = await getUserId(req);
-    const { sessionId } = req.body;
-    if (sessionId) {
-      const session = await prisma.session.findFirst({ where: { id: sessionId, userId } });
-      if (!session) {
-        res.status(404).json({ error: 'Session not found or access denied' });
-        return;
-      }
+    const userId = getUserId(req);
+    const { sessionId, ...tradeData } = req.body;
+    if (!sessionId) {
+      res.status(400).json({ error: 'sessionId required' });
+      return;
     }
-    const trade = await prisma.trade.create({ data: req.body });
+    const session = await prisma.session.findFirst({ where: { id: sessionId, userId } });
+    if (!session) {
+      res.status(404).json({ error: 'Session not found or access denied' });
+      return;
+    }
+    const trade = await prisma.trade.create({
+      data: {
+        ...tradeData,
+        sessionId,
+        openTime: BigInt(tradeData.openTime),
+        closeTime: tradeData.closeTime ? BigInt(tradeData.closeTime) : null,
+        tags: tradeData.tags && Array.isArray(tradeData.tags) ? JSON.stringify(tradeData.tags) : (tradeData.tags || null)
+      }
+    });
     res.status(201).json(trade);
   } catch (err: any) {
     res.status(500).json({ error: err.message });

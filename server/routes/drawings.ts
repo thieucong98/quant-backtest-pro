@@ -5,12 +5,27 @@ import { authMiddleware } from './users.js';
 export const drawingsRouter = Router();
 drawingsRouter.use(authMiddleware);
 
+// Helper: Verify session ownership
+async function verifySessionOwnership(sessionId: string, userId: string): Promise<boolean> {
+  const session = await prisma.session.findFirst({
+    where: { id: sessionId, userId }
+  });
+  return !!session;
+}
+
 // POST /api/drawings/sync — Bulk sync drawings for a session
 drawingsRouter.post('/sync', async (req: Request, res: Response) => {
   try {
+    const userId = (req as any).userId;
     const { sessionId, drawings } = req.body;
     if (!sessionId || !Array.isArray(drawings)) {
       res.status(400).json({ error: 'sessionId and drawings array required' });
+      return;
+    }
+
+    const isOwner = await verifySessionOwnership(sessionId, userId);
+    if (!isOwner) {
+      res.status(404).json({ error: 'Session not found or access denied' });
       return;
     }
 
@@ -40,7 +55,15 @@ drawingsRouter.post('/sync', async (req: Request, res: Response) => {
 // GET /api/drawings/session/:sessionId — Get drawings for a session
 drawingsRouter.get('/session/:sessionId', async (req: Request, res: Response) => {
   try {
+    const userId = (req as any).userId;
     const { sessionId } = req.params as { sessionId: string };
+
+    const isOwner = await verifySessionOwnership(sessionId, userId);
+    if (!isOwner) {
+      res.status(404).json({ error: 'Session not found or access denied' });
+      return;
+    }
+
     const drawings = await prisma.drawing.findMany({
       where: { sessionId },
       orderBy: { createdAt: 'asc' }
@@ -58,9 +81,16 @@ drawingsRouter.get('/session/:sessionId', async (req: Request, res: Response) =>
 // POST /api/drawings/equity/sync — Bulk sync equity points for a session
 drawingsRouter.post('/equity/sync', async (req: Request, res: Response) => {
   try {
+    const userId = (req as any).userId;
     const { sessionId, equityPoints } = req.body;
     if (!sessionId || !Array.isArray(equityPoints)) {
       res.status(400).json({ error: 'sessionId and equityPoints array required' });
+      return;
+    }
+
+    const isOwner = await verifySessionOwnership(sessionId, userId);
+    if (!isOwner) {
+      res.status(404).json({ error: 'Session not found or access denied' });
       return;
     }
 

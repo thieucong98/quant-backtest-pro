@@ -31,42 +31,54 @@ async function runSecuritySuite() {
   
   const sandbox = new StrategyRunner();
 
-  // Test 1.1: Malicious strategy trying to read window/localStorage/fetch
+  // Test 1.1: Malicious strategy trying to read window/localStorage/fetch rejected at compile time
   const exploitStrategy = `
     return {
       onCandle: (candle, indicators, account, api) => {
-        // Attempt to exfiltrate window or localStorage
-        if (typeof window !== 'undefined' && window) {
-          throw new Error('LEAK_WINDOW');
-        }
-        if (typeof localStorage !== 'undefined' && localStorage) {
-          throw new Error('LEAK_LOCALSTORAGE');
-        }
-        if (typeof fetch !== 'undefined' && fetch) {
-          throw new Error('LEAK_FETCH');
+        if (typeof window !== 'undefined' && window) {}
+      }
+    };
+  `;
+  const compileRes = sandbox.compile(exploitStrategy);
+  assert('Exploit strategy with dangerous token (window) rejected at compile time', !compileRes.success && !!compileRes.error);
+
+  // Test 1.2: Malicious strategy trying prototype pollution rejected at compile time
+  const protoExploit = `
+    return {
+      onCandle: (candle, indicators, account, api) => {
+        Object.prototype.isAdmin = true;
+      }
+    };
+  `;
+  const protoRes = sandbox.compile(protoExploit);
+  assert('Prototype pollution attempt (prototype) rejected at compile time', !protoRes.success && !!protoRes.error);
+
+  // Test 1.3: Valid strategy compiles and executes safely
+  const validStrategy = `
+    return {
+      onCandle: (candle, indicators, account, api) => {
+        if (candle.close > candle.open) {
+          api.log('Bullish bar detected');
         }
       }
     };
   `;
+  const validRes = sandbox.compile(validStrategy);
+  assert('Valid quant strategy compiles successfully', validRes.success);
 
-  const compileRes = sandbox.compile(exploitStrategy);
-  assert('Exploit strategy compiles inside Sandbox wrapper', compileRes.success);
-
-  let leakDetected = false;
+  let executedSafely = false;
   try {
     sandbox.executeCandle(
       { timestamp: 1000, open: 1, high: 2, low: 0.5, close: 1.5, volume: 100 },
       {} as any,
       {} as any,
-      {} as any
+      { log: () => {} } as any
     );
+    executedSafely = true;
   } catch (e: any) {
-    if (e.message.startsWith('LEAK_')) {
-      leakDetected = true;
-    }
+    executedSafely = false;
   }
-
-  assert('Global browser APIs (window, localStorage, fetch) shadowed to undefined', !leakDetected);
+  assert('Valid quant strategy executes safely in sandbox', executedSafely);
 
   // -------------------------------------------------------------
   // TEST GROUP 2: BROWSER LOCALSTORAGE CREDENTIAL SANITIZATION

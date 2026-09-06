@@ -5,22 +5,19 @@ import { authMiddleware } from './users.js';
 export const analyticsRouter = Router();
 analyticsRouter.use(authMiddleware);
 
-// Helper: get userId
-async function getUserId(req: Request): Promise<string> {
-  if ((req as any).userId) return (req as any).userId;
-  let user = await prisma.user.findFirst();
-  if (!user) {
-    user = await prisma.user.create({
-      data: { email: 'dev@quantbacktest.com', name: 'Dev User', tier: 'PRO' }
-    });
+// Helper: get userId from authenticated request
+function getUserId(req: Request): string {
+  const userId = (req as any).userId;
+  if (!userId) {
+    throw new Error('Unauthorized: Thiếu định danh người dùng hợp lệ');
   }
-  return user.id;
+  return userId;
 }
 
 // GET /api/analytics/dashboard — Aggregated dashboard across all sessions
 analyticsRouter.get('/dashboard', async (req: Request, res: Response) => {
   try {
-    const userId = await getUserId(req);
+    const userId = getUserId(req);
 
     // Get all sessions with their trades & snapshots
     const sessions = await prisma.session.findMany({
@@ -116,6 +113,14 @@ analyticsRouter.get('/dashboard', async (req: Request, res: Response) => {
 analyticsRouter.get('/sessions/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params as { id: string };
+    const userId = getUserId(req);
+
+    const session = await prisma.session.findFirst({ where: { id, userId } });
+    if (!session) {
+      res.status(404).json({ error: 'Session not found or access denied' });
+      return;
+    }
+
     const snapshot = await prisma.analyticsSnapshot.findUnique({
       where: { sessionId: id }
     });
@@ -139,6 +144,14 @@ analyticsRouter.get('/sessions/:id', async (req: Request, res: Response) => {
 analyticsRouter.post('/sessions/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params as { id: string };
+    const userId = getUserId(req);
+
+    const session = await prisma.session.findFirst({ where: { id, userId } });
+    if (!session) {
+      res.status(404).json({ error: 'Session not found or access denied' });
+      return;
+    }
+
     const data: any = { ...req.body };
 
     // Serialize JSON fields

@@ -153,14 +153,57 @@ async function startLocaltunnel(port: number, subdomain?: string): Promise<strin
 }
 
 /**
+ * Middleware: Verify PIN for requests coming through remote tunnel
+ */
+export function verifyTunnelPin(req: Request, res: Response, next: Function) {
+  if (tunnelState.active && tunnelState.pin) {
+    const forwardedHost = req.headers['x-forwarded-host'] || req.headers['host'] || '';
+    const isRemote = typeof forwardedHost === 'string' && (
+      forwardedHost.includes('trycloudflare.com') ||
+      forwardedHost.includes('localtunnel.me')
+    );
+
+    if (isRemote) {
+      const clientPin = req.headers['x-tunnel-pin'] || req.query.pin;
+      if (!clientPin || String(clientPin).trim() !== tunnelState.pin) {
+        res.status(403).json({
+          error: 'Yêu cầu mã PIN bảo vệ Tunnel. Vui lòng cung cấp header X-Tunnel-Pin hợp lệ.',
+          requiresPin: true
+        });
+        return;
+      }
+    }
+  }
+  next();
+}
+
+/**
  * GET /api/tunnel/status
  */
 tunnelRouter.get('/status', async (_req: Request, res: Response) => {
   const uptimeSeconds = tunnelState.startedAt ? Math.floor((Date.now() - tunnelState.startedAt) / 1000) : 0;
+  // Security: Never leak pin in plaintext status
+  const { pin: _pin, ...safeState } = tunnelState;
   return res.json({
-    ...tunnelState,
+    ...safeState,
+    hasPin: Boolean(tunnelState.pin),
     uptime: uptimeSeconds
   });
+});
+
+/**
+ * POST /api/tunnel/verify-pin
+ */
+tunnelRouter.post('/verify-pin', (req: Request, res: Response) => {
+  const { pin } = req.body;
+  if (!tunnelState.pin) {
+    return res.json({ success: true, verified: true, message: 'No PIN configured' });
+  }
+  const isMatch = String(pin || '').trim() === tunnelState.pin;
+  if (isMatch) {
+    return res.json({ success: true, verified: true });
+  }
+  return res.status(401).json({ success: false, verified: false, error: 'Mã PIN không chính xác' });
 });
 
 /**

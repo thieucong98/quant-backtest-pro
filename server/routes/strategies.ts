@@ -5,22 +5,19 @@ import { authMiddleware } from './users.js';
 export const strategiesRouter = Router();
 strategiesRouter.use(authMiddleware);
 
-// Helper: get userId
-async function getUserId(req: Request): Promise<string> {
-  if ((req as any).userId) return (req as any).userId;
-  let user = await prisma.user.findFirst();
-  if (!user) {
-    user = await prisma.user.create({
-      data: { email: 'dev@quantbacktest.com', name: 'Dev User', tier: 'PRO' }
-    });
+// Helper: get userId from authenticated request
+function getUserId(req: Request): string {
+  const userId = (req as any).userId;
+  if (!userId) {
+    throw new Error('Unauthorized: Thiếu định danh người dùng hợp lệ');
   }
-  return user.id;
+  return userId;
 }
 
 // GET /api/strategies — List all strategies
 strategiesRouter.get('/', async (req: Request, res: Response) => {
   try {
-    const userId = await getUserId(req);
+    const userId = getUserId(req);
     const strategies = await prisma.strategy.findMany({
       where: { userId },
       orderBy: { updatedAt: 'desc' }

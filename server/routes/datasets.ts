@@ -7,22 +7,19 @@ import { KaggleDatasetService, KAGGLE_PRESETS } from '../services/kaggleService.
 export const datasetsRouter = Router();
 datasetsRouter.use(authMiddleware);
 
-// Helper: get userId
-async function getUserId(req: Request): Promise<string> {
-  if ((req as any).userId) return (req as any).userId;
-  let user = await prisma.user.findFirst();
-  if (!user) {
-    user = await prisma.user.create({
-      data: { email: 'dev@quantbacktest.com', name: 'Dev User', tier: 'PRO' }
-    });
+// Helper: get userId from authenticated request
+function getUserId(req: Request): string {
+  const userId = (req as any).userId;
+  if (!userId) {
+    throw new Error('Unauthorized: Thiếu định danh người dùng hợp lệ');
   }
-  return user.id;
+  return userId;
 }
 
 // GET /api/datasets — List datasets (without candle data for speed)
 datasetsRouter.get('/', async (req: Request, res: Response) => {
   try {
-    const userId = await getUserId(req);
+    const userId = getUserId(req);
     const datasets = await prisma.dataset.findMany({
       where: { userId },
       select: {
@@ -49,12 +46,13 @@ datasetsRouter.get('/', async (req: Request, res: Response) => {
 datasetsRouter.get('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params as { id: string };
-    const dataset = await prisma.dataset.findUnique({
-      where: { id }
+    const userId = getUserId(req);
+    const dataset = await prisma.dataset.findFirst({
+      where: { id, userId }
     });
 
     if (!dataset) {
-      res.status(404).json({ error: 'Dataset not found' });
+      res.status(404).json({ error: 'Dataset not found or access denied' });
       return;
     }
 
@@ -145,6 +143,12 @@ datasetsRouter.post('/', async (req: Request, res: Response) => {
 datasetsRouter.delete('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params as { id: string };
+    const userId = getUserId(req);
+    const existing = await prisma.dataset.findFirst({ where: { id, userId } });
+    if (!existing) {
+      res.status(404).json({ error: 'Dataset not found or access denied' });
+      return;
+    }
     await prisma.dataset.delete({ where: { id } });
     res.json({ success: true });
   } catch (err: any) {

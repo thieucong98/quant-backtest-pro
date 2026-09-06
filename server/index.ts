@@ -12,7 +12,7 @@ import { analyticsRouter } from './routes/analytics.js';
 import { usersRouter, getOrCreateDefaultUser } from './routes/users.js';
 import { drawingsRouter } from './routes/drawings.js';
 import { brokerRouter } from './routes/broker.js';
-import { tunnelRouter } from './routes/tunnel.js';
+import { tunnelRouter, verifyTunnelPin } from './routes/tunnel.js';
 import { calendarRouter } from './routes/calendar.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -25,13 +25,33 @@ export { prisma };
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Middleware
+// Allowed CORS origins: Local development, Docker, and Tunnel domains
+const allowedOriginPatterns = [
+  /^http:\/\/localhost:(5173|5174|4173|3000|3001|3002)$/,
+  /^http:\/\/127\.0\.0\.1:(5173|5174|4173|3000|3001|3002)$/,
+  /https:\/\/[a-zA-Z0-9-]+\.trycloudflare\.com$/,
+  /https:\/\/[a-zA-Z0-9-]+\.loca\.lt$/
+];
+
+// Security Hardened Middleware
 app.use(cors({
-  origin: true,
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    const isAllowed = allowedOriginPatterns.some(pattern => pattern.test(origin));
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      callback(new Error(`CORS blocked for unauthorized origin: ${origin}`));
+    }
+  },
   credentials: true
 }));
-app.use(express.json({ limit: '250mb' })); // Large payloads for candle data and zip imports
-app.use(express.urlencoded({ limit: '250mb', extended: true }));
+
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+// Enforce Remote Tunnel PIN if configured
+app.use('/api', verifyTunnelPin);
 
 // Health check
 app.get('/api/health', (_req, res) => {
