@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useMemo } from 'react';
+import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import {
   createChart,
   IChartApi,
@@ -37,6 +37,7 @@ import { snapEventToBarTime, getCurrenciesForSymbol } from '../../config/newsEve
 import { DrawingCanvas } from './DrawingCanvas';
 import { AIBotHUD } from '../panels/AIBotHUD';
 import { VisualChartTradingOverlay } from './VisualChartTradingOverlay';
+import { PriceScaleContextMenu } from './PriceScaleContextMenu';
 
 /**
  * Tính toán nến Heikin-Ashi làm mượt xu hướng
@@ -131,12 +132,27 @@ export const TradingViewChart: React.FC = () => {
     isLogScale,
     isPercentageScale,
     isInvertedScale,
+    isAutoScale,
+    isPriceRatioLocked,
+    priceScalePosition,
+    scaleChartOnly,
+    isIndexedScale,
+    showScalePlusButton,
+    resetPriceScaleTrigger,
     showCountdown,
     showWatermark,
     showGrid,
     toggleLogScale,
     togglePercentageScale,
-    toggleInvertedScale
+    toggleInvertedScale,
+    setAutoScale,
+    toggleAutoScale,
+    togglePriceRatioLocked,
+    setPriceScalePosition,
+    togglePriceScalePosition,
+    toggleScaleChartOnly,
+    setScaleMode,
+    triggerResetPriceScale
   } = useBacktestStore();
 
   const {
@@ -178,7 +194,13 @@ export const TradingViewChart: React.FC = () => {
   }, []);
 
   // Tạo Main Series theo Chart Type đã chọn
-  const createMainSeriesForType = (chart: IChartApi, type: ChartType, spec: InstrumentSpec, basePrice?: number) => {
+  const createMainSeriesForType = (
+    chart: IChartApi,
+    type: ChartType,
+    spec: InstrumentSpec,
+    basePrice?: number,
+    priceScale: 'right' | 'left' = 'right'
+  ) => {
     const priceFormat = {
       type: 'price' as const,
       precision: spec.digits,
@@ -196,7 +218,8 @@ export const TradingViewChart: React.FC = () => {
           borderDownColor: '#ef5350',
           wickUpColor: '#26a69a',
           wickDownColor: '#ef5350',
-          priceFormat
+          priceFormat,
+          priceScaleId: priceScale
         });
 
       case 'heikin-ashi':
@@ -207,7 +230,8 @@ export const TradingViewChart: React.FC = () => {
           borderVisible: false,
           wickUpColor: '#26a69a',
           wickDownColor: '#ef5350',
-          priceFormat
+          priceFormat,
+          priceScaleId: priceScale
         });
 
       case 'bar':
@@ -215,14 +239,16 @@ export const TradingViewChart: React.FC = () => {
           upColor: '#26a69a',
           downColor: '#ef5350',
           thinBars: false,
-          priceFormat
+          priceFormat,
+          priceScaleId: priceScale
         });
 
       case 'line':
         return chart.addLineSeries({
           color: '#6366f1',
           lineWidth: 2,
-          priceFormat
+          priceFormat,
+          priceScaleId: priceScale
         });
 
       case 'area':
@@ -231,7 +257,8 @@ export const TradingViewChart: React.FC = () => {
           bottomColor: 'rgba(99, 102, 241, 0.02)',
           lineColor: '#6366f1',
           lineWidth: 2,
-          priceFormat
+          priceFormat,
+          priceScaleId: priceScale
         });
 
       case 'baseline':
@@ -244,7 +271,8 @@ export const TradingViewChart: React.FC = () => {
           bottomFillColor2: 'rgba(239, 83, 80, 0.28)',
           bottomLineColor: '#ef5350',
           lineWidth: 2,
-          priceFormat
+          priceFormat,
+          priceScaleId: priceScale
         });
 
       default:
@@ -254,7 +282,8 @@ export const TradingViewChart: React.FC = () => {
           borderVisible: false,
           wickUpColor: '#26a69a',
           wickDownColor: '#ef5350',
-          priceFormat
+          priceFormat,
+          priceScaleId: priceScale
         });
     }
   };
@@ -297,6 +326,15 @@ export const TradingViewChart: React.FC = () => {
         secondsVisible: false
       },
       rightPriceScale: {
+        visible: priceScalePosition === 'right',
+        borderColor: 'rgba(51, 65, 85, 0.5)',
+        scaleMargins: {
+          top: 0.1,
+          bottom: 0.2
+        }
+      },
+      leftPriceScale: {
+        visible: priceScalePosition === 'left',
         borderColor: 'rgba(51, 65, 85, 0.5)',
         scaleMargins: {
           top: 0.1,
@@ -305,7 +343,7 @@ export const TradingViewChart: React.FC = () => {
       }
     });
 
-    const mainSeries = createMainSeriesForType(chart, chartType, instrument, candles[0]?.close);
+    const mainSeries = createMainSeriesForType(chart, chartType, instrument, candles[0]?.close, priceScalePosition);
 
     const volumeSeries = chart.addHistogramSeries({
       color: '#38bdf8',
@@ -355,9 +393,13 @@ export const TradingViewChart: React.FC = () => {
         const height = chartContainerRef.current.clientHeight;
         chartRef.current.applyOptions({ width, height });
         try {
-          chartRef.current.priceScale('right').applyOptions({ autoScale: true });
-          chartRef.current.timeScale().fitContent();
+          chartRef.current.priceScale(priceScalePosition).applyOptions({
+            autoScale: true,
+            scaleMargins: { top: 0.1, bottom: 0.2 }
+          });
+          chartRef.current.timeScale().resetTimeScale();
         } catch (e) {}
+        setAutoScale(true);
       }
     };
 
@@ -383,30 +425,169 @@ export const TradingViewChart: React.FC = () => {
       } catch (e) {}
     }
 
-    const newSeries = createMainSeriesForType(chartRef.current, chartType, instrument, candles[0]?.close);
+    const newSeries = createMainSeriesForType(chartRef.current, chartType, instrument, candles[0]?.close, priceScalePosition);
     mainSeriesRef.current = newSeries;
     lastChartTypeRef.current = chartType;
 
     // Reset render flags to force full data update
     lastRenderedIndexRef.current = -1;
     lastCandlesRef.current = null;
-  }, [chartType, instrument]);
+  }, [chartType, instrument, priceScalePosition]);
 
-  // Cập nhật Price Scale Modes (Logarithmic, Percentage, Invert Scale, Auto Scale)
+  // Cập nhật vị trí Price Scale ('right' | 'left')
   useEffect(() => {
     if (!chartRef.current) return;
-    const rightScale = chartRef.current.priceScale('right');
+    chartRef.current.applyOptions({
+      rightPriceScale: { visible: priceScalePosition === 'right' },
+      leftPriceScale: { visible: priceScalePosition === 'left' }
+    });
+    if (mainSeriesRef.current) {
+      mainSeriesRef.current.applyOptions({
+        priceScaleId: priceScalePosition
+      });
+    }
+  }, [priceScalePosition]);
+
+  // Cập nhật Price Scale Modes (Logarithmic, Percentage, Indexed to 100, Invert Scale, Auto Scale)
+  useEffect(() => {
+    if (!chartRef.current) return;
+    const currentScale = chartRef.current.priceScale(priceScalePosition);
 
     let mode = PriceScaleMode.Normal;
     if (isLogScale) mode = PriceScaleMode.Logarithmic;
     else if (isPercentageScale) mode = PriceScaleMode.Percentage;
+    else if (isIndexedScale) mode = PriceScaleMode.IndexedTo100;
 
-    rightScale.applyOptions({
+    currentScale.applyOptions({
       mode,
       invertScale: isInvertedScale,
-      autoScale: true
+      autoScale: isAutoScale
     });
-  }, [isLogScale, isPercentageScale, isInvertedScale]);
+  }, [isLogScale, isPercentageScale, isIndexedScale, isInvertedScale, isAutoScale, priceScalePosition]);
+
+  // Đồng bộ trạng thái AutoScale khi người dùng kéo dãn thước giá bằng chuột
+  useEffect(() => {
+    const handleMouseUp = () => {
+      if (!chartRef.current) return;
+      try {
+        const currentOptions = chartRef.current.priceScale(priceScalePosition).options();
+        if (currentOptions.autoScale !== isAutoScale) {
+          setAutoScale(currentOptions.autoScale);
+        }
+      } catch (err) {}
+    };
+
+    window.addEventListener('mouseup', handleMouseUp);
+    return () => window.removeEventListener('mouseup', handleMouseUp);
+  }, [priceScalePosition, isAutoScale, setAutoScale]);
+
+  // Xử lý Reset Price Scale & Tỷ lệ khung hình chuẩn TradingView (Alt + R / Double click)
+  const handleResetPriceScale = useCallback(() => {
+    if (!chartRef.current) return;
+    const pScale = chartRef.current.priceScale(priceScalePosition);
+    pScale.applyOptions({
+      autoScale: true,
+      scaleMargins: {
+        top: 0.1,
+        bottom: 0.2
+      }
+    });
+
+    try {
+      chartRef.current.timeScale().resetTimeScale();
+    } catch (e) {}
+
+    setAutoScale(true);
+  }, [priceScalePosition, setAutoScale]);
+
+  // Lắng nghe trigger Reset Price Scale từ Store
+  useEffect(() => {
+    if (resetPriceScaleTrigger > 0) {
+      handleResetPriceScale();
+    }
+  }, [resetPriceScaleTrigger, handleResetPriceScale]);
+
+  // Phím tắt toàn cục TradingView (Alt+R, Alt+I, Alt+P, Alt+L, Alt+A)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(target?.tagName)) return;
+
+      if (e.altKey && (e.key === 'r' || e.key === 'R')) {
+        e.preventDefault();
+        handleResetPriceScale();
+      } else if (e.altKey && (e.key === 'i' || e.key === 'I')) {
+        e.preventDefault();
+        toggleInvertedScale();
+      } else if (e.altKey && (e.key === 'p' || e.key === 'P')) {
+        e.preventDefault();
+        togglePercentageScale();
+      } else if (e.altKey && (e.key === 'l' || e.key === 'L')) {
+        e.preventDefault();
+        toggleLogScale();
+      } else if (e.altKey && (e.key === 'a' || e.key === 'A')) {
+        e.preventDefault();
+        toggleAutoScale();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleResetPriceScale, toggleInvertedScale, togglePercentageScale, toggleLogScale, toggleAutoScale]);
+
+  // Trạng thái hiển thị menu chuột phải trên thước giá
+  const [contextMenuPos, setContextMenuPos] = useState<{ x: number; y: number } | null>(null);
+
+  const handleContextMenu = (e: React.MouseEvent) => {
+    if (!chartContainerRef.current || !chartRef.current) return;
+    const rect = chartContainerRef.current.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+
+    if (mouseX < 0 || mouseX > rect.width || mouseY < 0 || mouseY > rect.height) return;
+
+    const pScale = chartRef.current.priceScale(priceScalePosition);
+    const scaleWidth = Math.max(50, pScale.width());
+
+    const isOverPriceScale =
+      priceScalePosition === 'right'
+        ? mouseX >= rect.width - scaleWidth
+        : mouseX <= scaleWidth;
+
+    if (isOverPriceScale) {
+      e.preventDefault();
+      e.stopPropagation();
+      setContextMenuPos({ x: e.clientX, y: e.clientY });
+    }
+  };
+
+  const handleDoubleClick = (e: React.MouseEvent) => {
+    if (!chartContainerRef.current || !chartRef.current) return;
+    const rect = chartContainerRef.current.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+
+    if (mouseX < 0 || mouseX > rect.width || mouseY < 0 || mouseY > rect.height) return;
+
+    const pScale = chartRef.current.priceScale(priceScalePosition);
+    const scaleWidth = Math.max(50, pScale.width());
+
+    const isOverPriceScale =
+      priceScalePosition === 'right'
+        ? mouseX >= rect.width - scaleWidth
+        : mouseX <= scaleWidth;
+
+    const timeScaleHeight = 28;
+    const isOverTimeScale = mouseY >= rect.height - timeScaleHeight;
+
+    if (isOverPriceScale) {
+      handleResetPriceScale();
+    } else if (isOverTimeScale) {
+      try {
+        chartRef.current.timeScale().resetTimeScale();
+      } catch (err) {}
+    }
+  };
 
   // Cập nhật Gridlines
   useEffect(() => {
@@ -851,7 +1032,11 @@ export const TradingViewChart: React.FC = () => {
   const isPassed = currentProfit >= profitTargetMax;
 
   return (
-    <div className="relative w-full h-full flex flex-col bg-[#0b0e14] overflow-hidden select-none">
+    <div
+      className="relative w-full h-full flex flex-col bg-[#0b0e14] overflow-hidden select-none"
+      onContextMenu={handleContextMenu}
+      onDoubleClick={handleDoubleClick}
+    >
       {/* 1. ONE-CLICK QUICK TRADING DOCK (TOP-LEFT OVERLAY) */}
       <div className="absolute top-3 left-3 z-20 flex flex-col gap-1.5">
         {/* LIVE STREAM STATUS RIBBON */}
@@ -1217,7 +1402,11 @@ export const TradingViewChart: React.FC = () => {
       )}
 
       {/* 4. TRADINGVIEW BOTTOM-RIGHT SCALE TOOLBAR */}
-      <div className="absolute bottom-6 right-16 z-20 flex items-center gap-1 bg-[#111622]/90 backdrop-blur-md border border-slate-800 rounded-lg p-1 text-[10px] font-mono shadow-xl">
+      <div
+        className={`absolute bottom-6 ${
+          priceScalePosition === 'right' ? 'right-16' : 'right-4'
+        } z-20 flex items-center gap-1 bg-[#111622]/90 backdrop-blur-md border border-slate-800 rounded-lg p-1 text-[10px] font-mono shadow-xl`}
+      >
         <button
           onClick={toggleLogScale}
           className={`px-1.5 py-0.5 rounded font-bold transition-all ${
@@ -1246,12 +1435,11 @@ export const TradingViewChart: React.FC = () => {
           INV
         </button>
         <button
-          onClick={() => {
-            chartRef.current?.timeScale().resetTimeScale();
-            chartRef.current?.priceScale('right').applyOptions({ autoScale: true });
-          }}
-          className="px-1.5 py-0.5 rounded text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors"
-          title={t.autoScaleTooltip}
+          onClick={handleResetPriceScale}
+          className={`px-1.5 py-0.5 rounded font-bold transition-all ${
+            isAutoScale ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+          }`}
+          title={t.resetChartRatioTooltip}
         >
           AUTO
         </button>
@@ -1270,6 +1458,16 @@ export const TradingViewChart: React.FC = () => {
 
       {/* Overlay Drawing Canvas */}
       <DrawingCanvas chart={chartRef.current} series={mainSeriesRef.current} />
+
+      {/* TradingView Price Scale Context Menu */}
+      {contextMenuPos && (
+        <PriceScaleContextMenu
+          x={contextMenuPos.x}
+          y={contextMenuPos.y}
+          onClose={() => setContextMenuPos(null)}
+          onResetPriceScale={handleResetPriceScale}
+        />
+      )}
     </div>
   );
 };

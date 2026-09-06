@@ -83,6 +83,25 @@ interface BacktestStore {
   showWatermark: boolean;
   showGrid: boolean;
 
+  // Price Scale & Aspect Ratio Settings
+  isAutoScale: boolean;
+  isPriceRatioLocked: boolean;
+  priceScalePosition: 'right' | 'left';
+  scaleChartOnly: boolean;
+  isIndexedScale: boolean;
+  showScalePlusButton: boolean;
+  scaleLabels: {
+    symbolName: boolean;
+    lastPrice: boolean;
+    bidAsk: boolean;
+    highLow: boolean;
+  };
+  scaleLines: {
+    lastPrice: boolean;
+    bidAsk: boolean;
+    highLow: boolean;
+  };
+
   setChartType: (type: ChartType) => void;
   toggleLogScale: () => void;
   togglePercentageScale: () => void;
@@ -90,6 +109,19 @@ interface BacktestStore {
   toggleCountdown: () => void;
   toggleWatermark: () => void;
   toggleGrid: () => void;
+  setAutoScale: (auto: boolean) => void;
+  toggleAutoScale: () => void;
+  togglePriceRatioLocked: () => void;
+  setPriceScalePosition: (pos: 'right' | 'left') => void;
+  togglePriceScalePosition: () => void;
+  setScaleChartOnly: (val: boolean) => void;
+  toggleScaleChartOnly: () => void;
+  setScaleMode: (mode: 'regular' | 'percent' | 'log' | 'indexed') => void;
+  toggleScalePlusButton: () => void;
+  toggleScaleLabel: (key: 'symbolName' | 'lastPrice' | 'bidAsk' | 'highLow') => void;
+  toggleScaleLine: (key: 'lastPrice' | 'bidAsk' | 'highLow') => void;
+  resetPriceScaleTrigger: number;
+  triggerResetPriceScale: () => void;
 
   // Modals & Language
   language: 'vi' | 'en' | 'ja' | 'zh';
@@ -406,13 +438,63 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
     showWatermark: true,
     showGrid: true,
 
+    // Price Scale & Aspect Ratio Settings
+    isAutoScale: true,
+    isPriceRatioLocked: false,
+    priceScalePosition: 'right',
+    scaleChartOnly: true,
+    isIndexedScale: false,
+    showScalePlusButton: true,
+    scaleLabels: {
+      symbolName: false,
+      lastPrice: true,
+      bidAsk: true,
+      highLow: false,
+    },
+    scaleLines: {
+      lastPrice: true,
+      bidAsk: true,
+      highLow: false,
+    },
+    resetPriceScaleTrigger: 0,
+
     setChartType: (chartType) => set({ chartType }),
-    toggleLogScale: () => set(s => ({ isLogScale: !s.isLogScale, isPercentageScale: false })),
-    togglePercentageScale: () => set(s => ({ isPercentageScale: !s.isPercentageScale, isLogScale: false })),
+    toggleLogScale: () => set(s => ({ isLogScale: !s.isLogScale, isPercentageScale: false, isIndexedScale: false })),
+    togglePercentageScale: () => set(s => ({ isPercentageScale: !s.isPercentageScale, isLogScale: false, isIndexedScale: false })),
     toggleInvertedScale: () => set(s => ({ isInvertedScale: !s.isInvertedScale })),
     toggleCountdown: () => set(s => ({ showCountdown: !s.showCountdown })),
     toggleWatermark: () => set(s => ({ showWatermark: !s.showWatermark })),
     toggleGrid: () => set(s => ({ showGrid: !s.showGrid })),
+    setAutoScale: (isAutoScale) => set({ isAutoScale }),
+    toggleAutoScale: () => set(s => ({ isAutoScale: !s.isAutoScale })),
+    togglePriceRatioLocked: () => set(s => ({ isPriceRatioLocked: !s.isPriceRatioLocked })),
+    setPriceScalePosition: (priceScalePosition) => set({ priceScalePosition }),
+    togglePriceScalePosition: () => set(s => ({ priceScalePosition: s.priceScalePosition === 'right' ? 'left' : 'right' })),
+    setScaleChartOnly: (scaleChartOnly) => set({ scaleChartOnly }),
+    toggleScaleChartOnly: () => set(s => ({ scaleChartOnly: !s.scaleChartOnly })),
+    setScaleMode: (mode) => set(() => {
+      if (mode === 'log') {
+        return { isLogScale: true, isPercentageScale: false, isIndexedScale: false };
+      }
+      if (mode === 'percent') {
+        return { isLogScale: false, isPercentageScale: true, isIndexedScale: false };
+      }
+      if (mode === 'indexed') {
+        return { isLogScale: false, isPercentageScale: false, isIndexedScale: true };
+      }
+      return { isLogScale: false, isPercentageScale: false, isIndexedScale: false };
+    }),
+    toggleScalePlusButton: () => set(s => ({ showScalePlusButton: !s.showScalePlusButton })),
+    toggleScaleLabel: (key) => set(s => ({
+      scaleLabels: { ...s.scaleLabels, [key]: !s.scaleLabels[key] }
+    })),
+    toggleScaleLine: (key) => set(s => ({
+      scaleLines: { ...s.scaleLines, [key]: !s.scaleLines[key] }
+    })),
+    triggerResetPriceScale: () => set(s => ({
+      isAutoScale: true,
+      resetPriceScaleTrigger: s.resetPriceScaleTrigger + 1
+    })),
 
     language: (typeof localStorage !== 'undefined' ? (localStorage.getItem('quant_lang') as any) : 'vi') || 'vi',
     isOrderModalOpen: false,
