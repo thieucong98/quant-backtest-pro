@@ -8,7 +8,7 @@
 [![Language: English](https://img.shields.io/badge/Language-English-blue.svg?style=for-the-badge)](#)
 [![Language: Tiếng Việt](https://img.shields.io/badge/Ngôn%20ngữ-Tiếng%20Việt-red.svg?style=for-the-badge)](README.vi.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-emerald.svg?style=for-the-badge)](LICENSE)
-[![Tests: 100% Passed](https://img.shields.io/badge/Tests-101%2F101%20Passed-success.svg?style=for-the-badge)](#)
+[![Tests: 100% Passed](https://img.shields.io/badge/Tests-143%2F143%20Passed-success.svg?style=for-the-badge)](#)
 [![Docker Ready](https://img.shields.io/badge/Docker-Ready-2496ED.svg?style=for-the-badge&logo=docker&logoColor=white)](Dockerfile)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6.svg?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-19.0-61DAFB.svg?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
@@ -18,7 +18,7 @@
 <br />
 
 <!-- Hero Showcase Image -->
-<img src="docs/assets/01_dashboard_hero.png" alt="Quant Backtest Pro Main Workspace" width="100%" style="border-radius: 12px; box-shadow: 0 20px 50px rgba(0,0,0,0.5);" />
+<img src="docs/assets/en/01_dashboard_hero.png" alt="Quant Backtest Pro Main Workspace" width="100%" style="border-radius: 12px; box-shadow: 0 20px 50px rgba(0,0,0,0.5);" />
 
 </div>
 
@@ -44,7 +44,7 @@ It unifies **60 FPS ultra-smooth candlestick replay (even with 200,000+ candles)
 Replay price action with sub-millisecond precision. Jump to any exact historical date and time or jump between dataset milestones (*Start / 50% Midpoint / Latest*) instantly using an optimized binary-search indexer.
 
 <div align="center">
-  <img src="docs/assets/04_time_travel_replay.png" alt="Time Travel Replay Bar" width="95%" style="border-radius: 10px; margin: 10px 0;" />
+  <img src="docs/assets/en/04_time_travel_replay.png" alt="Time Travel Replay Bar" width="95%" style="border-radius: 10px; margin: 10px 0;" />
 </div>
 
 - **$O(1)$ Incremental Chart Rendering**: Sub-millisecond (`0.05ms`) candle updates on TradingView Lightweight Charts, eliminating canvas rebuilds and GC thrashing at high playback speeds (`10x` to `100x`).
@@ -58,8 +58,8 @@ Replay price action with sub-millisecond precision. Jump to any exact historical
 Never search or re-upload your historical data again. Automatically persist every imported CSV or crawled feed into an integrated local SQLite database.
 
 <div align="center">
-  <img src="docs/assets/02_data_import_library.png" alt="SQLite Dataset Library Grid" width="48%" style="border-radius: 10px; margin-right: 2%;" />
-  <img src="docs/assets/03_online_crawler.png" alt="Multi-Batch Online Crawler" width="48%" style="border-radius: 10px;" />
+  <img src="docs/assets/en/02_data_import_library.png" alt="SQLite Dataset Library Grid" width="48%" style="border-radius: 10px; margin-right: 2%;" />
+  <img src="docs/assets/en/03_online_crawler.png" alt="Multi-Batch Online Crawler" width="48%" style="border-radius: 10px;" />
 </div>
 
 - **1-Click Load Dataset Cards**: Instant 1-click loading from the Database card grid with asset badges, timeframe tags, candle counts, and date spans.
@@ -73,7 +73,7 @@ Never search or re-upload your historical data again. Automatically persist ever
 Transform trading ideas described in plain natural language into fully backtestable, executable TypeScript strategy code.
 
 <div align="center">
-  <img src="docs/assets/05_ai_strategy_studio.png" alt="AI Strategy Studio" width="95%" style="border-radius: 10px; margin: 10px 0;" />
+  <img src="docs/assets/en/05_ai_strategy_studio.png" alt="AI Strategy Studio" width="95%" style="border-radius: 10px; margin: 10px 0;" />
 </div>
 
 - **Natural Language to Code**: Type *"Fast EMA 9 crosses above EMA 21 with RSI < 70 filter, SL 15 pips, TP 30 pips"* and receive verified execution logic.
@@ -86,7 +86,7 @@ Transform trading ideas described in plain natural language into fully backtesta
 Prevent curve-fitting and uncover truly robust parameter combinations with automated multi-variant batch simulations.
 
 <div align="center">
-  <img src="docs/assets/06_sltp_grid_optimizer.png" alt="SL/TP Grid Optimizer" width="95%" style="border-radius: 10px; margin: 10px 0;" />
+  <img src="docs/assets/en/06_sltp_grid_optimizer.png" alt="SL/TP Grid Optimizer" width="95%" style="border-radius: 10px; margin: 10px 0;" />
 </div>
 
 - **2D Profit Heatmap Matrix**: Visually highlights profitable clusters (*Sweet Spots*) across Stop Loss and Take Profit parameter pairs.
@@ -100,7 +100,7 @@ Prevent curve-fitting and uncover truly robust parameter combinations with autom
 Deploy backtested strategies directly to live brokerage and algorithmic trading platforms in seconds.
 
 <div align="center">
-  <img src="docs/assets/07_bot_exporter_hub.png" alt="Bot Exporter Hub" width="95%" style="border-radius: 10px; margin: 10px 0;" />
+  <img src="docs/assets/en/07_bot_exporter_hub.png" alt="Bot Exporter Hub" width="95%" style="border-radius: 10px; margin: 10px 0;" />
 </div>
 
 - **TradingView (Pine Script v5)**: Complete indicator script with automated webhook alert JSON payloads for 3Commas, Bybit, Binance, and PineConnector.
@@ -115,7 +115,7 @@ Deploy backtested strategies directly to live brokerage and algorithmic trading 
 Monitor compliance with prop firm challenge rules (FTMO, FundedNext, MFF) in real time, and audit performance using institutional Monte Carlo stress testing.
 
 <div align="center">
-  <img src="docs/assets/08_analytics_monte_carlo.png" alt="Analytics and Monte Carlo Simulation" width="95%" style="border-radius: 10px; margin: 10px 0;" />
+  <img src="docs/assets/en/08_analytics_monte_carlo.png" alt="Analytics and Monte Carlo Simulation" width="95%" style="border-radius: 10px; margin: 10px 0;" />
 </div>
 
 - **Prop Firm Shield**: Set Max Daily Loss (e.g. 5%) and Max Total Drawdown (e.g. 10%) with real-time audio and visual circuit breakers.

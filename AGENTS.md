@@ -49,3 +49,11 @@ Welcome to **QuantBacktest Pro** codebase. All AI coding agents, assistants, and
 
 ## 4. Quality & Build Validation
 - Always run `npx tsc --noEmit` and `npm run build` before considering any task complete.
+
+---
+
+## 5. Open-Source Documentation & Localized Showcase Standards
+- **English-First Root Docs**: `README.md` and all primary architectural docs must be authored in clear, professional English.
+- **Visual Asset Language Parity**: UI screenshots in `README.md` must display English interface labels (`docs/assets/en/`). Localized readmes like `README.vi.md` must display matching localized interface labels (`docs/assets/vi/`).
+- **Parity Across Translations**: Any updates to feature sets, test counts, or commands in `README.md` must be mirrored in `README.vi.md`.
+

@@ -8,7 +8,7 @@
 [![Ngôn ngữ: Tiếng Việt](https://img.shields.io/badge/Ngôn%20ngữ-Tiếng%20Việt-red.svg?style=for-the-badge)](#)
 [![Language: English](https://img.shields.io/badge/Language-English-blue.svg?style=for-the-badge)](README.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-emerald.svg?style=for-the-badge)](LICENSE)
-[![Tests: 100% Passed](https://img.shields.io/badge/Tests-101%2F101%20Passed-success.svg?style=for-the-badge)](#)
+[![Tests: 100% Passed](https://img.shields.io/badge/Tests-143%2F143%20Passed-success.svg?style=for-the-badge)](#)
 [![Docker Ready](https://img.shields.io/badge/Docker-Sẵn%20sàng-2496ED.svg?style=for-the-badge&logo=docker&logoColor=white)](Dockerfile)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6.svg?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-19.0-61DAFB.svg?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
@@ -18,7 +18,7 @@
 <br />
 
 <!-- Hero Showcase Image -->
-<img src="docs/assets/01_dashboard_hero.png" alt="Không gian làm việc Quant Backtest Pro" width="100%" style="border-radius: 12px; box-shadow: 0 20px 50px rgba(0,0,0,0.5);" />
+<img src="docs/assets/vi/01_dashboard_hero.png" alt="Không gian làm việc Quant Backtest Pro" width="100%" style="border-radius: 12px; box-shadow: 0 20px 50px rgba(0,0,0,0.5);" />
 
 </div>
 
@@ -44,7 +44,7 @@ Hệ thống kết hợp giữa **công nghệ Replay nến 60 FPS siêu mượt
 Tua nến lịch sử với độ trễ cực thấp (< 0.05ms). Nhảy tới bất kỳ ngày giờ nào trong quá khứ hoặc chuyển nhanh giữa các mốc (*Đầu dữ liệu / Giữa 50% / Mới nhất*) với thuật toán Binary Search tối ưu.
 
 <div align="center">
-  <img src="docs/assets/04_time_travel_replay.png" alt="Thanh Replay và Popup Time Travel" width="95%" style="border-radius: 10px; margin: 10px 0;" />
+  <img src="docs/assets/vi/04_time_travel_replay.png" alt="Thanh Replay và Popup Time Travel" width="95%" style="border-radius: 10px; margin: 10px 0;" />
 </div>
 
 - **Cơ chế $O(1)$ Incremental Series Update**: Cập nhật từng nến chỉ mất `0.05ms` trên TradingView Lightweight Charts, loại bỏ hoàn toàn việc vẽ lại Canvas và nghẽn rác bộ nhớ (GC thrashing) ở tốc độ tua cao (`10x` đến `100x`).
@@ -58,8 +58,8 @@ Tua nến lịch sử với độ trễ cực thấp (< 0.05ms). Nhảy tới b�
 Không bao giờ phải mất công tìm kiếm file hay nạp lại dữ liệu mỗi khi mở ứng dụng. Mọi file CSV nạp vào hoặc dữ liệu crawl online đều được lưu tự động vào cơ sở dữ liệu SQLite cục bộ.
 
 <div align="center">
-  <img src="docs/assets/02_data_import_library.png" alt="Thư viện Dataset SQLite" width="48%" style="border-radius: 10px; margin-right: 2%;" />
-  <img src="docs/assets/03_online_crawler.png" alt="Crawler Online đa tài sản" width="48%" style="border-radius: 10px;" />
+  <img src="docs/assets/vi/02_data_import_library.png" alt="Thư viện Dataset SQLite" width="48%" style="border-radius: 10px; margin-right: 2%;" />
+  <img src="docs/assets/vi/03_online_crawler.png" alt="Crawler Online đa tài sản" width="48%" style="border-radius: 10px;" />
 </div>
 
 - **Nạp 1-Click từ Thư Viện Dataset**: Bấm 1 nút trên thẻ Card Grid để nạp ngay nến lên biểu đồ kèm thông tin cặp tiền, khung thời gian, số nến và dải ngày tháng.
@@ -73,7 +73,7 @@ Không bao giờ phải mất công tìm kiếm file hay nạp lại dữ liệu
 Chuyển đổi ý tưởng giao dịch diễn đạt bằng tiếng Việt hoặc tiếng Anh thông thường thành mã nguồn thuật toán TypeScript có thể backtest và chạy tự động ngay lập tức.
 
 <div align="center">
-  <img src="docs/assets/05_ai_strategy_studio.png" alt="AI Strategy Studio" width="95%" style="border-radius: 10px; margin: 10px 0;" />
+  <img src="docs/assets/vi/05_ai_strategy_studio.png" alt="AI Strategy Studio" width="95%" style="border-radius: 10px; margin: 10px 0;" />
 </div>
 
 - **Ngôn ngữ tự nhiên sang Code**: Nhập *"EMA 9 cắt lên EMA 21, RSI < 70, SL 15 pips, TP 30 pips"* để nhận logic kiểm thử hoàn chỉnh.
@@ -86,7 +86,7 @@ Chuyển đổi ý tưởng giao dịch diễn đạt bằng tiếng Việt ho�
 Tránh bẫy Overfitting (khớp quá mức dữ liệu quá khứ) và tìm ra dải tham số bền vững (*Sweet Spots*) với công nghệ quét lưới hàng loạt.
 
 <div align="center">
-  <img src="docs/assets/06_sltp_grid_optimizer.png" alt="Bộ tối ưu SL/TP Optimizer" width="95%" style="border-radius: 10px; margin: 10px 0;" />
+  <img src="docs/assets/vi/06_sltp_grid_optimizer.png" alt="Bộ tối ưu SL/TP Optimizer" width="95%" style="border-radius: 10px; margin: 10px 0;" />
 </div>
 
 - **Ma Trận Nhiệt Lợi Nhuận 2D (Profit Heatmap)**: Nhận diện trực quan các vùng tham số xanh ổn định nhất theo các cặp Stop Loss và Take Profit.
@@ -100,7 +100,7 @@ Tránh bẫy Overfitting (khớp quá mức dữ liệu quá khứ) và tìm ra 
 Triển khai chiến lược đã kiểm thử thành công lên các nền tảng giao dịch thực tế chỉ trong vài giây.
 
 <div align="center">
-  <img src="docs/assets/07_bot_exporter_hub.png" alt="Trung tâm xuất Bot Exporter" width="95%" style="border-radius: 10px; margin: 10px 0;" />
+  <img src="docs/assets/vi/07_bot_exporter_hub.png" alt="Trung tâm xuất Bot Exporter" width="95%" style="border-radius: 10px; margin: 10px 0;" />
 </div>
 
 - **TradingView (Pine Script v5)**: Chỉ báo đầy đủ kèm cấu trúc Webhook Alert JSON cho 3Commas, Bybit, Binance và PineConnector.
@@ -115,7 +115,7 @@ Triển khai chiến lược đã kiểm thử thành công lên các nền tả
 Kiểm soát vi phạm quy tắc thi tuyển Quỹ (FTMO, FundedNext, MFF) theo thời gian thực và đánh giá độ bền chiến lược với mô phỏng Monte Carlo.
 
 <div align="center">
-  <img src="docs/assets/08_analytics_monte_carlo.png" alt="Phân tích định lượng và Monte Carlo" width="95%" style="border-radius: 10px; margin: 10px 0;" />
+  <img src="docs/assets/vi/08_analytics_monte_carlo.png" alt="Phân tích định lượng và Monte Carlo" width="95%" style="border-radius: 10px; margin: 10px 0;" />
 </div>
 
 - **Lá Chắn Quỹ (Prop Firm Shield)**: Đặt giới hạn Sụt giảm ngày (5%) và Sụt giảm tối đa (10%) kèm âm thanh cảnh báo và ngắt giao dịch tức thì.

@@ -4,26 +4,27 @@ trigger: manual
 
 # Professional Git Flow & Branching Standards (MANDATORY)
 
-## 1. Bắt Buộc Checkout Nhánh Mới Trước Khi Thực Thi
-- **TUYỆT ĐỐI KHÔNG triển khai code tính năng, sửa đổi lớn hoặc fix bug trực tiếp trên nhánh `main`**.
-- Trước khi bắt đầu viết code cho bất kỳ task/tính năng/bugfix nào, AI Agent bắt buộc phải:
-  1. Kiểm tra trạng thái git: `git status` (đảm bảo working tree sạch).
-  2. Tạo và checkout sang nhánh chuyên biệt theo quy chuẩn Git Flow:
-     - `feature/<ten-tinh-nang>`: Tính năng mới hoặc bổ sung giao diện.
-     - `fix/<ten-loi>`: Sửa lỗi logic, hiển thị hoặc bảo mật.
-     - `refactor/<ten-module>`: Tái cấu trúc kiến trúc, tách store/component.
-     - `perf/<ten-toi-uu>`: Tối ưu hiệu năng render, tính toán.
-     - `test/<ten-test>`: Bổ sung bộ kiểm thử.
-     - `docs/<ten-tai-lieu>`: Cập nhật tài liệu kỹ thuật.
+## 1. Mandatory New Branch Checkout Before Implementation
+- **NEVER implement new features, non-trivial enhancements, or bugfixes directly on `main`**.
+- Before writing code for any task, feature, or bugfix, the AI Agent MUST:
+  1. Inspect Git status: `git status` (ensure the base working tree is clean).
+  2. Create and switch to a dedicated branch following Git Flow naming conventions:
+     - `feature/<feature-name>`: New capabilities, algorithms, or UI enhancements.
+     - `fix/<bug-name>`: Bug fixes, calculation corrections, or security patches.
+     - `refactor/<module-name>`: Architectural improvements, modularization, or slice extraction.
+     - `perf/<optimization-name>`: Performance optimizations (rendering, calculation, caching).
+     - `test/<test-suite>`: Unit, integration, or end-to-end test suites.
+     - `docs/<doc-name>`: Documentation and rule updates.
 
-## 2. Quy Chuẩn Commit Cục Bộ (Local Commits Only)
-- Sau khi hoàn thành và vượt qua tất cả Quality Gates (`npx tsc --noEmit`, `npm run check:i18n`, `npm test`, `npm run build`), tạo commit cục bộ sạch sẽ theo chuẩn **Conventional Commits**:
-  - `feat(...)`: Tính năng mới.
-  - `fix(...)`: Sửa lỗi.
-  - `refactor(...)`: Tái cấu trúc mã nguồn.
-  - `docs(...)`: Tài liệu.
-  - `test(...)`: Kiểm thử.
+## 2. Local Commits & Conventional Commits Standards
+- After implementation is complete and all Quality Gates pass (`npx tsc --noEmit`, `npm run check:i18n`, `npm test`, `npm run build`), create clean, atomic local commits adhering to **Conventional Commits**:
+  - `feat(...)`: A new feature or capability.
+  - `fix(...)`: A bug fix or correction.
+  - `refactor(...)`: Code refactoring without changing observable behavior.
+  - `docs(...)`: Documentation or rule updates.
+  - `test(...)`: Adding or updating test cases.
+  - `perf(...)`: Performance optimization.
 
-## 3. Quy Định Tuyệt Đối Về Git Push
-- **TUYỆT ĐỐI KHÔNG TỰ Ý PUSH** code lên origin/remote repository (`git push`) trừ khi người dùng đưa ra câu lệnh hoặc yêu cầu rõ ràng (ví dụ: "push code", "đẩy code lên git").
-- Mọi quy trình tự động mặc định dừng ở bước commit cục bộ.
+## 3. Strict Remote Push Policy
+- **NEVER RUN `git push`** to origin or any remote repository unless the user explicitly provides an unmistakable command (e.g. "push code", "git push", "push to github").
+- All automated tasks and agent workflows must stop at the local commit step.
