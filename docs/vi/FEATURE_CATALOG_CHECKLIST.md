@@ -12,14 +12,14 @@ Tài liệu này là **nguồn thông tin chuẩn mực duy nhất (Single Sourc
 
 | Mã Phân Hệ | Tên Phân Hệ Nghiệp Vụ | Số Tính Năng | Thành Phần Mã Nguồn Cốt Lõi |
 | :--- | :--- | :---: | :--- |
-| **`F-HDR`** | [1. Thanh Header & Điều Khiển Không Gian Làm Việc](#1-thanh-header--điều-khiển-không-gian-làm-việc-f-hdr) | 8 | [`Header.tsx`](file:///D:/Project/Backtest/src/components/header/Header.tsx), [`SymbolSearchModal.tsx`](file:///D:/Project/Backtest/src/components/header/SymbolSearchModal.tsx) |
-| **`F-CHT`** | [2. Đồ Thị Nến Tương Tác & Công Cụ Trục Giá](#2-đồ-thị-nến-tương-tác--công-cụ-trục-giá-f-cht) | 7 | [`TradingViewChart.tsx`](file:///D:/Project/Backtest/src/components/chart/TradingViewChart.tsx), [`VisualChartTradingOverlay.tsx`](file:///D:/Project/Backtest/src/components/chart/VisualChartTradingOverlay.tsx), [`PriceScaleContextMenu.tsx`](file:///D:/Project/Backtest/src/components/chart/PriceScaleContextMenu.tsx) |
-| **`F-RPL`** | [3. Cỗ Máy Tua Nến Lịch Sử Time-Travel](#3-cỗ-máy-tua-nến-lịch-sử-time-travel-f-rpl) | 4 | [`ReplayBar.tsx`](file:///D:/Project/Backtest/src/components/replay/ReplayBar.tsx), [`resampler.ts`](file:///D:/Project/Backtest/src/engine/resampler.ts) |
-| **`F-OMS`** | [4. Bộ Máy Khớp Lệnh (OMS) & Bảng Lệnh Dưới Cùng](#4-bộ-máy-khớp-lệnh-oms--bảng-lệnh-dưới-cùng-f-oms) | 9 | [`QuickTradeDock.tsx`](file:///D:/Project/Backtest/src/components/chart/QuickTradeDock.tsx), [`OrderEntryModal.tsx`](file:///D:/Project/Backtest/src/components/panels/OrderEntryModal.tsx), [`PositionsTable.tsx`](file:///D:/Project/Backtest/src/components/panels/PositionsTable.tsx) |
-| **`F-DAT`** | [5. Quản Lý Dữ Liệu 2.0 & Thư Viện SQLite](#5-quản-lý-dữ-liệu-20--thư-viện-sqlite-f-dat) | 5 | [`DataImportModal.tsx`](file:///D:/Project/Backtest/src/components/panels/DataImportModal.tsx), [`csvParser.ts`](file:///D:/Project/Backtest/src/engine/csvParser.ts), [`dataCrawler.ts`](file:///D:/Project/Backtest/src/engine/dataCrawler.ts) |
-| **`F-STR`** | [6. AI Strategy Studio, Tối Ưu Hóa & Xuất Bot](#6-ai-strategy-studio-tối-ưu-hóa--xuất-bot-f-str) | 14 | [`AIStrategyModal.tsx`](file:///D:/Project/Backtest/src/components/panels/AIStrategyModal.tsx), [`strategyOptimizer.ts`](file:///D:/Project/Backtest/src/engine/strategyOptimizer.ts), [`strategyExporter.ts`](file:///D:/Project/Backtest/src/engine/strategyExporter.ts) |
-| **`F-ANL`** | [7. Báo Cáo Định Lượng & Mô Phỏng Monte Carlo](#7-báo-cáo-định-lượng--mô-phỏng-monte-carlo-f-anl) | 5 | [`AnalyticsDashboardModal.tsx`](file:///D:/Project/Backtest/src/components/panels/AnalyticsDashboardModal.tsx), [`analytics.ts`](file:///D:/Project/Backtest/src/engine/analytics.ts) |
-| **`F-SYS`** | [8. Kết Nối Sàn MT5, Cloud Tunnel & Hạ Tầng](#8-kết-nối-sàn-mt5-cloud-tunnel--hạ-tầng-f-sys) | 6 | [`BrokerConnectionModal.tsx`](file:///D:/Project/Backtest/src/components/panels/BrokerConnectionModal.tsx), [`TunnelModal.tsx`](file:///D:/Project/Backtest/src/components/panels/TunnelModal.tsx), [`SessionManagerModal.tsx`](file:///D:/Project/Backtest/src/components/panels/SessionManagerModal.tsx) |
+| **`F-HDR`** | [1. Thanh Header & Điều Khiển Không Gian Làm Việc](#1-thanh-header--điều-khiển-không-gian-làm-việc-f-hdr) | 8 | `src/components/header/Header.tsx`, `src/components/header/SymbolSearchModal.tsx` |
+| **`F-CHT`** | [2. Đồ Thị Nến Tương Tác & Công Cụ Trục Giá](#2-đồ-thị-nến-tương-tác--công-cụ-trục-giá-f-cht) | 7 | `src/components/chart/TradingViewChart.tsx`, `src/components/chart/VisualChartTradingOverlay.tsx`, `src/components/chart/PriceScaleContextMenu.tsx` |
+| **`F-RPL`** | [3. Cỗ Máy Tua Nến Lịch Sử Time-Travel](#3-cỗ-máy-tua-nến-lịch-sử-time-travel-f-rpl) | 4 | `src/components/replay/ReplayBar.tsx`, `src/engine/resampler.ts` |
+| **`F-OMS`** | [4. Bộ Máy Khớp Lệnh (OMS) & Bảng Lệnh Dưới Cùng](#4-bộ-máy-khớp-lệnh-oms--bảng-lệnh-dưới-cùng-f-oms) | 9 | `src/components/chart/QuickTradeDock.tsx`, `src/components/panels/OrderEntryModal.tsx`, `src/components/panels/PositionsTable.tsx` |
+| **`F-DAT`** | [5. Quản Lý Dữ Liệu 2.0 & Thư Viện SQLite](#5-quản-lý-dữ-liệu-20--thư-viện-sqlite-f-dat) | 5 | `src/components/panels/DataImportModal.tsx`, `src/engine/csvParser.ts`, `src/engine/dataCrawler.ts` |
+| **`F-STR`** | [6. AI Strategy Studio, Tối Ưu Hóa & Xuất Bot](#6-ai-strategy-studio-tối-ưu-hóa--xuất-bot-f-str) | 14 | `src/components/panels/AIStrategyModal.tsx`, `src/engine/strategyOptimizer.ts`, `src/engine/strategyExporter.ts` |
+| **`F-ANL`** | [7. Báo Cáo Định Lượng & Mô Phỏng Monte Carlo](#7-báo-cáo-định-lượng--mô-phỏng-monte-carlo-f-anl) | 5 | `src/components/panels/AnalyticsDashboardModal.tsx`, `src/engine/analytics.ts` |
+| **`F-SYS`** | [8. Kết Nối Sàn MT5, Cloud Tunnel & Hạ Tầng](#8-kết-nối-sàn-mt5-cloud-tunnel--hạ-tầng-f-sys) | 6 | `src/components/panels/BrokerConnectionModal.tsx`, `src/components/panels/TunnelModal.tsx`, `src/components/panels/SessionManagerModal.tsx` |
 
 ---
 
@@ -28,14 +28,14 @@ Tài liệu này là **nguồn thông tin chuẩn mực duy nhất (Single Sourc
 ### Bảng Thống Kê Phân Hệ
 | Mã | Tên Kỹ Thuật | Tên Hiển Thị (EN / VI) | Đường Dẫn Điều Hướng Giao Diện (Navigator) | Đường Dẫn Mã Nguồn |
 | :--- | :--- | :--- | :--- | :--- |
-| `F-HDR-01` | Tìm Kiếm & Chọn Cặp Tiền | `Symbol Picker` / `Chọn Cặp Tiền` | Header Topbar ➔ Bấm vào nút Cặp tiền (Ví dụ: `XAUUSD`) | [`SymbolSearchModal.tsx`](file:///D:/Project/Backtest/src/components/header/SymbolSearchModal.tsx) |
-| `F-HDR-02` | Bộ Chuyển Khung Thời Gian | `Timeframe Pills (M1 - MN)` / `Khung Thời Gian` | Header Topbar ➔ Nhóm nút tròn `[M1, M5, M15, M30, H1, H4, D1, W1, MN]` | [`Header.tsx:L190`](file:///D:/Project/Backtest/src/components/header/Header.tsx), [`resampler.ts`](file:///D:/Project/Backtest/src/engine/resampler.ts) |
-| `F-HDR-03` | Chuyển Đổi Kiểu Biểu Đồ | `Candles / Heikin-Ashi` / `Nến Thường / Heikin-Ashi` | Header Topbar ➔ Menu Icon dạng nến bên cạnh Timeframe | [`Header.tsx:L240`](file:///D:/Project/Backtest/src/components/header/Header.tsx), [`TradingViewChart.tsx`](file:///D:/Project/Backtest/src/components/chart/TradingViewChart.tsx) |
-| `F-HDR-04` | Quản Lý Chỉ Báo Kỹ Thuật | `Indicators` / `Chỉ Báo` | Header Topbar ➔ Nút `Chỉ báo [f(x)]` | [`Header.tsx:L280`](file:///D:/Project/Backtest/src/components/header/Header.tsx), [`indicators.ts`](file:///D:/Project/Backtest/src/engine/indicators.ts) |
-| `F-HDR-05` | Hiển Thị Spread & Giá Bid/Ask | `Spread: X.X pips (Ask/Bid)` / `Spread: X.X pips` | Header Topbar ➔ Thẻ thông tin Spread | [`Header.tsx:L340`](file:///D:/Project/Backtest/src/components/header/Header.tsx), [`TradingViewChart.tsx`](file:///D:/Project/Backtest/src/components/chart/TradingViewChart.tsx) |
-| `F-HDR-06` | Bảng Quản Lý Vốn & Ký Quỹ | `Balance / Equity / Margin` / `Số Dư / Vốn / Ký Quỹ` | Header Topbar ➔ Cụm số dư & Nút Đặt lại số dư | [`Header.tsx:L370`](file:///D:/Project/Backtest/src/components/header/Header.tsx), [`backtestStore.ts`](file:///D:/Project/Backtest/src/store/backtestStore.ts) |
-| `F-HDR-07` | Chuyển Đổi Ngôn Ngữ Đa Quốc Gia | `Language Menu (EN/VI/JA/ZH)` / `Chuyển Đổi Ngôn Ngữ` | Header Topbar ➔ Menu cờ / ngôn ngữ góc trên bên phải | [`Header.tsx:L450`](file:///D:/Project/Backtest/src/components/header/Header.tsx), [`src/i18n/`](file:///D:/Project/Backtest/src/i18n/) |
-| `F-HDR-08` | Hồ Sơ Người Dùng & Xác Thực | `Login / Profile [Pro]` / `Đăng Nhập / Hồ Sơ` | Header Topbar ➔ Nút Avatar / Đăng nhập góc ngoài cùng bên phải | [`AuthModal.tsx`](file:///D:/Project/Backtest/src/components/auth/AuthModal.tsx), [`UserProfileModal.tsx`](file:///D:/Project/Backtest/src/components/auth/UserProfileModal.tsx) |
+| `F-HDR-01` | Tìm Kiếm & Chọn Cặp Tiền | `Symbol Picker` / `Chọn Cặp Tiền` | Header Topbar ➔ Bấm vào nút Cặp tiền (Ví dụ: `XAUUSD`) | `src/components/header/SymbolSearchModal.tsx` |
+| `F-HDR-02` | Bộ Chuyển Khung Thời Gian | `Timeframe Pills (M1 - MN)` / `Khung Thời Gian` | Header Topbar ➔ Nhóm nút tròn `[M1, M5, M15, M30, H1, H4, D1, W1, MN]` | `src/components/header/Header.tsx:L190`, `src/engine/resampler.ts` |
+| `F-HDR-03` | Chuyển Đổi Kiểu Biểu Đồ | `Candles / Heikin-Ashi` / `Nến Thường / Heikin-Ashi` | Header Topbar ➔ Menu Icon dạng nến bên cạnh Timeframe | `src/components/header/Header.tsx:L240`, `src/components/chart/TradingViewChart.tsx` |
+| `F-HDR-04` | Quản Lý Chỉ Báo Kỹ Thuật | `Indicators` / `Chỉ Báo` | Header Topbar ➔ Nút `Chỉ báo [f(x)]` | `src/components/header/Header.tsx:L280`, `src/engine/indicators.ts` |
+| `F-HDR-05` | Hiển Thị Spread & Giá Bid/Ask | `Spread: X.X pips (Ask/Bid)` / `Spread: X.X pips` | Header Topbar ➔ Thẻ thông tin Spread | `src/components/header/Header.tsx:L340`, `src/components/chart/TradingViewChart.tsx` |
+| `F-HDR-06` | Bảng Quản Lý Vốn & Ký Quỹ | `Balance / Equity / Margin` / `Số Dư / Vốn / Ký Quỹ` | Header Topbar ➔ Cụm số dư & Nút Đặt lại số dư | `src/components/header/Header.tsx:L370`, `src/store/backtestStore.ts` |
+| `F-HDR-07` | Chuyển Đổi Ngôn Ngữ Đa Quốc Gia | `Language Menu (EN/VI/JA/ZH)` / `Chuyển Đổi Ngôn Ngữ` | Header Topbar ➔ Menu cờ / ngôn ngữ góc trên bên phải | `src/components/header/Header.tsx:L450`, `src/i18n/` |
+| `F-HDR-08` | Hồ Sơ Người Dùng & Xác Thực | `Login / Profile [Pro]` / `Đăng Nhập / Hồ Sơ` | Header Topbar ➔ Nút Avatar / Đăng nhập góc ngoài cùng bên phải | `src/components/auth/AuthModal.tsx`, `src/components/auth/UserProfileModal.tsx` |
 
 ### Chi Tiết Kỹ Thuật & Tiêu Chí Kiểm Thử (QA Checklist)
 
@@ -92,7 +92,7 @@ Tài liệu này là **nguồn thông tin chuẩn mực duy nhất (Single Sourc
 - **Điều hướng:** Bấm nút Avatar / Tài khoản ở góc ngoài cùng bên phải Header.
 - **Chức năng:** Đăng nhập, đăng ký tài khoản, phân quyền hạng `INSTITUTIONAL`, quản lý khóa bảo mật.
 - **QA Checklist:**
-  1. Đăng nhập bằng `admin@quantbacktest.pro` -> Huy hiệu `INSTITUTIONAL` xuất hiện trên Header.
+  1. Đăng nhập bằng `institutional-user@quantbacktest.pro` -> Huy hiệu `INSTITUTIONAL` xuất hiện trên Header.
 
 ---
 
@@ -101,13 +101,13 @@ Tài liệu này là **nguồn thông tin chuẩn mực duy nhất (Single Sourc
 ### Bảng Thống Kê Phân Hệ
 | Mã | Tên Kỹ Thuật | Tên Hiển Thị (EN / VI) | Đường Dẫn Điều Hướng Giao Diện (Navigator) | Đường Dẫn Mã Nguồn |
 | :--- | :--- | :--- | :--- | :--- |
-| `F-CHT-01` | Động Cơ Vẽ Canvas 60 FPS | `TradingView Canvas` / `Biểu Đồ Canvas TradingView` | Khu vực biểu đồ trung tâm màn hình | [`TradingViewChart.tsx`](file:///D:/Project/Backtest/src/components/chart/TradingViewChart.tsx) |
-| `F-CHT-02` | Kéo Thả Trực Quan SL/TP | `Drag SL/TP Lines` / `Kéo Thả Đường SL/TP` | Bấm vào đường vị thế trên đồ thị ➔ Kéo thả chuột | [`VisualChartTradingOverlay.tsx`](file:///D:/Project/Backtest/src/components/chart/VisualChartTradingOverlay.tsx) |
-| `F-CHT-03` | Nút (+) Đặt Lệnh Trực Tiếp | `(+) Limit/Stop Order Button` / `Nút (+) Đặt Lệnh Trục Giá` | Rê chuột lên thanh trục giá bên phải ➔ Bấm `(+)` | [`TradingViewChart.tsx:L820`](file:///D:/Project/Backtest/src/components/chart/TradingViewChart.tsx) |
-| `F-CHT-04` | Menu Chuột Phải Trục Giá | `Price Scale Options` / `Menu Trục Giá Chuột Phải` | Nhấp chuột phải lên thanh trục giá bên phải | [`PriceScaleContextMenu.tsx`](file:///D:/Project/Backtest/src/components/chart/PriceScaleContextMenu.tsx) |
-| `F-CHT-05` | Bộ Công Cụ Vẽ Kỹ Thuật | `Drawing Toolbar` / `Thanh Công Cụ Vẽ Kỹ Thuật` | Thanh công cụ vẽ dạng nổi bên trái đồ thị | [`DrawingCanvas.tsx`](file:///D:/Project/Backtest/src/components/chart/DrawingCanvas.tsx) |
-| `F-CHT-06` | Đường Đỉnh/Đáy & Phân Cách Ngày | `High/Low Lines & Separators` / `Đường Đỉnh/Đáy & Phân Cách Ngày` | Vẽ tự động theo các phiên giao dịch | [`TradingViewChart.tsx:L450`](file:///D:/Project/Backtest/src/components/chart/TradingViewChart.tsx) |
-| `F-CHT-07` | Lá Chắn Thi Quỹ Prop Firm HUD | `Prop Firm Shield HUD` / `Lá Chắn Thi Quỹ Prop Firm` | Thẻ nổi góc trên bên phải biểu đồ | [`PropFirmHUD.tsx`](file:///D:/Project/Backtest/src/components/chart/PropFirmHUD.tsx), [`createPropFirmSlice.ts`](file:///D:/Project/Backtest/src/store/slices/createPropFirmSlice.ts) |
+| `F-CHT-01` | Động Cơ Vẽ Canvas 60 FPS | `TradingView Canvas` / `Biểu Đồ Canvas TradingView` | Khu vực biểu đồ trung tâm màn hình | `src/components/chart/TradingViewChart.tsx` |
+| `F-CHT-02` | Kéo Thả Trực Quan SL/TP | `Drag SL/TP Lines` / `Kéo Thả Đường SL/TP` | Bấm vào đường vị thế trên đồ thị ➔ Kéo thả chuột | `src/components/chart/VisualChartTradingOverlay.tsx` |
+| `F-CHT-03` | Nút (+) Đặt Lệnh Trực Tiếp | `(+) Limit/Stop Order Button` / `Nút (+) Đặt Lệnh Trục Giá` | Rê chuột lên thanh trục giá bên phải ➔ Bấm `(+)` | `src/components/chart/TradingViewChart.tsx:L820` |
+| `F-CHT-04` | Menu Chuột Phải Trục Giá | `Price Scale Options` / `Menu Trục Giá Chuột Phải` | Nhấp chuột phải lên thanh trục giá bên phải | `src/components/chart/PriceScaleContextMenu.tsx` |
+| `F-CHT-05` | Bộ Công Cụ Vẽ Kỹ Thuật | `Drawing Toolbar` / `Thanh Công Cụ Vẽ Kỹ Thuật` | Thanh công cụ vẽ dạng nổi bên trái đồ thị | `src/components/chart/DrawingCanvas.tsx` |
+| `F-CHT-06` | Đường Đỉnh/Đáy & Phân Cách Ngày | `High/Low Lines & Separators` / `Đường Đỉnh/Đáy & Phân Cách Ngày` | Vẽ tự động theo các phiên giao dịch | `src/components/chart/TradingViewChart.tsx:L450` |
+| `F-CHT-07` | Lá Chắn Thi Quỹ Prop Firm HUD | `Prop Firm Shield HUD` / `Lá Chắn Thi Quỹ Prop Firm` | Thẻ nổi góc trên bên phải biểu đồ | `src/components/chart/PropFirmHUD.tsx`, `src/store/slices/createPropFirmSlice.ts` |
 
 ### Chi Tiết Kỹ Thuật & Tiêu Chí Kiểm Thử (QA Checklist)
 
@@ -153,10 +153,10 @@ Tài liệu này là **nguồn thông tin chuẩn mực duy nhất (Single Sourc
 ### Bảng Thống Kê Phân Hệ
 | Mã | Tên Kỹ Thuật | Tên Hiển Thị (EN / VI) | Đường Dẫn Điều Hướng Giao Diện (Navigator) | Đường Dẫn Mã Nguồn |
 | :--- | :--- | :--- | :--- | :--- |
-| `F-RPL-01` | Điều Khiển Tua Nến 60 FPS | `Play / Pause / Step [F8]` / `Phát / Tạm Dừng / Từng Bước` | Thanh Replay nổi phía dưới màn hình ➔ Nút Phát, Dừng, Bước | [`ReplayBar.tsx`](file:///D:/Project/Backtest/src/components/replay/ReplayBar.tsx) |
-| `F-RPL-02` | Thanh Điều Chỉnh Tốc Độ Tua | `Speed Slider (0.1x - 100x)` / `Tốc Độ Tua` | Thanh Replay ➔ Nút chọn tốc độ & Thanh trượt | [`ReplayBar.tsx:L120`](file:///D:/Project/Backtest/src/components/replay/ReplayBar.tsx) |
-| `F-RPL-03` | Nhảy Nhanh Mốc Dữ Liệu | `Start / Mid / Latest` / `Đầu / Giữa 50% / Mới Nhất` | Thanh Replay ➔ Các nút mốc `[0%, 50%, 100%]` | [`ReplayBar.tsx:L180`](file:///D:/Project/Backtest/src/components/replay/ReplayBar.tsx) |
-| `F-RPL-04` | Tua Nến Chính Xác Ngày Giờ | `Jump to Date/Time [Calendar]` / `Tua Đến Ngày Giờ` | Thanh Replay ➔ Bấm vào ô hiển thị ngày giờ ➔ Chọn giờ ➔ `Nhảy` | [`ReplayBar.tsx:L220`](file:///D:/Project/Backtest/src/components/replay/ReplayBar.tsx) |
+| `F-RPL-01` | Điều Khiển Tua Nến 60 FPS | `Play / Pause / Step [F8]` / `Phát / Tạm Dừng / Từng Bước` | Thanh Replay nổi phía dưới màn hình ➔ Nút Phát, Dừng, Bước | `src/components/replay/ReplayBar.tsx` |
+| `F-RPL-02` | Thanh Điều Chỉnh Tốc Độ Tua | `Speed Slider (0.1x - 100x)` / `Tốc Độ Tua` | Thanh Replay ➔ Nút chọn tốc độ & Thanh trượt | `src/components/replay/ReplayBar.tsx:L120` |
+| `F-RPL-03` | Nhảy Nhanh Mốc Dữ Liệu | `Start / Mid / Latest` / `Đầu / Giữa 50% / Mới Nhất` | Thanh Replay ➔ Các nút mốc `[0%, 50%, 100%]` | `src/components/replay/ReplayBar.tsx:L180` |
+| `F-RPL-04` | Tua Nến Chính Xác Ngày Giờ | `Jump to Date/Time [Calendar]` / `Tua Đến Ngày Giờ` | Thanh Replay ➔ Bấm vào ô hiển thị ngày giờ ➔ Chọn giờ ➔ `Nhảy` | `src/components/replay/ReplayBar.tsx:L220` |
 
 ### Chi Tiết Kỹ Thuật & Tiêu Chí Kiểm Thử (QA Checklist)
 
@@ -187,15 +187,15 @@ Tài liệu này là **nguồn thông tin chuẩn mực duy nhất (Single Sourc
 ### Bảng Thống Kê Phân Hệ
 | Mã | Tên Kỹ Thuật | Tên Hiển Thị (EN / VI) | Đường Dẫn Điều Hướng Giao Diện (Navigator) | Đường Dẫn Mã Nguồn |
 | :--- | :--- | :--- | :--- | :--- |
-| `F-OMS-01` | Bảng Lệnh Nhanh Quick Trade | `Quick Trade Dock` / `Bảng Lệnh Nhanh Quick Trade` | Dock nổi góc trên-trái đồ thị / Nút `Quick Trade` trên Header | [`QuickTradeDock.tsx`](file:///D:/Project/Backtest/src/components/chart/QuickTradeDock.tsx) |
-| `F-OMS-02` | Hộp Thoại Đặt Lệnh Nâng Cao | `Order Entry` / `Đặt Lệnh Nâng Cao` | Header Topbar ➔ Bấm nút `Đặt Lệnh (Order Entry)` | [`OrderEntryModal.tsx`](file:///D:/Project/Backtest/src/components/panels/OrderEntryModal.tsx), [`OrderFactory.ts`](file:///D:/Project/Backtest/src/engine/patterns/OrderFactory.ts) |
-| `F-OMS-03` | Quản Lý Vị Thế Đang Mở | `Open Positions Tab` / `Vị Thế Đang Mở` | Bảng dưới cùng ➔ Tab `Vị Thế (Positions)` | [`PositionsTable.tsx:L120`](file:///D:/Project/Backtest/src/components/panels/PositionsTable.tsx) |
-| `F-OMS-04` | Quản Lý Lệnh Chờ (Pending) | `Pending Orders Tab` / `Lệnh Chờ (Limit/Stop)` | Bảng dưới cùng ➔ Tab `Lệnh Chờ (Pending Orders)` | [`PositionsTable.tsx:L320`](file:///D:/Project/Backtest/src/components/panels/PositionsTable.tsx) |
-| `F-OMS-05` | Sổ Cái Lịch Sử Giao Dịch | `Trade History Tab` / `Lịch Sử Giao Dịch` | Bảng dưới cùng ➔ Tab `Lịch Sử (History)` | [`PositionsTable.tsx:L450`](file:///D:/Project/Backtest/src/components/panels/PositionsTable.tsx) |
-| `F-OMS-06` | Nhật Ký Chiến Lược Bot | `Strategy Logs Tab` / `Nhật Ký Chiến Lược Bot` | Bảng dưới cùng ➔ Tab `Nhật Ký Chiến Lược` | [`PositionsTable.tsx:L580`](file:///D:/Project/Backtest/src/components/panels/PositionsTable.tsx) |
-| `F-OMS-07` | Lịch Kinh Tế Chuẩn Xác | `Economic Calendar Tab` / `Lịch Kinh Tế` | Bảng dưới cùng ➔ Tab `Lịch Kinh Tế (Calendar)` | [`EconomicCalendarTab.tsx`](file:///D:/Project/Backtest/src/components/panels/EconomicCalendarTab.tsx) |
-| `F-OMS-08` | Bảng Theo Dõi Thị Trường | `Market Watch Drawer` / `Bảng Theo Dõi Giá` | Bảng dưới cùng ➔ Tab `Theo Dõi (Market Watch)` | [`MarketWatchDrawer.tsx`](file:///D:/Project/Backtest/src/components/panels/MarketWatchDrawer.tsx) |
-| `F-OMS-09` | Nút Đóng Khẩn Cấp Tất Cả Lệnh | `Close All Button` / `Đóng Tất Cả Vị Thế` | Bảng dưới cùng ➔ Nút màu đỏ `Đóng Tất Cả Lệnh` | [`PositionsTable.tsx:L85`](file:///D:/Project/Backtest/src/components/panels/PositionsTable.tsx) |
+| `F-OMS-01` | Bảng Lệnh Nhanh Quick Trade | `Quick Trade Dock` / `Bảng Lệnh Nhanh Quick Trade` | Dock nổi góc trên-trái đồ thị / Nút `Quick Trade` trên Header | `src/components/chart/QuickTradeDock.tsx` |
+| `F-OMS-02` | Hộp Thoại Đặt Lệnh Nâng Cao | `Order Entry` / `Đặt Lệnh Nâng Cao` | Header Topbar ➔ Bấm nút `Đặt Lệnh (Order Entry)` | `src/components/panels/OrderEntryModal.tsx`, `src/engine/patterns/OrderFactory.ts` |
+| `F-OMS-03` | Quản Lý Vị Thế Đang Mở | `Open Positions Tab` / `Vị Thế Đang Mở` | Bảng dưới cùng ➔ Tab `Vị Thế (Positions)` | `src/components/panels/PositionsTable.tsx:L120` |
+| `F-OMS-04` | Quản Lý Lệnh Chờ (Pending) | `Pending Orders Tab` / `Lệnh Chờ (Limit/Stop)` | Bảng dưới cùng ➔ Tab `Lệnh Chờ (Pending Orders)` | `src/components/panels/PositionsTable.tsx:L320` |
+| `F-OMS-05` | Sổ Cái Lịch Sử Giao Dịch | `Trade History Tab` / `Lịch Sử Giao Dịch` | Bảng dưới cùng ➔ Tab `Lịch Sử (History)` | `src/components/panels/PositionsTable.tsx:L450` |
+| `F-OMS-06` | Nhật Ký Chiến Lược Bot | `Strategy Logs Tab` / `Nhật Ký Chiến Lược Bot` | Bảng dưới cùng ➔ Tab `Nhật Ký Chiến Lược` | `src/components/panels/PositionsTable.tsx:L580` |
+| `F-OMS-07` | Lịch Kinh Tế Chuẩn Xác | `Economic Calendar Tab` / `Lịch Kinh Tế` | Bảng dưới cùng ➔ Tab `Lịch Kinh Tế (Calendar)` | `src/components/panels/EconomicCalendarTab.tsx` |
+| `F-OMS-08` | Bảng Theo Dõi Thị Trường | `Market Watch Drawer` / `Bảng Theo Dõi Giá` | Bảng dưới cùng ➔ Tab `Theo Dõi (Market Watch)` | `src/components/panels/MarketWatchDrawer.tsx` |
+| `F-OMS-09` | Nút Đóng Khẩn Cấp Tất Cả Lệnh | `Close All Button` / `Đóng Tất Cả Vị Thế` | Bảng dưới cùng ➔ Nút màu đỏ `Đóng Tất Cả Lệnh` | `src/components/panels/PositionsTable.tsx:L85` |
 
 ### Chi Tiết Kỹ Thuật & Tiêu Chí Kiểm Thử (QA Checklist)
 
@@ -255,11 +255,11 @@ Tài liệu này là **nguồn thông tin chuẩn mực duy nhất (Single Sourc
 ### Bảng Thống Kê Phân Hệ
 | Mã | Tên Kỹ Thuật | Tên Hiển Thị (EN / VI) | Đường Dẫn Điều Hướng Giao Diện (Navigator) | Đường Dẫn Mã Nguồn |
 | :--- | :--- | :--- | :--- | :--- |
-| `F-DAT-01` | Bộ Đọc CSV Số Nguyên Siêu Tốc | `Upload CSV File` / `Tải Lên File CSV` | Header ➔ `Công Cụ Khác [•••]` ➔ `Quản Lý Dữ Liệu` ➔ Tab `Tải Lên` | [`csvParser.ts`](file:///D:/Project/Backtest/src/engine/csvParser.ts), [`DataImportModal.tsx`](file:///D:/Project/Backtest/src/components/panels/DataImportModal.tsx) |
-| `F-DAT-02` | Thư Viện Dataset SQLite | `Dataset Library` / `Thư Viện Dữ Liệu SQLite` | Header ➔ `Công Cụ Khác [•••]` ➔ `Quản Lý Dữ Liệu` ➔ Tab `Thư Viện` | [`DataImportModal.tsx:L250`](file:///D:/Project/Backtest/src/components/panels/DataImportModal.tsx) |
-| `F-DAT-03` | Crawler Thu Thập Trực Tuyến | `Online Crawler` / `Thu Thập Trực Tuyến` | Header ➔ `Công Cụ Khác [•••]` ➔ `Quản Lý Dữ Liệu` ➔ Tab `Crawler` | [`dataCrawler.ts`](file:///D:/Project/Backtest/src/engine/dataCrawler.ts), [`DataImportModal.tsx:L400`](file:///D:/Project/Backtest/src/components/panels/DataImportModal.tsx) |
-| `F-DAT-04` | Chế Độ Thu Thập Theo Khoảng Ngày | `Custom Date Range` / `Khoảng Ngày Tùy Chọn` | Trong Tab Crawler ➔ Bật `Chọn Khoảng Ngày` | [`DataImportModal.tsx:L480`](file:///D:/Project/Backtest/src/components/panels/DataImportModal.tsx) |
-| `F-DAT-05` | Dữ Liệu Chuẩn Mẫu Kaggle | `Kaggle Presets` / `Dữ Liệu Mẫu Kaggle` | Trong Modal Dữ Liệu ➔ Tab `Dữ Liệu Mẫu` | [`DataImportModal.tsx:L600`](file:///D:/Project/Backtest/src/components/panels/DataImportModal.tsx) |
+| `F-DAT-01` | Bộ Đọc CSV Số Nguyên Siêu Tốc | `Upload CSV File` / `Tải Lên File CSV` | Header ➔ `Công Cụ Khác [•••]` ➔ `Quản Lý Dữ Liệu` ➔ Tab `Tải Lên` | `src/engine/csvParser.ts`, `src/components/panels/DataImportModal.tsx` |
+| `F-DAT-02` | Thư Viện Dataset SQLite | `Dataset Library` / `Thư Viện Dữ Liệu SQLite` | Header ➔ `Công Cụ Khác [•••]` ➔ `Quản Lý Dữ Liệu` ➔ Tab `Thư Viện` | `src/components/panels/DataImportModal.tsx:L250` |
+| `F-DAT-03` | Crawler Thu Thập Trực Tuyến | `Online Crawler` / `Thu Thập Trực Tuyến` | Header ➔ `Công Cụ Khác [•••]` ➔ `Quản Lý Dữ Liệu` ➔ Tab `Crawler` | `src/engine/dataCrawler.ts`, `src/components/panels/DataImportModal.tsx:L400` |
+| `F-DAT-04` | Chế Độ Thu Thập Theo Khoảng Ngày | `Custom Date Range` / `Khoảng Ngày Tùy Chọn` | Trong Tab Crawler ➔ Bật `Chọn Khoảng Ngày` | `src/components/panels/DataImportModal.tsx:L480` |
+| `F-DAT-05` | Dữ Liệu Chuẩn Mẫu Kaggle | `Kaggle Presets` / `Dữ Liệu Mẫu Kaggle` | Trong Modal Dữ Liệu ➔ Tab `Dữ Liệu Mẫu` | `src/components/panels/DataImportModal.tsx:L600` |
 
 ### Chi Tiết Kỹ Thuật & Tiêu Chí Kiểm Thử (QA Checklist)
 
@@ -295,20 +295,20 @@ Tài liệu này là **nguồn thông tin chuẩn mực duy nhất (Single Sourc
 ### Bảng Thống Kê Phân Hệ
 | Mã | Tên Kỹ Thuật | Tên Hiển Thị (EN / VI) | Đường Dẫn Điều Hướng Giao Diện (Navigator) | Đường Dẫn Mã Nguồn |
 | :--- | :--- | :--- | :--- | :--- |
-| `F-STR-01` | Chuyển Ngôn Ngữ Tự Nhiên Sang Code | `AI Strategy Studio` / `Khởi Tạo Chiến Lược AI` | Header Topbar ➔ Bấm nút `AI Studio` | [`AIStrategyModal.tsx`](file:///D:/Project/Backtest/src/components/panels/AIStrategyModal.tsx), [`aiService.ts`](file:///D:/Project/Backtest/src/engine/aiService.ts) |
-| `F-STR-02` | Thẻ Tóm Tắt Quy Tắc Vào Lệnh | `Rule Breakdown Cards` / `Thẻ Quy Tắc Vào Lệnh` | Trong Modal AI Studio ➔ Tab `Chiến Lược` | [`AIStrategyModal.tsx:L320`](file:///D:/Project/Backtest/src/components/panels/AIStrategyModal.tsx) |
-| `F-STR-03` | Môi Trường Thực Thi Cách Ly Sandbox | `Run Sandbox Backtest` / `Chạy Thử Chiến Lược` | Trong Modal AI Studio ➔ Bấm `Chạy Backtest` | [`strategySandbox.ts`](file:///D:/Project/Backtest/src/engine/strategySandbox.ts) |
-| `F-STR-04` | Kết Nối Đa Mô Hình Ngôn Ngữ (LLMs) | `AI Model Settings` / `Cấu Hình Mô Hình AI` | Trong Modal AI Studio ➔ Biểu tượng Bánh răng Cài đặt | [`aiService.ts:L80`](file:///D:/Project/Backtest/src/engine/aiService.ts) |
-| `F-STR-05` | Bảng Điều Khiển Bot Live Trên Đồ Thị | `AI Bot HUD Overlay` / `Bảng Điều Khiển Bot Live` | Khu vực biểu đồ ➔ Bảng nổi AI Bot HUD | [`AIBotHUD.tsx`](file:///D:/Project/Backtest/src/components/panels/AIBotHUD.tsx) |
-| `F-STR-06` | Bộ Tối Ưu Tham Số Quét Lưới SL/TP | `Grid Search Optimizer` / `Tối Ưu Hóa Tham Số SL/TP` | Trong Modal AI Studio ➔ Tab `Bộ Tối Ưu` | [`strategyOptimizer.ts`](file:///D:/Project/Backtest/src/engine/strategyOptimizer.ts) |
-| `F-STR-07` | Ma Trận Nhiệt Lợi Nhuận 2D | `2D Profit Heatmap` / `Ma Trận Nhiệt Lợi Nhuận 2D` | Trong Tab Bộ Tối Ưu ➔ Biểu Đồ Nhiệt 2D | [`AIStrategyModal.tsx:L750`](file:///D:/Project/Backtest/src/components/panels/AIStrategyModal.tsx) |
-| `F-STR-08` | Kiểm Thử Ngoài Mẫu (Out-of-Sample) | `Walk-Forward OOS Test` / `Kiểm Thử Ngoài Mẫu OOS` | Trong Tab Bộ Tối Ưu ➔ Bật `Xác Thực OOS` | [`strategyOptimizer.ts:L180`](file:///D:/Project/Backtest/src/engine/strategyOptimizer.ts) |
-| `F-STR-09` | Xuất Chỉ Báo Pine Script v5 | `Export Pine Script v5` / `Xuất Mã TradingView v5` | Trong Modal AI Studio ➔ Tab `Xuất Bot` ➔ `TradingView` | [`strategyExporter.ts`](file:///D:/Project/Backtest/src/engine/strategyExporter.ts), [`ExportStrategyModal.tsx`](file:///D:/Project/Backtest/src/components/panels/ExportStrategyModal.tsx) |
-| `F-STR-10` | Xuất Robot MT5 (MQL5 EA) | `Export MetaTrader 5 (MQL5)` / `Xuất Bot MT5 MQL5` | Trong Tab Xuất Bot ➔ `MetaTrader 5` | [`strategyExporter.ts:L120`](file:///D:/Project/Backtest/src/engine/strategyExporter.ts) |
-| `F-STR-11` | Xuất Robot MT4 (MQL4 EA) | `Export MetaTrader 4 (MQL4)` / `Xuất Bot MT4 MQL4` | Trong Tab Xuất Bot ➔ `MetaTrader 4` | [`strategyExporter.ts:L240`](file:///D:/Project/Backtest/src/engine/strategyExporter.ts) |
-| `F-STR-12` | Xuất Bot Python CCXT Độc Lập | `Export Python Bot (CCXT)` / `Xuất Bot Python 3` | Trong Tab Xuất Bot ➔ `Python CCXT` | [`strategyExporter.ts:L360`](file:///D:/Project/Backtest/src/engine/strategyExporter.ts) |
-| `F-STR-13` | Xuất Robot cTrader (C# cBot) | `Export cTrader (C#)` / `Xuất Robot cTrader` | Trong Tab Xuất Bot ➔ `cTrader` | [`strategyExporter.ts:L480`](file:///D:/Project/Backtest/src/engine/strategyExporter.ts) |
-| `F-STR-14` | Xuất Gói Cấu Hình Universal JSON | `Export Strategy JSON` / `Xuất Gói Cấu Hình JSON` | Trong Tab Xuất Bot ➔ `Universal JSON` | [`strategyExporter.ts:L560`](file:///D:/Project/Backtest/src/engine/strategyExporter.ts) |
+| `F-STR-01` | Chuyển Ngôn Ngữ Tự Nhiên Sang Code | `AI Strategy Studio` / `Khởi Tạo Chiến Lược AI` | Header Topbar ➔ Bấm nút `AI Studio` | `src/components/panels/AIStrategyModal.tsx`, `src/engine/aiService.ts` |
+| `F-STR-02` | Thẻ Tóm Tắt Quy Tắc Vào Lệnh | `Rule Breakdown Cards` / `Thẻ Quy Tắc Vào Lệnh` | Trong Modal AI Studio ➔ Tab `Chiến Lược` | `src/components/panels/AIStrategyModal.tsx:L320` |
+| `F-STR-03` | Môi Trường Thực Thi Cách Ly Sandbox | `Run Sandbox Backtest` / `Chạy Thử Chiến Lược` | Trong Modal AI Studio ➔ Bấm `Chạy Backtest` | `src/engine/strategySandbox.ts` |
+| `F-STR-04` | Kết Nối Đa Mô Hình Ngôn Ngữ (LLMs) | `AI Model Settings` / `Cấu Hình Mô Hình AI` | Trong Modal AI Studio ➔ Biểu tượng Bánh răng Cài đặt | `src/engine/aiService.ts:L80` |
+| `F-STR-05` | Bảng Điều Khiển Bot Live Trên Đồ Thị | `AI Bot HUD Overlay` / `Bảng Điều Khiển Bot Live` | Khu vực biểu đồ ➔ Bảng nổi AI Bot HUD | `src/components/panels/AIBotHUD.tsx` |
+| `F-STR-06` | Bộ Tối Ưu Tham Số Quét Lưới SL/TP | `Grid Search Optimizer` / `Tối Ưu Hóa Tham Số SL/TP` | Trong Modal AI Studio ➔ Tab `Bộ Tối Ưu` | `src/engine/strategyOptimizer.ts` |
+| `F-STR-07` | Ma Trận Nhiệt Lợi Nhuận 2D | `2D Profit Heatmap` / `Ma Trận Nhiệt Lợi Nhuận 2D` | Trong Tab Bộ Tối Ưu ➔ Biểu Đồ Nhiệt 2D | `src/components/panels/AIStrategyModal.tsx:L750` |
+| `F-STR-08` | Kiểm Thử Ngoài Mẫu (Out-of-Sample) | `Walk-Forward OOS Test` / `Kiểm Thử Ngoài Mẫu OOS` | Trong Tab Bộ Tối Ưu ➔ Bật `Xác Thực OOS` | `src/engine/strategyOptimizer.ts:L180` |
+| `F-STR-09` | Xuất Chỉ Báo Pine Script v5 | `Export Pine Script v5` / `Xuất Mã TradingView v5` | Trong Modal AI Studio ➔ Tab `Xuất Bot` ➔ `TradingView` | `src/engine/strategyExporter.ts`, `src/components/panels/ExportStrategyModal.tsx` |
+| `F-STR-10` | Xuất Robot MT5 (MQL5 EA) | `Export MetaTrader 5 (MQL5)` / `Xuất Bot MT5 MQL5` | Trong Tab Xuất Bot ➔ `MetaTrader 5` | `src/engine/strategyExporter.ts:L120` |
+| `F-STR-11` | Xuất Robot MT4 (MQL4 EA) | `Export MetaTrader 4 (MQL4)` / `Xuất Bot MT4 MQL4` | Trong Tab Xuất Bot ➔ `MetaTrader 4` | `src/engine/strategyExporter.ts:L240` |
+| `F-STR-12` | Xuất Bot Python CCXT Độc Lập | `Export Python Bot (CCXT)` / `Xuất Bot Python 3` | Trong Tab Xuất Bot ➔ `Python CCXT` | `src/engine/strategyExporter.ts:L360` |
+| `F-STR-13` | Xuất Robot cTrader (C# cBot) | `Export cTrader (C#)` / `Xuất Robot cTrader` | Trong Tab Xuất Bot ➔ `cTrader` | `src/engine/strategyExporter.ts:L480` |
+| `F-STR-14` | Xuất Gói Cấu Hình Universal JSON | `Export Strategy JSON` / `Xuất Gói Cấu Hình JSON` | Trong Tab Xuất Bot ➔ `Universal JSON` | `src/engine/strategyExporter.ts:L560` |
 
 ### Chi Tiết Kỹ Thuật & Tiêu Chí Kiểm Thử (QA Checklist)
 
@@ -369,11 +369,11 @@ Tài liệu này là **nguồn thông tin chuẩn mực duy nhất (Single Sourc
 ### Bảng Thống Kê Phân Hệ
 | Mã | Tên Kỹ Thuật | Tên Hiển Thị (EN / VI) | Đường Dẫn Điều Hướng Giao Diện (Navigator) | Đường Dẫn Mã Nguồn |
 | :--- | :--- | :--- | :--- | :--- |
-| `F-ANL-01` | Thống Kê Hiệu Suất Định Lượng | `Analytics Overview` / `Báo Cáo Hiệu Suất Tổng Quan` | Header Topbar ➔ Bấm nút `Phân Tích (Analytics)` | [`AnalyticsDashboardModal.tsx`](file:///D:/Project/Backtest/src/components/panels/AnalyticsDashboardModal.tsx), [`analytics.ts`](file:///D:/Project/Backtest/src/engine/analytics.ts) |
-| `F-ANL-02` | Mô Phỏng Căng Thẳng Monte Carlo | `Monte Carlo Simulation` / `Mô Phỏng Căng Thẳng Monte Carlo` | Trong Modal Phân Tích ➔ Tab `Monte Carlo` | [`AnalyticsDashboardModal.tsx:L350`](file:///D:/Project/Backtest/src/components/panels/AnalyticsDashboardModal.tsx), [`analytics.ts:L220`](file:///D:/Project/Backtest/src/engine/analytics.ts) |
-| `F-ANL-03` | Lịch Lãi Lỗ & Biểu Đồ Nhiệt Phiên | `PnL Calendar & Heatmap` / `Lịch Lãi Lỗ & Biểu Đồ Nhiệt Phiên` | Trong Modal Phân Tích ➔ Tab `Biểu Đồ Nhiệt` | [`AnalyticsDashboardModal.tsx:L520`](file:///D:/Project/Backtest/src/components/panels/AnalyticsDashboardModal.tsx) |
-| `F-ANL-04` | Đối Chiếu So Sánh Đa Phiên | `Compare Sessions` / `Đối Chiếu Đa Phiên Backtest` | Trong Modal Phân Tích ➔ Tab `So Sánh Phiên` | [`AnalyticsDashboardModal.tsx:L680`](file:///D:/Project/Backtest/src/components/panels/AnalyticsDashboardModal.tsx) |
-| `F-ANL-05` | Xuất File CSV & Lưu Ảnh Chụp DB | `Export CSV / Save Snapshot` / `Xuất File CSV / Lưu Ảnh Chụp` | Trong Modal Phân Tích ➔ Cụm nút hành động góc trên phải | [`AnalyticsDashboardModal.tsx:L120`](file:///D:/Project/Backtest/src/components/panels/AnalyticsDashboardModal.tsx) |
+| `F-ANL-01` | Thống Kê Hiệu Suất Định Lượng | `Analytics Overview` / `Báo Cáo Hiệu Suất Tổng Quan` | Header Topbar ➔ Bấm nút `Phân Tích (Analytics)` | `src/components/panels/AnalyticsDashboardModal.tsx`, `src/engine/analytics.ts` |
+| `F-ANL-02` | Mô Phỏng Căng Thẳng Monte Carlo | `Monte Carlo Simulation` / `Mô Phỏng Căng Thẳng Monte Carlo` | Trong Modal Phân Tích ➔ Tab `Monte Carlo` | `src/components/panels/AnalyticsDashboardModal.tsx:L350`, `src/engine/analytics.ts:L220` |
+| `F-ANL-03` | Lịch Lãi Lỗ & Biểu Đồ Nhiệt Phiên | `PnL Calendar & Heatmap` / `Lịch Lãi Lỗ & Biểu Đồ Nhiệt Phiên` | Trong Modal Phân Tích ➔ Tab `Biểu Đồ Nhiệt` | `src/components/panels/AnalyticsDashboardModal.tsx:L520` |
+| `F-ANL-04` | Đối Chiếu So Sánh Đa Phiên | `Compare Sessions` / `Đối Chiếu Đa Phiên Backtest` | Trong Modal Phân Tích ➔ Tab `So Sánh Phiên` | `src/components/panels/AnalyticsDashboardModal.tsx:L680` |
+| `F-ANL-05` | Xuất File CSV & Lưu Ảnh Chụp DB | `Export CSV / Save Snapshot` / `Xuất File CSV / Lưu Ảnh Chụp` | Trong Modal Phân Tích ➔ Cụm nút hành động góc trên phải | `src/components/panels/AnalyticsDashboardModal.tsx:L120` |
 
 ### Chi Tiết Kỹ Thuật & Tiêu Chí Kiểm Thử (QA Checklist)
 
@@ -409,12 +409,12 @@ Tài liệu này là **nguồn thông tin chuẩn mực duy nhất (Single Sourc
 ### Bảng Thống Kê Phân Hệ
 | Mã | Tên Kỹ Thuật | Tên Hiển Thị (EN / VI) | Đường Dẫn Điều Hướng Giao Diện (Navigator) | Đường Dẫn Mã Nguồn |
 | :--- | :--- | :--- | :--- | :--- |
-| `F-SYS-01` | Kết Nối Cổng Micro-Gateway MT5 | `MT5 Broker Connection` / `Kết Nối Sàn MT5` | Header ➔ `Công Cụ Khác [•••]` ➔ `Kết Nối Sàn MT5` | [`BrokerConnectionModal.tsx`](file:///D:/Project/Backtest/src/components/panels/BrokerConnectionModal.tsx), [`brokerStore.ts`](file:///D:/Project/Backtest/src/store/brokerStore.ts) |
-| `F-SYS-02` | Cô Lập Phiên Đa Người Dùng | `Multi-Tenant Isolation` / `Cô Lập Đa Người Dùng` | Tự động phân luồng tại Backend Server | [`server/routes/broker.ts`](file:///D:/Project/Backtest/server/routes/broker.ts) |
-| `F-SYS-03` | Đường Truyền Từ Xa Cloudflare Tunnel | `Remote Tunnel Gateway` / `Đường Truyền Từ Xa Cloudflare` | Header ➔ `Công Cụ Khác [•••]` ➔ `Đường Truyền Từ Xa` | [`TunnelModal.tsx`](file:///D:/Project/Backtest/src/components/panels/TunnelModal.tsx), [`tunnelStore.ts`](file:///D:/Project/Backtest/src/store/tunnelStore.ts) |
-| `F-SYS-04` | Quản Lý Đa Phiên Làm Việc | `Session Manager` / `Quản Lý Phiên Làm Việc` | Header ➔ `Công Cụ Khác [•••]` ➔ `Quản Lý Phiên` | [`SessionManagerModal.tsx`](file:///D:/Project/Backtest/src/components/panels/SessionManagerModal.tsx) |
-| `F-SYS-05` | Bảng Tra Cứu Phím Tắt Nhanh | `Keyboard Shortcuts [?]` / `Phím Tắt Hệ Thống` | Header ➔ `Công Cụ Khác [•••]` ➔ `Phím Tắt` hoặc bấm `?` | [`ShortcutsModal.tsx`](file:///D:/Project/Backtest/src/components/panels/ShortcutsModal.tsx) |
-| `F-SYS-06` | Bộ Khởi Chạy Đa Nền Tảng | `CLI & Launch Scripts` / `Bộ Khởi Chạy Đa Nền Tảng` | Terminal: `npm run dev:all` / `./start_all.sh` / `start_all.bat` | [`package.json`](file:///D:/Project/Backtest/package.json), [`start_all.sh`](file:///D:/Project/Backtest/start_all.sh), [`start_all.bat`](file:///D:/Project/Backtest/start_all.bat) |
+| `F-SYS-01` | Kết Nối Cổng Micro-Gateway MT5 | `MT5 Broker Connection` / `Kết Nối Sàn MT5` | Header ➔ `Công Cụ Khác [•••]` ➔ `Kết Nối Sàn MT5` | `src/components/panels/BrokerConnectionModal.tsx`, `src/store/brokerStore.ts` |
+| `F-SYS-02` | Cô Lập Phiên Đa Người Dùng | `Multi-Tenant Isolation` / `Cô Lập Đa Người Dùng` | Tự động phân luồng tại Backend Server | `server/routes/broker.ts` |
+| `F-SYS-03` | Đường Truyền Từ Xa Cloudflare Tunnel | `Remote Tunnel Gateway` / `Đường Truyền Từ Xa Cloudflare` | Header ➔ `Công Cụ Khác [•••]` ➔ `Đường Truyền Từ Xa` | `src/components/panels/TunnelModal.tsx`, `src/store/tunnelStore.ts` |
+| `F-SYS-04` | Quản Lý Đa Phiên Làm Việc | `Session Manager` / `Quản Lý Phiên Làm Việc` | Header ➔ `Công Cụ Khác [•••]` ➔ `Quản Lý Phiên` | `src/components/panels/SessionManagerModal.tsx` |
+| `F-SYS-05` | Bảng Tra Cứu Phím Tắt Nhanh | `Keyboard Shortcuts [?]` / `Phím Tắt Hệ Thống` | Header ➔ `Công Cụ Khác [•••]` ➔ `Phím Tắt` hoặc bấm `?` | `src/components/panels/ShortcutsModal.tsx` |
+| `F-SYS-06` | Bộ Khởi Chạy Đa Nền Tảng | `CLI & Launch Scripts` / `Bộ Khởi Chạy Đa Nền Tảng` | Terminal: `npm run dev:all` / `./start_all.sh` / `start_all.bat` | `package.json`, `start_all.sh`, `start_all.bat` |
 
 ### Chi Tiết Kỹ Thuật & Tiêu Chí Kiểm Thử (QA Checklist)
 
@@ -457,7 +457,7 @@ Tài liệu này là **nguồn thông tin chuẩn mực duy nhất (Single Sourc
 
 | Mã | Tên Tính Năng | Phân Hệ | Loại Kiểm Thử | Trạng Thái | File Kiểm Thử Tự Động Đối Chiếu |
 | :--- | :--- | :--- | :--- | :---: | :--- |
-| `F-HDR-01` | Tìm Kiếm Cặp Tiền | Header | UI / Unit | ✅ PASS | [`test_comprehensive_suite.ts`](file:///D:/Project/Backtest/test_comprehensive_suite.ts) |
+| `F-HDR-01` | Tìm Kiếm Cặp Tiền | Header | UI / Unit | ✅ PASS | `test_comprehensive_suite.ts` |
 | `F-HDR-02` | Tổng Hợp Khung Thời Gian | Header | Unit / Math | ✅ PASS | Suite 4: Resampler Tests (6 tests) |
 | `F-HDR-03` | Nến Heikin-Ashi | Header | UI / Visual | ✅ PASS | Suite 10: Heikin-Ashi Tests (13 tests) |
 | `F-HDR-04` | Chỉ Báo Kỹ Thuật | Header | Math / Realtime | ✅ PASS | Suite 3: Indicators Tests (7 tests) |

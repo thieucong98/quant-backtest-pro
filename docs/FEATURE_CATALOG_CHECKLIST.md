@@ -12,14 +12,14 @@ This document provides a single source of truth for all **48 features across 8 c
 
 | Module Code | Module Name | Features Count | Primary Source Components |
 | :--- | :--- | :---: | :--- |
-| **`F-HDR`** | [1. Workspace Header & Global Controls](#1-workspace-header--global-controls-f-hdr) | 8 | [`Header.tsx`](file:///D:/Project/Backtest/src/components/header/Header.tsx), [`SymbolSearchModal.tsx`](file:///D:/Project/Backtest/src/components/header/SymbolSearchModal.tsx) |
-| **`F-CHT`** | [2. Interactive Candlestick Charting & Price Scale Tools](#2-interactive-candlestick-charting--price-scale-tools-f-cht) | 7 | [`TradingViewChart.tsx`](file:///D:/Project/Backtest/src/components/chart/TradingViewChart.tsx), [`VisualChartTradingOverlay.tsx`](file:///D:/Project/Backtest/src/components/chart/VisualChartTradingOverlay.tsx), [`PriceScaleContextMenu.tsx`](file:///D:/Project/Backtest/src/components/chart/PriceScaleContextMenu.tsx) |
-| **`F-RPL`** | [3. Time-Travel Candlestick Replay Engine](#3-time-travel-candlestick-replay-engine-f-rpl) | 4 | [`ReplayBar.tsx`](file:///D:/Project/Backtest/src/components/replay/ReplayBar.tsx), [`resampler.ts`](file:///D:/Project/Backtest/src/engine/resampler.ts) |
-| **`F-OMS`** | [4. Order Management System (OMS) & Execution Dock](#4-order-management-system-oms--execution-dock-f-oms) | 9 | [`QuickTradeDock.tsx`](file:///D:/Project/Backtest/src/components/chart/QuickTradeDock.tsx), [`OrderEntryModal.tsx`](file:///D:/Project/Backtest/src/components/panels/OrderEntryModal.tsx), [`PositionsTable.tsx`](file:///D:/Project/Backtest/src/components/panels/PositionsTable.tsx) |
-| **`F-DAT`** | [5. Data Import Manager 2.0 & SQLite Persistence](#5-data-import-manager-20--sqlite-persistence-f-dat) | 5 | [`DataImportModal.tsx`](file:///D:/Project/Backtest/src/components/panels/DataImportModal.tsx), [`csvParser.ts`](file:///D:/Project/Backtest/src/engine/csvParser.ts), [`dataCrawler.ts`](file:///D:/Project/Backtest/src/engine/dataCrawler.ts) |
-| **`F-STR`** | [6. AI Strategy Studio, Optimizer & Bot Exporter Hub](#6-ai-strategy-studio-optimizer--bot-exporter-hub-f-str) | 14 | [`AIStrategyModal.tsx`](file:///D:/Project/Backtest/src/components/panels/AIStrategyModal.tsx), [`strategyOptimizer.ts`](file:///D:/Project/Backtest/src/engine/strategyOptimizer.ts), [`strategyExporter.ts`](file:///D:/Project/Backtest/src/engine/strategyExporter.ts) |
-| **`F-ANL`** | [7. Institutional Analytics & Monte Carlo Risk Engine](#7-institutional-analytics--monte-carlo-risk-engine-f-anl) | 5 | [`AnalyticsDashboardModal.tsx`](file:///D:/Project/Backtest/src/components/panels/AnalyticsDashboardModal.tsx), [`analytics.ts`](file:///D:/Project/Backtest/src/engine/analytics.ts) |
-| **`F-SYS`** | [8. Live MT5 Broker, Cloud Tunnel & System Infrastructure](#8-live-mt5-broker-cloud-tunnel--system-infrastructure-f-sys) | 6 | [`BrokerConnectionModal.tsx`](file:///D:/Project/Backtest/src/components/panels/BrokerConnectionModal.tsx), [`TunnelModal.tsx`](file:///D:/Project/Backtest/src/components/panels/TunnelModal.tsx), [`SessionManagerModal.tsx`](file:///D:/Project/Backtest/src/components/panels/SessionManagerModal.tsx) |
+| **`F-HDR`** | [1. Workspace Header & Global Controls](#1-workspace-header--global-controls-f-hdr) | 8 | `src/components/header/Header.tsx`, `src/components/header/SymbolSearchModal.tsx` |
+| **`F-CHT`** | [2. Interactive Candlestick Charting & Price Scale Tools](#2-interactive-candlestick-charting--price-scale-tools-f-cht) | 7 | `src/components/chart/TradingViewChart.tsx`, `src/components/chart/VisualChartTradingOverlay.tsx`, `src/components/chart/PriceScaleContextMenu.tsx` |
+| **`F-RPL`** | [3. Time-Travel Candlestick Replay Engine](#3-time-travel-candlestick-replay-engine-f-rpl) | 4 | `src/components/replay/ReplayBar.tsx`, `src/engine/resampler.ts` |
+| **`F-OMS`** | [4. Order Management System (OMS) & Execution Dock](#4-order-management-system-oms--execution-dock-f-oms) | 9 | `src/components/chart/QuickTradeDock.tsx`, `src/components/panels/OrderEntryModal.tsx`, `src/components/panels/PositionsTable.tsx` |
+| **`F-DAT`** | [5. Data Import Manager 2.0 & SQLite Persistence](#5-data-import-manager-20--sqlite-persistence-f-dat) | 5 | `src/components/panels/DataImportModal.tsx`, `src/engine/csvParser.ts`, `src/engine/dataCrawler.ts` |
+| **`F-STR`** | [6. AI Strategy Studio, Optimizer & Bot Exporter Hub](#6-ai-strategy-studio-optimizer--bot-exporter-hub-f-str) | 14 | `src/components/panels/AIStrategyModal.tsx`, `src/engine/strategyOptimizer.ts`, `src/engine/strategyExporter.ts` |
+| **`F-ANL`** | [7. Institutional Analytics & Monte Carlo Risk Engine](#7-institutional-analytics--monte-carlo-risk-engine-f-anl) | 5 | `src/components/panels/AnalyticsDashboardModal.tsx`, `src/engine/analytics.ts` |
+| **`F-SYS`** | [8. Live MT5 Broker, Cloud Tunnel & System Infrastructure](#8-live-mt5-broker-cloud-tunnel--system-infrastructure-f-sys) | 6 | `src/components/panels/BrokerConnectionModal.tsx`, `src/components/panels/TunnelModal.tsx`, `src/components/panels/SessionManagerModal.tsx` |
 
 ---
 
@@ -28,14 +28,14 @@ This document provides a single source of truth for all **48 features across 8 c
 ### Summary Table
 | ID | Feature Technical Name | UI Display Name (EN / VI) | UI Navigation Path | Source Code Path |
 | :--- | :--- | :--- | :--- | :--- |
-| `F-HDR-01` | Symbol Search & Asset Picker | `Symbol Picker` / `Chọn Cặp Tiền` | Topbar Header ➔ Click Symbol Button (e.g. `XAUUSD`) | [`SymbolSearchModal.tsx`](file:///D:/Project/Backtest/src/components/header/SymbolSearchModal.tsx) |
-| `F-HDR-02` | Multi-Timeframe Resampler | `Timeframe Pills (M1 - MN)` / `Khung Thời Gian` | Topbar Header ➔ Pill Group `[M1, M5, M15, M30, H1, H4, D1, W1, MN]` | [`Header.tsx:L190`](file:///D:/Project/Backtest/src/components/header/Header.tsx), [`resampler.ts`](file:///D:/Project/Backtest/src/engine/resampler.ts) |
-| `F-HDR-03` | Chart Type Switcher | `Candles / Heikin-Ashi` / `Nến Thường / Heikin-Ashi` | Topbar Header ➔ Chart Type Dropdown Icon | [`Header.tsx:L240`](file:///D:/Project/Backtest/src/components/header/Header.tsx), [`TradingViewChart.tsx`](file:///D:/Project/Backtest/src/components/chart/TradingViewChart.tsx) |
-| `F-HDR-04` | Technical Indicators Popover | `Indicators` / `Chỉ Báo` | Topbar Header ➔ Button `Indicators [f(x)]` | [`Header.tsx:L280`](file:///D:/Project/Backtest/src/components/header/Header.tsx), [`indicators.ts`](file:///D:/Project/Backtest/src/engine/indicators.ts) |
-| `F-HDR-05` | Spread & Bid/Ask Price Display | `Spread: X.X pips (Ask/Bid)` / `Spread: X.X pips` | Topbar Header ➔ Spread Badge indicator | [`Header.tsx:L340`](file:///D:/Project/Backtest/src/components/header/Header.tsx), [`TradingViewChart.tsx`](file:///D:/Project/Backtest/src/components/chart/TradingViewChart.tsx) |
-| `F-HDR-06` | Account Equity & Balance HUD | `Balance / Equity / Margin` / `Số Dư / Vốn / Ký Quỹ` | Topbar Header ➔ Metric Group & Reset Balance button | [`Header.tsx:L370`](file:///D:/Project/Backtest/src/components/header/Header.tsx), [`backtestStore.ts`](file:///D:/Project/Backtest/src/store/backtestStore.ts) |
-| `F-HDR-07` | Internationalization Switcher | `Language Menu (EN/VI/JA/ZH)` / `Chuyển Đổi Ngôn Ngữ` | Topbar Header ➔ Flag/Language dropdown | [`Header.tsx:L450`](file:///D:/Project/Backtest/src/components/header/Header.tsx), [`src/i18n/`](file:///D:/Project/Backtest/src/i18n/) |
-| `F-HDR-08` | User Profile & Auth Modal | `Login / Profile [Pro]` / `Đăng Nhập / Hồ Sơ` | Topbar Header ➔ Far Right Profile Button | [`AuthModal.tsx`](file:///D:/Project/Backtest/src/components/auth/AuthModal.tsx), [`UserProfileModal.tsx`](file:///D:/Project/Backtest/src/components/auth/UserProfileModal.tsx) |
+| `F-HDR-01` | Symbol Search & Asset Picker | `Symbol Picker` / `Chọn Cặp Tiền` | Topbar Header ➔ Click Symbol Button (e.g. `XAUUSD`) | `src/components/header/SymbolSearchModal.tsx` |
+| `F-HDR-02` | Multi-Timeframe Resampler | `Timeframe Pills (M1 - MN)` / `Khung Thời Gian` | Topbar Header ➔ Pill Group `[M1, M5, M15, M30, H1, H4, D1, W1, MN]` | `src/components/header/Header.tsx:L190`, `src/engine/resampler.ts` |
+| `F-HDR-03` | Chart Type Switcher | `Candles / Heikin-Ashi` / `Nến Thường / Heikin-Ashi` | Topbar Header ➔ Chart Type Dropdown Icon | `src/components/header/Header.tsx:L240`, `src/components/chart/TradingViewChart.tsx` |
+| `F-HDR-04` | Technical Indicators Popover | `Indicators` / `Chỉ Báo` | Topbar Header ➔ Button `Indicators [f(x)]` | `src/components/header/Header.tsx:L280`, `src/engine/indicators.ts` |
+| `F-HDR-05` | Spread & Bid/Ask Price Display | `Spread: X.X pips (Ask/Bid)` / `Spread: X.X pips` | Topbar Header ➔ Spread Badge indicator | `src/components/header/Header.tsx:L340`, `src/components/chart/TradingViewChart.tsx` |
+| `F-HDR-06` | Account Equity & Balance HUD | `Balance / Equity / Margin` / `Số Dư / Vốn / Ký Quỹ` | Topbar Header ➔ Metric Group & Reset Balance button | `src/components/header/Header.tsx:L370`, `src/store/backtestStore.ts` |
+| `F-HDR-07` | Internationalization Switcher | `Language Menu (EN/VI/JA/ZH)` / `Chuyển Đổi Ngôn Ngữ` | Topbar Header ➔ Flag/Language dropdown | `src/components/header/Header.tsx:L450`, `src/i18n/` |
+| `F-HDR-08` | User Profile & Auth Modal | `Login / Profile [Pro]` / `Đăng Nhập / Hồ Sơ` | Topbar Header ➔ Far Right Profile Button | `src/components/auth/AuthModal.tsx`, `src/components/auth/UserProfileModal.tsx` |
 
 ### Detailed Specification & QA Checklist
 
@@ -92,7 +92,7 @@ This document provides a single source of truth for all **48 features across 8 c
 - **UI Navigation:** Click user avatar or `Login` / `Profile` button on the far right of the header.
 - **Functionality:** Supports login/registration with JWT authentication, role verification (`INSTITUTIONAL`), and profile settings.
 - **QA Verification:**
-  1. Log in with `admin@quantbacktest.pro` -> Badge updates to `INSTITUTIONAL`.
+  1. Log in with `institutional-user@quantbacktest.pro` -> Badge updates to `INSTITUTIONAL`.
 
 ---
 
@@ -101,13 +101,13 @@ This document provides a single source of truth for all **48 features across 8 c
 ### Summary Table
 | ID | Feature Technical Name | UI Display Name (EN / VI) | UI Navigation Path | Source Code Path |
 | :--- | :--- | :--- | :--- | :--- |
-| `F-CHT-01` | Canvas Charting Engine (60 FPS) | `TradingView Canvas` / `Biểu Đồ Canvas TradingView` | Main Workspace Canvas Area | [`TradingViewChart.tsx`](file:///D:/Project/Backtest/src/components/chart/TradingViewChart.tsx) |
-| `F-CHT-02` | Visual SL/TP Drag Overlay | `Drag SL/TP Lines` / `Kéo Thả Đường SL/TP` | Click open position line on chart ➔ Drag handles | [`VisualChartTradingOverlay.tsx`](file:///D:/Project/Backtest/src/components/chart/VisualChartTradingOverlay.tsx) |
-| `F-CHT-03` | Price Axis Direct (+) Order Button | `(+) Limit/Stop Order Button` / `Nút (+) Đặt Lệnh Trực Tiếp` | Hover mouse over right price axis ➔ Click `(+)` | [`TradingViewChart.tsx:L820`](file:///D:/Project/Backtest/src/components/chart/TradingViewChart.tsx) |
-| `F-CHT-04` | Price Scale Context Menu | `Price Scale Options` / `Menu Trục Giá Chuột Phải` | Right-click on right price axis | [`PriceScaleContextMenu.tsx`](file:///D:/Project/Backtest/src/components/chart/PriceScaleContextMenu.tsx) |
-| `F-CHT-05` | Vector Drawing Tools Canvas | `Drawing Toolbar` / `Thanh Công Cụ Vẽ Kỹ Thuật` | Left floating toolbar on chart | [`DrawingCanvas.tsx`](file:///D:/Project/Backtest/src/components/chart/DrawingCanvas.tsx) |
-| `F-CHT-06` | Session High/Low & Period Separators | `High/Low Lines & Separators` / `Đường Đỉnh/Đáy & Phân Cách Ngày` | Auto-rendered on chart canvas / Chart settings | [`TradingViewChart.tsx:L450`](file:///D:/Project/Backtest/src/components/chart/TradingViewChart.tsx) |
-| `F-CHT-07` | Prop Firm Challenge Shield HUD | `Prop Firm Shield HUD` / `Lá Chắn Thi Quỹ Prop Firm` | Top-right floating overlay on chart canvas | [`PropFirmHUD.tsx`](file:///D:/Project/Backtest/src/components/chart/PropFirmHUD.tsx), [`createPropFirmSlice.ts`](file:///D:/Project/Backtest/src/store/slices/createPropFirmSlice.ts) |
+| `F-CHT-01` | Canvas Charting Engine (60 FPS) | `TradingView Canvas` / `Biểu Đồ Canvas TradingView` | Main Workspace Canvas Area | `src/components/chart/TradingViewChart.tsx` |
+| `F-CHT-02` | Visual SL/TP Drag Overlay | `Drag SL/TP Lines` / `Kéo Thả Đường SL/TP` | Click open position line on chart ➔ Drag handles | `src/components/chart/VisualChartTradingOverlay.tsx` |
+| `F-CHT-03` | Price Axis Direct (+) Order Button | `(+) Limit/Stop Order Button` / `Nút (+) Đặt Lệnh Trực Tiếp` | Hover mouse over right price axis ➔ Click `(+)` | `src/components/chart/TradingViewChart.tsx:L820` |
+| `F-CHT-04` | Price Scale Context Menu | `Price Scale Options` / `Menu Trục Giá Chuột Phải` | Right-click on right price axis | `src/components/chart/PriceScaleContextMenu.tsx` |
+| `F-CHT-05` | Vector Drawing Tools Canvas | `Drawing Toolbar` / `Thanh Công Cụ Vẽ Kỹ Thuật` | Left floating toolbar on chart | `src/components/chart/DrawingCanvas.tsx` |
+| `F-CHT-06` | Session High/Low & Period Separators | `High/Low Lines & Separators` / `Đường Đỉnh/Đáy & Phân Cách Ngày` | Auto-rendered on chart canvas / Chart settings | `src/components/chart/TradingViewChart.tsx:L450` |
+| `F-CHT-07` | Prop Firm Challenge Shield HUD | `Prop Firm Shield HUD` / `Lá Chắn Thi Quỹ Prop Firm` | Top-right floating overlay on chart canvas | `src/components/chart/PropFirmHUD.tsx`, `src/store/slices/createPropFirmSlice.ts` |
 
 ### Detailed Specification & QA Checklist
 
@@ -153,10 +153,10 @@ This document provides a single source of truth for all **48 features across 8 c
 ### Summary Table
 | ID | Feature Technical Name | UI Display Name (EN / VI) | UI Navigation Path | Source Code Path |
 | :--- | :--- | :--- | :--- | :--- |
-| `F-RPL-01` | 60 FPS Candlestick Replay Controls | `Play / Pause / Step [F8]` / `Phát / Tạm Dừng / Từng Bước` | Bottom Floating Replay Bar ➔ Play, Pause, Step Buttons | [`ReplayBar.tsx`](file:///D:/Project/Backtest/src/components/replay/ReplayBar.tsx) |
-| `F-RPL-02` | Playback Speed Multiplier | `Speed Slider (0.1x - 100x)` / `Tốc Độ Tua` | Bottom Replay Bar ➔ Speed Preset Pills & Slider | [`ReplayBar.tsx:L120`](file:///D:/Project/Backtest/src/components/replay/ReplayBar.tsx) |
-| `F-RPL-03` | Milestone Time-Travel Jumps | `Start / Mid / Latest` / `Đầu / Giữa 50% / Mới Nhất` | Bottom Replay Bar ➔ Milestone Buttons `[0%, 50%, 100%]` | [`ReplayBar.tsx:L180`](file:///D:/Project/Backtest/src/components/replay/ReplayBar.tsx) |
-| `F-RPL-04` | Exact Date-Time Binary Search Jump | `Jump to Date/Time [Calendar]` / `Tua Đến Ngày Giờ` | Bottom Replay Bar ➔ Click Date-Time button ➔ Pick time ➔ `Jump` | [`ReplayBar.tsx:L220`](file:///D:/Project/Backtest/src/components/replay/ReplayBar.tsx) |
+| `F-RPL-01` | 60 FPS Candlestick Replay Controls | `Play / Pause / Step [F8]` / `Phát / Tạm Dừng / Từng Bước` | Bottom Floating Replay Bar ➔ Play, Pause, Step Buttons | `src/components/replay/ReplayBar.tsx` |
+| `F-RPL-02` | Playback Speed Multiplier | `Speed Slider (0.1x - 100x)` / `Tốc Độ Tua` | Bottom Replay Bar ➔ Speed Preset Pills & Slider | `src/components/replay/ReplayBar.tsx:L120` |
+| `F-RPL-03` | Milestone Time-Travel Jumps | `Start / Mid / Latest` / `Đầu / Giữa 50% / Mới Nhất` | Bottom Replay Bar ➔ Milestone Buttons `[0%, 50%, 100%]` | `src/components/replay/ReplayBar.tsx:L180` |
+| `F-RPL-04` | Exact Date-Time Binary Search Jump | `Jump to Date/Time [Calendar]` / `Tua Đến Ngày Giờ` | Bottom Replay Bar ➔ Click Date-Time button ➔ Pick time ➔ `Jump` | `src/components/replay/ReplayBar.tsx:L220` |
 
 ### Detailed Specification & QA Checklist
 
@@ -187,15 +187,15 @@ This document provides a single source of truth for all **48 features across 8 c
 ### Summary Table
 | ID | Feature Technical Name | UI Display Name (EN / VI) | UI Navigation Path | Source Code Path |
 | :--- | :--- | :--- | :--- | :--- |
-| `F-OMS-01` | Quick Trade Floating Dock | `Quick Trade Dock` / `Bảng Lệnh Nhanh Quick Trade` | Floating Dock at Top-Left / Toggle via Header `Quick Trade` | [`QuickTradeDock.tsx`](file:///D:/Project/Backtest/src/components/chart/QuickTradeDock.tsx) |
-| `F-OMS-02` | Advanced Order Entry Modal | `Order Entry` / `Đặt Lệnh Nâng Cao` | Header ➔ Click `Order Entry` Button | [`OrderEntryModal.tsx`](file:///D:/Project/Backtest/src/components/panels/OrderEntryModal.tsx), [`OrderFactory.ts`](file:///D:/Project/Backtest/src/engine/patterns/OrderFactory.ts) |
-| `F-OMS-03` | Open Positions Manager | `Open Positions Tab` / `Vị Thế Đang Mở` | Bottom Panel ➔ Tab `Positions` | [`PositionsTable.tsx:L120`](file:///D:/Project/Backtest/src/components/panels/PositionsTable.tsx) |
-| `F-OMS-04` | Pending Orders Manager | `Pending Orders Tab` / `Lệnh Chờ (Limit/Stop)` | Bottom Panel ➔ Tab `Pending Orders` | [`PositionsTable.tsx:L320`](file:///D:/Project/Backtest/src/components/panels/PositionsTable.tsx) |
-| `F-OMS-05` | Trade History & Audit Ledger | `Trade History Tab` / `Lịch Sử Giao Dịch` | Bottom Panel ➔ Tab `History` | [`PositionsTable.tsx:L450`](file:///D:/Project/Backtest/src/components/panels/PositionsTable.tsx) |
-| `F-OMS-06` | Strategy Bot Execution Logs | `Strategy Logs Tab` / `Nhật Ký Chiến Lược Bot` | Bottom Panel ➔ Tab `Strategy Logs` | [`PositionsTable.tsx:L580`](file:///D:/Project/Backtest/src/components/panels/PositionsTable.tsx) |
-| `F-OMS-07` | Authentic Economic Calendar | `Economic Calendar Tab` / `Lịch Kinh Tế` | Bottom Panel ➔ Tab `Calendar` | [`EconomicCalendarTab.tsx`](file:///D:/Project/Backtest/src/components/panels/EconomicCalendarTab.tsx) |
-| `F-OMS-08` | Market Watch Drawer | `Market Watch Drawer` / `Bảng Theo Dõi Giá` | Bottom Panel ➔ Tab `Market Watch` | [`MarketWatchDrawer.tsx`](file:///D:/Project/Backtest/src/components/panels/MarketWatchDrawer.tsx) |
-| `F-OMS-09` | Emergency "Close All Positions" | `Close All Button` / `Đóng Tất Cả Vị Thế` | Bottom Panel ➔ Red `Close All Positions` Button | [`PositionsTable.tsx:L85`](file:///D:/Project/Backtest/src/components/panels/PositionsTable.tsx) |
+| `F-OMS-01` | Quick Trade Floating Dock | `Quick Trade Dock` / `Bảng Lệnh Nhanh Quick Trade` | Floating Dock at Top-Left / Toggle via Header `Quick Trade` | `src/components/chart/QuickTradeDock.tsx` |
+| `F-OMS-02` | Advanced Order Entry Modal | `Order Entry` / `Đặt Lệnh Nâng Cao` | Header ➔ Click `Order Entry` Button | `src/components/panels/OrderEntryModal.tsx`, `src/engine/patterns/OrderFactory.ts` |
+| `F-OMS-03` | Open Positions Manager | `Open Positions Tab` / `Vị Thế Đang Mở` | Bottom Panel ➔ Tab `Positions` | `src/components/panels/PositionsTable.tsx:L120` |
+| `F-OMS-04` | Pending Orders Manager | `Pending Orders Tab` / `Lệnh Chờ (Limit/Stop)` | Bottom Panel ➔ Tab `Pending Orders` | `src/components/panels/PositionsTable.tsx:L320` |
+| `F-OMS-05` | Trade History & Audit Ledger | `Trade History Tab` / `Lịch Sử Giao Dịch` | Bottom Panel ➔ Tab `History` | `src/components/panels/PositionsTable.tsx:L450` |
+| `F-OMS-06` | Strategy Bot Execution Logs | `Strategy Logs Tab` / `Nhật Ký Chiến Lược Bot` | Bottom Panel ➔ Tab `Strategy Logs` | `src/components/panels/PositionsTable.tsx:L580` |
+| `F-OMS-07` | Authentic Economic Calendar | `Economic Calendar Tab` / `Lịch Kinh Tế` | Bottom Panel ➔ Tab `Calendar` | `src/components/panels/EconomicCalendarTab.tsx` |
+| `F-OMS-08` | Market Watch Drawer | `Market Watch Drawer` / `Bảng Theo Dõi Giá` | Bottom Panel ➔ Tab `Market Watch` | `src/components/panels/MarketWatchDrawer.tsx` |
+| `F-OMS-09` | Emergency "Close All Positions" | `Close All Button` / `Đóng Tất Cả Vị Thế` | Bottom Panel ➔ Red `Close All Positions` Button | `src/components/panels/PositionsTable.tsx:L85` |
 
 ### Detailed Specification & QA Checklist
 
@@ -255,11 +255,11 @@ This document provides a single source of truth for all **48 features across 8 c
 ### Summary Table
 | ID | Feature Technical Name | UI Display Name (EN / VI) | UI Navigation Path | Source Code Path |
 | :--- | :--- | :--- | :--- | :--- |
-| `F-DAT-01` | High-Speed Integer CSV Parser | `Upload CSV File` / `Tải Lên File CSV` | Header ➔ `More Tools [•••]` ➔ `Data Manager` ➔ Tab `Upload` | [`csvParser.ts`](file:///D:/Project/Backtest/src/engine/csvParser.ts), [`DataImportModal.tsx`](file:///D:/Project/Backtest/src/components/panels/DataImportModal.tsx) |
-| `F-DAT-02` | SQLite Dataset Library Grid | `Dataset Library` / `Thư Viện Dữ Liệu SQLite` | Header ➔ `More Tools [•••]` ➔ `Data Manager` ➔ Tab `Library` | [`DataImportModal.tsx:L250`](file:///D:/Project/Backtest/src/components/panels/DataImportModal.tsx) |
-| `F-DAT-03` | Multi-Batch Online Crawler | `Online Crawler` / `Thu Thập Trực Tuyến` | Header ➔ `More Tools [•••]` ➔ `Data Manager` ➔ Tab `Crawler` | [`dataCrawler.ts`](file:///D:/Project/Backtest/src/engine/dataCrawler.ts), [`DataImportModal.tsx:L400`](file:///D:/Project/Backtest/src/components/panels/DataImportModal.tsx) |
-| `F-DAT-04` | Date-Range Crawl Mode | `Custom Date Range` / `Khoảng Ngày Tùy Chọn` | In Crawler Tab ➔ Toggle `Date Range Mode` | [`DataImportModal.tsx:L480`](file:///D:/Project/Backtest/src/components/panels/DataImportModal.tsx) |
-| `F-DAT-05` | Curated Kaggle Presets | `Kaggle Presets` / `Dữ Liệu Mẫu Kaggle` | In Data Modal ➔ Tab `Presets` | [`DataImportModal.tsx:L600`](file:///D:/Project/Backtest/src/components/panels/DataImportModal.tsx) |
+| `F-DAT-01` | High-Speed Integer CSV Parser | `Upload CSV File` / `Tải Lên File CSV` | Header ➔ `More Tools [•••]` ➔ `Data Manager` ➔ Tab `Upload` | `src/engine/csvParser.ts`, `src/components/panels/DataImportModal.tsx` |
+| `F-DAT-02` | SQLite Dataset Library Grid | `Dataset Library` / `Thư Viện Dữ Liệu SQLite` | Header ➔ `More Tools [•••]` ➔ `Data Manager` ➔ Tab `Library` | `src/components/panels/DataImportModal.tsx:L250` |
+| `F-DAT-03` | Multi-Batch Online Crawler | `Online Crawler` / `Thu Thập Trực Tuyến` | Header ➔ `More Tools [•••]` ➔ `Data Manager` ➔ Tab `Crawler` | `src/engine/dataCrawler.ts`, `src/components/panels/DataImportModal.tsx:L400` |
+| `F-DAT-04` | Date-Range Crawl Mode | `Custom Date Range` / `Khoảng Ngày Tùy Chọn` | In Crawler Tab ➔ Toggle `Date Range Mode` | `src/components/panels/DataImportModal.tsx:L480` |
+| `F-DAT-05` | Curated Kaggle Presets | `Kaggle Presets` / `Dữ Liệu Mẫu Kaggle` | In Data Modal ➔ Tab `Presets` | `src/components/panels/DataImportModal.tsx:L600` |
 
 ### Detailed Specification & QA Checklist
 
@@ -295,20 +295,20 @@ This document provides a single source of truth for all **48 features across 8 c
 ### Summary Table
 | ID | Feature Technical Name | UI Display Name (EN / VI) | UI Navigation Path | Source Code Path |
 | :--- | :--- | :--- | :--- | :--- |
-| `F-STR-01` | Natural Language Strategy Transpiler | `AI Strategy Studio` / `Khởi Tạo Chiến Lược AI` | Header ➔ Click `AI Studio` Button | [`AIStrategyModal.tsx`](file:///D:/Project/Backtest/src/components/panels/AIStrategyModal.tsx), [`aiService.ts`](file:///D:/Project/Backtest/src/engine/aiService.ts) |
-| `F-STR-02` | Strategy Rule Breakdown Cards | `Rule Breakdown Cards` / `Thẻ Quy Tắc Vào Lệnh` | In AI Studio Modal ➔ Tab `Strategy` | [`AIStrategyModal.tsx:L320`](file:///D:/Project/Backtest/src/components/panels/AIStrategyModal.tsx) |
-| `F-STR-03` | Sandboxed Strategy Execution Engine | `Run Sandbox Backtest` / `Chạy Thử Chiến Lược` | In AI Studio Modal ➔ Click `Run Backtest` | [`strategySandbox.ts`](file:///D:/Project/Backtest/src/engine/strategySandbox.ts) |
-| `F-STR-04` | Multi-LLM Provider Connectors | `AI Model Settings` / `Cấu Hình Mô Hình AI` | In AI Studio Modal ➔ Model Settings gear icon | [`aiService.ts:L80`](file:///D:/Project/Backtest/src/engine/aiService.ts) |
-| `F-STR-05` | Live AI Bot Floating HUD | `AI Bot HUD Overlay` / `Bảng Điều Khiển Bot Live` | Chart Canvas ➔ Floating AI Bot HUD widget | [`AIBotHUD.tsx`](file:///D:/Project/Backtest/src/components/panels/AIBotHUD.tsx) |
-| `F-STR-06` | SL/TP Grid Search Optimizer | `Grid Search Optimizer` / `Tối Ưu Hóa Tham Số SL/TP` | In AI Studio Modal ➔ Tab `Optimizer` | [`strategyOptimizer.ts`](file:///D:/Project/Backtest/src/engine/strategyOptimizer.ts) |
-| `F-STR-07` | 2D Sweet-Spot Profit Heatmap | `2D Profit Heatmap` / `Ma Trận Nhiệt Lợi Nhuận 2D` | In Optimizer Tab ➔ Heatmap Matrix | [`AIStrategyModal.tsx:L750`](file:///D:/Project/Backtest/src/components/panels/AIStrategyModal.tsx) |
-| `F-STR-08` | In-Sample vs Out-of-Sample Test | `Walk-Forward OOS Test` / `Kiểm Thử Ngoài Mẫu OOS` | In Optimizer Tab ➔ Toggle `OOS Validation` | [`strategyOptimizer.ts:L180`](file:///D:/Project/Backtest/src/engine/strategyOptimizer.ts) |
-| `F-STR-09` | Pine Script v5 Exporter | `Export Pine Script v5` / `Xuất Mã TradingView v5` | In AI Studio ➔ Tab `Export Bot` ➔ `TradingView` | [`strategyExporter.ts`](file:///D:/Project/Backtest/src/engine/strategyExporter.ts), [`ExportStrategyModal.tsx`](file:///D:/Project/Backtest/src/components/panels/ExportStrategyModal.tsx) |
-| `F-STR-10` | MT5 MQL5 EA Exporter | `Export MetaTrader 5 (MQL5)` / `Xuất Bot MT5 MQL5` | In Export Bot Tab ➔ `MetaTrader 5` | [`strategyExporter.ts:L120`](file:///D:/Project/Backtest/src/engine/strategyExporter.ts) |
-| `F-STR-11` | MT4 MQL4 EA Exporter | `Export MetaTrader 4 (MQL4)` / `Xuất Bot MT4 MQL4` | In Export Bot Tab ➔ `MetaTrader 4` | [`strategyExporter.ts:L240`](file:///D:/Project/Backtest/src/engine/strategyExporter.ts) |
-| `F-STR-12` | Python CCXT Algorithmic Bot | `Export Python Bot (CCXT)` / `Xuất Bot Python 3` | In Export Bot Tab ➔ `Python CCXT` | [`strategyExporter.ts:L360`](file:///D:/Project/Backtest/src/engine/strategyExporter.ts) |
-| `F-STR-13` | cTrader C# cBot Exporter | `Export cTrader (C#)` / `Xuất Robot cTrader` | In Export Bot Tab ➔ `cTrader` | [`strategyExporter.ts:L480`](file:///D:/Project/Backtest/src/engine/strategyExporter.ts) |
-| `F-STR-14` | Universal Strategy JSON Package | `Export Strategy JSON` / `Xuất Gói Cấu Hình JSON` | In Export Bot Tab ➔ `Universal JSON` | [`strategyExporter.ts:L560`](file:///D:/Project/Backtest/src/engine/strategyExporter.ts) |
+| `F-STR-01` | Natural Language Strategy Transpiler | `AI Strategy Studio` / `Khởi Tạo Chiến Lược AI` | Header ➔ Click `AI Studio` Button | `src/components/panels/AIStrategyModal.tsx`, `src/engine/aiService.ts` |
+| `F-STR-02` | Strategy Rule Breakdown Cards | `Rule Breakdown Cards` / `Thẻ Quy Tắc Vào Lệnh` | In AI Studio Modal ➔ Tab `Strategy` | `src/components/panels/AIStrategyModal.tsx:L320` |
+| `F-STR-03` | Sandboxed Strategy Execution Engine | `Run Sandbox Backtest` / `Chạy Thử Chiến Lược` | In AI Studio Modal ➔ Click `Run Backtest` | `src/engine/strategySandbox.ts` |
+| `F-STR-04` | Multi-LLM Provider Connectors | `AI Model Settings` / `Cấu Hình Mô Hình AI` | In AI Studio Modal ➔ Model Settings gear icon | `src/engine/aiService.ts:L80` |
+| `F-STR-05` | Live AI Bot Floating HUD | `AI Bot HUD Overlay` / `Bảng Điều Khiển Bot Live` | Chart Canvas ➔ Floating AI Bot HUD widget | `src/components/panels/AIBotHUD.tsx` |
+| `F-STR-06` | SL/TP Grid Search Optimizer | `Grid Search Optimizer` / `Tối Ưu Hóa Tham Số SL/TP` | In AI Studio Modal ➔ Tab `Optimizer` | `src/engine/strategyOptimizer.ts` |
+| `F-STR-07` | 2D Sweet-Spot Profit Heatmap | `2D Profit Heatmap` / `Ma Trận Nhiệt Lợi Nhuận 2D` | In Optimizer Tab ➔ Heatmap Matrix | `src/components/panels/AIStrategyModal.tsx:L750` |
+| `F-STR-08` | In-Sample vs Out-of-Sample Test | `Walk-Forward OOS Test` / `Kiểm Thử Ngoài Mẫu OOS` | In Optimizer Tab ➔ Toggle `OOS Validation` | `src/engine/strategyOptimizer.ts:L180` |
+| `F-STR-09` | Pine Script v5 Exporter | `Export Pine Script v5` / `Xuất Mã TradingView v5` | In AI Studio ➔ Tab `Export Bot` ➔ `TradingView` | `src/engine/strategyExporter.ts`, `src/components/panels/ExportStrategyModal.tsx` |
+| `F-STR-10` | MT5 MQL5 EA Exporter | `Export MetaTrader 5 (MQL5)` / `Xuất Bot MT5 MQL5` | In Export Bot Tab ➔ `MetaTrader 5` | `src/engine/strategyExporter.ts:L120` |
+| `F-STR-11` | MT4 MQL4 EA Exporter | `Export MetaTrader 4 (MQL4)` / `Xuất Bot MT4 MQL4` | In Export Bot Tab ➔ `MetaTrader 4` | `src/engine/strategyExporter.ts:L240` |
+| `F-STR-12` | Python CCXT Algorithmic Bot | `Export Python Bot (CCXT)` / `Xuất Bot Python 3` | In Export Bot Tab ➔ `Python CCXT` | `src/engine/strategyExporter.ts:L360` |
+| `F-STR-13` | cTrader C# cBot Exporter | `Export cTrader (C#)` / `Xuất Robot cTrader` | In Export Bot Tab ➔ `cTrader` | `src/engine/strategyExporter.ts:L480` |
+| `F-STR-14` | Universal Strategy JSON Package | `Export Strategy JSON` / `Xuất Gói Cấu Hình JSON` | In Export Bot Tab ➔ `Universal JSON` | `src/engine/strategyExporter.ts:L560` |
 
 ### Detailed Specification & QA Checklist
 
@@ -370,11 +370,11 @@ This document provides a single source of truth for all **48 features across 8 c
 ### Summary Table
 | ID | Feature Technical Name | UI Display Name (EN / VI) | UI Navigation Path | Source Code Path |
 | :--- | :--- | :--- | :--- | :--- |
-| `F-ANL-01` | Institutional Performance Metrics | `Analytics Overview` / `Báo Cáo Hiệu Suất Tổng Quan` | Header ➔ Click `Analytics` Button | [`AnalyticsDashboardModal.tsx`](file:///D:/Project/Backtest/src/components/panels/AnalyticsDashboardModal.tsx), [`analytics.ts`](file:///D:/Project/Backtest/src/engine/analytics.ts) |
-| `F-ANL-02` | Monte Carlo Stress Testing Engine | `Monte Carlo Simulation` / `Mô Phỏng Căng Thẳng Monte Carlo` | In Analytics Modal ➔ Tab `Monte Carlo` | [`AnalyticsDashboardModal.tsx:L350`](file:///D:/Project/Backtest/src/components/panels/AnalyticsDashboardModal.tsx), [`analytics.ts:L220`](file:///D:/Project/Backtest/src/engine/analytics.ts) |
-| `F-ANL-03` | PnL Calendar & Session Heatmap | `PnL Calendar & Heatmap` / `Lịch Lãi Lỗ & Biểu Đồ Nhiệt Phiên` | In Analytics Modal ➔ Tab `Heatmap` | [`AnalyticsDashboardModal.tsx:L520`](file:///D:/Project/Backtest/src/components/panels/AnalyticsDashboardModal.tsx) |
-| `F-ANL-04` | Multi-Session Comparison Matrix | `Compare Sessions` / `Đối Chiếu Đa Phiên Backtest` | In Analytics Modal ➔ Tab `Comparison` | [`AnalyticsDashboardModal.tsx:L680`](file:///D:/Project/Backtest/src/components/panels/AnalyticsDashboardModal.tsx) |
-| `F-ANL-05` | CSV Export & Database Snapshot | `Export CSV / Save Snapshot` / `Xuất File CSV / Lưu Ảnh Chụp` | In Analytics Modal ➔ Action Buttons top right | [`AnalyticsDashboardModal.tsx:L120`](file:///D:/Project/Backtest/src/components/panels/AnalyticsDashboardModal.tsx) |
+| `F-ANL-01` | Institutional Performance Metrics | `Analytics Overview` / `Báo Cáo Hiệu Suất Tổng Quan` | Header ➔ Click `Analytics` Button | `src/components/panels/AnalyticsDashboardModal.tsx`, `src/engine/analytics.ts` |
+| `F-ANL-02` | Monte Carlo Stress Testing Engine | `Monte Carlo Simulation` / `Mô Phỏng Căng Thẳng Monte Carlo` | In Analytics Modal ➔ Tab `Monte Carlo` | `src/components/panels/AnalyticsDashboardModal.tsx:L350`, `src/engine/analytics.ts:L220` |
+| `F-ANL-03` | PnL Calendar & Session Heatmap | `PnL Calendar & Heatmap` / `Lịch Lãi Lỗ & Biểu Đồ Nhiệt Phiên` | In Analytics Modal ➔ Tab `Heatmap` | `src/components/panels/AnalyticsDashboardModal.tsx:L520` |
+| `F-ANL-04` | Multi-Session Comparison Matrix | `Compare Sessions` / `Đối Chiếu Đa Phiên Backtest` | In Analytics Modal ➔ Tab `Comparison` | `src/components/panels/AnalyticsDashboardModal.tsx:L680` |
+| `F-ANL-05` | CSV Export & Database Snapshot | `Export CSV / Save Snapshot` / `Xuất File CSV / Lưu Ảnh Chụp` | In Analytics Modal ➔ Action Buttons top right | `src/components/panels/AnalyticsDashboardModal.tsx:L120` |
 
 ### Detailed Specification & QA Checklist
 
@@ -410,12 +410,12 @@ This document provides a single source of truth for all **48 features across 8 c
 ### Summary Table
 | ID | Feature Technical Name | UI Display Name (EN / VI) | UI Navigation Path | Source Code Path |
 | :--- | :--- | :--- | :--- | :--- |
-| `F-SYS-01` | MT5 Micro-Gateway Connector | `MT5 Broker Connection` / `Kết Nối Sàn MT5` | Header ➔ `More Tools [•••]` ➔ `Connect Broker` | [`BrokerConnectionModal.tsx`](file:///D:/Project/Backtest/src/components/panels/BrokerConnectionModal.tsx), [`brokerStore.ts`](file:///D:/Project/Backtest/src/store/brokerStore.ts) |
-| `F-SYS-02` | Multi-Tenant Broker Isolation | `Multi-Tenant Isolation` / `Cô Lập Đa Người Dùng` | Server backend routing | [`server/routes/broker.ts`](file:///D:/Project/Backtest/server/routes/broker.ts) |
-| `F-SYS-03` | Cloudflare Remote Tunnel Gateway | `Remote Tunnel Gateway` / `Đường Truyền Từ Xa Cloudflare` | Header ➔ `More Tools [•••]` ➔ `Remote Tunnel` | [`TunnelModal.tsx`](file:///D:/Project/Backtest/src/components/panels/TunnelModal.tsx), [`tunnelStore.ts`](file:///D:/Project/Backtest/src/store/tunnelStore.ts) |
-| `F-SYS-04` | Multi-Session Manager | `Session Manager` / `Quản Lý Phiên Làm Việc` | Header ➔ `More Tools [•••]` ➔ `Session Manager` | [`SessionManagerModal.tsx`](file:///D:/Project/Backtest/src/components/panels/SessionManagerModal.tsx) |
-| `F-SYS-05` | Keyboard Shortcuts Helper Modal | `Keyboard Shortcuts [?]` / `Phím Tắt Hệ Thống` | Header ➔ `More Tools [•••]` ➔ `Shortcuts` or press `?` | [`ShortcutsModal.tsx`](file:///D:/Project/Backtest/src/components/panels/ShortcutsModal.tsx) |
-| `F-SYS-06` | Cross-Platform Concurrent Launchers | `CLI & Launch Scripts` / `Bộ Khởi Chạy Đa Nền Tảng` | Terminal: `npm run dev:all` / `./start_all.sh` / `start_all.bat` | [`package.json`](file:///D:/Project/Backtest/package.json), [`start_all.sh`](file:///D:/Project/Backtest/start_all.sh), [`start_all.bat`](file:///D:/Project/Backtest/start_all.bat) |
+| `F-SYS-01` | MT5 Micro-Gateway Connector | `MT5 Broker Connection` / `Kết Nối Sàn MT5` | Header ➔ `More Tools [•••]` ➔ `Connect Broker` | `src/components/panels/BrokerConnectionModal.tsx`, `src/store/brokerStore.ts` |
+| `F-SYS-02` | Multi-Tenant Broker Isolation | `Multi-Tenant Isolation` / `Cô Lập Đa Người Dùng` | Server backend routing | `server/routes/broker.ts` |
+| `F-SYS-03` | Cloudflare Remote Tunnel Gateway | `Remote Tunnel Gateway` / `Đường Truyền Từ Xa Cloudflare` | Header ➔ `More Tools [•••]` ➔ `Remote Tunnel` | `src/components/panels/TunnelModal.tsx`, `src/store/tunnelStore.ts` |
+| `F-SYS-04` | Multi-Session Manager | `Session Manager` / `Quản Lý Phiên Làm Việc` | Header ➔ `More Tools [•••]` ➔ `Session Manager` | `src/components/panels/SessionManagerModal.tsx` |
+| `F-SYS-05` | Keyboard Shortcuts Helper Modal | `Keyboard Shortcuts [?]` / `Phím Tắt Hệ Thống` | Header ➔ `More Tools [•••]` ➔ `Shortcuts` or press `?` | `src/components/panels/ShortcutsModal.tsx` |
+| `F-SYS-06` | Cross-Platform Concurrent Launchers | `CLI & Launch Scripts` / `Bộ Khởi Chạy Đa Nền Tảng` | Terminal: `npm run dev:all` / `./start_all.sh` / `start_all.bat` | `package.json`, `start_all.sh`, `start_all.bat` |
 
 ### Detailed Specification & QA Checklist
 
@@ -458,7 +458,7 @@ This document provides a single source of truth for all **48 features across 8 c
 
 | ID | Feature | Category | Test Type | Status | Automated Test Suite Reference |
 | :--- | :--- | :--- | :--- | :---: | :--- |
-| `F-HDR-01` | Symbol Search Modal | Header | UI / Unit | ✅ PASS | [`test_comprehensive_suite.ts`](file:///D:/Project/Backtest/test_comprehensive_suite.ts) |
+| `F-HDR-01` | Symbol Search Modal | Header | UI / Unit | ✅ PASS | `test_comprehensive_suite.ts` |
 | `F-HDR-02` | Timeframe Resampler | Header | Unit / Math | ✅ PASS | Suite 4: Resampler Tests (6 tests) |
 | `F-HDR-03` | Chart Type Switcher | Header | UI / Visual | ✅ PASS | Suite 10: Heikin-Ashi Tests (13 tests) |
 | `F-HDR-04` | Technical Indicators | Header | Math / Realtime | ✅ PASS | Suite 3: Indicators Tests (7 tests) |
