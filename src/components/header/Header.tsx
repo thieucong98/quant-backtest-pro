@@ -28,7 +28,8 @@ import {
   EyeOff,
   Filter,
   Sparkles,
-  MoreHorizontal
+  MoreHorizontal,
+  RotateCcw
 } from 'lucide-react';
 import { INSTRUMENTS } from '../../config/instruments';
 import { getCurrenciesForSymbol } from '../../config/newsEvents';
@@ -49,6 +50,7 @@ export const Header: React.FC = () => {
   const [isCalendarMenuOpen, setIsCalendarMenuOpen] = useState(false);
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
+  const [isMobileTfOpen, setIsMobileTfOpen] = useState(false);
 
   const {
     instrument,
@@ -78,7 +80,10 @@ export const Header: React.FC = () => {
     setDataModalOpen,
     setShortcutsModalOpen,
     setProfileModalOpen,
-    setSessionManagerOpen
+    setSessionManagerOpen,
+    resetSimulation,
+    isPropFirmMode,
+    togglePropFirmMode
   } = useBacktestStore();
 
   const {
@@ -153,6 +158,50 @@ export const Header: React.FC = () => {
             </div>
             <ChevronDown className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-200" />
           </button>
+
+          {/* Mobile Timeframe Quick Dropdown (Visible on < sm) */}
+          <div className="relative sm:hidden shrink-0">
+            <button
+              onClick={() => setIsMobileTfOpen(!isMobileTfOpen)}
+              className="flex items-center gap-1 bg-slate-900/90 hover:bg-slate-800 px-2 py-1.5 rounded-lg border border-slate-700/80 hover:border-indigo-500/50 text-xs font-mono font-bold text-indigo-300 transition-all shadow-xs"
+              title={t.timeframe}
+            >
+              <span>{timeframe}</span>
+              <ChevronDown className="w-3 h-3 text-slate-400" />
+            </button>
+
+            {isMobileTfOpen && (
+              <>
+                <div
+                  className="fixed inset-0 z-40"
+                  onClick={() => setIsMobileTfOpen(false)}
+                />
+                <div className="absolute left-0 mt-1.5 w-36 bg-[#111622] border border-slate-800 rounded-xl shadow-2xl p-1.5 z-50 animate-in fade-in zoom-in-95 font-mono text-xs space-y-0.5">
+                  <div className="px-2 py-1 text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-800/80 mb-1">
+                    {t.timeframe}
+                  </div>
+                  <div className="grid grid-cols-2 gap-1">
+                    {timeframes.map((tf) => (
+                      <button
+                        key={tf}
+                        onClick={() => {
+                          setTimeframe(tf);
+                          setIsMobileTfOpen(false);
+                        }}
+                        className={`px-2 py-1.5 rounded-md text-center text-xs font-mono transition-colors ${
+                          timeframe === tf
+                            ? 'bg-indigo-600 text-white font-bold'
+                            : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                        }`}
+                      >
+                        {tf}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
 
           {/* Market Watch Toggle Button */}
           <button
@@ -773,7 +822,7 @@ export const Header: React.FC = () => {
             className="fixed inset-0 bg-black/60 backdrop-blur-xs"
             onClick={() => setIsMobileDrawerOpen(false)}
           />
-          <div className="relative w-72 max-w-[80vw] h-full bg-[#111622] border-l border-slate-800 shadow-2xl p-4 flex flex-col justify-between z-10 animate-in slide-in-from-right duration-300 font-mono">
+          <div className="relative w-80 max-w-[88vw] h-full bg-[#111622] border-l border-slate-800 shadow-2xl p-4 flex flex-col justify-between z-10 animate-in slide-in-from-right duration-300 font-mono overflow-y-auto">
             {/* Top Drawer Section */}
             <div className="space-y-4">
               <div className="flex items-center justify-between border-b border-slate-800 pb-3">
@@ -791,22 +840,143 @@ export const Header: React.FC = () => {
                 </button>
               </div>
 
-              {/* Account Quick Stats */}
-              <div className="bg-slate-900/80 p-2.5 rounded-xl border border-slate-800 space-y-1.5 text-xs">
+              {/* Account Quick Stats & Reset Balance */}
+              <div className="bg-slate-900/90 p-2.5 rounded-xl border border-slate-800 space-y-2 text-xs">
                 <div className="flex justify-between text-slate-400">
                   <span>{t.balanceLabel}:</span>
-                  <span className="font-bold text-slate-200">${account.balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                  <span className="font-bold text-slate-200">${activeBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
                 </div>
                 <div className="flex justify-between text-slate-400">
                   <span>{t.equityLabel}:</span>
-                  <span className={`font-bold ${account.equity >= account.balance ? 'text-teal-400' : 'text-rose-400'}`}>
-                    ${account.equity.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                  <span className={`font-bold ${activeEquity >= activeBalance ? 'text-teal-400' : 'text-rose-400'}`}>
+                    ${activeEquity.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                   </span>
+                </div>
+                <button
+                  onClick={() => {
+                    if (window.confirm(t.mobileResetBalanceConfirm)) {
+                      resetSimulation();
+                      alert(t.mobileBalanceResetSuccess);
+                    }
+                  }}
+                  className="w-full py-1 px-2 bg-slate-800/90 hover:bg-slate-750 text-indigo-300 hover:text-indigo-200 border border-slate-700/80 rounded-lg text-[10px] font-bold flex items-center justify-center gap-1.5 transition-colors"
+                >
+                  <RotateCcw className="w-3 h-3" />
+                  <span>{t.mobileResetBalance}</span>
+                </button>
+              </div>
+
+              {/* Timeframe Selector Group */}
+              <div className="space-y-1.5">
+                <div className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5 text-indigo-400" />
+                  <span>{t.mobileTimeframeSelect}</span>
+                </div>
+                <div className="grid grid-cols-4 gap-1">
+                  {timeframes.map((tf) => (
+                    <button
+                      key={tf}
+                      onClick={() => {
+                        setTimeframe(tf);
+                        setIsMobileDrawerOpen(false);
+                      }}
+                      className={`py-1 rounded text-center text-xs font-mono font-bold transition-colors ${
+                        timeframe === tf
+                          ? 'bg-indigo-600 text-white shadow-xs'
+                          : 'bg-slate-900 text-slate-300 hover:bg-slate-800'
+                      }`}
+                    >
+                      {tf}
+                    </button>
+                  ))}
                 </div>
               </div>
 
+              {/* Chart Type Selector Grid */}
+              <div className="space-y-1.5">
+                <div className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider flex items-center gap-1.5">
+                  <TrendingUp className="w-3.5 h-3.5 text-indigo-400" />
+                  <span>{t.chartType}</span>
+                </div>
+                <div className="grid grid-cols-2 gap-1 text-xs">
+                  {[
+                    { id: 'candlestick' as const, label: t.candlestick, icon: '🕯️' },
+                    { id: 'heikin-ashi' as const, label: t.heikinAshi, icon: '⛩️' },
+                    { id: 'line' as const, label: t.lineChart, icon: '📈' },
+                    { id: 'bar' as const, label: t.barChart, icon: '📊' }
+                  ].map((ct) => (
+                    <button
+                      key={ct.id}
+                      onClick={() => {
+                        setChartType(ct.id);
+                        setIsMobileDrawerOpen(false);
+                      }}
+                      className={`px-2 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors ${
+                        chartType === ct.id
+                          ? 'bg-indigo-600 text-white font-bold'
+                          : 'bg-slate-900 text-slate-300 hover:bg-slate-800'
+                      }`}
+                    >
+                      <span>{ct.icon}</span>
+                      <span className="text-[10px] truncate">{ct.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Workspace Quick Tools Toggle */}
+              <div className="space-y-1.5 pt-1 border-t border-slate-800">
+                <div className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+                  <span>{t.mobileQuickTools}</span>
+                </div>
+
+                {/* Toggle Prop Firm HUD */}
+                <button
+                  onClick={() => togglePropFirmMode()}
+                  className="w-full px-2.5 py-1.5 bg-slate-900/90 hover:bg-slate-800 border border-slate-800 rounded-lg flex items-center justify-between text-xs text-slate-300"
+                >
+                  <div className="flex items-center gap-2">
+                    <Shield className="w-3.5 h-3.5 text-indigo-400" />
+                    <span className="text-[11px]">{t.propFirmShieldTitle}</span>
+                  </div>
+                  <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold ${isPropFirmMode ? 'bg-indigo-600/30 text-indigo-300 border border-indigo-500/40' : 'bg-slate-800 text-slate-500'}`}>
+                    {isPropFirmMode ? t.statusOn : t.statusOff}
+                  </span>
+                </button>
+
+                {/* Toggle Economic News */}
+                <button
+                  onClick={() => toggleEconomicNews()}
+                  className="w-full px-2.5 py-1.5 bg-slate-900/90 hover:bg-slate-800 border border-slate-800 rounded-lg flex items-center justify-between text-xs text-slate-300"
+                >
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-3.5 h-3.5 text-amber-400" />
+                    <span className="text-[11px]">{t.economicCalendar}</span>
+                  </div>
+                  <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold ${showEconomicNews ? 'bg-amber-600/30 text-amber-300 border border-amber-500/40' : 'bg-slate-800 text-slate-500'}`}>
+                    {showEconomicNews ? t.statusOn : t.statusOff}
+                  </span>
+                </button>
+
+                {/* Market Watch Drawer */}
+                <button
+                  onClick={() => {
+                    setMarketWatchOpen(!isMarketWatchOpen);
+                    setIsMobileDrawerOpen(false);
+                  }}
+                  className="w-full px-2.5 py-1.5 bg-slate-900/90 hover:bg-slate-800 border border-slate-800 rounded-lg flex items-center justify-between text-xs text-slate-300"
+                >
+                  <div className="flex items-center gap-2">
+                    <Layers className="w-3.5 h-3.5 text-indigo-400" />
+                    <span className="text-[11px]">{t.marketWatchTitle}</span>
+                  </div>
+                  <span className="text-[9px] text-slate-500 font-bold">➔</span>
+                </button>
+              </div>
+
               {/* Drawer Menu Links */}
-              <div className="space-y-1 text-xs">
+              <div className="space-y-1 text-xs pt-1 border-t border-slate-800">
                 <button
                   onClick={() => { setAIModalOpen(true); setIsMobileDrawerOpen(false); }}
                   className="w-full px-3 py-2 rounded-lg flex items-center gap-2.5 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
@@ -857,6 +1027,14 @@ export const Header: React.FC = () => {
                 </button>
 
                 <button
+                  onClick={() => { setBrokerModalOpen(true); setIsMobileDrawerOpen(false); }}
+                  className="w-full px-3 py-2 rounded-lg flex items-center gap-2.5 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
+                >
+                  <Radio className="w-4 h-4 text-emerald-400" />
+                  <span>{t.brokerSettingsTooltip}</span>
+                </button>
+
+                <button
                   onClick={() => { setShortcutsModalOpen(true); setIsMobileDrawerOpen(false); }}
                   className="w-full px-3 py-2 rounded-lg flex items-center gap-2.5 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
                 >
@@ -867,7 +1045,7 @@ export const Header: React.FC = () => {
             </div>
 
             {/* Bottom Drawer Section: Language & Auth */}
-            <div className="border-t border-slate-800 pt-3 space-y-3">
+            <div className="border-t border-slate-800 pt-3 space-y-3 mt-4">
               <div className="flex items-center justify-between">
                 <span className="text-[11px] text-slate-400 flex items-center gap-1.5">
                   <Globe className="w-3.5 h-3.5 text-indigo-400" />

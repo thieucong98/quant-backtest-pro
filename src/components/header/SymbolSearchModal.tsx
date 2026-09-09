@@ -57,10 +57,10 @@ export const SymbolSearchModal: React.FC<SymbolSearchModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/75 backdrop-blur-xs flex items-start justify-center pt-16 z-50 animate-in fade-in select-none p-3">
-      <div className="bg-[#111622] border border-slate-700/90 rounded-xl w-full max-w-xl shadow-2xl flex flex-col overflow-hidden text-xs">
+    <div className="fixed inset-0 bg-black/75 backdrop-blur-xs flex items-start justify-center pt-8 sm:pt-16 z-50 animate-in fade-in select-none p-2 sm:p-3">
+      <div className="bg-[#111622] border border-slate-700/90 rounded-xl w-full max-w-xl max-h-[85vh] shadow-2xl flex flex-col overflow-hidden text-xs">
         {/* SEARCH HEADER */}
-        <div className="p-3 bg-slate-900 border-b border-slate-800 flex items-center gap-2.5">
+        <div className="p-3 bg-slate-900 border-b border-slate-800 flex items-center gap-2.5 shrink-0">
           <Search className="w-4 h-4 text-slate-400 shrink-0" />
           <input
             ref={inputRef}
@@ -80,14 +80,14 @@ export const SymbolSearchModal: React.FC<SymbolSearchModalProps> = ({
           )}
           <button
             onClick={onClose}
-            className="p-1 hover:bg-slate-800 text-slate-400 hover:text-slate-200 rounded transition-colors"
+            className="p-1 hover:bg-slate-800 text-slate-400 hover:text-slate-200 rounded transition-colors shrink-0"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* CATEGORIES PILLS */}
-        <div className="flex items-center gap-1.5 px-3 py-2 bg-slate-950/80 border-b border-slate-800 text-[11px] font-mono">
+        <div className="flex items-center gap-1.5 px-3 py-2 bg-slate-950/80 border-b border-slate-800 text-[11px] font-mono overflow-x-auto shrink-0">
           {(['ALL', 'FOREX', 'METALS', 'CRYPTO', 'INDICES'] as const).map(cat => {
             const count = cat === 'ALL'
               ? instrumentsList.length
@@ -97,7 +97,7 @@ export const SymbolSearchModal: React.FC<SymbolSearchModalProps> = ({
               <button
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
-                className={`px-2.5 py-1 rounded-md transition-all flex items-center gap-1.5 ${
+                className={`px-2.5 py-1 rounded-md transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
                   selectedCategory === cat
                     ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/30'
                     : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
@@ -113,7 +113,7 @@ export const SymbolSearchModal: React.FC<SymbolSearchModalProps> = ({
         </div>
 
         {/* SYMBOL LIST */}
-        <div className="max-h-80 overflow-y-auto p-2 space-y-1 font-mono">
+        <div className="max-h-80 overflow-y-auto p-2 space-y-1 font-mono flex-1">
           {filtered.length === 0 ? (
             <div className="py-8 text-center text-slate-500 text-xs">
               {t.noSymbolsFound}

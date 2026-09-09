@@ -244,6 +244,7 @@ export const en: TranslationDict = {
   "datasetDbTabTitle": "Dataset DB Library",
   "csvTxtTabTitle": "Import CSV / TXT File",
   "sampleGbmTabTitle": "Synthetic Data (GBM)",
+  "viewDatabaseBtn": "View Database ➔",
   "autoCrawlTab": "Auto Crawl Online",
   "uploadFileTab": "Import File (CSV / TXT)",
   "sampleDataTab": "Sample Datasets",
@@ -788,7 +789,20 @@ export const en: TranslationDict = {
   // Bottom Dock Resizer & Layout Reset
   "dragToResizePanel": "Drag to resize panel (Double-click to reset)",
   "resetPanelHeight": "Reset panel height & chart aspect ratio",
-  "panelHeightDefault": "Default"
+  "panelHeightDefault": "Default",
+
+  // Mobile Responsive & Touch Enhancements
+  "mobileCardView": "Card View",
+  "mobileTableView": "Table View",
+  "mobileTimeframeSelect": "Timeframe",
+  "mobileQuickTools": "Trading Controls",
+  "mobileResetBalance": "Reset Initial Balance",
+  "mobileResetBalanceConfirm": "Are you sure you want to reset your account balance to the default $10,000?",
+  "mobileBalanceResetSuccess": "Account balance successfully reset to $10,000!",
+  "mobileTradingSheet": "Quick Trade Sheet",
+  "mobileToggleTools": "Toggle Tools",
+  "statusOn": "ON",
+  "statusOff": "OFF"
 };
 
 

@@ -143,8 +143,123 @@ export const QuickTradeDock: React.FC<QuickTradeDockProps> = ({
 
       <div className="flex items-center gap-2">
         {isQuickDockOpen ? (
-          <div className="bg-[#111622]/95 border border-slate-700/90 backdrop-blur-md p-2.5 rounded-2xl shadow-2xl animate-in fade-in zoom-in-95 font-mono text-xs max-w-[95vw] overflow-x-auto">
-            <div className="flex items-center gap-3">
+          <div className="bg-[#111622]/95 border border-slate-700/90 backdrop-blur-md p-2.5 rounded-2xl shadow-2xl animate-in fade-in zoom-in-95 font-mono text-xs max-w-[calc(100vw-1.5rem)]">
+            {/* MOBILE COMPACT STACK (< sm) */}
+            <div className="flex flex-col gap-2 sm:hidden w-[280px] max-w-[calc(100vw-2.5rem)]">
+              {/* Row 1: Header with Symbol, Lot & Close */}
+              <div className="flex items-center justify-between border-b border-slate-800 pb-1.5">
+                <div className="flex items-center gap-1.5">
+                  <span className="font-bold text-slate-200 text-xs">{instrument.symbol}</span>
+                  <span className="text-[10px] text-slate-400 font-normal">({quickLot}L)</span>
+                </div>
+                <button
+                  onClick={() => setIsQuickDockOpen(false)}
+                  className="p-1 text-slate-400 hover:text-white"
+                  title={t.collapseQuickTradeTooltip}
+                >
+                  <ChevronUp className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              {/* Row 2: BUY and SELL Large Touch Buttons */}
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => handleQuickTrade('BUY')}
+                  className="py-2 px-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold rounded-xl flex flex-col items-center justify-center shadow-md active:scale-95 transition-all"
+                  title={t.buyAtAskTooltip.replace('{price}', currentAsk.toFixed(instrument.digits))}
+                >
+                  <div className="flex items-center gap-1">
+                    <ArrowUpRight className="w-3.5 h-3.5" />
+                    <span className="text-xs font-bold">{t.buy}</span>
+                  </div>
+                  <span className="text-[10px] text-emerald-200 font-mono">
+                    {currentAsk.toFixed(instrument.digits)}
+                  </span>
+                </button>
+
+                <button
+                  onClick={() => handleQuickTrade('SELL')}
+                  className="py-2 px-2 bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white font-bold rounded-xl flex flex-col items-center justify-center shadow-md active:scale-95 transition-all"
+                  title={t.sellAtBidTooltip.replace('{price}', currentBid.toFixed(instrument.digits))}
+                >
+                  <div className="flex items-center gap-1">
+                    <ArrowDownRight className="w-3.5 h-3.5" />
+                    <span className="text-xs font-bold">{t.sell}</span>
+                  </div>
+                  <span className="text-[10px] text-rose-200 font-mono">
+                    {currentBid.toFixed(instrument.digits)}
+                  </span>
+                </button>
+              </div>
+
+              {/* Row 3: Lot Stepper & Presets */}
+              <div className="flex items-center justify-between gap-1.5 pt-0.5">
+                <div className="flex items-center gap-1 bg-slate-900 px-1.5 py-0.5 rounded-lg border border-slate-800">
+                  <button
+                    onClick={() => setQuickLot(Math.max(0.01, +(quickLot - 0.01).toFixed(2)))}
+                    className="p-1 text-slate-400 hover:text-white"
+                  >
+                    <Minus className="w-3 h-3" />
+                  </button>
+                  <span className="w-12 text-slate-100 font-bold text-center text-xs">
+                    {quickLot}L
+                  </span>
+                  <button
+                    onClick={() => setQuickLot(+(quickLot + 0.01).toFixed(2))}
+                    className="p-1 text-slate-400 hover:text-white"
+                  >
+                    <Plus className="w-3 h-3" />
+                  </button>
+                </div>
+                <div className="flex items-center gap-1">
+                  {[0.01, 0.05, 0.1, 1.0].map((preset) => (
+                    <button
+                      key={preset}
+                      onClick={() => setQuickLot(preset)}
+                      className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
+                        quickLot === preset
+                          ? 'bg-indigo-600 text-white'
+                          : 'bg-slate-900 text-slate-400 hover:bg-slate-800'
+                      }`}
+                    >
+                      {preset}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Row 4: SL & TP Controls */}
+              <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-800/80 text-[10px]">
+                <div className="flex items-center gap-1">
+                  <input
+                    type="checkbox"
+                    checked={useAutoSL}
+                    onChange={(e) => setUseAutoSL(e.target.checked)}
+                    className="accent-rose-500 rounded"
+                  />
+                  <span className="font-bold text-rose-400">SL:</span>
+                  <span className="text-slate-300 font-mono">{autoSLPips}p</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <input
+                    type="checkbox"
+                    checked={useAutoTP}
+                    onChange={(e) => setUseAutoTP(e.target.checked)}
+                    className="accent-emerald-500 rounded"
+                  />
+                  <span className="font-bold text-emerald-400">TP:</span>
+                  <span className="text-slate-300 font-mono">{autoTPPips}p</span>
+                </div>
+                {useAutoSL && useAutoTP && (
+                  <span className="px-1.5 py-0.2 rounded bg-indigo-950 text-indigo-300 border border-indigo-500/30 text-[9px] font-bold">
+                    1:{rrRatio}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* DESKTOP ROW (sm:flex) */}
+            <div className="hidden sm:flex items-center gap-3">
               {/* BUY / SELL BUTTONS */}
               <div className="flex items-center gap-1.5">
                 {/* BUY BUTTON */}

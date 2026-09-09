@@ -84,8 +84,8 @@ export const AuthModal: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 animate-in fade-in select-none p-4">
-      <div className="bg-[#0f1422] border border-slate-700/90 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col relative text-xs">
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 animate-in fade-in select-none p-2 sm:p-4">
+      <div className="bg-[#0f1422] border border-slate-700/90 rounded-2xl w-full max-w-md max-h-[92vh] shadow-2xl overflow-y-auto flex flex-col relative text-xs">
         {/* Glow Header */}
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-teal-400" />
 
@@ -98,11 +98,11 @@ export const AuthModal: React.FC = () => {
         </button>
 
         {/* Modal Header */}
-        <div className="p-6 pb-3 text-center">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center mx-auto mb-3 shadow-lg shadow-indigo-500/25">
-            <Zap className="w-6 h-6 text-white" />
+        <div className="p-4 sm:p-6 pb-3 text-center">
+          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center mx-auto mb-2.5 sm:mb-3 shadow-lg shadow-indigo-500/25">
+            <Zap className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
           </div>
-          <h2 className="text-lg font-bold text-slate-100">
+          <h2 className="text-base sm:text-lg font-bold text-slate-100">
             {authMode === 'login' ? t.signInTitle : t.signUpTitle}
           </h2>
           <p className="text-slate-400 mt-1 text-[11px] max-w-xs mx-auto">
@@ -111,7 +111,7 @@ export const AuthModal: React.FC = () => {
         </div>
 
         {/* Tabs Switcher */}
-        <div className="flex border-b border-slate-800 mx-6 mb-3">
+        <div className="flex border-b border-slate-800 mx-3 sm:mx-6 mb-3">
           <button
             onClick={() => {
               setAuthModalOpen(true, 'login');
@@ -141,7 +141,7 @@ export const AuthModal: React.FC = () => {
         </div>
 
         {/* 1-CLICK DEFAULT DEMO ACCOUNT CARD */}
-        <div className="mx-6 mb-3 bg-gradient-to-r from-indigo-950/60 to-purple-950/60 border border-indigo-500/40 rounded-xl p-2.5 flex items-center justify-between gap-2 shadow-inner">
+        <div className="mx-3 sm:mx-6 mb-3 bg-gradient-to-r from-indigo-950/60 to-purple-950/60 border border-indigo-500/40 rounded-xl p-2.5 flex items-center justify-between gap-2 shadow-inner">
           <div className="flex items-center gap-2 min-w-0">
             <div className="w-7 h-7 rounded-lg bg-indigo-600/30 border border-indigo-400/30 flex items-center justify-center shrink-0">
               <KeyRound className="w-3.5 h-3.5 text-indigo-300" />

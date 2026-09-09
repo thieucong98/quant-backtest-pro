@@ -261,6 +261,7 @@ export interface TranslationDict {
   datasetDbTabTitle: string;
   csvTxtTabTitle: string;
   sampleGbmTabTitle: string;
+  viewDatabaseBtn: string;
   autoCrawlTab: string;
   uploadFileTab: string;
   sampleDataTab: string;
@@ -820,5 +821,18 @@ export interface TranslationDict {
   dragToResizePanel: string;
   resetPanelHeight: string;
   panelHeightDefault: string;
+
+  // Mobile Responsive & Touch Enhancements
+  mobileCardView: string;
+  mobileTableView: string;
+  mobileTimeframeSelect: string;
+  mobileQuickTools: string;
+  mobileResetBalance: string;
+  mobileResetBalanceConfirm: string;
+  mobileBalanceResetSuccess: string;
+  mobileTradingSheet: string;
+  mobileToggleTools: string;
+  statusOn: string;
+  statusOff: string;
 }
 

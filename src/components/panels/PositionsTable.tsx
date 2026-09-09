@@ -19,7 +19,9 @@ import {
   Zap,
   CheckCircle2,
   Calendar,
-  RotateCcw
+  RotateCcw,
+  LayoutGrid,
+  List
 } from 'lucide-react';
 import { INSTRUMENTS } from '../../config/instruments';
 import { useBacktestStore } from '../../store/backtestStore';
@@ -37,6 +39,7 @@ export const PositionsTable: React.FC = () => {
   const [editTP, setEditTP] = useState<string>('');
   const [selectedTag, setSelectedTag] = useState<string>('SMC Order Block');
   const [noteText, setNoteText] = useState<string>('');
+  const [viewMode, setViewMode] = useState<'auto' | 'cards' | 'table'>('auto');
 
   const {
     openPositions,
@@ -125,6 +128,440 @@ export const PositionsTable: React.FC = () => {
   const openCount = isLiveActive ? livePositions.length : openPositions.length;
   const pendingCount = isLiveActive ? liveOrders.length : pendingOrders.length;
   const historyCount = isLiveActive ? liveDeals.length : closedPositions.length;
+
+  // RENDER HELPERS FOR MOBILE CARDS VIEW
+  const renderOpenPositionsCards = () => {
+    if (isLiveActive) {
+      if (livePositions.length === 0) {
+        return (
+          <div className="text-center py-8 text-slate-500">
+            No live open positions on {activeBroker}.
+          </div>
+        );
+      }
+      return (
+        <div className="p-2 space-y-2">
+          {livePositions.map((pos) => {
+            const liveTick = liveTicks[pos.symbol];
+            const openPrice = Number(pos.openPrice || (pos as any).price_open || 0);
+            const curPrice = liveTick
+              ? (pos.side === 'BUY' ? liveTick.bid : liveTick.ask)
+              : Number(pos.currentPrice || (pos as any).price_current || openPrice);
+
+            const lot = Number(pos.lotSize || (pos as any).volume || 0.1);
+            const pnlDiff = pos.side === 'BUY' ? curPrice - openPrice : openPrice - curPrice;
+            const contractSize = INSTRUMENTS[pos.symbol]?.contractSize || (pos.symbol.includes('XAU') ? 100 : 100000);
+            const displayPnL = (liveTick && openPrice > 0)
+              ? Number((pnlDiff * contractSize * lot).toFixed(2))
+              : Number(pos.floatingPnL ?? (pos as any).profit ?? 0);
+
+            return (
+              <div key={pos.ticket} className="bg-slate-900/90 border border-slate-800 rounded-lg p-2.5 text-xs space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-bold text-white text-sm">{pos.symbol}</span>
+                    <span
+                      className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                        pos.side === 'BUY'
+                          ? 'bg-teal-950 text-teal-400 border border-teal-500/40'
+                          : 'bg-rose-950 text-rose-400 border border-rose-500/40'
+                      }`}
+                    >
+                      {pos.side || ((pos as any).type === 0 ? 'BUY' : 'SELL')}
+                    </span>
+                    <span className="text-[10px] text-slate-400 font-mono">#{pos.ticket}</span>
+                  </div>
+                  <div
+                    className={`font-bold text-sm ${
+                      displayPnL >= 0 ? 'text-teal-400' : 'text-rose-400'
+                    }`}
+                  >
+                    {displayPnL >= 0 ? '+' : ''}${displayPnL.toFixed(2)}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2 text-[11px] bg-slate-950/60 p-2 rounded border border-slate-800/60">
+                  <div>
+                    <div className="text-slate-500 text-[10px]">{t.lot}</div>
+                    <div className="font-bold text-slate-200">{lot}</div>
+                  </div>
+                  <div>
+                    <div className="text-slate-500 text-[10px]">{t.entryPrice}</div>
+                    <div className="text-slate-300">{formatPrice(pos.symbol, openPrice)}</div>
+                  </div>
+                  <div>
+                    <div className="text-slate-500 text-[10px]">{t.currentPrice}</div>
+                    <div className="text-indigo-300 font-semibold">{formatPrice(pos.symbol, curPrice)}</div>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between text-[11px] text-slate-400">
+                  <div className="flex items-center gap-2">
+                    <span className="text-rose-400">SL: {pos.sl ? formatPrice(pos.symbol, pos.sl) : 'None'}</span>
+                    <span>•</span>
+                    <span className="text-teal-400">TP: {pos.tp ? formatPrice(pos.symbol, pos.tp) : 'None'}</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-1 border-t border-slate-800/80">
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => setLiveBreakeven(pos.ticket)}
+                      className="px-2 py-1 bg-amber-950/80 hover:bg-amber-900 border border-amber-500/40 text-amber-300 rounded text-[10px] font-bold flex items-center gap-1"
+                    >
+                      <ShieldCheck className="w-3 h-3" />
+                      <span>BE</span>
+                    </button>
+                    <button
+                      onClick={() => partialCloseLive(pos.ticket, 50)}
+                      className="px-2 py-1 bg-sky-950/80 hover:bg-sky-900 border border-sky-500/40 text-sky-300 rounded text-[10px] font-bold flex items-center gap-1"
+                    >
+                      <Percent className="w-3 h-3" />
+                      <span>50%</span>
+                    </button>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => handleOpenEdit(pos)}
+                      className="p-1.5 bg-slate-800 hover:bg-slate-700 rounded text-slate-300"
+                      title={t.editSLTP}
+                    >
+                      <Edit2 className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => closeLivePosition(pos.ticket)}
+                      className="px-2 py-1 bg-rose-950 hover:bg-rose-900 border border-rose-500/40 text-rose-300 rounded text-[10px] font-bold flex items-center gap-1"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                      <span>{t.closePosition}</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      );
+    }
+
+    // Backtest positions
+    if (openPositions.length === 0) {
+      return (
+        <div className="text-center py-8 text-slate-500">
+          {t.noOpenPositions}
+        </div>
+      );
+    }
+
+    return (
+      <div className="p-2 space-y-2">
+        {openPositions.map((pos) => {
+          const rr = pos.stopLoss && pos.takeProfit
+            ? (Math.abs(pos.takeProfit - pos.entryPrice) / Math.abs(pos.entryPrice - pos.stopLoss)).toFixed(1)
+            : null;
+
+          return (
+            <div key={pos.id} className="bg-slate-900/90 border border-slate-800 rounded-lg p-2.5 text-xs space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <span className="font-bold text-white text-sm">{pos.symbol}</span>
+                  <span
+                    className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                      pos.side === 'BUY'
+                        ? 'bg-teal-950 text-teal-400 border border-teal-500/40'
+                        : 'bg-rose-950 text-rose-400 border border-rose-500/40'
+                    }`}
+                  >
+                    {pos.side}
+                  </span>
+                  {pos.tags && pos.tags.length > 0 && (
+                    <span className="text-[9px] px-1 py-0.2 bg-indigo-950 text-indigo-400 rounded border border-indigo-500/30">
+                      {pos.tags[0]}
+                    </span>
+                  )}
+                </div>
+                <div
+                  className={`font-bold text-sm ${
+                    pos.floatingPnL >= 0 ? 'text-teal-400' : 'text-rose-400'
+                  }`}
+                >
+                  {pos.floatingPnL >= 0 ? '+' : ''}${pos.floatingPnL.toFixed(2)}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2 text-[11px] bg-slate-950/60 p-2 rounded border border-slate-800/60">
+                <div>
+                  <div className="text-slate-500 text-[10px]">{t.lot}</div>
+                  <div className="font-bold text-slate-200">{pos.lotSize}</div>
+                </div>
+                <div>
+                  <div className="text-slate-500 text-[10px]">{t.entryPrice}</div>
+                  <div className="text-slate-300">{pos.entryPrice.toFixed(instrument.digits)}</div>
+                </div>
+                <div>
+                  <div className="text-slate-500 text-[10px]">{t.currentPrice}</div>
+                  <div className="text-indigo-300 font-semibold">{currentCandle?.close.toFixed(instrument.digits)}</div>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between text-[11px] text-slate-400">
+                <div className="flex items-center gap-2">
+                  <span className="text-rose-400">SL: {pos.stopLoss ? pos.stopLoss.toFixed(instrument.digits) : 'None'}</span>
+                  <span>•</span>
+                  <span className="text-teal-400">TP: {pos.takeProfit ? pos.takeProfit.toFixed(instrument.digits) : 'None'}</span>
+                </div>
+                {rr && (
+                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-indigo-950/80 text-indigo-300 border border-indigo-500/30 font-mono">
+                    R:R 1:{rr}
+                  </span>
+                )}
+              </div>
+
+              <div className="flex items-center justify-between pt-1 border-t border-slate-800/80">
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => setBreakeven(pos.id)}
+                    className="px-2 py-1 bg-amber-950/80 hover:bg-amber-900 border border-amber-500/40 text-amber-300 rounded text-[10px] font-bold flex items-center gap-1"
+                  >
+                    <ShieldCheck className="w-3 h-3" />
+                    <span>{t.setBE}</span>
+                  </button>
+                  <button
+                    onClick={() => partialClose(pos.id, 50)}
+                    disabled={pos.lotSize <= instrument.minLot}
+                    className="px-2 py-1 bg-sky-950/80 hover:bg-sky-900 disabled:opacity-40 border border-sky-500/40 text-sky-300 rounded text-[10px] font-bold flex items-center gap-1"
+                  >
+                    <Percent className="w-3 h-3" />
+                    <span>{t.close50}</span>
+                  </button>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => handleOpenEdit(pos)}
+                    className="p-1.5 bg-slate-800 hover:bg-slate-700 rounded text-slate-300"
+                    title={t.editSLTP}
+                  >
+                    <Edit2 className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => closePosition(pos.id)}
+                    className="px-2 py-1 bg-rose-950 hover:bg-rose-900 border border-rose-500/40 text-rose-300 rounded text-[10px] font-bold flex items-center gap-1"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                    <span>{t.closePosition}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
+  const renderPendingOrdersCards = () => {
+    if (isLiveActive) {
+      if (liveOrders.length === 0) {
+        return <div className="text-center py-8 text-slate-500">No pending orders on {activeBroker}.</div>;
+      }
+      return (
+        <div className="p-2 space-y-2">
+          {liveOrders.map((order) => (
+            <div key={order.ticket} className="bg-slate-900/90 border border-slate-800 rounded-lg p-2.5 text-xs space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <span className="font-bold text-white text-sm">{order.symbol}</span>
+                  <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-indigo-950 text-indigo-400 border border-indigo-500/40">
+                    {order.type}
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-mono">#{order.ticket}</span>
+                </div>
+                <span className="text-slate-300 font-bold">{order.lotSize} Lots</span>
+              </div>
+              <div className="grid grid-cols-3 gap-2 text-[11px] bg-slate-950/60 p-2 rounded border border-slate-800/60">
+                <div>
+                  <div className="text-slate-500 text-[10px]">Trigger</div>
+                  <div className="font-semibold text-amber-300">{formatPrice(order.symbol, order.triggerPrice)}</div>
+                </div>
+                <div>
+                  <div className="text-slate-500 text-[10px]">SL</div>
+                  <div className="text-rose-400">{order.sl ? formatPrice(order.symbol, order.sl) : '---'}</div>
+                </div>
+                <div>
+                  <div className="text-slate-500 text-[10px]">TP</div>
+                  <div className="text-teal-400">{order.tp ? formatPrice(order.symbol, order.tp) : '---'}</div>
+                </div>
+              </div>
+              <div className="flex justify-end pt-1">
+                <button
+                  onClick={() => cancelLiveOrder(order.ticket)}
+                  className="w-full sm:w-auto px-3 py-1 text-[11px] text-rose-400 hover:text-rose-300 bg-rose-950/80 rounded border border-rose-500/30 font-bold"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    if (pendingOrders.length === 0) {
+      return <div className="text-center py-8 text-slate-500">{t.noPendingOrders}</div>;
+    }
+    return (
+      <div className="p-2 space-y-2">
+        {pendingOrders.map((order) => (
+          <div key={order.id} className="bg-slate-900/90 border border-slate-800 rounded-lg p-2.5 text-xs space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <span className="font-bold text-white text-sm">{order.symbol}</span>
+                <span
+                  className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                    order.type.includes('BUY')
+                      ? 'bg-teal-950 text-teal-400 border border-teal-500/40'
+                      : 'bg-rose-950 text-rose-400 border border-rose-500/40'
+                  }`}
+                >
+                  {order.type}
+                </span>
+                <span className="text-[10px] text-slate-400 font-mono">#{order.id.slice(0, 6)}</span>
+              </div>
+              <span className="text-slate-300 font-bold">{order.lotSize} Lots</span>
+            </div>
+            <div className="grid grid-cols-3 gap-2 text-[11px] bg-slate-950/60 p-2 rounded border border-slate-800/60">
+              <div>
+                <div className="text-slate-500 text-[10px]">Trigger</div>
+                <div className="font-semibold text-amber-300">
+                  {formatPrice(order.symbol, (order as any).triggerPrice || order.price)}
+                </div>
+              </div>
+              <div>
+                <div className="text-slate-500 text-[10px]">SL</div>
+                <div className="text-rose-400">
+                  {order.stopLoss ? formatPrice(order.symbol, order.stopLoss) : '---'}
+                </div>
+              </div>
+              <div>
+                <div className="text-slate-500 text-[10px]">TP</div>
+                <div className="text-teal-400">
+                  {order.takeProfit ? formatPrice(order.symbol, order.takeProfit) : '---'}
+                </div>
+              </div>
+            </div>
+            <div className="flex justify-end pt-1">
+              <button
+                onClick={() => cancelPendingOrder(order.id)}
+                className="w-full sm:w-auto px-3 py-1 text-[11px] text-rose-400 hover:text-rose-300 bg-rose-950/80 rounded border border-rose-500/30 font-bold"
+              >
+                {t.cancel}
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  const renderHistoryCards = () => {
+    if (isLiveActive) {
+      if (liveDeals.length === 0) {
+        return <div className="text-center py-8 text-slate-500">No trade history on {activeBroker}.</div>;
+      }
+      return (
+        <div className="p-2 space-y-2">
+          {[...liveDeals].reverse().map((deal) => (
+            <div key={deal.ticket} className="bg-slate-900/90 border border-slate-800 rounded-lg p-2.5 text-xs space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <span className="font-bold text-white text-sm">{deal.symbol}</span>
+                  <span
+                    className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                      deal.side === 'BUY' ? 'bg-teal-950 text-teal-400' : 'bg-rose-950 text-rose-400'
+                    }`}
+                  >
+                    {deal.side}
+                  </span>
+                  <span className="text-[10px] text-slate-500 font-mono">#{deal.ticket}</span>
+                </div>
+                <div className={`font-bold text-sm ${deal.profit >= 0 ? 'text-teal-400' : 'text-rose-400'}`}>
+                  {deal.profit >= 0 ? '+' : ''}${deal.profit.toFixed(2)}
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-2 text-[11px] bg-slate-950/60 p-2 rounded border border-slate-800/60">
+                <div>
+                  <div className="text-slate-500 text-[10px]">{t.lot}</div>
+                  <div className="text-slate-300">{deal.lotSize}</div>
+                </div>
+                <div>
+                  <div className="text-slate-500 text-[10px]">Price</div>
+                  <div className="text-slate-300">{formatPrice(deal.symbol, deal.price)}</div>
+                </div>
+                <div>
+                  <div className="text-slate-500 text-[10px]">Comm/Swap</div>
+                  <div className="text-slate-400">${deal.commission.toFixed(2)} / ${deal.swap.toFixed(2)}</div>
+                </div>
+              </div>
+              <div className="text-[10px] text-slate-500 text-right">{formatTime(deal.time)}</div>
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    if (closedPositions.length === 0) {
+      return <div className="text-center py-8 text-slate-500">{t.noHistory}</div>;
+    }
+    return (
+      <div className="p-2 space-y-2">
+        {[...closedPositions].reverse().map((trade) => (
+          <div key={trade.id} className="bg-slate-900/90 border border-slate-800 rounded-lg p-2.5 text-xs space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <span className="font-bold text-white text-sm">{trade.symbol}</span>
+                <span
+                  className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                    trade.side === 'BUY' ? 'bg-teal-950 text-teal-400' : 'bg-rose-950 text-rose-400'
+                  }`}
+                >
+                  {trade.side}
+                </span>
+                <span
+                  className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                    trade.closeReason === 'TP'
+                      ? 'bg-teal-900/60 text-teal-300'
+                      : trade.closeReason === 'SL'
+                      ? 'bg-rose-900/60 text-rose-300'
+                      : 'bg-slate-800 text-slate-400'
+                  }`}
+                >
+                  {trade.closeReason}
+                </span>
+              </div>
+              <div className={`font-bold text-sm ${trade.realizedPnL >= 0 ? 'text-teal-400' : 'text-rose-400'}`}>
+                {trade.realizedPnL >= 0 ? '+' : ''}${trade.realizedPnL.toFixed(2)}
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-2 text-[11px] bg-slate-950/60 p-2 rounded border border-slate-800/60">
+              <div>
+                <div className="text-slate-500 text-[10px]">{t.lot}</div>
+                <div className="text-slate-300">{trade.lotSize}</div>
+              </div>
+              <div>
+                <div className="text-slate-500 text-[10px]">Entry</div>
+                <div className="text-slate-300">{formatPrice(trade.symbol, trade.entryPrice)}</div>
+              </div>
+              <div>
+                <div className="text-slate-500 text-[10px]">Exit</div>
+                <div className="text-slate-300">{formatPrice(trade.symbol, trade.closePrice)}</div>
+              </div>
+            </div>
+            <div className="text-[10px] text-slate-500 text-right">{formatTime(trade.closeTime)}</div>
+          </div>
+        ))}
+      </div>
+    );
+  };
 
   return (
     <div
@@ -247,6 +684,20 @@ export const PositionsTable: React.FC = () => {
             </button>
           )}
 
+          {/* Toggle Card View vs Table View */}
+          {activeTab !== 'calendar' && (
+            <button
+              onClick={() => setViewMode(viewMode === 'cards' ? 'table' : 'cards')}
+              className={`p-1 rounded text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors ${
+                viewMode === 'cards' ? 'text-indigo-400 bg-slate-800/80' : ''
+              }`}
+              title={viewMode === 'cards' ? t.mobileTableView : t.mobileCardView}
+              aria-label={viewMode === 'cards' ? t.mobileTableView : t.mobileCardView}
+            >
+              {viewMode === 'cards' ? <List className="w-3.5 h-3.5" /> : <LayoutGrid className="w-3.5 h-3.5" />}
+            </button>
+          )}
+
           {/* Reset to Default Height & Aspect Ratio */}
           <button
             onClick={resetBottomPanelHeight}
@@ -273,475 +724,511 @@ export const PositionsTable: React.FC = () => {
         <div className="flex-1 overflow-auto text-xs font-mono">
           {/* 1. OPEN POSITIONS TAB */}
           {activeTab === 'open' && (
-            <table className="w-full text-left border-collapse min-w-[680px]">
-              <thead>
-                <tr className="border-b border-slate-800 text-slate-400 bg-slate-900/50 sticky top-0 text-[11px]">
-                  <th className="py-1.5 px-3">Ticket / Symbol</th>
-                  <th className="py-1.5 px-2">{t.side}</th>
-                  <th className="py-1.5 px-2">{t.lot}</th>
-                  <th className="py-1.5 px-2">{t.entryPrice}</th>
-                  <th className="py-1.5 px-2">{t.currentPrice}</th>
-                  <th className="py-1.5 px-2">SL / TP</th>
-                  <th className="py-1.5 px-2">Pro Actions</th>
-                  <th className="py-1.5 px-3 text-right">{t.floatingPnL}</th>
-                  <th className="py-1.5 px-3 text-center">{t.actions}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {isLiveActive ? (
-                  // LIVE BROKER POSITIONS
-                  livePositions.length === 0 ? (
-                    <tr>
-                      <td colSpan={9} className="text-center py-8 text-slate-500">
-                        No live open positions on {activeBroker}.
-                      </td>
-                    </tr>
-                  ) : (
-                    livePositions.map((pos) => {
-                      const liveTick = liveTicks[pos.symbol];
-                      const openPrice = Number(pos.openPrice || (pos as any).price_open || 0);
-                      const curPrice = liveTick
-                        ? (pos.side === 'BUY' ? liveTick.bid : liveTick.ask)
-                        : Number(pos.currentPrice || (pos as any).price_current || openPrice);
-
-                      const lot = Number(pos.lotSize || (pos as any).volume || 0.1);
-                      const pnlDiff = pos.side === 'BUY' ? curPrice - openPrice : openPrice - curPrice;
-                      const contractSize = INSTRUMENTS[pos.symbol]?.contractSize || (pos.symbol.includes('XAU') ? 100 : 100000);
-                      const displayPnL = (liveTick && openPrice > 0)
-                        ? Number((pnlDiff * contractSize * lot).toFixed(2))
-                        : Number(pos.floatingPnL ?? (pos as any).profit ?? 0);
-
-                      return (
-                        <tr
-                          key={pos.ticket}
-                          className="border-b border-slate-800/40 hover:bg-slate-800/30 transition-colors"
-                        >
-                          <td className="py-1.5 px-3 font-semibold text-slate-200">
-                            <div className="flex items-center gap-1.5">
-                              <span className="text-slate-400 font-mono text-[10px]">#{pos.ticket}</span>
-                              <span className="font-bold text-white">{pos.symbol}</span>
-                            </div>
-                            {pos.comment && (
-                              <div className="text-[9px] text-slate-500 truncate max-w-[120px]">{pos.comment}</div>
-                            )}
-                          </td>
-                          <td className="py-1.5 px-2">
-                            <span
-                              className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
-                                pos.side === 'BUY'
-                                  ? 'bg-teal-950 text-teal-400 border border-teal-500/40'
-                                  : 'bg-rose-950 text-rose-400 border border-rose-500/40'
-                              }`}
-                            >
-                              {pos.side || ((pos as any).type === 0 ? 'BUY' : 'SELL')}
-                            </span>
-                          </td>
-                          <td className="py-1.5 px-2 text-slate-300 font-bold">{lot}</td>
-                          <td className="py-1.5 px-2 text-slate-300">{formatPrice(pos.symbol, openPrice)}</td>
-                          <td className="py-1.5 px-2 text-indigo-300 font-semibold">
-                            {formatPrice(pos.symbol, curPrice)}
-                          </td>
-                          <td className="py-1.5 px-2">
-                            <div className="text-rose-400 text-[10px]">
-                              SL: {pos.sl ? formatPrice(pos.symbol, pos.sl) : 'None'}
-                            </div>
-                            <div className="text-teal-400 text-[10px]">
-                              TP: {pos.tp ? formatPrice(pos.symbol, pos.tp) : 'None'}
-                            </div>
-                          </td>
-                          <td className="py-1.5 px-2">
-                            <div className="flex items-center gap-1">
-                              <button
-                                onClick={() => setLiveBreakeven(pos.ticket)}
-                                className="px-1.5 py-0.5 bg-amber-950/80 hover:bg-amber-900 border border-amber-500/40 text-amber-300 rounded text-[10px] font-bold flex items-center gap-0.5"
-                                title="Set Breakeven SL"
-                              >
-                                <ShieldCheck className="w-3 h-3" />
-                                <span>BE</span>
-                              </button>
-                              <button
-                                onClick={() => partialCloseLive(pos.ticket, 50)}
-                                className="px-1.5 py-0.5 bg-sky-950/80 hover:bg-sky-900 border border-sky-500/40 text-sky-300 rounded text-[10px] font-bold flex items-center gap-0.5"
-                                title="Close 50% Lot"
-                              >
-                                <Percent className="w-3 h-3" />
-                                <span>50%</span>
-                              </button>
-                            </div>
-                          </td>
-                          <td
-                            className={`py-1.5 px-3 text-right font-bold text-xs ${
-                              displayPnL >= 0 ? 'text-teal-400' : 'text-rose-400'
-                            }`}
-                          >
-                            {displayPnL >= 0 ? '+' : ''}${displayPnL.toFixed(2)}
-                          </td>
-                          <td className="py-1.5 px-3 text-center">
-                            <div className="flex items-center justify-center gap-1.5">
-                              <button
-                                onClick={() => handleOpenEdit(pos)}
-                                className="p-1 hover:bg-slate-700 rounded text-slate-400 hover:text-indigo-300"
-                                title="Edit SL/TP"
-                              >
-                                <Edit2 className="w-3.5 h-3.5" />
-                              </button>
-                              <button
-                                onClick={() => closeLivePosition(pos.ticket)}
-                                className="p-1 hover:bg-rose-900/60 rounded text-slate-400 hover:text-rose-400"
-                                title="Close Position"
-                              >
-                                <X className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )
-                ) : (
-                  // REPLAY BACKTEST POSITIONS
-                  openPositions.length === 0 ? (
-                    <tr>
-                      <td colSpan={9} className="text-center py-8 text-slate-500">
-                        {t.noOpenPositions}
-                      </td>
-                    </tr>
-                  ) : (
-                    openPositions.map((pos) => (
-                      <tr
-                        key={pos.id}
-                        className="border-b border-slate-800/40 hover:bg-slate-800/30 transition-colors"
-                      >
-                        <td className="py-1.5 px-3 font-semibold text-slate-200">
-                          <div>{pos.symbol}</div>
-                          {pos.tags && pos.tags.length > 0 && (
-                            <span className="text-[9px] px-1 py-0.2 bg-indigo-950 text-indigo-400 rounded border border-indigo-500/30">
-                              {pos.tags[0]}
-                            </span>
-                          )}
-                        </td>
-                        <td className="py-1.5 px-2">
-                          <span
-                            className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
-                              pos.side === 'BUY'
-                                ? 'bg-teal-950 text-teal-400 border border-teal-500/40'
-                                : 'bg-rose-950 text-rose-400 border border-rose-500/40'
-                            }`}
-                          >
-                            {pos.side}
-                          </span>
-                        </td>
-                        <td className="py-1.5 px-2 text-slate-300 font-bold">{pos.lotSize}</td>
-                        <td className="py-1.5 px-2 text-slate-300">
-                          {pos.entryPrice.toFixed(instrument.digits)}
-                        </td>
-                        <td className="py-1.5 px-2 text-indigo-300 font-semibold">
-                          {currentCandle?.close.toFixed(instrument.digits)}
-                        </td>
-                        <td className="py-1.5 px-2">
-                          <div className="text-rose-400 text-[10px]">
-                            SL: {pos.stopLoss ? pos.stopLoss.toFixed(instrument.digits) : 'None'}
-                          </div>
-                          <div className="text-teal-400 text-[10px]">
-                            TP: {pos.takeProfit ? pos.takeProfit.toFixed(instrument.digits) : 'None'}
-                          </div>
-                          {pos.stopLoss && pos.takeProfit && (
-                            <div className="mt-0.5">
-                              <span className="text-[9px] font-bold px-1 py-0.2 rounded bg-indigo-950/80 text-indigo-300 border border-indigo-500/30 font-mono">
-                                R:R 1:
-                                {(
-                                  Math.abs(pos.takeProfit - pos.entryPrice) /
-                                  Math.abs(pos.entryPrice - pos.stopLoss)
-                                ).toFixed(1)}
-                              </span>
-                            </div>
-                          )}
-                        </td>
-                        <td className="py-1.5 px-2">
-                          <div className="flex items-center gap-1">
-                            <button
-                              onClick={() => setBreakeven(pos.id)}
-                              className="px-1.5 py-0.5 bg-amber-950/80 hover:bg-amber-900 border border-amber-500/40 text-amber-300 rounded text-[10px] font-bold flex items-center gap-0.5"
-                              title="Set Breakeven SL"
-                            >
-                              <ShieldCheck className="w-3 h-3" />
-                              <span>{t.setBE}</span>
-                            </button>
-                            <button
-                              onClick={() => partialClose(pos.id, 50)}
-                              disabled={pos.lotSize <= instrument.minLot}
-                              className="px-1.5 py-0.5 bg-sky-950/80 hover:bg-sky-900 disabled:opacity-40 border border-sky-500/40 text-sky-300 rounded text-[10px] font-bold flex items-center gap-0.5"
-                              title="Close 50% Lot"
-                            >
-                              <Percent className="w-3 h-3" />
-                              <span>{t.close50}</span>
-                            </button>
-                          </div>
-                        </td>
-                        <td
-                          className={`py-1.5 px-3 text-right font-bold text-xs ${
-                            pos.floatingPnL >= 0 ? 'text-teal-400' : 'text-rose-400'
-                          }`}
-                        >
-                          {pos.floatingPnL >= 0 ? '+' : ''}${pos.floatingPnL.toFixed(2)}
-                        </td>
-                        <td className="py-1.5 px-3 text-center">
-                          <div className="flex items-center justify-center gap-1.5">
-                            <button
-                              onClick={() => handleOpenEdit(pos)}
-                              className="p-1 hover:bg-slate-700 rounded text-slate-400 hover:text-indigo-300"
-                              title={t.editSLTP}
-                            >
-                              <Edit2 className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              onClick={() => closePosition(pos.id)}
-                              className="p-1 hover:bg-rose-900/60 rounded text-slate-400 hover:text-rose-400"
-                              title={t.closePosition}
-                            >
-                              <X className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        </td>
+            <>
+              {(viewMode === 'table' || viewMode === 'auto') && (
+                <div className={viewMode === 'auto' ? 'hidden md:block' : 'block'}>
+                  <table className="w-full text-left border-collapse min-w-[680px]">
+                    <thead>
+                      <tr className="border-b border-slate-800 text-slate-400 bg-slate-900/50 sticky top-0 text-[11px]">
+                        <th className="py-1.5 px-3">Ticket / Symbol</th>
+                        <th className="py-1.5 px-2">{t.side}</th>
+                        <th className="py-1.5 px-2">{t.lot}</th>
+                        <th className="py-1.5 px-2">{t.entryPrice}</th>
+                        <th className="py-1.5 px-2">{t.currentPrice}</th>
+                        <th className="py-1.5 px-2">SL / TP</th>
+                        <th className="py-1.5 px-2">Pro Actions</th>
+                        <th className="py-1.5 px-3 text-right">{t.floatingPnL}</th>
+                        <th className="py-1.5 px-3 text-center">{t.actions}</th>
                       </tr>
-                    ))
-                  )
-                )}
-              </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                      {isLiveActive ? (
+                        // LIVE BROKER POSITIONS
+                        livePositions.length === 0 ? (
+                          <tr>
+                            <td colSpan={9} className="text-center py-8 text-slate-500">
+                              No live open positions on {activeBroker}.
+                            </td>
+                          </tr>
+                        ) : (
+                          livePositions.map((pos) => {
+                            const liveTick = liveTicks[pos.symbol];
+                            const openPrice = Number(pos.openPrice || (pos as any).price_open || 0);
+                            const curPrice = liveTick
+                              ? (pos.side === 'BUY' ? liveTick.bid : liveTick.ask)
+                              : Number(pos.currentPrice || (pos as any).price_current || openPrice);
+
+                            const lot = Number(pos.lotSize || (pos as any).volume || 0.1);
+                            const pnlDiff = pos.side === 'BUY' ? curPrice - openPrice : openPrice - curPrice;
+                            const contractSize = INSTRUMENTS[pos.symbol]?.contractSize || (pos.symbol.includes('XAU') ? 100 : 100000);
+                            const displayPnL = (liveTick && openPrice > 0)
+                              ? Number((pnlDiff * contractSize * lot).toFixed(2))
+                              : Number(pos.floatingPnL ?? (pos as any).profit ?? 0);
+
+                            return (
+                              <tr
+                                key={pos.ticket}
+                                className="border-b border-slate-800/40 hover:bg-slate-800/30 transition-colors"
+                              >
+                                <td className="py-1.5 px-3 font-semibold text-slate-200">
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="text-slate-400 font-mono text-[10px]">#{pos.ticket}</span>
+                                    <span className="font-bold text-white">{pos.symbol}</span>
+                                  </div>
+                                  {pos.comment && (
+                                    <div className="text-[9px] text-slate-500 truncate max-w-[120px]">{pos.comment}</div>
+                                  )}
+                                </td>
+                                <td className="py-1.5 px-2">
+                                  <span
+                                    className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                                      pos.side === 'BUY'
+                                        ? 'bg-teal-950 text-teal-400 border border-teal-500/40'
+                                        : 'bg-rose-950 text-rose-400 border border-rose-500/40'
+                                    }`}
+                                  >
+                                    {pos.side || ((pos as any).type === 0 ? 'BUY' : 'SELL')}
+                                  </span>
+                                </td>
+                                <td className="py-1.5 px-2 text-slate-300 font-bold">{lot}</td>
+                                <td className="py-1.5 px-2 text-slate-300">{formatPrice(pos.symbol, openPrice)}</td>
+                                <td className="py-1.5 px-2 text-indigo-300 font-semibold">
+                                  {formatPrice(pos.symbol, curPrice)}
+                                </td>
+                                <td className="py-1.5 px-2">
+                                  <div className="text-rose-400 text-[10px]">
+                                    SL: {pos.sl ? formatPrice(pos.symbol, pos.sl) : 'None'}
+                                  </div>
+                                  <div className="text-teal-400 text-[10px]">
+                                    TP: {pos.tp ? formatPrice(pos.symbol, pos.tp) : 'None'}
+                                  </div>
+                                </td>
+                                <td className="py-1.5 px-2">
+                                  <div className="flex items-center gap-1">
+                                    <button
+                                      onClick={() => setLiveBreakeven(pos.ticket)}
+                                      className="px-1.5 py-0.5 bg-amber-950/80 hover:bg-amber-900 border border-amber-500/40 text-amber-300 rounded text-[10px] font-bold flex items-center gap-0.5"
+                                      title="Set Breakeven SL"
+                                    >
+                                      <ShieldCheck className="w-3 h-3" />
+                                      <span>BE</span>
+                                    </button>
+                                    <button
+                                      onClick={() => partialCloseLive(pos.ticket, 50)}
+                                      className="px-1.5 py-0.5 bg-sky-950/80 hover:bg-sky-900 border border-sky-500/40 text-sky-300 rounded text-[10px] font-bold flex items-center gap-0.5"
+                                      title="Close 50% Lot"
+                                    >
+                                      <Percent className="w-3 h-3" />
+                                      <span>50%</span>
+                                    </button>
+                                  </div>
+                                </td>
+                                <td
+                                  className={`py-1.5 px-3 text-right font-bold text-xs ${
+                                    displayPnL >= 0 ? 'text-teal-400' : 'text-rose-400'
+                                  }`}
+                                >
+                                  {displayPnL >= 0 ? '+' : ''}${displayPnL.toFixed(2)}
+                                </td>
+                                <td className="py-1.5 px-3 text-center">
+                                  <div className="flex items-center justify-center gap-1.5">
+                                    <button
+                                      onClick={() => handleOpenEdit(pos)}
+                                      className="p-1 hover:bg-slate-700 rounded text-slate-400 hover:text-indigo-300"
+                                      title="Edit SL/TP"
+                                    >
+                                      <Edit2 className="w-3.5 h-3.5" />
+                                    </button>
+                                    <button
+                                      onClick={() => closeLivePosition(pos.ticket)}
+                                      className="p-1 hover:bg-rose-900/60 rounded text-slate-400 hover:text-rose-400"
+                                      title="Close Position"
+                                    >
+                                      <X className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })
+                        )
+                      ) : (
+                        // REPLAY BACKTEST POSITIONS
+                        openPositions.length === 0 ? (
+                          <tr>
+                            <td colSpan={9} className="text-center py-8 text-slate-500">
+                              {t.noOpenPositions}
+                            </td>
+                          </tr>
+                        ) : (
+                          openPositions.map((pos) => (
+                            <tr
+                              key={pos.id}
+                              className="border-b border-slate-800/40 hover:bg-slate-800/30 transition-colors"
+                            >
+                              <td className="py-1.5 px-3 font-semibold text-slate-200">
+                                <div>{pos.symbol}</div>
+                                {pos.tags && pos.tags.length > 0 && (
+                                  <span className="text-[9px] px-1 py-0.2 bg-indigo-950 text-indigo-400 rounded border border-indigo-500/30">
+                                    {pos.tags[0]}
+                                  </span>
+                                )}
+                              </td>
+                              <td className="py-1.5 px-2">
+                                <span
+                                  className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                                    pos.side === 'BUY'
+                                      ? 'bg-teal-950 text-teal-400 border border-teal-500/40'
+                                      : 'bg-rose-950 text-rose-400 border border-rose-500/40'
+                                  }`}
+                                >
+                                  {pos.side}
+                                </span>
+                              </td>
+                              <td className="py-1.5 px-2 text-slate-300 font-bold">{pos.lotSize}</td>
+                              <td className="py-1.5 px-2 text-slate-300">
+                                {pos.entryPrice.toFixed(instrument.digits)}
+                              </td>
+                              <td className="py-1.5 px-2 text-indigo-300 font-semibold">
+                                {currentCandle?.close.toFixed(instrument.digits)}
+                              </td>
+                              <td className="py-1.5 px-2">
+                                <div className="text-rose-400 text-[10px]">
+                                  SL: {pos.stopLoss ? pos.stopLoss.toFixed(instrument.digits) : 'None'}
+                                </div>
+                                <div className="text-teal-400 text-[10px]">
+                                  TP: {pos.takeProfit ? pos.takeProfit.toFixed(instrument.digits) : 'None'}
+                                </div>
+                                {pos.stopLoss && pos.takeProfit && (
+                                  <div className="mt-0.5">
+                                    <span className="text-[9px] font-bold px-1 py-0.2 rounded bg-indigo-950/80 text-indigo-300 border border-indigo-500/30 font-mono">
+                                      R:R 1:
+                                      {(
+                                        Math.abs(pos.takeProfit - pos.entryPrice) /
+                                        Math.abs(pos.entryPrice - pos.stopLoss)
+                                      ).toFixed(1)}
+                                    </span>
+                                  </div>
+                                )}
+                              </td>
+                              <td className="py-1.5 px-2">
+                                <div className="flex items-center gap-1">
+                                  <button
+                                    onClick={() => setBreakeven(pos.id)}
+                                    className="px-1.5 py-0.5 bg-amber-950/80 hover:bg-amber-900 border border-amber-500/40 text-amber-300 rounded text-[10px] font-bold flex items-center gap-0.5"
+                                    title="Set Breakeven SL"
+                                  >
+                                    <ShieldCheck className="w-3 h-3" />
+                                    <span>{t.setBE}</span>
+                                  </button>
+                                  <button
+                                    onClick={() => partialClose(pos.id, 50)}
+                                    disabled={pos.lotSize <= instrument.minLot}
+                                    className="px-1.5 py-0.5 bg-sky-950/80 hover:bg-sky-900 disabled:opacity-40 border border-sky-500/40 text-sky-300 rounded text-[10px] font-bold flex items-center gap-0.5"
+                                    title="Close 50% Lot"
+                                  >
+                                    <Percent className="w-3 h-3" />
+                                    <span>{t.close50}</span>
+                                  </button>
+                                </div>
+                              </td>
+                              <td
+                                className={`py-1.5 px-3 text-right font-bold text-xs ${
+                                  pos.floatingPnL >= 0 ? 'text-teal-400' : 'text-rose-400'
+                                }`}
+                              >
+                                {pos.floatingPnL >= 0 ? '+' : ''}${pos.floatingPnL.toFixed(2)}
+                              </td>
+                              <td className="py-1.5 px-3 text-center">
+                                <div className="flex items-center justify-center gap-1.5">
+                                  <button
+                                    onClick={() => handleOpenEdit(pos)}
+                                    className="p-1 hover:bg-slate-700 rounded text-slate-400 hover:text-indigo-300"
+                                    title={t.editSLTP}
+                                  >
+                                    <Edit2 className="w-3.5 h-3.5" />
+                                  </button>
+                                  <button
+                                    onClick={() => closePosition(pos.id)}
+                                    className="p-1 hover:bg-rose-900/60 rounded text-slate-400 hover:text-rose-400"
+                                    title={t.closePosition}
+                                  >
+                                    <X className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))
+                        )
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {(viewMode === 'cards' || viewMode === 'auto') && (
+                <div className={viewMode === 'auto' ? 'block md:hidden' : 'block'}>
+                  {renderOpenPositionsCards()}
+                </div>
+              )}
+            </>
           )}
 
           {/* 2. PENDING ORDERS TAB */}
           {activeTab === 'pending' && (
-            <table className="w-full text-left border-collapse min-w-[680px]">
-              <thead>
-                <tr className="border-b border-slate-800 text-slate-400 bg-slate-900/50 sticky top-0 text-[11px]">
-                  <th className="py-1.5 px-3">Ticket / Symbol</th>
-                  <th className="py-1.5 px-2">{t.side}</th>
-                  <th className="py-1.5 px-2">{t.lot}</th>
-                  <th className="py-1.5 px-2">Trigger Price</th>
-                  <th className="py-1.5 px-2">SL</th>
-                  <th className="py-1.5 px-2">TP</th>
-                  <th className="py-1.5 px-3 text-center">{t.actions}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {isLiveActive ? (
-                  // LIVE BROKER ORDERS
-                  liveOrders.length === 0 ? (
-                    <tr>
-                      <td colSpan={7} className="text-center py-8 text-slate-500">
-                        No pending orders on {activeBroker}.
-                      </td>
-                    </tr>
-                  ) : (
-                    liveOrders.map((order) => (
-                      <tr
-                        key={order.ticket}
-                        className="border-b border-slate-800/40 hover:bg-slate-800/30"
-                      >
-                        <td className="py-1.5 px-3 font-semibold text-slate-200">
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-slate-400 font-mono text-[10px]">#{order.ticket}</span>
-                            <span>{order.symbol}</span>
-                          </div>
-                        </td>
-                        <td className="py-1.5 px-2">
-                          <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-indigo-950 text-indigo-400 border border-indigo-500/40">
-                            {order.type}
-                          </span>
-                        </td>
-                        <td className="py-1.5 px-2 text-slate-300">{order.lotSize}</td>
-                        <td className="py-1.5 px-2 text-amber-300 font-semibold">
-                          {formatPrice(order.symbol, order.triggerPrice)}
-                        </td>
-                        <td className="py-1.5 px-2 text-rose-400">
-                          {order.sl ? formatPrice(order.symbol, order.sl) : '---'}
-                        </td>
-                        <td className="py-1.5 px-2 text-teal-400">
-                          {order.tp ? formatPrice(order.symbol, order.tp) : '---'}
-                        </td>
-                        <td className="py-1.5 px-3 text-center">
-                          <button
-                            onClick={() => cancelLiveOrder(order.ticket)}
-                            className="text-[10px] text-rose-400 hover:text-rose-300 bg-rose-950/80 px-2 py-0.5 rounded border border-rose-500/30 font-bold"
-                          >
-                            Cancel
-                          </button>
-                        </td>
+            <>
+              {(viewMode === 'table' || viewMode === 'auto') && (
+                <div className={viewMode === 'auto' ? 'hidden md:block' : 'block'}>
+                  <table className="w-full text-left border-collapse min-w-[680px]">
+                    <thead>
+                      <tr className="border-b border-slate-800 text-slate-400 bg-slate-900/50 sticky top-0 text-[11px]">
+                        <th className="py-1.5 px-3">Ticket / Symbol</th>
+                        <th className="py-1.5 px-2">{t.side}</th>
+                        <th className="py-1.5 px-2">{t.lot}</th>
+                        <th className="py-1.5 px-2">Trigger Price</th>
+                        <th className="py-1.5 px-2">SL</th>
+                        <th className="py-1.5 px-2">TP</th>
+                        <th className="py-1.5 px-3 text-center">{t.actions}</th>
                       </tr>
-                    ))
-                  )
-                ) : (
-                  // SANDBOX PENDING ORDERS
-                  pendingOrders.length === 0 ? (
-                    <tr>
-                      <td colSpan={7} className="text-center py-8 text-slate-500">
-                        {t.noPendingOrders}
-                      </td>
-                    </tr>
-                  ) : (
-                    pendingOrders.map((order) => (
-                      <tr key={order.id} className="border-b border-slate-800/40 hover:bg-slate-800/30">
-                        <td className="py-1.5 px-3 font-semibold text-slate-200">
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-slate-400 font-mono text-[10px]">#{order.id.slice(0, 6)}</span>
-                            <span>{order.symbol}</span>
-                          </div>
-                        </td>
-                        <td className="py-1.5 px-2">
-                          <span
-                            className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
-                              order.type.includes('BUY')
-                                ? 'bg-teal-950 text-teal-400 border border-teal-500/40'
-                                : 'bg-rose-950 text-rose-400 border border-rose-500/40'
-                            }`}
-                          >
-                            {order.type}
-                          </span>
-                        </td>
-                        <td className="py-1.5 px-2 text-slate-300">{order.lotSize}</td>
-                        <td className="py-1.5 px-2 text-amber-300 font-semibold">
-                          {formatPrice(order.symbol, (order as any).triggerPrice || order.price)}
-                        </td>
-                        <td className="py-1.5 px-2 text-rose-400">
-                          {order.stopLoss ? formatPrice(order.symbol, order.stopLoss) : '---'}
-                        </td>
-                        <td className="py-1.5 px-2 text-teal-400">
-                          {order.takeProfit ? formatPrice(order.symbol, order.takeProfit) : '---'}
-                        </td>
-                        <td className="py-1.5 px-3 text-center">
-                          <button
-                            onClick={() => cancelPendingOrder(order.id)}
-                            className="text-[10px] text-rose-400 hover:text-rose-300 bg-rose-950/80 px-2 py-0.5 rounded border border-rose-500/30 font-bold"
-                          >
-                            {t.cancel}
-                          </button>
-                        </td>
-                      </tr>
-                    ))
-                  )
-                )}
-              </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                      {isLiveActive ? (
+                        // LIVE BROKER ORDERS
+                        liveOrders.length === 0 ? (
+                          <tr>
+                            <td colSpan={7} className="text-center py-8 text-slate-500">
+                              No pending orders on {activeBroker}.
+                            </td>
+                          </tr>
+                        ) : (
+                          liveOrders.map((order) => (
+                            <tr
+                              key={order.ticket}
+                              className="border-b border-slate-800/40 hover:bg-slate-800/30"
+                            >
+                              <td className="py-1.5 px-3 font-semibold text-slate-200">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-slate-400 font-mono text-[10px]">#{order.ticket}</span>
+                                  <span>{order.symbol}</span>
+                                </div>
+                              </td>
+                              <td className="py-1.5 px-2">
+                                <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-indigo-950 text-indigo-400 border border-indigo-500/40">
+                                  {order.type}
+                                </span>
+                              </td>
+                              <td className="py-1.5 px-2 text-slate-300">{order.lotSize}</td>
+                              <td className="py-1.5 px-2 text-amber-300 font-semibold">
+                                {formatPrice(order.symbol, order.triggerPrice)}
+                              </td>
+                              <td className="py-1.5 px-2 text-rose-400">
+                                {order.sl ? formatPrice(order.symbol, order.sl) : '---'}
+                              </td>
+                              <td className="py-1.5 px-2 text-teal-400">
+                                {order.tp ? formatPrice(order.symbol, order.tp) : '---'}
+                              </td>
+                              <td className="py-1.5 px-3 text-center">
+                                <button
+                                  onClick={() => cancelLiveOrder(order.ticket)}
+                                  className="text-[10px] text-rose-400 hover:text-rose-300 bg-rose-950/80 px-2 py-0.5 rounded border border-rose-500/30 font-bold"
+                                >
+                                  Cancel
+                                </button>
+                              </td>
+                            </tr>
+                          ))
+                        )
+                      ) : (
+                        // SANDBOX PENDING ORDERS
+                        pendingOrders.length === 0 ? (
+                          <tr>
+                            <td colSpan={7} className="text-center py-8 text-slate-500">
+                              {t.noPendingOrders}
+                            </td>
+                          </tr>
+                        ) : (
+                          pendingOrders.map((order) => (
+                            <tr key={order.id} className="border-b border-slate-800/40 hover:bg-slate-800/30">
+                              <td className="py-1.5 px-3 font-semibold text-slate-200">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-slate-400 font-mono text-[10px]">#{order.id.slice(0, 6)}</span>
+                                  <span>{order.symbol}</span>
+                                </div>
+                              </td>
+                              <td className="py-1.5 px-2">
+                                <span
+                                  className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                                    order.type.includes('BUY')
+                                      ? 'bg-teal-950 text-teal-400 border border-teal-500/40'
+                                      : 'bg-rose-950 text-rose-400 border border-rose-500/40'
+                                  }`}
+                                >
+                                  {order.type}
+                                </span>
+                              </td>
+                              <td className="py-1.5 px-2 text-slate-300">{order.lotSize}</td>
+                              <td className="py-1.5 px-2 text-amber-300 font-semibold">
+                                {formatPrice(order.symbol, (order as any).triggerPrice || order.price)}
+                              </td>
+                              <td className="py-1.5 px-2 text-rose-400">
+                                {order.stopLoss ? formatPrice(order.symbol, order.stopLoss) : '---'}
+                              </td>
+                              <td className="py-1.5 px-2 text-teal-400">
+                                {order.takeProfit ? formatPrice(order.symbol, order.takeProfit) : '---'}
+                              </td>
+                              <td className="py-1.5 px-3 text-center">
+                                <button
+                                  onClick={() => cancelPendingOrder(order.id)}
+                                  className="text-[10px] text-rose-400 hover:text-rose-300 bg-rose-950/80 px-2 py-0.5 rounded border border-rose-500/30 font-bold"
+                                >
+                                  {t.cancel}
+                                </button>
+                              </td>
+                            </tr>
+                          ))
+                        )
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {(viewMode === 'cards' || viewMode === 'auto') && (
+                <div className={viewMode === 'auto' ? 'block md:hidden' : 'block'}>
+                  {renderPendingOrdersCards()}
+                </div>
+              )}
+            </>
           )}
 
           {/* 3. CLOSED TRADES TAB */}
           {activeTab === 'history' && (
-            <table className="w-full text-left border-collapse min-w-[680px]">
-              <thead>
-                <tr className="border-b border-slate-800 text-slate-400 bg-slate-900/50 sticky top-0 text-[11px]">
-                  <th className="py-1.5 px-3">Time</th>
-                  <th className="py-1.5 px-2">Ticket / Symbol</th>
-                  <th className="py-1.5 px-2">{t.side}</th>
-                  <th className="py-1.5 px-2">{t.lot}</th>
-                  <th className="py-1.5 px-2">Price</th>
-                  <th className="py-1.5 px-2">Comm / Swap</th>
-                  <th className="py-1.5 px-3 text-right">{t.realizedPnL}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {isLiveActive ? (
-                  // LIVE DEALS
-                  liveDeals.length === 0 ? (
-                    <tr>
-                      <td colSpan={7} className="text-center py-8 text-slate-500">
-                        No trade history on {activeBroker}.
-                      </td>
-                    </tr>
-                  ) : (
-                    [...liveDeals].reverse().map((deal) => (
-                      <tr
-                        key={deal.ticket}
-                        className="border-b border-slate-800/40 hover:bg-slate-800/30"
-                      >
-                        <td className="py-1.5 px-3 text-slate-400 text-[10px]">{formatTime(deal.time)}</td>
-                        <td className="py-1.5 px-2 font-semibold text-slate-200">
-                          <div className="flex items-center gap-1">
-                            <span className="text-[10px] text-slate-500">#{deal.ticket}</span>
-                            <span>{deal.symbol}</span>
-                          </div>
-                        </td>
-                        <td className="py-1.5 px-2">
-                          <span
-                            className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
-                              deal.side === 'BUY' ? 'bg-teal-950 text-teal-400' : 'bg-rose-950 text-rose-400'
-                            }`}
-                          >
-                            {deal.side}
-                          </span>
-                        </td>
-                        <td className="py-1.5 px-2 text-slate-300">{deal.lotSize}</td>
-                        <td className="py-1.5 px-2 text-slate-300">{formatPrice(deal.symbol, deal.price)}</td>
-                        <td className="py-1.5 px-2 text-slate-400 text-[10px]">
-                          ${deal.commission.toFixed(2)} / ${deal.swap.toFixed(2)}
-                        </td>
-                        <td
-                          className={`py-1.5 px-3 text-right font-bold ${
-                            deal.profit >= 0 ? 'text-teal-400' : 'text-rose-400'
-                          }`}
-                        >
-                          {deal.profit >= 0 ? '+' : ''}${deal.profit.toFixed(2)}
-                        </td>
+            <>
+              {(viewMode === 'table' || viewMode === 'auto') && (
+                <div className={viewMode === 'auto' ? 'hidden md:block' : 'block'}>
+                  <table className="w-full text-left border-collapse min-w-[680px]">
+                    <thead>
+                      <tr className="border-b border-slate-800 text-slate-400 bg-slate-900/50 sticky top-0 text-[11px]">
+                        <th className="py-1.5 px-3">Time</th>
+                        <th className="py-1.5 px-2">Ticket / Symbol</th>
+                        <th className="py-1.5 px-2">{t.side}</th>
+                        <th className="py-1.5 px-2">{t.lot}</th>
+                        <th className="py-1.5 px-2">Price</th>
+                        <th className="py-1.5 px-2">Comm / Swap</th>
+                        <th className="py-1.5 px-3 text-right">{t.realizedPnL}</th>
                       </tr>
-                    ))
-                  )
-                ) : (
-                  // REPLAY TRADES
-                  closedPositions.length === 0 ? (
-                    <tr>
-                      <td colSpan={7} className="text-center py-8 text-slate-500">
-                        {t.noHistory}
-                      </td>
-                    </tr>
-                  ) : (
-                    [...closedPositions].reverse().map((trade) => (
-                      <tr
-                        key={trade.id}
-                        className="border-b border-slate-800/40 hover:bg-slate-800/30"
-                      >
-                        <td className="py-1.5 px-3 text-slate-400 text-[10px]">{formatTime(trade.closeTime)}</td>
-                        <td className="py-1.5 px-2 font-semibold text-slate-200">{trade.symbol}</td>
-                        <td className="py-1.5 px-2">
-                          <span
-                            className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
-                              trade.side === 'BUY' ? 'bg-teal-950 text-teal-400' : 'bg-rose-950 text-rose-400'
-                            }`}
-                          >
-                            {trade.side}
-                          </span>
-                        </td>
-                        <td className="py-1.5 px-2 text-slate-300">{trade.lotSize}</td>
-                        <td className="py-1.5 px-2 text-slate-300">
-                          <div>{formatPrice(trade.symbol, trade.entryPrice)}</div>
-                          <div className="text-slate-500 text-[10px]">↳ {formatPrice(trade.symbol, trade.closePrice)}</div>
-                        </td>
-                        <td className="py-1.5 px-2">
-                          <span
-                            className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
-                              trade.closeReason === 'TP'
-                                ? 'bg-teal-900/60 text-teal-300'
-                                : trade.closeReason === 'SL'
-                                ? 'bg-rose-900/60 text-rose-300'
-                                : 'bg-slate-800 text-slate-400'
-                            }`}
-                          >
-                            {trade.closeReason}
-                          </span>
-                        </td>
-                        <td
-                          className={`py-1.5 px-3 text-right font-bold ${
-                            trade.realizedPnL >= 0 ? 'text-teal-400' : 'text-rose-400'
-                          }`}
-                        >
-                          {trade.realizedPnL >= 0 ? '+' : ''}${trade.realizedPnL.toFixed(2)}
-                        </td>
-                      </tr>
-                    ))
-                  )
-                )}
-              </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                      {isLiveActive ? (
+                        // LIVE DEALS
+                        liveDeals.length === 0 ? (
+                          <tr>
+                            <td colSpan={7} className="text-center py-8 text-slate-500">
+                              No trade history on {activeBroker}.
+                            </td>
+                          </tr>
+                        ) : (
+                          [...liveDeals].reverse().map((deal) => (
+                            <tr
+                              key={deal.ticket}
+                              className="border-b border-slate-800/40 hover:bg-slate-800/30"
+                            >
+                              <td className="py-1.5 px-3 text-slate-400 text-[10px]">{formatTime(deal.time)}</td>
+                              <td className="py-1.5 px-2 font-semibold text-slate-200">
+                                <div className="flex items-center gap-1">
+                                  <span className="text-[10px] text-slate-500">#{deal.ticket}</span>
+                                  <span>{deal.symbol}</span>
+                                </div>
+                              </td>
+                              <td className="py-1.5 px-2">
+                                <span
+                                  className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                                    deal.side === 'BUY' ? 'bg-teal-950 text-teal-400' : 'bg-rose-950 text-rose-400'
+                                  }`}
+                                >
+                                  {deal.side}
+                                </span>
+                              </td>
+                              <td className="py-1.5 px-2 text-slate-300">{deal.lotSize}</td>
+                              <td className="py-1.5 px-2 text-slate-300">{formatPrice(deal.symbol, deal.price)}</td>
+                              <td className="py-1.5 px-2 text-slate-400 text-[10px]">
+                                ${deal.commission.toFixed(2)} / ${deal.swap.toFixed(2)}
+                              </td>
+                              <td
+                                className={`py-1.5 px-3 text-right font-bold ${
+                                  deal.profit >= 0 ? 'text-teal-400' : 'text-rose-400'
+                                }`}
+                              >
+                                {deal.profit >= 0 ? '+' : ''}${deal.profit.toFixed(2)}
+                              </td>
+                            </tr>
+                          ))
+                        )
+                      ) : (
+                        // REPLAY TRADES
+                        closedPositions.length === 0 ? (
+                          <tr>
+                            <td colSpan={7} className="text-center py-8 text-slate-500">
+                              {t.noHistory}
+                            </td>
+                          </tr>
+                        ) : (
+                          [...closedPositions].reverse().map((trade) => (
+                            <tr
+                              key={trade.id}
+                              className="border-b border-slate-800/40 hover:bg-slate-800/30"
+                            >
+                              <td className="py-1.5 px-3 text-slate-400 text-[10px]">{formatTime(trade.closeTime)}</td>
+                              <td className="py-1.5 px-2 font-semibold text-slate-200">{trade.symbol}</td>
+                              <td className="py-1.5 px-2">
+                                <span
+                                  className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                                    trade.side === 'BUY' ? 'bg-teal-950 text-teal-400' : 'bg-rose-950 text-rose-400'
+                                  }`}
+                                >
+                                  {trade.side}
+                                </span>
+                              </td>
+                              <td className="py-1.5 px-2 text-slate-300">{trade.lotSize}</td>
+                              <td className="py-1.5 px-2 text-slate-300">
+                                <div>{formatPrice(trade.symbol, trade.entryPrice)}</div>
+                                <div className="text-slate-500 text-[10px]">↳ {formatPrice(trade.symbol, trade.closePrice)}</div>
+                              </td>
+                              <td className="py-1.5 px-2">
+                                <span
+                                  className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                                    trade.closeReason === 'TP'
+                                      ? 'bg-teal-900/60 text-teal-300'
+                                      : trade.closeReason === 'SL'
+                                      ? 'bg-rose-900/60 text-rose-300'
+                                      : 'bg-slate-800 text-slate-400'
+                                  }`}
+                                >
+                                  {trade.closeReason}
+                                </span>
+                              </td>
+                              <td
+                                className={`py-1.5 px-3 text-right font-bold ${
+                                  trade.realizedPnL >= 0 ? 'text-teal-400' : 'text-rose-400'
+                                }`}
+                              >
+                                {trade.realizedPnL >= 0 ? '+' : ''}${trade.realizedPnL.toFixed(2)}
+                              </td>
+                            </tr>
+                          ))
+                        )
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {(viewMode === 'cards' || viewMode === 'auto') && (
+                <div className={viewMode === 'auto' ? 'block md:hidden' : 'block'}>
+                  {renderHistoryCards()}
+                </div>
+              )}
+            </>
           )}
 
           {/* 4. AI STRATEGY LOGS TAB */}
@@ -776,8 +1263,8 @@ export const PositionsTable: React.FC = () => {
 
       {/* EDIT SL/TP & TAGGING MODAL DIALOG */}
       {editingPosition && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 animate-in fade-in">
-          <div className="bg-slate-900 border border-slate-700 p-5 rounded-lg w-84 shadow-2xl space-y-3.5 text-xs">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-in fade-in">
+          <div className="bg-slate-900 border border-slate-700 p-5 rounded-lg w-84 max-w-[calc(100vw-2rem)] shadow-2xl space-y-3.5 text-xs">
             <h3 className="font-bold text-sm text-slate-200">
               {isLiveTradingMode ? 'Modify Live SL / TP' : `${t.editSLTP} & ${t.tagStrategy}`}
             </h3>

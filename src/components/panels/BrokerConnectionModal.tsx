@@ -116,12 +116,12 @@ export const BrokerConnectionModal: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="bg-[#0f1420] border border-slate-700/80 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
+      <div className="bg-[#0f1420] border border-slate-700/80 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
         {/* HEADER */}
-        <div className="px-6 py-4 bg-[#141a29] border-b border-slate-800 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+        <div className="px-3 sm:px-6 py-3 sm:py-4 bg-[#141a29] border-b border-slate-800 flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20 shrink-0">
               <Globe className="w-5 h-5 text-white" />
             </div>
             <div>
@@ -134,24 +134,24 @@ export const BrokerConnectionModal: React.FC = () => {
                   </span>
                 )}
               </h2>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-400 line-clamp-1">
                 Direct low-latency bridge to Exness, MT5, XTB, and Binance
               </p>
             </div>
           </div>
           <button
             onClick={() => setBrokerModalOpen(false)}
-            className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
+            className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors shrink-0"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* TABS NAVIGATION */}
-        <div className="flex border-b border-slate-800 bg-[#111724] px-6 gap-2">
+        <div className="flex border-b border-slate-800 bg-[#111724] px-3 sm:px-6 gap-2 overflow-x-auto shrink-0">
           <button
             onClick={() => setActiveTab('mt5')}
-            className={`py-3 px-4 text-xs font-semibold border-b-2 flex items-center gap-2 transition-all ${
+            className={`py-3 px-3 sm:px-4 text-xs font-semibold border-b-2 flex items-center gap-2 transition-all whitespace-nowrap shrink-0 ${
               activeTab === 'mt5'
                 ? 'border-indigo-500 text-indigo-400'
                 : 'border-transparent text-slate-400 hover:text-slate-200'
@@ -162,7 +162,7 @@ export const BrokerConnectionModal: React.FC = () => {
           </button>
           <button
             onClick={() => setActiveTab('xtb')}
-            className={`py-3 px-4 text-xs font-semibold border-b-2 flex items-center gap-2 transition-all ${
+            className={`py-3 px-3 sm:px-4 text-xs font-semibold border-b-2 flex items-center gap-2 transition-all whitespace-nowrap shrink-0 ${
               activeTab === 'xtb'
                 ? 'border-indigo-500 text-indigo-400'
                 : 'border-transparent text-slate-400 hover:text-slate-200'
@@ -173,7 +173,7 @@ export const BrokerConnectionModal: React.FC = () => {
           </button>
           <button
             onClick={() => setActiveTab('binance')}
-            className={`py-3 px-4 text-xs font-semibold border-b-2 flex items-center gap-2 transition-all ${
+            className={`py-3 px-3 sm:px-4 text-xs font-semibold border-b-2 flex items-center gap-2 transition-all whitespace-nowrap shrink-0 ${
               activeTab === 'binance'
                 ? 'border-indigo-500 text-indigo-400'
                 : 'border-transparent text-slate-400 hover:text-slate-200'
@@ -184,7 +184,7 @@ export const BrokerConnectionModal: React.FC = () => {
           </button>
           <button
             onClick={() => setActiveTab('settings')}
-            className={`py-3 px-4 text-xs font-semibold border-b-2 flex items-center gap-2 transition-all ${
+            className={`py-3 px-3 sm:px-4 text-xs font-semibold border-b-2 flex items-center gap-2 transition-all whitespace-nowrap shrink-0 ${
               activeTab === 'settings'
                 ? 'border-indigo-500 text-indigo-400'
                 : 'border-transparent text-slate-400 hover:text-slate-200'
@@ -196,7 +196,7 @@ export const BrokerConnectionModal: React.FC = () => {
         </div>
 
         {/* MODAL BODY */}
-        <div className="p-6 overflow-y-auto space-y-5 flex-1">
+        <div className="p-3 sm:p-6 overflow-y-auto space-y-5 flex-1">
           {/* TAB 1: MT5 / EXNESS */}
           {activeTab === 'mt5' && (
             <div className="space-y-4">

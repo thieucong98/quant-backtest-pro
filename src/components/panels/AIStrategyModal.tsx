@@ -641,7 +641,7 @@ export const AIStrategyModal: React.FC = () => {
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="font-bold text-sm text-slate-100">{t.aiStudioTitle}</h2>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-950/80 border border-purple-500/40 text-purple-300 font-mono">
+                <span className="hidden sm:inline-block text-[10px] px-2 py-0.5 rounded-full bg-purple-950/80 border border-purple-500/40 text-purple-300 font-mono">
                   {AI_PROVIDER_MODELS[llmConfig.provider]?.name.split(' ')[0]} • {llmConfig.model}
                 </span>
               </div>
@@ -650,8 +650,8 @@ export const AIStrategyModal: React.FC = () => {
 
           <div className="flex items-center gap-2">
             {/* Auto Trading Switch */}
-            <div className="flex items-center gap-2 bg-slate-950 border border-slate-800 px-3 py-1 rounded-lg">
-              <span className="text-[11px] text-slate-400 font-medium">{t.autoTrading}:</span>
+            <div className="flex items-center gap-2 bg-slate-950 border border-slate-800 px-2 sm:px-3 py-1 rounded-lg">
+              <span className="hidden sm:inline text-[11px] text-slate-400 font-medium">{t.autoTrading}:</span>
               <button
                 onClick={() => toggleAutoTrading()}
                 className={`px-2 py-0.5 rounded text-[10px] font-bold transition-colors ${
@@ -674,11 +674,11 @@ export const AIStrategyModal: React.FC = () => {
         </div>
 
         {/* TABS NAVIGATION */}
-        <div className="flex items-center justify-between px-4 bg-slate-950 border-b border-slate-800 text-xs shrink-0">
-          <div className="flex items-center gap-1">
+        <div className="flex items-center justify-between px-2 sm:px-4 bg-slate-950 border-b border-slate-800 text-xs shrink-0 overflow-x-auto">
+          <div className="flex items-center gap-1 shrink-0">
             <button
               onClick={() => setActiveTab('studio')}
-              className={`px-3.5 py-2.5 font-bold transition-all border-b-2 flex items-center gap-1.5 ${
+              className={`px-3 sm:px-3.5 py-2.5 font-bold transition-all border-b-2 flex items-center gap-1.5 whitespace-nowrap ${
                 activeTab === 'studio'
                   ? 'border-purple-500 text-purple-400 bg-purple-950/20'
                   : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/50'
@@ -691,7 +691,7 @@ export const AIStrategyModal: React.FC = () => {
             {/* TAB OPTIMIZER */}
             <button
               onClick={() => setActiveTab('optimizer')}
-              className={`px-3.5 py-2.5 font-bold transition-all border-b-2 flex items-center gap-1.5 ${
+              className={`px-3 sm:px-3.5 py-2.5 font-bold transition-all border-b-2 flex items-center gap-1.5 whitespace-nowrap ${
                 activeTab === 'optimizer'
                   ? 'border-emerald-500 text-emerald-400 bg-emerald-950/20'
                   : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/50'
@@ -706,7 +706,7 @@ export const AIStrategyModal: React.FC = () => {
 
             <button
               onClick={() => setActiveTab('my-strategies')}
-              className={`px-3.5 py-2.5 font-bold transition-all border-b-2 flex items-center gap-1.5 ${
+              className={`px-3 sm:px-3.5 py-2.5 font-bold transition-all border-b-2 flex items-center gap-1.5 whitespace-nowrap ${
                 activeTab === 'my-strategies'
                   ? 'border-amber-500 text-amber-400 bg-amber-950/20'
                   : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/50'
@@ -718,7 +718,7 @@ export const AIStrategyModal: React.FC = () => {
 
             <button
               onClick={() => setActiveTab('templates')}
-              className={`px-3.5 py-2.5 font-bold transition-all border-b-2 flex items-center gap-1.5 ${
+              className={`px-3 sm:px-3.5 py-2.5 font-bold transition-all border-b-2 flex items-center gap-1.5 whitespace-nowrap ${
                 activeTab === 'templates'
                   ? 'border-teal-500 text-teal-400 bg-teal-950/20'
                   : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/50'
@@ -730,7 +730,7 @@ export const AIStrategyModal: React.FC = () => {
 
             <button
               onClick={() => setActiveTab('settings')}
-              className={`px-3.5 py-2.5 font-bold transition-all border-b-2 flex items-center gap-1.5 ${
+              className={`px-3 sm:px-3.5 py-2.5 font-bold transition-all border-b-2 flex items-center gap-1.5 whitespace-nowrap ${
                 activeTab === 'settings'
                   ? 'border-indigo-500 text-indigo-400 bg-indigo-950/20'
                   : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/50'
@@ -749,7 +749,7 @@ export const AIStrategyModal: React.FC = () => {
         </div>
 
         {/* TAB CONTENTS */}
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex-1 overflow-y-auto p-2 sm:p-4">
           {/* TAB 1: STUDIO */}
           {activeTab === 'studio' && (
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 h-full">

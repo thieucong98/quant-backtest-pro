@@ -29,42 +29,42 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onCl
   if (!isOpen || !user) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center z-50 animate-in fade-in select-none p-4">
-      <div className="bg-[#111622] border border-slate-700/80 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col text-xs font-mono">
+    <div className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center z-50 animate-in fade-in select-none p-2 sm:p-4">
+      <div className="bg-[#111622] border border-slate-700/80 rounded-2xl w-full max-w-lg max-h-[92vh] shadow-2xl overflow-y-auto flex flex-col text-xs font-mono">
         {/* Header with Avatar & Tier */}
-        <div className="relative p-6 bg-gradient-to-r from-slate-900 via-indigo-950/40 to-slate-900 border-b border-slate-800 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="relative">
+        <div className="relative p-4 sm:p-6 bg-gradient-to-r from-slate-900 via-indigo-950/40 to-slate-900 border-b border-slate-800 flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="relative shrink-0">
               <img
                 src={user.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80'}
                 alt={user.name}
-                className="w-14 h-14 rounded-2xl object-cover border-2 border-indigo-500/60 shadow-lg shadow-indigo-500/20"
+                className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl object-cover border-2 border-indigo-500/60 shadow-lg shadow-indigo-500/20"
               />
               <span className="absolute -bottom-1 -right-1 px-1.5 py-0.5 bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-extrabold text-[9px] rounded shadow">
                 {user.tier}
               </span>
             </div>
-            <div>
+            <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <h3 className="font-bold text-base text-slate-100">{user.name}</h3>
-                <span className="px-1.5 py-0.5 rounded text-[10px] bg-emerald-950 border border-emerald-500/40 text-emerald-400 font-bold">
+                <h3 className="font-bold text-sm sm:text-base text-slate-100 truncate">{user.name}</h3>
+                <span className="px-1.5 py-0.5 rounded text-[10px] bg-emerald-950 border border-emerald-500/40 text-emerald-400 font-bold shrink-0">
                   ● ACTIVE
                 </span>
               </div>
-              <p className="text-slate-400 text-xs">{user.email}</p>
+              <p className="text-slate-400 text-xs truncate">{user.email}</p>
             </div>
           </div>
 
           <button
             onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-lg transition-colors"
+            className="p-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-lg transition-colors shrink-0"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Stats Grid */}
-        <div className="p-5 space-y-4">
+        <div className="p-3 sm:p-5 space-y-4">
           <div className="grid grid-cols-3 gap-3">
             <div className="bg-slate-900/80 border border-slate-800 p-3 rounded-xl">
               <div className="flex items-center gap-1.5 text-slate-400 text-[11px]">

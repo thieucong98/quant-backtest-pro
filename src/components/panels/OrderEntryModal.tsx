@@ -175,10 +175,10 @@ export const OrderEntryModal: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-xs flex items-center justify-center z-50 animate-in fade-in select-none">
-      <div className="bg-[#111622] border border-slate-700/80 rounded-xl w-full max-w-md shadow-2xl overflow-hidden text-xs">
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-xs flex items-center justify-center z-50 p-3 sm:p-4 animate-in fade-in select-none">
+      <div className="bg-[#111622] border border-slate-700/80 rounded-xl w-full max-w-md max-h-[92vh] flex flex-col shadow-2xl overflow-hidden text-xs">
         {/* MODAL HEADER */}
-        <div className="h-12 bg-slate-900/90 border-b border-slate-800 px-4 flex items-center justify-between">
+        <div className="h-12 bg-slate-900/90 border-b border-slate-800 px-4 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2">
             <span className="font-bold text-sm text-slate-100">{instrument.symbol}</span>
             <span className="text-[10px] px-1.5 py-0.5 rounded bg-indigo-950 text-indigo-400 border border-indigo-500/30">
@@ -200,7 +200,7 @@ export const OrderEntryModal: React.FC = () => {
         </div>
 
         {/* ORDER FORM */}
-        <form onSubmit={handleSubmit} className="p-4 space-y-4">
+        <form onSubmit={handleSubmit} className="p-4 space-y-4 overflow-y-auto flex-1">
           {/* Order Type Tabs */}
           <div className="grid grid-cols-3 gap-1 p-1 bg-slate-950 rounded-lg border border-slate-800">
             {(['MARKET', 'LIMIT', 'STOP'] as const).map(type => (

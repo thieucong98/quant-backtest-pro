@@ -244,6 +244,7 @@ export const zh: TranslationDict = {
   "datasetDbTabTitle": "数据集DB库",
   "csvTxtTabTitle": "导入 CSV / TXT 文件",
   "sampleGbmTabTitle": "合成样本数据 (GBM)",
+  "viewDatabaseBtn": "查看数据库 ➔",
   "autoCrawlTab": "在线自动抓取",
   "uploadFileTab": "导入文件 (CSV / TXT)",
   "sampleDataTab": "示例数据",
@@ -788,7 +789,20 @@ export const zh: TranslationDict = {
   // Bottom Dock Resizer & Layout Reset
   "dragToResizePanel": "拖动以调整高度 (双击重置默认)",
   "resetPanelHeight": "恢复默认高度与图表比例",
-  "panelHeightDefault": "默认"
+  "panelHeightDefault": "默认",
+
+  // Mobile Responsive & Touch Enhancements
+  "mobileCardView": "卡片视图",
+  "mobileTableView": "表格视图",
+  "mobileTimeframeSelect": "时间周期",
+  "mobileQuickTools": "交易工具",
+  "mobileResetBalance": "重置初始资金",
+  "mobileResetBalanceConfirm": "您确定要将账户余额重置为默认的 $10,000 吗？",
+  "mobileBalanceResetSuccess": "账户余额已成功重置为 $10,000！",
+  "mobileTradingSheet": "快捷交易面板",
+  "mobileToggleTools": "切换工具",
+  "statusOn": "开启",
+  "statusOff": "关闭"
 };
 
 

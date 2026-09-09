@@ -183,6 +183,123 @@ export const EconomicCalendarTab: React.FC = () => {
 
   const upcomingCount = filteredEvents.length - pastCount;
 
+  const renderMobileEventCards = () => {
+    return (
+      <div className="p-2 space-y-2">
+        {filteredEvents.map((ev) => {
+          const dateObj = new Date(ev.timestamp);
+          const isPast = ev.timestampSec <= currentTimestampSec;
+          const isNearCurrent = Math.abs(ev.timestampSec - currentTimestampSec) <= 1800; // within 30 min
+          const timeStr = dateObj.toISOString().replace('T', ' ').slice(0, 16) + ' UTC';
+
+          return (
+            <div
+              key={ev.id}
+              className={`p-2.5 rounded-lg border text-xs space-y-2 ${
+                isNearCurrent
+                  ? 'bg-amber-500/10 border-amber-500/40 shadow-sm'
+                  : isPast
+                  ? 'bg-slate-900/60 border-slate-800/80 text-slate-400'
+                  : 'bg-slate-900/90 border-slate-800 text-slate-200'
+              }`}
+            >
+              {/* Top row: Time + Currency + Impact */}
+              <div className="flex items-center justify-between gap-1 flex-wrap">
+                <div className="flex items-center gap-1.5">
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-950 border border-slate-800 text-[10px] font-bold">
+                    <span>{COUNTRY_FLAGS[ev.currency] || '🌐'}</span>
+                    <span>{ev.currency}</span>
+                  </span>
+                  <span className={`text-[11px] font-mono ${isPast ? 'text-slate-400' : 'text-indigo-300 font-semibold'}`}>
+                    {timeStr}
+                  </span>
+                </div>
+                <div>
+                  {ev.impact === 'HIGH' && (
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/40">
+                      🔴 {t.calendarImpactHigh}
+                    </span>
+                  )}
+                  {ev.impact === 'MEDIUM' && (
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/40">
+                      🟡 {t.calendarImpactMedium}
+                    </span>
+                  )}
+                  {ev.impact === 'LOW' && (
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-500/20 text-sky-400 border border-sky-500/40">
+                      🔵 {t.calendarImpactLow}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Event Title */}
+              <div className="flex items-start gap-1.5">
+                <span className={`font-semibold text-sm ${isPast ? 'text-slate-300' : 'text-slate-100'}`}>
+                  {ev.title}
+                </span>
+                {ev.sentiment === 'BULLISH' && (
+                  <span title={t.calendarBullishImpact} className="mt-0.5">
+                    <TrendingUp className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                  </span>
+                )}
+                {ev.sentiment === 'BEARISH' && (
+                  <span title={t.calendarBearishImpact} className="mt-0.5">
+                    <TrendingDown className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+                  </span>
+                )}
+              </div>
+
+              {/* Values Grid: Actual / Forecast / Previous */}
+              <div className="grid grid-cols-3 gap-2 text-[11px] bg-slate-950/60 p-2 rounded border border-slate-800/60 text-center">
+                <div>
+                  <div className="text-slate-500 text-[10px]">{t.calendarActual}</div>
+                  <div
+                    className={`font-bold ${
+                      !isPast
+                        ? 'text-slate-500'
+                        : ev.sentiment === 'BULLISH'
+                        ? 'text-emerald-400'
+                        : ev.sentiment === 'BEARISH'
+                        ? 'text-rose-400'
+                        : 'text-slate-200'
+                    }`}
+                  >
+                    {isPast ? ev.actual || '---' : t.calendarNotAvailable}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-slate-500 text-[10px]">{t.calendarForecast}</div>
+                  <div className="text-slate-300">{ev.forecast || '---'}</div>
+                </div>
+                <div>
+                  <div className="text-slate-500 text-[10px]">{t.calendarPrevious}</div>
+                  <div className="text-slate-500">{ev.previous || '---'}</div>
+                </div>
+              </div>
+
+              {/* Footer row: Source & Status */}
+              <div className="flex items-center justify-between pt-1 border-t border-slate-800/60 text-[10px]">
+                <div>{renderSourceBadge(ev.source)}</div>
+                <div>
+                  {isPast ? (
+                    <span className="text-emerald-400 bg-emerald-950/60 border border-emerald-500/30 px-1.5 py-0.5 rounded font-semibold">
+                      ✅ {t.calendarStatusPassed}
+                    </span>
+                  ) : (
+                    <span className="text-amber-400 bg-amber-950/60 border border-amber-500/30 px-1.5 py-0.5 rounded font-semibold">
+                      ⏳ {t.calendarStatusUpcoming}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
   return (
     <div className="flex flex-col h-full bg-[#0a0d14]">
       {/* Control Bar */}
@@ -248,7 +365,7 @@ export const EconomicCalendarTab: React.FC = () => {
               placeholder={t.calendarSearchPlaceholder}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="bg-slate-900 border border-slate-800 text-slate-200 rounded pl-6 pr-2 py-1 text-[11px] w-36 sm:w-44 focus:outline-none focus:border-indigo-500 placeholder-slate-600"
+              className="bg-slate-900 border border-slate-800 text-slate-200 rounded pl-6 pr-2 py-1 text-[11px] w-32 sm:w-44 focus:outline-none focus:border-indigo-500 placeholder-slate-600"
             />
           </div>
 
@@ -287,7 +404,7 @@ export const EconomicCalendarTab: React.FC = () => {
             title={t.calendarSyncFFBtn}
           >
             <RefreshCw className={`w-3 h-3 ${isSyncingCalendar ? 'animate-spin text-emerald-400' : 'text-emerald-400'}`} />
-            <span>{isSyncingCalendar ? t.calendarSyncingFFBtn : t.calendarSyncFFBtn}</span>
+            <span className="hidden sm:inline">{isSyncingCalendar ? t.calendarSyncingFFBtn : t.calendarSyncFFBtn}</span>
           </button>
 
           {showEconomicNews && (
@@ -314,7 +431,7 @@ export const EconomicCalendarTab: React.FC = () => {
             title={t.calendarShowOnChart}
           >
             {showEconomicNews ? <Eye className="w-3 h-3 text-indigo-400" /> : <EyeOff className="w-3 h-3 text-slate-500" />}
-            <span>{showEconomicNews ? t.calendarChartToggleActive : t.calendarChartToggleInactive}</span>
+            <span className="hidden sm:inline">{showEconomicNews ? t.calendarChartToggleActive : t.calendarChartToggleInactive}</span>
           </button>
         </div>
       </div>
@@ -347,7 +464,7 @@ export const EconomicCalendarTab: React.FC = () => {
         </div>
       )}
 
-      {/* Table Content */}
+      {/* Table Content & Mobile Cards */}
       <div className="flex-1 overflow-auto">
         {filteredEvents.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-slate-500">
@@ -355,138 +472,148 @@ export const EconomicCalendarTab: React.FC = () => {
             <p>{t.calendarNoEvents}</p>
           </div>
         ) : (
-          <table className="w-full text-left border-collapse min-w-[840px]">
-            <thead>
-              <tr className="border-b border-slate-800 text-slate-400 bg-slate-900/50 sticky top-0 text-[11px]">
-                <th
-                  className="py-1.5 px-3 cursor-pointer hover:text-slate-200 select-none"
-                  onClick={() => setCalendarSortOrder((prev) => (prev === 'DESC' ? 'ASC' : 'DESC'))}
-                  title={t.calendarSortOrderToggle}
-                >
-                  <div className="flex items-center gap-1.5">
-                    <span>{t.calendarTimeUTC}</span>
-                    <ArrowUpDown className="w-3 h-3 text-indigo-400" />
-                    <span className="text-[10px] text-indigo-400 font-mono">
-                      {calendarSortOrder === 'DESC' ? '↓' : '↑'}
-                    </span>
-                  </div>
-                </th>
-                <th className="py-1.5 px-2">{t.calendarCurrency}</th>
-                <th className="py-1.5 px-2 text-center">{t.calendarImpact}</th>
-                <th className="py-1.5 px-3">{t.calendarEvent}</th>
-                <th className="py-1.5 px-2 text-right">{t.calendarActual}</th>
-                <th className="py-1.5 px-2 text-right">{t.calendarForecast}</th>
-                <th className="py-1.5 px-2 text-right">{t.calendarPrevious}</th>
-                <th className="py-1.5 px-2 text-center">{t.calendarSource}</th>
-                <th className="py-1.5 px-3 text-center">{t.calendarStatus}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredEvents.map((ev) => {
-                const dateObj = new Date(ev.timestamp);
-                const isPast = ev.timestampSec <= currentTimestampSec;
-                const isNearCurrent = Math.abs(ev.timestampSec - currentTimestampSec) <= 1800; // within 30 min
-
-                const timeStr = dateObj.toISOString().replace('T', ' ').slice(0, 16) + ' UTC';
-
-                return (
-                  <tr
-                    key={ev.id}
-                    className={`border-b border-slate-800/40 transition-colors ${
-                      isNearCurrent
-                        ? 'bg-amber-500/10 border-amber-500/30'
-                        : isPast
-                        ? 'hover:bg-slate-800/20 text-slate-400'
-                        : 'hover:bg-slate-800/40 text-slate-200 font-medium'
-                    }`}
-                  >
-                    <td className="py-1.5 px-3 whitespace-nowrap">
-                      <span className={isPast ? 'text-slate-400' : 'text-indigo-300 font-semibold'}>
-                        {timeStr}
-                      </span>
-                    </td>
-                    <td className="py-1.5 px-2 whitespace-nowrap">
-                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800 text-[10px] font-bold">
-                        <span>{COUNTRY_FLAGS[ev.currency] || '🌐'}</span>
-                        <span>{ev.currency}</span>
-                      </span>
-                    </td>
-                    <td className="py-1.5 px-2 text-center whitespace-nowrap">
-                      {ev.impact === 'HIGH' && (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/40">
-                          🔴 {t.calendarImpactHigh}
-                        </span>
-                      )}
-                      {ev.impact === 'MEDIUM' && (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/40">
-                          🟡 {t.calendarImpactMedium}
-                        </span>
-                      )}
-                      {ev.impact === 'LOW' && (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-500/20 text-sky-400 border border-sky-500/40">
-                          🔵 {t.calendarImpactLow}
-                        </span>
-                      )}
-                    </td>
-                    <td className="py-1.5 px-3">
+          <>
+            {/* Desktop Table View */}
+            <div className="hidden md:block">
+              <table className="w-full text-left border-collapse min-w-[840px]">
+                <thead>
+                  <tr className="border-b border-slate-800 text-slate-400 bg-slate-900/50 sticky top-0 text-[11px]">
+                    <th
+                      className="py-1.5 px-3 cursor-pointer hover:text-slate-200 select-none"
+                      onClick={() => setCalendarSortOrder((prev) => (prev === 'DESC' ? 'ASC' : 'DESC'))}
+                      title={t.calendarSortOrderToggle}
+                    >
                       <div className="flex items-center gap-1.5">
-                        <span className={isPast ? 'text-slate-300' : 'text-slate-100 font-semibold'}>
-                          {ev.title}
+                        <span>{t.calendarTimeUTC}</span>
+                        <ArrowUpDown className="w-3 h-3 text-indigo-400" />
+                        <span className="text-[10px] text-indigo-400 font-mono">
+                          {calendarSortOrder === 'DESC' ? '↓' : '↑'}
                         </span>
-                        {ev.sentiment === 'BULLISH' && (
-                          <span title={t.calendarBullishImpact}>
-                            <TrendingUp className="w-3 h-3 text-emerald-400 shrink-0" />
-                          </span>
-                        )}
-                        {ev.sentiment === 'BEARISH' && (
-                          <span title={t.calendarBearishImpact}>
-                            <TrendingDown className="w-3 h-3 text-rose-400 shrink-0" />
-                          </span>
-                        )}
                       </div>
-                    </td>
-                    <td className="py-1.5 px-2 text-right font-bold">
-                      {isPast ? (
-                        <span
-                          className={
-                            ev.sentiment === 'BULLISH'
-                              ? 'text-emerald-400'
-                              : ev.sentiment === 'BEARISH'
-                              ? 'text-rose-400'
-                              : 'text-slate-200'
-                          }
-                        >
-                          {ev.actual || '---'}
-                        </span>
-                      ) : (
-                        <span className="text-slate-500 font-normal">{t.calendarNotAvailable}</span>
-                      )}
-                    </td>
-                    <td className="py-1.5 px-2 text-right text-slate-400">
-                      {ev.forecast || '---'}
-                    </td>
-                    <td className="py-1.5 px-2 text-right text-slate-500">
-                      {ev.previous || '---'}
-                    </td>
-                    <td className="py-1.5 px-2 text-center whitespace-nowrap">
-                      {renderSourceBadge(ev.source)}
-                    </td>
-                    <td className="py-1.5 px-3 text-center whitespace-nowrap">
-                      {isPast ? (
-                        <span className="text-[10px] text-emerald-400 bg-emerald-950/60 border border-emerald-500/30 px-1.5 py-0.5 rounded font-semibold">
-                          ✅ {t.calendarStatusPassed}
-                        </span>
-                      ) : (
-                        <span className="text-[10px] text-amber-400 bg-amber-950/60 border border-amber-500/30 px-1.5 py-0.5 rounded font-semibold">
-                          ⏳ {t.calendarStatusUpcoming}
-                        </span>
-                      )}
-                    </td>
+                    </th>
+                    <th className="py-1.5 px-2">{t.calendarCurrency}</th>
+                    <th className="py-1.5 px-2 text-center">{t.calendarImpact}</th>
+                    <th className="py-1.5 px-3">{t.calendarEvent}</th>
+                    <th className="py-1.5 px-2 text-right">{t.calendarActual}</th>
+                    <th className="py-1.5 px-2 text-right">{t.calendarForecast}</th>
+                    <th className="py-1.5 px-2 text-right">{t.calendarPrevious}</th>
+                    <th className="py-1.5 px-2 text-center">{t.calendarSource}</th>
+                    <th className="py-1.5 px-3 text-center">{t.calendarStatus}</th>
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                </thead>
+                <tbody>
+                  {filteredEvents.map((ev) => {
+                    const dateObj = new Date(ev.timestamp);
+                    const isPast = ev.timestampSec <= currentTimestampSec;
+                    const isNearCurrent = Math.abs(ev.timestampSec - currentTimestampSec) <= 1800; // within 30 min
+
+                    const timeStr = dateObj.toISOString().replace('T', ' ').slice(0, 16) + ' UTC';
+
+                    return (
+                      <tr
+                        key={ev.id}
+                        className={`border-b border-slate-800/40 transition-colors ${
+                          isNearCurrent
+                            ? 'bg-amber-500/10 border-amber-500/30'
+                            : isPast
+                            ? 'hover:bg-slate-800/20 text-slate-400'
+                            : 'hover:bg-slate-800/40 text-slate-200 font-medium'
+                        }`}
+                      >
+                        <td className="py-1.5 px-3 whitespace-nowrap">
+                          <span className={isPast ? 'text-slate-400' : 'text-indigo-300 font-semibold'}>
+                            {timeStr}
+                          </span>
+                        </td>
+                        <td className="py-1.5 px-2 whitespace-nowrap">
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800 text-[10px] font-bold">
+                            <span>{COUNTRY_FLAGS[ev.currency] || '🌐'}</span>
+                            <span>{ev.currency}</span>
+                          </span>
+                        </td>
+                        <td className="py-1.5 px-2 text-center whitespace-nowrap">
+                          {ev.impact === 'HIGH' && (
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/40">
+                              🔴 {t.calendarImpactHigh}
+                            </span>
+                          )}
+                          {ev.impact === 'MEDIUM' && (
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/40">
+                              🟡 {t.calendarImpactMedium}
+                            </span>
+                          )}
+                          {ev.impact === 'LOW' && (
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-500/20 text-sky-400 border border-sky-500/40">
+                              🔵 {t.calendarImpactLow}
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-1.5 px-3">
+                          <div className="flex items-center gap-1.5">
+                            <span className={isPast ? 'text-slate-300' : 'text-slate-100 font-semibold'}>
+                              {ev.title}
+                            </span>
+                            {ev.sentiment === 'BULLISH' && (
+                              <span title={t.calendarBullishImpact}>
+                                <TrendingUp className="w-3 h-3 text-emerald-400 shrink-0" />
+                              </span>
+                            )}
+                            {ev.sentiment === 'BEARISH' && (
+                              <span title={t.calendarBearishImpact}>
+                                <TrendingDown className="w-3 h-3 text-rose-400 shrink-0" />
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="py-1.5 px-2 text-right font-bold">
+                          {isPast ? (
+                            <span
+                              className={
+                                ev.sentiment === 'BULLISH'
+                                  ? 'text-emerald-400'
+                                  : ev.sentiment === 'BEARISH'
+                                  ? 'text-rose-400'
+                                  : 'text-slate-200'
+                              }
+                            >
+                              {ev.actual || '---'}
+                            </span>
+                          ) : (
+                            <span className="text-slate-500 font-normal">{t.calendarNotAvailable}</span>
+                          )}
+                        </td>
+                        <td className="py-1.5 px-2 text-right text-slate-400">
+                          {ev.forecast || '---'}
+                        </td>
+                        <td className="py-1.5 px-2 text-right text-slate-500">
+                          {ev.previous || '---'}
+                        </td>
+                        <td className="py-1.5 px-2 text-center whitespace-nowrap">
+                          {renderSourceBadge(ev.source)}
+                        </td>
+                        <td className="py-1.5 px-3 text-center whitespace-nowrap">
+                          {isPast ? (
+                            <span className="text-[10px] text-emerald-400 bg-emerald-950/60 border border-emerald-500/30 px-1.5 py-0.5 rounded font-semibold">
+                              ✅ {t.calendarStatusPassed}
+                            </span>
+                          ) : (
+                            <span className="text-[10px] text-amber-400 bg-amber-950/60 border border-amber-500/30 px-1.5 py-0.5 rounded font-semibold">
+                              ⏳ {t.calendarStatusUpcoming}
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Cards View */}
+            <div className="block md:hidden">
+              {renderMobileEventCards()}
+            </div>
+          </>
         )}
       </div>
     </div>

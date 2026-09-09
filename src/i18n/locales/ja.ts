@@ -244,6 +244,7 @@ export const ja: TranslationDict = {
   "datasetDbTabTitle": "データセットDBライブラリ",
   "csvTxtTabTitle": "CSV / TXT ファイル取込",
   "sampleGbmTabTitle": "サンプル合成データ (GBM)",
+  "viewDatabaseBtn": "データベースを表示 ➔",
   "autoCrawlTab": "オンライン自動取得",
   "uploadFileTab": "ファイル取込 (CSV / TXT)",
   "sampleDataTab": "サンプルデータ",
@@ -788,7 +789,20 @@ export const ja: TranslationDict = {
   // Bottom Dock Resizer & Layout Reset
   "dragToResizePanel": "ドラッグして高さを調整 (ダブルクリックで初期化)",
   "resetPanelHeight": "パネルの高さとチャート比率をリセット",
-  "panelHeightDefault": "初期設定"
+  "panelHeightDefault": "初期設定",
+
+  // Mobile Responsive & Touch Enhancements
+  "mobileCardView": "カード表示",
+  "mobileTableView": "テーブル表示",
+  "mobileTimeframeSelect": "時間枠",
+  "mobileQuickTools": "取引ツール",
+  "mobileResetBalance": "初期残高リセット",
+  "mobileResetBalanceConfirm": "口座残高を初期設定の$10,000にリセットしてもよろしいですか？",
+  "mobileBalanceResetSuccess": "口座残高が$10,000に正常にリセットされました！",
+  "mobileTradingSheet": "クイック注文シート",
+  "mobileToggleTools": "ツール切替",
+  "statusOn": "オン",
+  "statusOff": "オフ"
 };
 
 

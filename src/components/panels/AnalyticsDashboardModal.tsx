@@ -411,48 +411,49 @@ export const AnalyticsDashboardModal: React.FC = () => {
     : null;
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 animate-in fade-in select-none p-4">
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 animate-in fade-in select-none p-2 sm:p-4">
       <div className="bg-[#0f141f] border border-slate-700/80 rounded-2xl w-full max-w-5xl max-h-[92vh] shadow-2xl flex flex-col overflow-hidden text-xs">
         
         {/* TOP HEADER: Clean Title & Primary Actions */}
-        <div className="bg-[#0b0e17] border-b border-slate-800 px-6 py-3.5 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-gradient-to-br from-emerald-500/20 to-teal-500/10 border border-emerald-500/30 rounded-xl text-emerald-400 shadow-sm">
+        <div className="bg-[#0b0e17] border-b border-slate-800 px-3 sm:px-6 py-3 flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="p-2 bg-gradient-to-br from-emerald-500/20 to-teal-500/10 border border-emerald-500/30 rounded-xl text-emerald-400 shadow-sm shrink-0">
               <Activity className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-sm font-bold text-slate-100">{t.analyticsTitle}</h2>
-                <span className="px-2 py-0.5 rounded-full bg-indigo-950 text-indigo-300 border border-indigo-500/30 text-[10px] font-mono font-bold">
+                <span className="hidden sm:inline-block px-2 py-0.5 rounded-full bg-indigo-950 text-indigo-300 border border-indigo-500/30 text-[10px] font-mono font-bold">
                   QUANT ANALYTICS PRO
                 </span>
               </div>
-              <p className="text-[11px] text-slate-400 mt-0.5">
+              <p className="text-[11px] text-slate-400 mt-0.5 line-clamp-1">
                 {t.analyticsSub}
               </p>
             </div>
           </div>
 
           {/* Action Buttons */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             <button
               onClick={handleSaveSnapshot}
               disabled={saveStatus === 'saving'}
-              className="px-3 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all shadow-md active:scale-95"
+              className="px-2.5 sm:px-3 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all shadow-md active:scale-95"
               title={t.saveSnapshotTitle}
             >
               <Save className="w-3.5 h-3.5" />
-              <span>
+              <span className="hidden sm:inline">
                 {saveStatus === 'saving' ? t.savingSnapshot : saveStatus === 'success' ? t.snapshotSaved : t.saveSnapshot}
               </span>
             </button>
 
             <button
               onClick={handleExportCSV}
-              className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-xs"
+              className="px-2.5 sm:px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-xs"
+              title={t.exportCSV}
             >
               <Download className="w-3.5 h-3.5 text-indigo-400" />
-              <span>{t.exportCSV}</span>
+              <span className="hidden sm:inline">{t.exportCSV}</span>
             </button>
 
             <button
@@ -465,16 +466,16 @@ export const AnalyticsDashboardModal: React.FC = () => {
         </div>
 
         {/* SUB-BAR: Dedicated Luxury Session Selector & Navigation Tabs */}
-        <div className="bg-[#0e121d] border-b border-slate-800 px-6 py-2.5 flex items-center justify-between flex-wrap gap-3">
+        <div className="bg-[#0e121d] border-b border-slate-800 px-3 sm:px-6 py-2.5 flex items-center justify-between flex-wrap gap-2.5 shrink-0">
           
           {/* LEFT: LUXURY CUSTOM SESSION SELECTOR (Anchored with left-0 so it NEVER clips!) */}
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className="flex items-center gap-2.5 px-3.5 py-1.5 bg-slate-900/95 hover:bg-slate-800 border border-slate-700/90 hover:border-indigo-500/70 rounded-xl text-xs transition-all shadow-md group"
+              className="flex items-center gap-2.5 px-3 py-1.5 bg-slate-900/95 hover:bg-slate-800 border border-slate-700/90 hover:border-indigo-500/70 rounded-xl text-xs transition-all shadow-md group max-w-[calc(100vw-3rem)]"
             >
               <FolderKanban className="w-4 h-4 text-indigo-400 shrink-0" />
-              <div className="flex flex-col text-left max-w-[210px] sm:max-w-[280px]">
+              <div className="flex flex-col text-left max-w-[160px] sm:max-w-[280px]">
                 <span className="text-[9px] text-slate-400 uppercase font-sans font-bold tracking-wider">
                   {t.selectSessionPrompt}
                 </span>
@@ -487,7 +488,7 @@ export const AnalyticsDashboardModal: React.FC = () => {
 
             {/* DROPDOWN POPOVER MENU (Anchored to left-0, extends to the right with ample space) */}
             {isDropdownOpen && (
-              <div className="absolute left-0 top-full mt-2 w-84 sm:w-96 bg-[#111726] border border-slate-700/90 rounded-2xl shadow-2xl z-50 p-2.5 text-xs font-sans animate-in fade-in zoom-in-95 duration-150 backdrop-blur-2xl">
+              <div className="absolute left-0 top-full mt-2 w-84 sm:w-96 max-w-[calc(100vw-2rem)] bg-[#111726] border border-slate-700/90 rounded-2xl shadow-2xl z-50 p-2.5 text-xs font-sans animate-in fade-in zoom-in-95 duration-150 backdrop-blur-2xl">
                 
                 {/* Search input */}
                 <div className="relative mb-2 px-1">

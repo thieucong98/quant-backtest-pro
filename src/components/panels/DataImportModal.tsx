@@ -838,17 +838,17 @@ export const DataImportModal: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-xs flex items-center justify-center z-50 animate-in fade-in select-none p-3 font-sans">
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-xs flex items-center justify-center z-50 animate-in fade-in select-none p-2 sm:p-3 font-sans">
       <div className="bg-[#0e131f] border border-slate-700/80 rounded-2xl w-full max-w-3xl shadow-2xl flex flex-col overflow-hidden text-xs max-h-[92vh]">
         {/* MODAL HEADER */}
-        <div className="h-13 bg-slate-900/95 border-b border-slate-800/90 px-5 flex items-center justify-between">
+        <div className="h-13 bg-slate-900/95 border-b border-slate-800/90 px-3 sm:px-5 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="w-7 h-7 rounded-lg bg-sky-600/30 border border-sky-500/40 flex items-center justify-center shadow-xs">
               <Database className="w-4 h-4 text-sky-400" />
             </div>
             <div>
               <span className="font-bold text-sm text-slate-100 block">{t.dataManagerHeader}</span>
-              <span className="text-[10px] text-slate-400 font-mono">{t.sqliteMultiEngineSub}</span>
+              <span className="text-[10px] text-slate-400 font-mono line-clamp-1">{t.sqliteMultiEngineSub}</span>
             </div>
           </div>
 
@@ -926,7 +926,7 @@ export const DataImportModal: React.FC = () => {
         </div>
 
         {/* MODAL BODY */}
-        <div className="p-5 flex-1 overflow-y-auto space-y-4">
+        <div className="p-3 sm:p-5 flex-1 overflow-y-auto space-y-4">
           {/* TOP STATUS NOTIFICATION - ALWAYS VISIBLE */}
           {importStatus && (
             <div
@@ -951,7 +951,7 @@ export const DataImportModal: React.FC = () => {
                     onClick={() => setActiveTab('library')}
                     className="px-2.5 py-1 bg-teal-600/30 hover:bg-teal-600/50 border border-teal-500/40 text-teal-200 rounded text-[11px] font-mono transition-all font-bold"
                   >
-                    Xem Database ➔
+                    {t.viewDatabaseBtn}
                   </button>
                 )}
                 <button

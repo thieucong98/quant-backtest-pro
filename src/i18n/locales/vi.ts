@@ -244,6 +244,7 @@ export const vi: TranslationDict = {
   "datasetDbTabTitle": "Thư Viện Dataset DB",
   "csvTxtTabTitle": "Nạp File CSV / TXT",
   "sampleGbmTabTitle": "Dữ liệu Mẫu (GBM)",
+  "viewDatabaseBtn": "Xem Database ➔",
   "autoCrawlTab": "Tự Động Crawl Online",
   "uploadFileTab": "Nạp File (CSV / TXT)",
   "sampleDataTab": "Dữ Liệu Mẫu",
@@ -788,7 +789,20 @@ export const vi: TranslationDict = {
   // Bottom Dock Resizer & Layout Reset
   "dragToResizePanel": "Kéo để chỉnh độ cao (Nhấp đúp để reset mặc định)",
   "resetPanelHeight": "Khôi phục độ cao & khung hình mặc định",
-  "panelHeightDefault": "Mặc định"
+  "panelHeightDefault": "Mặc định",
+
+  // Mobile Responsive & Touch Enhancements
+  "mobileCardView": "Dạng thẻ",
+  "mobileTableView": "Dạng bảng",
+  "mobileTimeframeSelect": "Khung thời gian",
+  "mobileQuickTools": "Công cụ giao dịch",
+  "mobileResetBalance": "Đặt lại vốn ban đầu",
+  "mobileResetBalanceConfirm": "Bạn có chắc chắn muốn đặt lại số dư tài khoản về mức mặc định $10,000?",
+  "mobileBalanceResetSuccess": "Đã đặt lại số dư tài khoản về $10,000 thành công!",
+  "mobileTradingSheet": "Bảng lệnh nhanh",
+  "mobileToggleTools": "Bật/Tắt công cụ",
+  "statusOn": "BẬT",
+  "statusOff": "TẮT"
 };
 
 
