@@ -78,6 +78,21 @@ export async function getOrCreateDefaultUser() {
   return user;
 }
 
+// GET /api/auth/providers (or /api/users/providers)
+usersRouter.get('/providers', (_req: Request, res: Response) => {
+  const google = Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_ID.trim());
+  const github = Boolean(process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_ID.trim());
+  const apple = Boolean(process.env.APPLE_CLIENT_ID && process.env.APPLE_CLIENT_ID.trim());
+
+  res.json({
+    providers: {
+      google,
+      github,
+      apple
+    }
+  });
+});
+
 // POST /api/auth/register
 usersRouter.post('/register', async (req: Request, res: Response) => {
   try {

@@ -22,9 +22,11 @@ export interface AuthState {
   authMode: 'login' | 'register';
   isLoading: boolean;
   error: string | null;
+  configuredProviders: { google: boolean; github: boolean; apple: boolean };
   
   // Actions
   setAuthModalOpen: (open: boolean, mode?: 'login' | 'register') => void;
+  fetchConfiguredProviders: () => Promise<void>;
   loginWithEmail: (email: string, pass: string) => Promise<boolean>;
   registerWithEmail: (name: string, email: string, pass: string) => Promise<boolean>;
   loginDemoTrader: () => Promise<boolean>;

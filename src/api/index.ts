@@ -63,5 +63,7 @@ export const usersApi = {
   register: (name: string, email: string, password: string) =>
     api.post<{ user: any; token: string }>('/auth/register', { name, email, password }),
   sso: (provider: string, email: string, name: string, avatarUrl?: string) =>
-    api.post<{ user: any; token: string }>('/auth/sso', { provider, email, name, avatarUrl })
+    api.post<{ user: any; token: string }>('/auth/sso', { provider, email, name, avatarUrl }),
+  getProviders: () =>
+    api.get<{ providers: { google: boolean; github: boolean; apple: boolean } }>('/auth/providers')
 };

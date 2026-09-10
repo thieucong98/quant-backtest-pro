@@ -39,9 +39,29 @@ export const useAuthStore = create<AuthState>((set, get) => {
     authMode: 'login',
     isLoading: false,
     error: null,
+    configuredProviders: {
+      google: false,
+      github: false,
+      apple: false
+    },
 
     setAuthModalOpen: (open, mode = 'login') => {
       set({ isAuthModalOpen: open, authMode: mode, error: null });
+      if (open) {
+        get().fetchConfiguredProviders().catch(() => {});
+      }
+    },
+
+    fetchConfiguredProviders: async () => {
+      try {
+        const res = await usersApi.getProviders();
+        if (res?.providers) {
+          set({ configuredProviders: res.providers });
+        }
+      } catch (e) {
+        // Graceful fallback to all false if endpoint unavailable
+        set({ configuredProviders: { google: false, github: false, apple: false } });
+      }
     },
 
     loginWithEmail: async (email, password) => {
