@@ -834,5 +834,19 @@ export interface TranslationDict {
   mobileToggleTools: string;
   statusOn: string;
   statusOff: string;
+
+  // Auth Gates & Access Control
+  guestModeBadge: string;
+  authRequiredTitle: string;
+  authRequiredDesc: string;
+  authRequiredAiStudio: string;
+  authRequiredAnalytics: string;
+  authRequiredSessionManager: string;
+  authRequiredBroker: string;
+  authRequiredTunnel: string;
+  authRequiredDataSave: string;
+  quickDemoLogin: string;
+  loginNow: string;
+  guestSandboxTooltip: string;
 }
 

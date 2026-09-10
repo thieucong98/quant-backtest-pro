@@ -802,7 +802,21 @@ export const zh: TranslationDict = {
   "mobileTradingSheet": "快捷交易面板",
   "mobileToggleTools": "切换工具",
   "statusOn": "开启",
-  "statusOff": "关闭"
+  "statusOff": "关闭",
+
+  // Auth Gates & Access Control
+  "guestModeBadge": "访客模式",
+  "authRequiredTitle": "需要登录",
+  "authRequiredDesc": "使用此功能需要登录账户。",
+  "authRequiredAiStudio": "请登录以使用 AI 策略工作室、自动生成交易机器人及优化参数。",
+  "authRequiredAnalytics": "请登录以查看机构绩效分析和运行蒙特卡洛压力测试。",
+  "authRequiredSessionManager": "请登录以在云端保存和管理交易会话。",
+  "authRequiredBroker": "请登录以配置并保存 MT5 经纪商连接。",
+  "authRequiredTunnel": "请登录以启动 Cloudflare 远程隧道。",
+  "authRequiredDataSave": "请登录以将此数据集保存到您的账户数据库中。",
+  "quickDemoLogin": "快速体验（模拟交易员）",
+  "loginNow": "立即登录",
+  "guestSandboxTooltip": "您当前处于本地访客沙盒模式。登录以解锁 AI 策略工作室、云端会话及 MT5 连接。"
 };
 
 

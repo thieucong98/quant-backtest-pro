@@ -802,7 +802,21 @@ export const ja: TranslationDict = {
   "mobileTradingSheet": "クイック注文シート",
   "mobileToggleTools": "ツール切替",
   "statusOn": "オン",
-  "statusOff": "オフ"
+  "statusOff": "オフ",
+
+  // Auth Gates & Access Control
+  "guestModeBadge": "ゲストモード",
+  "authRequiredTitle": "ログインが必要です",
+  "authRequiredDesc": "この機能を利用するにはログインが必要です。",
+  "authRequiredAiStudio": "AI戦略スタジオ、自動ボット生成、パラメータ最適化を利用するにはログインしてください。",
+  "authRequiredAnalytics": "機関分析とモンテカルロシミュレーションを利用するにはログインしてください。",
+  "authRequiredSessionManager": "クラウド取引セッションを保存および管理するにはログインしてください。",
+  "authRequiredBroker": "MT5ブローカー接続を設定および保存するにはログインしてください。",
+  "authRequiredTunnel": "Cloudflareリモートトンネルを起動するにはログインしてください。",
+  "authRequiredDataSave": "このデータセットをアカウントデータベースに保存するにはログインしてください。",
+  "quickDemoLogin": "クイックアクセス（デモ）",
+  "loginNow": "今すぐログイン",
+  "guestSandboxTooltip": "ローカルのゲストサンドボックスモードです。AIスタジオ、クラウドセッション、MT5接続を利用するにはログインしてください。"
 };
 
 

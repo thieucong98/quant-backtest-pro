@@ -1127,10 +1127,12 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
           return;
         }
 
-        // Auto-authenticate default demo trader if not yet logged in
+        // Guest Sandbox Guard: Do NOT silently auto-login as admin
         const auth = useAuthStore.getState();
         if (!auth.isAuthenticated) {
-          await auth.loginDemoTrader();
+          set({ activeSessionId: 'guest-local-session' });
+          get().addStrategyLog('INFO', 'Khách dùng thử (Guest Sandbox) — Hãy đăng nhập để lưu trữ phiên lên đám mây');
+          return;
         }
 
         // Check for active session

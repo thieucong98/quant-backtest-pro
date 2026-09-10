@@ -15,9 +15,11 @@ import {
   Square,
   AlertTriangle,
   RotateCcw,
-  Sparkles
+  Sparkles,
+  Lock
 } from 'lucide-react';
 import { useBacktestStore } from '../../store/backtestStore';
+import { useAuthStore } from '../../store/authStore';
 import { sessionsApi, SessionListItem } from '../../api/sessions';
 import { INSTRUMENTS } from '../../config/instruments';
 import { getTranslation, formatDate } from '../../i18n';
@@ -68,13 +70,60 @@ export const SessionManagerModal: React.FC = () => {
     }
   };
 
+  const { isAuthenticated, setAuthModalOpen, loginDemoTrader } = useAuthStore();
+
   useEffect(() => {
-    if (isSessionManagerOpen) {
+    if (isSessionManagerOpen && isAuthenticated) {
       fetchSessions();
     }
-  }, [isSessionManagerOpen]);
+  }, [isSessionManagerOpen, isAuthenticated]);
 
   if (!isSessionManagerOpen) return null;
+
+  if (!isAuthenticated) {
+    return (
+      <div className="fixed inset-0 bg-black/80 backdrop-blur-xs flex items-center justify-center z-50 animate-in fade-in select-none p-2 sm:p-4 font-sans">
+        <div className="bg-[#0f1422] border border-amber-500/40 rounded-2xl w-full max-w-md shadow-2xl p-6 text-center text-xs relative flex flex-col items-center">
+          <button
+            onClick={() => setSessionManagerOpen(false)}
+            className="absolute top-3.5 right-3.5 p-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-lg transition-colors"
+          >
+            <X className="w-4 h-4" />
+          </button>
+          <div className="w-12 h-12 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 mb-3 shadow-md shadow-amber-500/20">
+            <Lock className="w-6 h-6" />
+          </div>
+          <h3 className="text-base font-bold text-slate-100 mb-1">{t.authRequiredTitle}</h3>
+          <p className="text-slate-400 mb-5 leading-relaxed max-w-sm">
+            {t.authRequiredSessionManager}
+          </p>
+          <div className="flex flex-col gap-2.5 w-full">
+            <button
+              onClick={() => {
+                setSessionManagerOpen(false);
+                setAuthModalOpen(true, 'login');
+              }}
+              className="w-full py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30 active:scale-98 transition-all"
+            >
+              <span>{t.loginNow}</span>
+            </button>
+            <button
+              onClick={async () => {
+                const ok = await loginDemoTrader();
+                if (ok) {
+                  fetchSessions();
+                }
+              }}
+              className="w-full py-2 bg-slate-900 hover:bg-slate-800 border border-slate-700/80 text-slate-300 hover:text-white font-medium rounded-xl flex items-center justify-center gap-2 active:scale-98 transition-all"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+              <span>{t.quickDemoLogin}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();

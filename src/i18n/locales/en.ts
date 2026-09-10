@@ -802,7 +802,21 @@ export const en: TranslationDict = {
   "mobileTradingSheet": "Quick Trade Sheet",
   "mobileToggleTools": "Toggle Tools",
   "statusOn": "ON",
-  "statusOff": "OFF"
+  "statusOff": "OFF",
+
+  // Auth Gates & Access Control
+  "guestModeBadge": "Guest Sandbox",
+  "authRequiredTitle": "Authentication Required",
+  "authRequiredDesc": "This feature requires logging in to access.",
+  "authRequiredAiStudio": "Please log in to use AI Strategy Studio, generate bots, and optimize parameters.",
+  "authRequiredAnalytics": "Please log in to view institutional analytics and run Monte Carlo simulations.",
+  "authRequiredSessionManager": "Please log in to persist and manage cloud trading sessions.",
+  "authRequiredBroker": "Please log in to configure and persist MT5 broker connections.",
+  "authRequiredTunnel": "Please log in to initialize the Cloudflare Remote Tunnel.",
+  "authRequiredDataSave": "Please log in to save this dataset to your account database.",
+  "quickDemoLogin": "Quick Access (Demo Trader)",
+  "loginNow": "Log In Now",
+  "guestSandboxTooltip": "You are in local guest sandbox mode. Log in to unlock AI Studio, cloud sessions, and MT5 connection."
 };
 
 

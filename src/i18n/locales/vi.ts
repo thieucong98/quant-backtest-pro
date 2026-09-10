@@ -802,7 +802,21 @@ export const vi: TranslationDict = {
   "mobileTradingSheet": "Bảng lệnh nhanh",
   "mobileToggleTools": "Bật/Tắt công cụ",
   "statusOn": "BẬT",
-  "statusOff": "TẮT"
+  "statusOff": "TẮT",
+
+  // Auth Gates & Access Control
+  "guestModeBadge": "Chế độ Khách",
+  "authRequiredTitle": "Yêu cầu đăng nhập",
+  "authRequiredDesc": "Tính năng này yêu cầu đăng nhập tài khoản để sử dụng.",
+  "authRequiredAiStudio": "Vui lòng đăng nhập để sử dụng AI Strategy Studio, sinh bot tự động và tối ưu hóa tham số.",
+  "authRequiredAnalytics": "Vui lòng đăng nhập để xem phân tích hiệu suất chuyên sâu và kiểm thử Monte Carlo.",
+  "authRequiredSessionManager": "Vui lòng đăng nhập để lưu trữ và quản lý các phiên làm việc trên đám mây.",
+  "authRequiredBroker": "Vui lòng đăng nhập để thiết lập và lưu trữ kết nối sàn MT5.",
+  "authRequiredTunnel": "Vui lòng đăng nhập để khởi tạo đường truyền từ xa Cloudflare Tunnel.",
+  "authRequiredDataSave": "Vui lòng đăng nhập để lưu bộ dữ liệu này vào Database tài khoản của bạn.",
+  "quickDemoLogin": "Trải nghiệm nhanh (Tài khoản Demo)",
+  "loginNow": "Đăng nhập ngay",
+  "guestSandboxTooltip": "Bạn đang ở chế độ khách dùng thử cục bộ. Đăng nhập để mở khóa AI Studio, lưu phiên lên Cloud và kết nối MT5."
 };
 
 

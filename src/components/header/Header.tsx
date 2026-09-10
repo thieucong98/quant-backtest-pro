@@ -508,7 +508,13 @@ export const Header: React.FC = () => {
           {/* LIVE BROKER MODE SWITCHER & CONNECTION HUD */}
           <div className="flex items-center gap-1 shrink-0">
             <button
-              onClick={() => setBrokerModalOpen(true)}
+              onClick={() => {
+                if (!isAuthenticated) {
+                  setAuthModalOpen(true, 'login');
+                  return;
+                }
+                setBrokerModalOpen(true);
+              }}
               className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all active:scale-95 ${
                 brokerStatus === 'CONNECTED'
                   ? 'bg-emerald-950/80 border-emerald-500/60 text-emerald-300 shadow-md shadow-emerald-500/10'
@@ -591,7 +597,13 @@ export const Header: React.FC = () => {
           <div className="hidden xl:flex items-center gap-1.5 shrink-0">
             {/* AI Strategy Studio Button */}
             <button
-              onClick={() => setAIModalOpen(true)}
+              onClick={() => {
+                if (!isAuthenticated) {
+                  setAuthModalOpen(true, 'login');
+                  return;
+                }
+                setAIModalOpen(true);
+              }}
               className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition-all active:scale-95 shrink-0 ${
                 autoTradingEnabled
                   ? 'bg-purple-950/90 border-purple-500 text-purple-200 shadow-lg shadow-purple-500/25 animate-pulse'
@@ -640,8 +652,12 @@ export const Header: React.FC = () => {
                     {/* Sessions */}
                     <button
                       onClick={() => {
-                        setSessionManagerOpen(true);
                         setIsMoreMenuOpen(false);
+                        if (!isAuthenticated) {
+                          setAuthModalOpen(true, 'login');
+                          return;
+                        }
+                        setSessionManagerOpen(true);
                       }}
                       className="w-full px-2.5 py-2 rounded-lg flex items-center justify-between text-slate-300 hover:bg-slate-800/80 hover:text-white transition-all text-left group"
                     >
@@ -659,8 +675,12 @@ export const Header: React.FC = () => {
                     {/* Analytics */}
                     <button
                       onClick={() => {
-                        setAnalyticsModalOpen(true);
                         setIsMoreMenuOpen(false);
+                        if (!isAuthenticated) {
+                          setAuthModalOpen(true, 'login');
+                          return;
+                        }
+                        setAnalyticsModalOpen(true);
                       }}
                       className="w-full px-2.5 py-2 rounded-lg flex items-center justify-between text-slate-300 hover:bg-slate-800/80 hover:text-white transition-all text-left group"
                     >
@@ -678,8 +698,12 @@ export const Header: React.FC = () => {
                     {/* Data Manager */}
                     <button
                       onClick={() => {
-                        setDataModalOpen(true);
                         setIsMoreMenuOpen(false);
+                        if (!isAuthenticated) {
+                          setAuthModalOpen(true, 'login');
+                          return;
+                        }
+                        setDataModalOpen(true);
                       }}
                       className="w-full px-2.5 py-2 rounded-lg flex items-center justify-between text-slate-300 hover:bg-slate-800/80 hover:text-white transition-all text-left group"
                     >
@@ -697,8 +721,12 @@ export const Header: React.FC = () => {
                     {/* Remote Access */}
                     <button
                       onClick={() => {
-                        setTunnelModalOpen(true);
                         setIsMoreMenuOpen(false);
+                        if (!isAuthenticated) {
+                          setAuthModalOpen(true, 'login');
+                          return;
+                        }
+                        setTunnelModalOpen(true);
                       }}
                       className="w-full px-2.5 py-2 rounded-lg flex items-center justify-between text-slate-300 hover:bg-slate-800/80 hover:text-white transition-all text-left group"
                     >
@@ -795,13 +823,22 @@ export const Header: React.FC = () => {
               </span>
             </button>
           ) : (
-            <button
-              onClick={() => setAuthModalOpen(true, 'login')}
-              className="px-2.5 py-1.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-semibold rounded-lg text-xs shadow-md shadow-indigo-600/30 transition-all active:scale-95 flex items-center gap-1.5 shrink-0"
-            >
-              <User className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">{t.login}</span>
-            </button>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <span
+                title={t.guestSandboxTooltip}
+                className="hidden md:inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold bg-amber-950/80 border border-amber-500/40 text-amber-300 font-mono"
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                {t.guestModeBadge}
+              </span>
+              <button
+                onClick={() => setAuthModalOpen(true, 'login')}
+                className="px-2.5 py-1.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-semibold rounded-lg text-xs shadow-md shadow-indigo-600/30 transition-all active:scale-95 flex items-center gap-1.5 shrink-0"
+              >
+                <User className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">{t.login}</span>
+              </button>
+            </div>
           )}
 
           {/* MOBILE & TABLET HAMBURGER BUTTON (Visible on < xl) */}
@@ -978,7 +1015,14 @@ export const Header: React.FC = () => {
               {/* Drawer Menu Links */}
               <div className="space-y-1 text-xs pt-1 border-t border-slate-800">
                 <button
-                  onClick={() => { setAIModalOpen(true); setIsMobileDrawerOpen(false); }}
+                  onClick={() => {
+                    setIsMobileDrawerOpen(false);
+                    if (!isAuthenticated) {
+                      setAuthModalOpen(true, 'login');
+                      return;
+                    }
+                    setAIModalOpen(true);
+                  }}
                   className="w-full px-3 py-2 rounded-lg flex items-center gap-2.5 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
                 >
                   <BrainCircuit className="w-4 h-4 text-purple-400" />
@@ -986,7 +1030,14 @@ export const Header: React.FC = () => {
                 </button>
 
                 <button
-                  onClick={() => { setSessionManagerOpen(true); setIsMobileDrawerOpen(false); }}
+                  onClick={() => {
+                    setIsMobileDrawerOpen(false);
+                    if (!isAuthenticated) {
+                      setAuthModalOpen(true, 'login');
+                      return;
+                    }
+                    setSessionManagerOpen(true);
+                  }}
                   className="w-full px-3 py-2 rounded-lg flex items-center gap-2.5 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
                 >
                   <FolderOpen className="w-4 h-4 text-indigo-400" />
@@ -994,7 +1045,14 @@ export const Header: React.FC = () => {
                 </button>
 
                 <button
-                  onClick={() => { setAnalyticsModalOpen(true); setIsMobileDrawerOpen(false); }}
+                  onClick={() => {
+                    setIsMobileDrawerOpen(false);
+                    if (!isAuthenticated) {
+                      setAuthModalOpen(true, 'login');
+                      return;
+                    }
+                    setAnalyticsModalOpen(true);
+                  }}
                   className="w-full px-3 py-2 rounded-lg flex items-center gap-2.5 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
                 >
                   <BarChart3 className="w-4 h-4 text-emerald-400" />
@@ -1002,7 +1060,14 @@ export const Header: React.FC = () => {
                 </button>
 
                 <button
-                  onClick={() => { setDataModalOpen(true); setIsMobileDrawerOpen(false); }}
+                  onClick={() => {
+                    setIsMobileDrawerOpen(false);
+                    if (!isAuthenticated) {
+                      setAuthModalOpen(true, 'login');
+                      return;
+                    }
+                    setDataModalOpen(true);
+                  }}
                   className="w-full px-3 py-2 rounded-lg flex items-center gap-2.5 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
                 >
                   <Upload className="w-4 h-4 text-sky-400" />
@@ -1010,7 +1075,14 @@ export const Header: React.FC = () => {
                 </button>
 
                 <button
-                  onClick={() => { setTunnelModalOpen(true); setIsMobileDrawerOpen(false); }}
+                  onClick={() => {
+                    setIsMobileDrawerOpen(false);
+                    if (!isAuthenticated) {
+                      setAuthModalOpen(true, 'login');
+                      return;
+                    }
+                    setTunnelModalOpen(true);
+                  }}
                   className={`w-full px-3 py-2 rounded-lg flex items-center justify-between transition-colors ${
                     isTunnelActive
                       ? 'bg-emerald-950/80 text-emerald-300 font-semibold'
@@ -1027,7 +1099,14 @@ export const Header: React.FC = () => {
                 </button>
 
                 <button
-                  onClick={() => { setBrokerModalOpen(true); setIsMobileDrawerOpen(false); }}
+                  onClick={() => {
+                    setIsMobileDrawerOpen(false);
+                    if (!isAuthenticated) {
+                      setAuthModalOpen(true, 'login');
+                      return;
+                    }
+                    setBrokerModalOpen(true);
+                  }}
                   className="w-full px-3 py-2 rounded-lg flex items-center gap-2.5 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
                 >
                   <Radio className="w-4 h-4 text-emerald-400" />
@@ -1064,13 +1143,21 @@ export const Header: React.FC = () => {
                 </div>
               </div>
 
-              {isAuthenticated && user && (
+              {isAuthenticated && user ? (
                 <button
                   onClick={() => { setProfileModalOpen(true); setIsMobileDrawerOpen(false); }}
                   className="w-full py-2 bg-slate-900 border border-slate-800 rounded-xl flex items-center justify-center gap-2 text-xs font-bold text-slate-200"
                 >
                   <User className="w-3.5 h-3.5 text-amber-400" />
                   <span>{user.name} ({user.tier})</span>
+                </button>
+              ) : (
+                <button
+                  onClick={() => { setAuthModalOpen(true, 'login'); setIsMobileDrawerOpen(false); }}
+                  className="w-full py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold rounded-xl flex items-center justify-center gap-2 text-xs shadow-md shadow-indigo-600/30 active:scale-98 transition-all"
+                >
+                  <User className="w-4 h-4" />
+                  <span>{t.login}</span>
                 </button>
               )}
             </div>

@@ -7,6 +7,7 @@
 
 import { useEffect, useRef, useCallback } from 'react';
 import { useBacktestStore } from '../store/backtestStore';
+import { useAuthStore } from '../store/authStore';
 import { sessionsApi } from '../api/sessions';
 import { tradesApi } from '../api/trades';
 import { drawingsApi } from '../api/index';
@@ -31,7 +32,8 @@ export function useAutoSave() {
 
   // Perform auto-save
   const performSave = useCallback(async () => {
-    if (!sessionId || !serverAvailableRef.current) return;
+    const isAuth = useAuthStore.getState().isAuthenticated;
+    if (!sessionId || !serverAvailableRef.current || !isAuth || sessionId.startsWith('guest-')) return;
 
     try {
       // 1. Update session metadata
@@ -95,7 +97,8 @@ export function useAutoSave() {
   // Save on beforeunload (tab close / refresh)
   useEffect(() => {
     const handleBeforeUnload = () => {
-      if (sessionId && serverAvailableRef.current) {
+      const isAuth = useAuthStore.getState().isAuthenticated;
+      if (sessionId && serverAvailableRef.current && isAuth && !sessionId.startsWith('guest-')) {
         // Use sendBeacon for reliable last-moment save
         const payload = JSON.stringify({
           finalBalance: account.balance,
