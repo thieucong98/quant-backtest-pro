@@ -320,7 +320,7 @@ export class KaggleDatasetService {
     console.log(`[KAGGLE DOWNLOAD] Initiating native Node.js HTTP stream from ${apiUrl}...`);
 
     const headers: Record<string, string> = {
-      'User-Agent': 'QuantBacktestPro/1.2.0 (Node.js Native Stream Engine)'
+      'User-Agent': 'QuantBacktestPro/1.3.0 (Node.js Native Stream Engine)'
     };
 
     if (username && key && username.trim() && key.trim()) {
@@ -408,7 +408,7 @@ export class KaggleDatasetService {
     console.log(`[KAGGLE SINGLE FILE] Fetching single file from ${fileUrl}...`);
 
     const headers: Record<string, string> = {
-      'User-Agent': 'QuantBacktestPro/1.2.0 (Node.js Single File Stream Engine)'
+      'User-Agent': 'QuantBacktestPro/1.3.0 (Node.js Single File Stream Engine)'
     };
 
     if (username && key && username.trim() && key.trim()) {

@@ -4,7 +4,7 @@
 
 > **Nền tảng Replay Đa Tài Sản, Khởi Tạo Thuật Toán AI & Xuất Bot Giao Dịch Đạt Chuẩn Tổ Chức Tài Chính (Institutional-Grade)**
 
-[![Phiên bản: v1.2.0](https://img.shields.io/badge/Phiên%20bản-v1.2.0-indigo.svg?style=for-the-badge)](https://github.com/thieucong98/quant-backtest-pro/releases/tag/v1.2.0)
+[![Phiên bản: v1.3.0](https://img.shields.io/badge/Phiên%20bản-v1.3.0-indigo.svg?style=for-the-badge)](https://github.com/thieucong98/quant-backtest-pro/releases/tag/v1.3.0)
 [![Ngôn ngữ: Tiếng Việt](https://img.shields.io/badge/Ngôn%20ngữ-Tiếng%20Việt-red.svg?style=for-the-badge)](#)
 [![Language: English](https://img.shields.io/badge/Language-English-blue.svg?style=for-the-badge)](README.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-emerald.svg?style=for-the-badge)](LICENSE)

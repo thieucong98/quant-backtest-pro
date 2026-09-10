@@ -108,7 +108,7 @@ app.use('/api/auth/register', authLimiter);
 app.get('/api/health', (_req, res) => {
   res.json({
     status: 'ok',
-    version: '1.2.0',
+    version: '1.3.0',
     timestamp: new Date().toISOString(),
     uptime: process.uptime()
   });

@@ -4,7 +4,7 @@
 
 > **Institutional-Grade Web-based Multi-Asset Replay, AI Strategy Generation & Trading Bot Deployment Platform**
 
-[![Release: v1.2.0](https://img.shields.io/badge/Release-v1.2.0-indigo.svg?style=for-the-badge)](https://github.com/thieucong98/quant-backtest-pro/releases/tag/v1.2.0)
+[![Release: v1.3.0](https://img.shields.io/badge/Release-v1.3.0-indigo.svg?style=for-the-badge)](https://github.com/thieucong98/quant-backtest-pro/releases/tag/v1.3.0)
 [![Language: English](https://img.shields.io/badge/Language-English-blue.svg?style=for-the-badge)](#)
 [![Language: Tiếng Việt](https://img.shields.io/badge/Ngôn%20ngữ-Tiếng%20Việt-red.svg?style=for-the-badge)](README.vi.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-emerald.svg?style=for-the-badge)](LICENSE)
