@@ -238,6 +238,7 @@ Open your browser at:
 | 🏛️ [System Architecture](docs/ARCHITECTURE.md) | 🏛️ [Kiến trúc hệ thống](docs/vi/ARCHITECTURE.md) |
 | 🤖 [Strategy Bot Exporter Guide](docs/STRATEGY_BOT_EXPORTER.md) | 🤖 [Hướng dẫn xuất Bot giao dịch](docs/vi/STRATEGY_BOT_EXPORTER.md) |
 | 🔌 [API Reference](docs/API_REFERENCE.md) | 🔌 [Tài liệu API RESTful](docs/vi/API_REFERENCE.md) |
+| 🔐 [OAuth & Auth Setup Guide](docs/OAUTH_SETUP_GUIDE.md) | 🔐 [Hướng dẫn cấu hình OAuth & Đăng nhập](docs/vi/OAUTH_SETUP_GUIDE.md) |
 
 ---
 
