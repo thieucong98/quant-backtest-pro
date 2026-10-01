@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="175" height="38" viewBox="0 0 175 38" fill="none">
+  <rect width="175" height="38" rx="8" fill="#0B0E14" stroke="#1E293B" stroke-width="1.5"/>
+  <rect x="1" y="1" width="173" height="36" rx="7" fill="url(#gitpod_grad)" fill-opacity="0.12"/>
+  <g transform="translate(14, 9)">
+    <rect width="20" height="20" rx="4" fill="#FFAE33"/>
+    <path d="M6 10L10 6L14 10L10 14L6 10Z" fill="#0B0E14"/>
+  </g>
+  <text x="44" y="24" fill="#FFFFFF" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="600" letter-spacing="0.3">Open in Gitpod</text>
+  <defs>
+    <linearGradient id="gitpod_grad" x1="0" y1="0" x2="175" y2="38" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFAE33"/>
+      <stop offset="1" stop-color="#F97316"/>
+    </linearGradient>
+  </defs>
+</svg>

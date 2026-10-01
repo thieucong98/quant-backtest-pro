@@ -20,6 +20,18 @@
 <!-- Hero Showcase Image -->
 <img src="docs/assets/vi/01_dashboard_hero.png" alt="Không gian làm việc Quant Backtest Pro" width="100%" style="border-radius: 12px; box-shadow: 0 20px 50px rgba(0,0,0,0.5);" />
 
+<br />
+
+<p align="center">
+  <a href="https://railway.com/new" target="_blank"><img src="docs/assets/marketing/deploy_railway.svg" height="34" alt="Khởi chạy trên Railway" /></a>
+  &nbsp;
+  <a href="https://render.com/deploy?repo=https://github.com/thieucong98/quant-backtest-pro" target="_blank"><img src="docs/assets/marketing/deploy_render.svg" height="34" alt="Khởi chạy trên Render" /></a>
+  &nbsp;
+  <a href="https://gitpod.io/#https://github.com/thieucong98/quant-backtest-pro" target="_blank"><img src="docs/assets/marketing/open_in_gitpod.svg" height="34" alt="Mở trong Gitpod" /></a>
+  &nbsp;
+  <a href="https://codespaces.new/thieucong98/quant-backtest-pro" target="_blank"><img src="docs/assets/marketing/open_in_codespaces.svg" height="34" alt="Mở trong GitHub Codespaces" /></a>
+</p>
+
 </div>
 
 ---
@@ -122,6 +134,23 @@ Kiểm soát vi phạm quy tắc thi tuyển Quỹ (FTMO, FundedNext, MFF) theo 
 - **Mô Phỏng Căng Thẳng Monte Carlo**: Chạy 500+ kịch bản ngẫu nhiên để tính toán xác suất Cháy tài khoản (Risk of Ruin) và khoảng tin cậy.
 - **Lịch Lãi Lỗ (PnL Calendar & Heatmap)**: Bảng phân tích chi tiết hiệu suất theo phiên giao dịch, ngày trong tuần và tháng.
 - **Ma Trận So Sánh Các Phiên**: Đối chiếu trực tiếp nhiều phiên backtest khác nhau (Sharpe Ratio, Profit Factor, Expectancy, Winrate).
+
+<div align="center">
+  <img src="docs/assets/marketing/prop_firm_shield_badge.svg" alt="Lá chắn Quỹ cấp vốn thể chế" width="60%" style="margin: 12px 0;" />
+</div>
+
+---
+
+### 7. 🏆 Giải Đấu Giao Dịch Định Lượng Toàn Cầu & Bánh Đà Cộng Đồng
+Giải đấu giao dịch thuật toán mã nguồn mở với tổng quỹ giải thưởng **$50.000 USD** mỗi mùa, tài trợ tài khoản quỹ thi và xác thực kết quả minh bạch bằng mã băm hạt giống mật mã học (Cryptographic Seed).
+
+<div align="center">
+  <img src="docs/assets/marketing/quant_challenge_banner.svg" alt="Giải đấu Quant Backtest Toàn cầu" width="100%" style="border-radius: 12px; margin: 15px 0;" />
+</div>
+
+- **Kiểm Chứng Seed Bất Biến**: Loại bỏ hoàn toàn ảnh chụp màn hình ảo và bot học vẹt. Mọi thí sinh chạy thuật toán trên tập dữ liệu chuẩn có mã SHA-256 xác thực.
+- **Công Thức Chấm Điểm Thể Chế**: Kết hợp hài hòa giữa Tỷ số Sharpe (35%), Sortino (25%), Tỷ lệ hồi phục Calmar (20%) và số lượng mẫu lệnh (10%) kèm các chế tài chống Curve-fitting.
+- **Tự Động Hóa Qua Discord & Telegram Bot**: Tự động đồng bộ bảng xếp hạng thời gian thực qua lệnh `/challenge submit` và chạy lại đối soát trên máy chủ CI độc lập.
 
 ---
 
@@ -228,6 +257,30 @@ Mở trình duyệt tại địa chỉ:
 
 ---
 
+## 🔬 Nghiên Cứu Định Lượng & Báo Cáo Kỹ Thuật Chuyên Sâu
+
+Các bài viết phân tích kỹ thuật chuẩn mực và ấn phẩm nghiên cứu toán học của chúng tôi:
+
+1. 📄 **[Tại Sao 90% Kết Quả Backtest Là Ảo: Xây Dựng Cỗ Máy Replay O(1) Với Độ Chính Xác Mili-Giây](docs/marketing/articles/vi/01_tai_sao_90_phan_tram_backtest_lua_doi.md)**  
+   *Mổ xẻ bẫy nội suy nến High/Low, ảo tưởng về trượt giá và bước nhảy vọt hiệu năng 460x của cơ chế cập nhật vi sai O(1).*
+2. 📄 **[Bên Trong AI Strategy Studio: Từ Câu Lệnh Tự Nhiên Đến Bot MQL5 & Pine Script Chuẩn Thực Chiến](docs/marketing/articles/vi/02_ben_trong_ai_strategy_studio.md)**  
+   *Loại bỏ ảo giác AI với cấu trúc JSON AST, môi trường sandbox kiểm thử trực tiếp trên trình duyệt và bộ chuyển mã đa nền tảng.*
+3. 📄 **[Chinh Phục Thử Thách Quỹ Cấp Vốn: Thuật Toán Lá Chắn Sụt Giảm & Dynamic Trailing Stop](docs/marketing/articles/vi/03_chinh_phuc_thu_thach_prop_firm.md)**  
+   *Giải mã toán học bẫy sụt giảm High-Water Mark và cách mô phỏng 1.000 kịch bản Monte Carlo tính toán xác suất cháy tài khoản chính xác.*
+
+---
+
+## 📈 Động Cơ Tăng Trưởng Thể Chế & Hệ Sinh Thái Nguồn Mở
+
+QuantBacktest Pro được thiết kế theo mô hình tăng trưởng lấy lập trình viên làm trọng tâm (PLG) và sẵn sàng tích hợp thể chế:
+
+- 🚀 **[Cẩm Nang Tăng Trưởng Nguồn Mở & Chiến Lược GTM](docs/marketing/vi/GTM_GROWTH_ENGINE_PLAYBOOK.md)**: Kế hoạch 60 ngày, cẩm nang Show HN trên Hacker News và cơ chế lan truyền cộng đồng.
+- 📅 **[Lịch Trình Ra Mắt & Quy Chuẩn Thiết Kế Ấn Phẩm](docs/marketing/vi/LAUNCH_CALENDAR_AND_ASSET_SPECS.md)**: Dòng thời gian chi tiết, bảng mã màu Cyber-Quant và thông số kích thước ấn phẩm.
+- 🏆 **[Cẩm Nang Tổ Chức Giải Đấu Giao Dịch Định Lượng](docs/marketing/vi/QUANT_CHALLENGE_PLAYBOOK.md)**: Quy chế thi đấu, công thức chấm điểm tổng hợp và bot kiểm chứng mật mã học.
+- 🏢 **[Hướng Dẫn Thể Chế Cho Quỹ Cấp Vốn & Giải Pháp White-Label](docs/marketing/vi/PROP_FIRM_INSTITUTIONAL_GUIDE.md)**: Cổng diễn tập mang thương hiệu riêng, cầu nối MT5 và cam kết dịch vụ SLA.
+
+---
+
 ## 📚 Danh Mục Tài Liệu Chi Tiết
 
 | Tiếng Việt (Vietnamese) | Tiếng Anh (English Documentation) |
@@ -239,6 +292,10 @@ Mở trình duyệt tại địa chỉ:
 | 🤖 [Hướng dẫn xuất Bot giao dịch](docs/vi/STRATEGY_BOT_EXPORTER.md) | 🤖 [Strategy Bot Exporter Guide](docs/STRATEGY_BOT_EXPORTER.md) |
 | 🔌 [Tài liệu API RESTful](docs/vi/API_REFERENCE.md) | 🔌 [API Reference](docs/API_REFERENCE.md) |
 | 🔐 [Hướng dẫn cấu hình OAuth & Đăng nhập](docs/vi/OAUTH_SETUP_GUIDE.md) | 🔐 [OAuth & Auth Setup Guide](docs/OAUTH_SETUP_GUIDE.md) |
+| 🚀 [Cẩm nang Tăng trưởng GTM](docs/marketing/vi/GTM_GROWTH_ENGINE_PLAYBOOK.md) | 🚀 [GTM Growth Playbook](docs/marketing/GTM_GROWTH_ENGINE_PLAYBOOK.md) |
+| 📅 [Lịch trình Ra mắt & Thiết kế](docs/marketing/vi/LAUNCH_CALENDAR_AND_ASSET_SPECS.md) | 📅 [Launch Calendar & Asset Specs](docs/marketing/LAUNCH_CALENDAR_AND_ASSET_SPECS.md) |
+| 🏆 [Thể lệ Giải đấu Quant](docs/marketing/vi/QUANT_CHALLENGE_PLAYBOOK.md) | 🏆 [Quant Challenge Playbook](docs/marketing/QUANT_CHALLENGE_PLAYBOOK.md) |
+| 🏢 [Hướng dẫn Thể chế Quỹ Thi](docs/marketing/vi/PROP_FIRM_INSTITUTIONAL_GUIDE.md) | 🏢 [Prop Firm Institutional Guide](docs/marketing/PROP_FIRM_INSTITUTIONAL_GUIDE.md) |
 
 ---
 

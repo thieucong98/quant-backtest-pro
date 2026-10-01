@@ -20,6 +20,18 @@
 <!-- Hero Showcase Image -->
 <img src="docs/assets/en/01_dashboard_hero.png" alt="Quant Backtest Pro Main Workspace" width="100%" style="border-radius: 12px; box-shadow: 0 20px 50px rgba(0,0,0,0.5);" />
 
+<br />
+
+<p align="center">
+  <a href="https://railway.com/new" target="_blank"><img src="docs/assets/marketing/deploy_railway.svg" height="34" alt="Deploy on Railway" /></a>
+  &nbsp;
+  <a href="https://render.com/deploy?repo=https://github.com/thieucong98/quant-backtest-pro" target="_blank"><img src="docs/assets/marketing/deploy_render.svg" height="34" alt="Deploy to Render" /></a>
+  &nbsp;
+  <a href="https://gitpod.io/#https://github.com/thieucong98/quant-backtest-pro" target="_blank"><img src="docs/assets/marketing/open_in_gitpod.svg" height="34" alt="Open in Gitpod" /></a>
+  &nbsp;
+  <a href="https://codespaces.new/thieucong98/quant-backtest-pro" target="_blank"><img src="docs/assets/marketing/open_in_codespaces.svg" height="34" alt="Open in GitHub Codespaces" /></a>
+</p>
+
 </div>
 
 ---
@@ -122,6 +134,23 @@ Monitor compliance with prop firm challenge rules (FTMO, FundedNext, MFF) in rea
 - **Monte Carlo Stress Testing**: 500+ iterations randomized path simulation to calculate Risk-of-Ruin probabilities and confidence intervals.
 - **PnL Calendar & Heatmap**: Visual breakdown of performance across trading sessions, weekdays, and months.
 - **Session Comparison Matrix**: Compare multiple backtesting runs side-by-side (Sharpe Ratio, Profit Factor, Expectancy, Winrate).
+
+<div align="center">
+  <img src="docs/assets/marketing/prop_firm_shield_badge.svg" alt="Institutional Prop Firm Shield" width="60%" style="margin: 12px 0;" />
+</div>
+
+---
+
+### 7. 🏆 Global Quant Backtest Challenge & Community Tournament
+An open-source, reproducible algorithmic trading tournament with a seasonal **$50,000 USD prize pool**, sponsored funded accounts, and transparent on-chain/cryptographic seed verification.
+
+<div align="center">
+  <img src="docs/assets/marketing/quant_challenge_banner.svg" alt="Global Quant Backtest Challenge" width="100%" style="border-radius: 12px; margin: 15px 0;" />
+</div>
+
+- **Cryptographic Seed Verification**: Eliminates fake screenshots and curve-fitted claims. Every participant runs strategies against standardized SHA-256 dataset hashes with verified deterministic execution proofs.
+- **Institutional Scoring Formula**: Balances Sharpe Ratio (35%), Sortino Ratio (25%), Calmar/Recovery Ratio (20%), and trade count statistical significance (10%) with anti-overfitting penalties.
+- **Automated Discord & Telegram Bot**: Instant leaderboard synchronization via `/challenge submit` and headless CI re-verification.
 
 ---
 
@@ -228,6 +257,30 @@ Open your browser at:
 
 ---
 
+## 🔬 Quantitative Research & Engineering Deep Dives
+
+Read our high-impact engineering teardowns and mathematical publications:
+
+1. 📄 **[Why 90% of Backtests Lie: Building an O(1) Replay Engine with Millisecond Precision](docs/marketing/articles/01_why_90_percent_of_backtests_lie.md)**  
+   *Deconstructing the intrabar tick ambiguity fallacy, zero-slippage illusions, and the 460x performance leap of O(1) canvas series updates.*
+2. 📄 **[Inside the AI Strategy Studio: From Natural Language Prompts to Production MQL5 and Pine Script](docs/marketing/articles/02_inside_the_ai_strategy_studio.md)**  
+   *Eliminating LLM hallucinations with structured JSON AST validation, client-side simulation sandboxes, and multi-target transpilation.*
+3. 📄 **[Mastering the Prop Firm Gauntlet: Algorithmic Drawdown Shields & Real-Time Trailing Stop-Loss Architecture](docs/marketing/articles/03_mastering_the_prop_firm_gauntlet.md)**  
+   *The mathematics of the trailing high-water mark drawdown trap and how 1,000-run Monte Carlo simulations compute exact probability of ruin.*
+
+---
+
+## 📈 Institutional Growth Engine & Open-Core Ecosystem
+
+QuantBacktest Pro is engineered for developer-led growth (PLG) and enterprise institutional adoption:
+
+- 🚀 **[Open-Source Growth Engine & Developer-Led GTM Playbook](docs/marketing/GTM_GROWTH_ENGINE_PLAYBOOK.md)**: 60-day roadmap, Hacker News Show HN playbook, and viral community mechanics.
+- 📅 **[Launch Calendar & Asset Specifications](docs/marketing/LAUNCH_CALENDAR_AND_ASSET_SPECS.md)**: Master timeline, Cyber-Quant visual identity tokens, and media dimensions.
+- 🏆 **[Global Quant Backtest Challenge Playbook](docs/marketing/QUANT_CHALLENGE_PLAYBOOK.md)**: Tournament rules, institutional composite scoring, and cryptographic verification bot.
+- 🏢 **[Prop Firm Institutional Guide & White-Label Overview](docs/marketing/PROP_FIRM_INSTITUTIONAL_GUIDE.md)**: Turnkey evaluation portals, MT5 broker bridges, and enterprise compliance SLAs.
+
+---
+
 ## 📚 Documentation Index
 
 | English Documentation | Vietnamese Documentation (Tiếng Việt) |
@@ -239,6 +292,10 @@ Open your browser at:
 | 🤖 [Strategy Bot Exporter Guide](docs/STRATEGY_BOT_EXPORTER.md) | 🤖 [Hướng dẫn xuất Bot giao dịch](docs/vi/STRATEGY_BOT_EXPORTER.md) |
 | 🔌 [API Reference](docs/API_REFERENCE.md) | 🔌 [Tài liệu API RESTful](docs/vi/API_REFERENCE.md) |
 | 🔐 [OAuth & Auth Setup Guide](docs/OAUTH_SETUP_GUIDE.md) | 🔐 [Hướng dẫn cấu hình OAuth & Đăng nhập](docs/vi/OAUTH_SETUP_GUIDE.md) |
+| 🚀 [GTM Growth Playbook](docs/marketing/GTM_GROWTH_ENGINE_PLAYBOOK.md) | 🚀 [Cẩm nang Tăng trưởng GTM](docs/marketing/vi/GTM_GROWTH_ENGINE_PLAYBOOK.md) |
+| 📅 [Launch Calendar & Asset Specs](docs/marketing/LAUNCH_CALENDAR_AND_ASSET_SPECS.md) | 📅 [Lịch trình Ra mắt & Thiết kế](docs/marketing/vi/LAUNCH_CALENDAR_AND_ASSET_SPECS.md) |
+| 🏆 [Quant Challenge Playbook](docs/marketing/QUANT_CHALLENGE_PLAYBOOK.md) | 🏆 [Thể lệ Giải đấu Quant](docs/marketing/vi/QUANT_CHALLENGE_PLAYBOOK.md) |
+| 🏢 [Prop Firm Institutional Guide](docs/marketing/PROP_FIRM_INSTITUTIONAL_GUIDE.md) | 🏢 [Hướng dẫn Thể chế Quỹ Thi](docs/marketing/vi/PROP_FIRM_INSTITUTIONAL_GUIDE.md) |
 
 ---
 

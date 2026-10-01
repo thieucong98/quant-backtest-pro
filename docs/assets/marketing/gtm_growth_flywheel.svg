@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="380" viewBox="0 0 900 380" fill="none">
+  <rect width="900" height="380" rx="16" fill="#0B0E14" stroke="#1E293B" stroke-width="2"/>
+
+  <!-- Title -->
+  <text x="450" y="45" fill="#FFFFFF" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="20" font-weight="700">QuantBacktest Pro: Developer-Led Growth Engine (PLG)</text>
+
+  <!-- Node 1: Open Source Core -->
+  <g transform="translate(60, 90)">
+    <rect width="220" height="110" rx="12" fill="#10141E" stroke="#38BDF8" stroke-width="1.5"/>
+    <text x="110" y="35" text-anchor="middle" fill="#38BDF8" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="14" font-weight="700">1. Open-Source Core</text>
+    <text x="110" y="60" text-anchor="middle" fill="#94A3B8" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="11">60 FPS Local Replay Engine</text>
+    <text x="110" y="80" text-anchor="middle" fill="#94A3B8" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="11">Local SQLite &amp; MIT License</text>
+  </g>
+
+  <!-- Node 2: 1-Click Launch & Virality -->
+  <g transform="translate(340, 90)">
+    <rect width="220" height="110" rx="12" fill="#10141E" stroke="#6366F1" stroke-width="1.5"/>
+    <text x="110" y="35" text-anchor="middle" fill="#6366F1" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="14" font-weight="700">2. Virality &amp; Cloud Launch</text>
+    <text x="110" y="60" text-anchor="middle" fill="#94A3B8" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="11">Railway, Render, Gitpod 1-Click</text>
+    <text x="110" y="80" text-anchor="middle" fill="#94A3B8" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="11">Show HN &amp; r/algotrading Blitz</text>
+  </g>
+
+  <!-- Node 3: Community Quant Tournaments -->
+  <g transform="translate(620, 90)">
+    <rect width="220" height="110" rx="12" fill="#10141E" stroke="#10B981" stroke-width="1.5"/>
+    <text x="110" y="35" text-anchor="middle" fill="#10B981" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="14" font-weight="700">3. Quant Tournaments</text>
+    <text x="110" y="60" text-anchor="middle" fill="#94A3B8" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="11">$50,000 Challenge Series</text>
+    <text x="110" y="80" text-anchor="middle" fill="#94A3B8" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="11">Discord Seed Verification Bot</text>
+  </g>
+
+  <!-- Node 4: Prop Firm Institutional B2B -->
+  <g transform="translate(200, 240)">
+    <rect width="500" height="100" rx="12" fill="#10141E" stroke="#F59E0B" stroke-width="2"/>
+    <text x="250" y="38" text-anchor="middle" fill="#F59E0B" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="16" font-weight="700">4. Institutional Enterprise &amp; Prop Firm White-Label</text>
+    <text x="250" y="65" text-anchor="middle" fill="#94A3B8" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="12">Turnkey Branded Portals • MT5 Execution Bridges • Anti-Cheat Audit Trails • $1.2M ARR Target</text>
+  </g>
+
+  <!-- Arrows -->
+  <path d="M280 145 L340 145" stroke="#38BDF8" stroke-width="2" marker-end="url(#arrow)"/>
+  <path d="M560 145 L620 145" stroke="#6366F1" stroke-width="2"/>
+  <path d="M730 200 L730 290 L700 290" stroke="#10B981" stroke-width="2"/>
+  <path d="M170 200 L170 290 L200 290" stroke="#38BDF8" stroke-width="2"/>
+</svg>

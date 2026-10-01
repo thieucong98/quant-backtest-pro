@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: quant-backtest-pro
+    env: docker
+    dockerfilePath: Dockerfile
+    plan: starter
+    healthCheckPath: /api/health
+    envVars:
+      - key: PORT
+        value: 3001
+      - key: NODE_ENV
+        value: production
+    disk:
+      name: quant-sqlite-data
+      mountPath: /app/server/prisma/data
+      sizeGB: 10

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="205" height="38" viewBox="0 0 205 38" fill="none">
+  <rect width="205" height="38" rx="8" fill="#0B0E14" stroke="#1E293B" stroke-width="1.5"/>
+  <rect x="1" y="1" width="203" height="36" rx="7" fill="url(#codespaces_grad)" fill-opacity="0.12"/>
+  <g transform="translate(14, 9)">
+    <rect width="20" height="20" rx="4" fill="#238636"/>
+    <path d="M5 8C5 6.89543 5.89543 6 7 6H13C14.1046 6 15 6.89543 15 8V12C15 13.1046 14.1046 14 13 14H7C5.89543 14 5 13.1046 5 12V8Z" fill="#FFFFFF"/>
+    <circle cx="8" cy="10" r="1" fill="#238636"/>
+    <circle cx="12" cy="10" r="1" fill="#238636"/>
+  </g>
+  <text x="44" y="24" fill="#FFFFFF" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="600" letter-spacing="0.3">Open in Codespaces</text>
+  <defs>
+    <linearGradient id="codespaces_grad" x1="0" y1="0" x2="205" y2="38" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#238636"/>
+      <stop offset="1" stop-color="#1F6FEB"/>
+    </linearGradient>
+  </defs>
+</svg>
