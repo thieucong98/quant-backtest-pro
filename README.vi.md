@@ -48,6 +48,24 @@
 
 Hệ thống kết hợp giữa **công nghệ Replay nến 60 FPS siêu mượt (chạy trơn tru kể cả với hơn 200,000 nến)**, bộ máy khớp lệnh thực tế (OMS), **AI Strategy Studio sinh code từ ngôn ngữ tự nhiên**, **Bộ tối ưu tham số SL/TP (Grid Search Optimizer)**, **AI Bot Live Floating HUD**, **Quản lý & Thư viện Dữ liệu Dataset 2.0 (tích hợp SQLite và Crawler đa tài sản)**, và **Trung tâm xuất Bot giao dịch đa nền tảng chỉ với 1 click**.
 
+<div align="center">
+  <img src="docs/assets/marketing/quant_challenge_banner.svg" alt="Giải đấu Giao dịch Định lượng Toàn cầu" width="100%" style="border-radius: 10px; margin: 15px 0;" />
+</div>
+
+### ⚔️ Bảng So Sánh Toàn Diện: Quant Backtest Pro vs Các Nền Tảng Khác
+
+| Tính Năng / Năng Lực | Quant Backtest Pro | TradingView Replay | MetaTrader 5 Strategy Tester | Python Backtesters (Backtrader / VectorBT) |
+| :--- | :---: | :---: | :---: | :---: |
+| **Bản Quyền & Chi Phí** | **100% Miễn Phí & Mã Nguồn Mở (MIT)** | Thu phí $15–$60 / tháng | Ứng dụng đóng trên máy tính | Thư viện mã nguồn mở Python |
+| **Độ Dài Nến Tối Đa** | **200.000+ Nến M1 (SQLite Cục Bộ)** | Giới hạn 10k–20k nến | Giới hạn ổ cứng (UI chậm) | Giới hạn RAM, không có UI trực quan |
+| **Tốc Độ Replay & Khung Hình** | **60 FPS (Lightweight Charts $O(1)$)** | Giới hạn 5–10 FPS, phụ thuộc mạng | Treo CPU đơn luồng khi tải nặng | Không có chế độ Replay nến động |
+| **AI Strategy Studio Bằng Tiếng Tự Nhiên** | **Chuyển Prompt Thành Chiến Lược (Multi-LLM)** | ❌ Không có | ❌ Không có | ❌ Không có |
+| **Xuất Bot Giao Dịch Đa Nền Tảng** | **1-Click (MQL5, MQL4, Pine v5, CCXT, cBot)** | ❌ Không có (chỉ Pine Script) | Chỉ xuất MQL5 | Phải tự viết lại code Python |
+| **Tối Ưu SL/TP Bằng Grid Heatmap** | **Ma Trận 2D Trực Quan + Sparklines** | ❌ Không có | Tối ưu hóa 2D/3D (chạy lâu) | Phải tự vẽ qua Matplotlib/Seaborn |
+| **Lá Chắn Thử Thách Quỹ Prop Firm** | **Bộ Quy Tắc FTMO/FundingPips + Live HUD** | ❌ Phải tự viết script cảnh báo | ❌ Cần gắn EA quản lý vốn riêng | ❌ Phải tự viết code quản lý rủi ro |
+| **Mô Phỏng Rủi Ro Monte Carlo** | **500+ Đường Mô Phỏng Ngẫu Nhiên** | ❌ Không có | Chỉ có báo cáo thống kê cơ bản | Phải tự cài đặt qua thư viện NumPy |
+| **Cầu Nối Khớp Lệnh Broker Thực** | **ZeroMQ / WebSocket sang MT5 & CCXT** | Webhook thông báo bên thứ 3 | Thiết bị đầu cuối MT5 | Tự viết API kết nối Broker |
+
 ---
 
 ## 📸 Bộ Ảnh Trực Quan & Tính Năng Nổi Bật
@@ -273,6 +291,10 @@ Các bài viết phân tích kỹ thuật chuẩn mực và ấn phẩm nghiên 
 ## 📈 Động Cơ Tăng Trưởng Thể Chế & Hệ Sinh Thái Nguồn Mở
 
 QuantBacktest Pro được thiết kế theo mô hình tăng trưởng lấy lập trình viên làm trọng tâm (PLG) và sẵn sàng tích hợp thể chế:
+
+<div align="center">
+  <img src="docs/assets/marketing/gtm_growth_flywheel.svg" alt="Mô hình Bánh đà Tăng trưởng Nguồn mở" width="85%" style="border-radius: 10px; margin: 15px 0;" />
+</div>
 
 - 🚀 **[Cẩm Nang Tăng Trưởng Nguồn Mở & Chiến Lược GTM](docs/marketing/vi/GTM_GROWTH_ENGINE_PLAYBOOK.md)**: Kế hoạch 60 ngày, cẩm nang Show HN trên Hacker News và cơ chế lan truyền cộng đồng.
 - 📅 **[Lịch Trình Ra Mắt & Quy Chuẩn Thiết Kế Ấn Phẩm](docs/marketing/vi/LAUNCH_CALENDAR_AND_ASSET_SPECS.md)**: Dòng thời gian chi tiết, bảng mã màu Cyber-Quant và thông số kích thước ấn phẩm.

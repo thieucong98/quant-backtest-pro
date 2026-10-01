@@ -48,6 +48,24 @@
 
 It unifies **60 FPS ultra-smooth candlestick replay (even with 200,000+ candles)**, millisecond order matching, **AI-powered natural language strategy creation**, **SL/TP Multi-Variant Grid Optimization**, live **AI Bot Floating HUD**, **Data Import Manager 2.0 (with SQLite dataset persistence and multi-batch online crawler)**, and **instant multi-platform bot exportation** into a sleek, dark-themed institutional workspace.
 
+<div align=center>
+  <img src="docs/assets/marketing/quant_challenge_banner.svg" alt="Global Quant Challenge Tournament" width="100%" style="border-radius: 10px; margin: 15px 0;" />
+</div>
+
+### ⚔️ Quant Backtest Pro vs. Traditional Alternatives
+
+| Feature / Capability | Quant Backtest Pro | TradingView Replay | MetaTrader 5 Strategy Tester | Python Backtesters (Backtrader / VectorBT) |
+| :--- | :---: | :---: | :---: | :---: |
+| **License & Cost** | **100% Free & Open-Source (MIT)** | $15–$60 / mo subscription | Closed-source desktop app | Free open-source Python |
+| **Max Candlestick Depth** | **200,000+ M1 Candles (Local SQLite)** | 10k–20k bars capped | Disk storage limit (slow UI) | RAM limited, zero visual UI |
+| **Replay Frame Rate & Latency** | **60 FPS ($O(1)$ Lightweight Charts)** | Capped at 5–10 FPS, cloud lag | Single-thread CPU freeze | No visual replay / static plots |
+| **Natural Language AI Strategy Studio** | **Multi-LLM Prompt-to-Strategy Engine** | ❌ None | ❌ None | ❌ None |
+| **Multi-Platform Bot Export** | **1-Click (MQL5, MQL4, Pine v5, CCXT, cBot)** | ❌ None (Pine Script only) | MQL5 only | Manual Python rewriting |
+| **SL/TP Grid Heatmap Optimizer** | **Interactive 2D Matrix + Sparklines** | ❌ None | 2D/3D Optimization (Slow) | Matplotlib / Seaborn scripts |
+| **Prop Firm Challenge Shield** | **FTMO / FundingPips Rules + Live HUD** | ❌ Manual alert scripts | ❌ Manual EAs required | ❌ Custom coding required |
+| **Monte Carlo Risk-of-Ruin Engine** | **500+ Path Stochastic Simulation** | ❌ None | Basic report metrics | Manual NumPy scripts |
+| **Live Broker Bridge** | **ZeroMQ / WebSocket to MT5 & CCXT** | Webhook alerts to 3rd-party | Native MT5 terminal | Custom API coding |
+
 ---
 
 ## 📸 Visual Showcase & Feature Highlights
@@ -273,6 +291,10 @@ Read our high-impact engineering teardowns and mathematical publications:
 ## 📈 Institutional Growth Engine & Open-Core Ecosystem
 
 QuantBacktest Pro is engineered for developer-led growth (PLG) and enterprise institutional adoption:
+
+<div align=center>
+  <img src="docs/assets/marketing/gtm_growth_flywheel.svg" alt="Institutional GTM Growth Flywheel" width="85%" style="border-radius: 10px; margin: 15px 0;" />
+</div>
 
 - 🚀 **[Open-Source Growth Engine & Developer-Led GTM Playbook](docs/marketing/GTM_GROWTH_ENGINE_PLAYBOOK.md)**: 60-day roadmap, Hacker News Show HN playbook, and viral community mechanics.
 - 📅 **[Launch Calendar & Asset Specifications](docs/marketing/LAUNCH_CALENDAR_AND_ASSET_SPECS.md)**: Master timeline, Cyber-Quant visual identity tokens, and media dimensions.
