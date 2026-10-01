@@ -54,9 +54,11 @@ This document outlines the strategic milestones and technical roadmap for **Quan
 
 ---
 
-## 🔮 v2.0 — Multi-Chart & Institutional Ecosystem (Future Vision)
-- [ ] **Synchronized Dual-Chart Multi-Timeframe Replay**: Side-by-side synchronized charts (e.g. H4 macro trend + M5 entry replay) on a unified playback scrubber.
-- [ ] **Multi-Symbol Portfolio Backtesting**: Simultaneous execution across a basket of correlated pairs (e.g. EURUSD + GBPUSD + USDJPY) with portfolio equity curves.
+## 🔮 v2.0 — Multi-Chart & Institutional Ecosystem (Active Planning & Specification)
+> 📄 **Official Specification**: See the approved [Institutional PRD & UX Specifications (v2.0)](docs/PRD_V2_MULTI_CHART_PORTFOLIO.md) and Vietnamese edition [Tài Liệu Đặc Tả PRD v2.0](docs/vi/PRD_V2_MULTI_CHART_PORTFOLIO.md).
+- [x] **[PRD & UX Specifications Approved]**: Complete Product Requirement Document authored by CPO covering Dual-Chart Replay, Portfolio Backtesting, 12-Dimensional Edge Case Matrix, and 4-Locale i18n Dictionary.
+- [ ] **Synchronized Dual-Chart Multi-Timeframe Replay**: Side-by-side synchronized charts (e.g. H4 macro trend + M5 entry replay) on a unified playback scrubber with dynamic developing HTF candle builder ($O(1)$) and zero lookahead bias.
+- [ ] **Multi-Symbol Portfolio Backtesting**: Simultaneous execution across a basket of correlated pairs (e.g. EURUSD + GBPUSD + USDJPY) with unified margin pool and 5 capital allocation models (Risk Parity, Markowitz, Equal Weight, Fixed Lot, Dynamic DD).
 - [ ] **Walk-Forward Analysis (WFA) Rolling Windows**: Automated rolling optimization and forward testing across multi-year data.
 - [ ] **Quant Tearsheet PDF & HTML Report Generator**: 1-click export of comprehensive tear sheets with embedded charts for investor presentations.
 - [ ] **Webhook & Broker Live Execution Bridge**: Direct paper-trading and live order dispatch to Interactive Brokers, Binance, and MetaTrader via local Webhook daemon.
