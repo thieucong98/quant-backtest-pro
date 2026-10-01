@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { TradingViewChart } from './components/chart/TradingViewChart';
+import { DualChartView } from './components/chart/DualChartView';
 import { Header } from './components/header/Header';
 import { ReplayBar } from './components/replay/ReplayBar';
 import { PositionsTable } from './components/panels/PositionsTable';
@@ -115,7 +115,7 @@ export const App: React.FC = () => {
       {/* 2. MAIN CENTER: CHART & DRAWINGS */}
       <main className="flex-1 relative w-full h-full min-h-0 bg-[#0b0e14]">
         <ErrorBoundary fallbackTitle={t.errorBoundaryChartTitle}>
-          <TradingViewChart />
+          <DualChartView />
         </ErrorBoundary>
       </main>
 

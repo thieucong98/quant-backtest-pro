@@ -816,7 +816,35 @@ export const vi: TranslationDict = {
   "authRequiredDataSave": "Vui lòng đăng nhập để lưu bộ dữ liệu này vào Database tài khoản của bạn.",
   "quickDemoLogin": "Trải nghiệm nhanh (Tài khoản Demo)",
   "loginNow": "Đăng nhập ngay",
-  "guestSandboxTooltip": "Bạn đang ở chế độ khách dùng thử cục bộ. Đăng nhập để mở khóa AI Studio, lưu phiên lên Cloud và kết nối MT5."
+  "guestSandboxTooltip": "Bạn đang ở chế độ khách dùng thử cục bộ. Đăng nhập để mở khóa AI Studio, lưu phiên lên Cloud và kết nối MT5.",
+
+  // Multi-Chart Layout & Synchronization (v2.0)
+  "singleLayout": "Biểu đồ đơn",
+  "dualHorizontalLayout": "Chia đôi (Ngang)",
+  "dualVerticalLayout": "Chia đôi (Dọc)",
+  "crosshairSyncActive": "Đồng bộ Crosshair: Bật",
+  "crosshairSyncInactive": "Đồng bộ Crosshair: Tắt",
+  "timeSyncActive": "Đồng bộ thời gian: Bật",
+  "timeSyncInactive": "Đồng bộ thời gian: Tắt",
+  "primaryTimeframe": "Biểu đồ A (Chính)",
+  "secondaryTimeframe": "Biểu đồ B (Phụ)",
+  "htfDeveloping": "Khung lớn đang chạy",
+  "syncStatusLocked": "Đã khóa đồng bộ",
+  "syncStatusUnlocked": "Độc lập",
+  "layoutMode": "Bố cục",
+  "resetView": "Đặt lại góc nhìn",
+  "chartAPane": "Biểu đồ A",
+  "chartBPane": "Biểu đồ B",
+
+  // Quant Execution Bridge (v2.0)
+  "bridgeConnected": "Bridge: Đã kết nối",
+  "bridgeConnecting": "Bridge: Đang kết nối...",
+  "bridgeDisconnected": "Bridge: Đã ngắt kết nối",
+  "bridgeError": "Bridge: Lỗi kết nối",
+  "bridgeLatency": "Độ trễ",
+  "bridgeCircuitBreakerActive": "Cầu dao rủi ro: Đã kích hoạt",
+  "bridgeCircuitBreakerNormal": "Cầu dao rủi ro: Bình thường",
+  "bridgeResetCircuitBreaker": "Đặt lại cầu dao rủi ro",
+  "bridgePropShieldActive": "Giáp quỹ: Đang bảo vệ",
+  "bridgeWebhookActive": "Tiếp nhận Webhook: Đang bật"
 };
-
-

@@ -11,7 +11,7 @@ import { TimeframeResampler } from './src/engine/resampler';
 import { generateRealisticCandles } from './src/config/sampleData';
 import { Candle, InstrumentSpec } from './src/types/market';
 import { Position } from './src/types/order';
-import { calculateHeikinAshi } from './src/components/chart/TradingViewChart';
+import { calculateHeikinAshi } from './src/engine/indicators';
 import { OrderFactory } from './src/engine/patterns/OrderFactory';
 import { StrategyExecutionContext, EMACrossoverStrategy, RSIMeanReversionStrategy } from './src/engine/patterns/StrategyPattern';
 
@@ -747,7 +747,202 @@ async function runComprehensiveTests() {
   assert(invariantHolds, 'Resampling', 'All resampled OHLC bars satisfy Low <= Open,Close <= High invariant');
 
   // =========================================================================
-  // 16. SUMMARY OF TEST SUITE RESULTS
+  // 16. MULTI-CHART WEB WORKER SYNC & EXECUTION BRIDGE TESTS (v2.0)
+  // =========================================================================
+  console.log('\n--- 16. Multi-Chart Web Worker Sync & Execution Bridge Tests ---');
+
+  const { TimestampIndexBuffer, createTimestampIndexBuffer } = await import('./src/engine/timeframeBuffer');
+  const { ReplaySyncEngine } = await import('./src/workers/replaySyncWorker');
+  const { WorkerBridge } = await import('./src/engine/workerBridge');
+  const { PreTradeRiskShieldInterceptor } = await import('./bridge/security/riskInterceptor');
+  const { BinanceDriver } = await import('./bridge/drivers/BinanceDriver');
+  const { BybitDriver } = await import('./bridge/drivers/BybitDriver');
+  const { IBKRDriver } = await import('./bridge/drivers/IBKRDriver');
+  const { MetaTraderDriver } = await import('./bridge/drivers/MetaTraderDriver');
+
+  // 16.1 TimestampIndexBuffer O(1) Int32Array tests
+  const v2SampleCandles: Candle[] = [];
+  const startEpoch = 1700000000;
+  for (let i = 0; i < 60; i++) {
+    v2SampleCandles.push({
+      timestamp: startEpoch + i * 60,
+      open: 100 + i,
+      high: 105 + i,
+      low: 95 + i,
+      close: 102 + i,
+      volume: 100
+    });
+  }
+  const buffer = new TimestampIndexBuffer(v2SampleCandles, 60);
+  assert(buffer.candleCount === 60, 'TimeframeBuffer', 'Buffer candle count matches input');
+  assert(buffer.getCandleIndexAt(startEpoch) === 0, 'TimeframeBuffer', 'Lookup at start epoch returns 0');
+  assert(buffer.getCandleIndexAt(startEpoch + 30 * 60) === 30, 'TimeframeBuffer', 'Lookup mid-series returns exact candle index');
+  assert(buffer.getCandleIndexAt(startEpoch + 30 * 60 + 25) === 30, 'TimeframeBuffer', 'Lookup inside candle duration floors to current candle');
+  assert(buffer.getCandleIndexAt(startEpoch - 100) === 0, 'TimeframeBuffer', 'Lookup before range clamps to 0');
+  assert(buffer.getCandleIndexAt(startEpoch + 100000) === 59, 'TimeframeBuffer', 'Lookup beyond range clamps to last candle');
+  assert(buffer.getMetrics().allocatedSlots === 60, 'TimeframeBuffer', 'Metrics reports correct allocated slots');
+
+  // 16.2 ReplaySyncEngine zero-lookahead developing bar synthesis
+  const workerEvents: any[] = [];
+  const syncEngine = new ReplaySyncEngine((event) => {
+    workerEvents.push(event);
+  });
+
+  syncEngine.handleAction({
+    type: 'LOAD_DATASET',
+    payload: {
+      symbol: 'EURUSD',
+      candles: v2SampleCandles,
+      baseTimeframe: 'M1',
+      linkedTimeframes: ['M5', 'H1']
+    }
+  });
+
+  assert(workerEvents.length >= 2, 'ReplaySyncWorker', 'Worker emitted initial DATASET_LOADED and FRAME_BATCH');
+  const firstBatch = workerEvents.find(e => e.type === 'FRAME_BATCH');
+  assert(firstBatch?.payload?.masterTimestamp === startEpoch, 'ReplaySyncWorker', 'Initial master timestamp aligned to startEpoch');
+  assert(firstBatch?.payload?.developingCandles !== undefined, 'ReplaySyncWorker', 'Synthesized developing secondary candle present');
+
+  // Step 1 forward
+  syncEngine.handleAction({ type: 'STEP', payload: { direction: 'FORWARD', count: 1 } });
+  const stepBatch = workerEvents[workerEvents.length - 1];
+  assert(stepBatch.payload.masterTimestamp === startEpoch + 60, 'ReplaySyncWorker', 'Step forward progressed timestamp by 60s');
+  assert(stepBatch.payload.primaryCandle.close === v2SampleCandles[1].close, 'ReplaySyncWorker', 'Step bar close updated to latest M1 close');
+
+  // 16.3 WorkerBridge controller tests
+  const bridge = new WorkerBridge();
+  let bridgeBatchCount = 0;
+  bridge.onFrameBatch(() => bridgeBatchCount++);
+  bridge.loadDataset({
+    symbol: 'EURUSD',
+    candles: v2SampleCandles,
+    baseTimeframe: 'M1',
+    linkedTimeframes: ['M5']
+  });
+  assert(bridge.isLoaded, 'WorkerBridge', 'WorkerBridge reports isLoaded == true');
+  bridge.step('FORWARD', 1);
+  assert(bridgeBatchCount >= 1, 'WorkerBridge', 'WorkerBridge step fired frame batch callback');
+  bridge.terminate();
+
+  // 16.4 PreTradeRiskShieldInterceptor tests
+  const shield = new PreTradeRiskShieldInterceptor({
+    maxDailyLossPct: 5.0,
+    maxTrailingDrawdownPct: 10.0,
+    maxTotalOpenLots: 10.0,
+    maxOrderLotSize: 2.0,
+    maxAllowedLatencyMs: 200,
+    newsRestrictionMinutes: 5,
+    weekendHoldingRestriction: true,
+  }, 100000, 'SIMULATION');
+
+  const mockRiskAccount = {
+    login: 12345,
+    brokerName: 'TestBroker',
+    server: 'Demo',
+    currency: 'USD',
+    leverage: 100,
+    balance: 100000,
+    equity: 100000,
+    margin: 0,
+    freeMargin: 100000,
+    marginLevel: 0,
+    profit: 0,
+    pingMs: 25,
+    isLive: false,
+  };
+
+  const validOrder = shield.evaluatePreTradeRisk({
+    order: { clientOrderId: 'ORD-1', symbol: 'EURUSD', side: 'BUY', type: 'MARKET', lotSize: 1.0 },
+    currentAccount: mockRiskAccount,
+    openPositions: [],
+    currentTimestamp: 1700040000,
+  });
+  assert(validOrder.allowed === true, 'RiskShield', 'Standard order passes pre-trade risk inspection');
+
+  const duplicateOrder = shield.evaluatePreTradeRisk({
+    order: { clientOrderId: 'ORD-1', symbol: 'EURUSD', side: 'BUY', type: 'MARKET', lotSize: 1.0 },
+    currentAccount: mockRiskAccount,
+    openPositions: [],
+    currentTimestamp: 1700040010,
+  });
+  assert(duplicateOrder.allowed === false && duplicateOrder.ruleViolated === 'IDEMPOTENT_DUPLICATE_ORDER', 'RiskShield', 'Duplicate order rejected by idempotency check');
+
+  const oversizedOrder = shield.evaluatePreTradeRisk({
+    order: { clientOrderId: 'ORD-2', symbol: 'EURUSD', side: 'BUY', type: 'MARKET', lotSize: 3.0 },
+    currentAccount: mockRiskAccount,
+    openPositions: [],
+    currentTimestamp: 1700040020,
+  });
+  assert(oversizedOrder.allowed === false && oversizedOrder.ruleViolated === 'MAX_ORDER_LOT_SIZE_EXCEEDED', 'RiskShield', 'Oversized order blocked by single order lot limit');
+
+  const dailyLossBreachedOrder = shield.evaluatePreTradeRisk({
+    order: { clientOrderId: 'ORD-3', symbol: 'EURUSD', side: 'BUY', type: 'MARKET', lotSize: 0.5 },
+    currentAccount: { ...mockRiskAccount, equity: 94000 },
+    openPositions: [],
+    currentTimestamp: 1700040030,
+  });
+  assert(dailyLossBreachedOrder.allowed === false && dailyLossBreachedOrder.ruleViolated === 'MAX_DAILY_LOSS_BREACH', 'RiskShield', 'Daily loss breach blocks new order');
+
+  shield.resetCircuitBreaker();
+  shield.updateLatency(350);
+  assert(shield.getCircuitBreakerStatus().isActive, 'RiskShield', 'Circuit breaker tripped on 350ms latency');
+
+  // 16.5 Multi-Broker Drivers
+  const binance = new BinanceDriver();
+  await binance.connect({
+    brokerType: 'BINANCE',
+    gatewayUrl: 'https://fapi.binance.com',
+    account: 'test-user',
+    apiKey: 'mock-binance-key',
+    apiSecret: 'mock-binance-secret',
+    autoReconnect: true,
+    positionMode: 'NETTING',
+  });
+  assert(binance.isConnected, 'BrokerDriver', 'BinanceDriver connected');
+  const binanceDeal = await binance.submitOrder({
+    clientOrderId: 'BIN-001',
+    symbol: 'BTCUSDT',
+    side: 'BUY',
+    type: 'MARKET',
+    lotSize: 0.1,
+    price: 65000,
+  });
+  assert(binanceDeal.price === 65000, 'BrokerDriver', 'Binance market order filled');
+
+  const bybit = new BybitDriver();
+  await bybit.connect({
+    brokerType: 'BYBIT',
+    gatewayUrl: 'https://api.bybit.com',
+    account: 'bybit-user',
+    apiKey: 'bybit-key',
+    apiSecret: 'bybit-secret',
+    autoReconnect: true,
+    positionMode: 'NETTING',
+  });
+  assert(bybit.isConnected, 'BrokerDriver', 'BybitDriver connected');
+
+  const ibkr = new IBKRDriver();
+  await ibkr.connect({
+    brokerType: 'INTERACTIVE_BROKERS',
+    gatewayUrl: '127.0.0.1:7496',
+    account: 'U123456',
+    autoReconnect: true,
+    positionMode: 'NETTING',
+  });
+  assert(ibkr.isConnected, 'BrokerDriver', 'IBKRDriver connected');
+
+  const mt = new MetaTraderDriver('MT5_EXNESS');
+  await mt.connect({
+    brokerType: 'MT5_EXNESS',
+    gatewayUrl: 'http://127.0.0.1:8765',
+    account: '1234567',
+    autoReconnect: true,
+    positionMode: 'HEDGING',
+  });
+  assert(mt.isConnected, 'BrokerDriver', 'MetaTraderDriver connected');
+
+  // =========================================================================
+  // 17. SUMMARY OF TEST SUITE RESULTS
   // =========================================================================
   console.log('\n===============================================================');
   const total = testResults.length;

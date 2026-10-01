@@ -41,6 +41,14 @@ export type WorkerInboundAction =
       };
     }
   | {
+      type: 'STEP';
+      payload: {
+        direction: 'FORWARD' | 'BACKWARD';
+        count?: number;
+        stepCount?: number;
+      };
+    }
+  | {
       type: 'REPLAY_SEEK';
       payload: {
         targetTimestamp: number; // Unix timestamp in seconds
@@ -92,6 +100,8 @@ export interface ReplayFrameBatch {
   masterTimestamp: number;
   primaryCandle: Candle;            // Lower Timeframe Candle (e.g. M5)
   secondaryCandle?: Candle;         // Higher Timeframe Developing Candle (e.g. H1)
+  developingSecondary?: Candle;     // Synthesized developing candle alias
+  developingCandles?: Record<string, Candle>; // Map of timeframe to developing candle
   isSecondaryNewBar: boolean;       // True when secondary TF crossed a period boundary
   accountState: ReplayAccountSnapshot;
   recentFills?: BrokerOrder[];
