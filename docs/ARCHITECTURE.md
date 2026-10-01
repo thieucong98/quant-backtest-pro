@@ -120,7 +120,7 @@ The matching engine simulates a real broker electronic communication network (EC
 
 ## 5. v2.0 Multi-Chart Synchronization & Local Execution Bridge Architecture (RFC-002)
 
-> 📄 **Authoritative Technical Specification**: For complete formulas, Web Worker message schemas, and broker driver definitions, refer to [Technical RFC 002: Multi-Chart Web Worker Synchronization & Local Execution Bridge](rfcs/RFC-002-MULTI-CHART-WORKER-SYNC-EXECUTION-BRIDGE.md).
+> 📄 **Authoritative Technical Specification**: For complete formulas, Web Worker message schemas, and broker driver definitions, refer to [Technical RFC 002: Multi-Chart Web Worker Synchronization & Local Execution Bridge](rfcs/RFC-002-MULTI-CHART-WORKER-SYNC-EXECUTION-BRIDGE.md) and [ADR 0002](adr/0002-multi-chart-worker-sync-execution-bridge.md). Concrete TypeScript contracts are established in `src/types/workerSync.ts`, `src/types/timeframeBuffer.ts`, and `src/types/executionBridge.ts`.
 
 ### 5.1. Dedicated Web Worker Architecture (`ReplaySyncWorker`)
 - **Off-Thread Playback Loop**: Completely isolates high-frequency replay progression, timeframe resampling, and order matching into a background Web Worker thread, preserving solid **60 FPS** UI frame rates at replay speeds up to 100x.

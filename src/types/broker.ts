@@ -4,7 +4,8 @@ export type BrokerType =
   | 'XTB'
   | 'BINANCE'
   | 'BYBIT'
-  | 'CUSTOM_MT5';
+  | 'CUSTOM_MT5'
+  | 'INTERACTIVE_BROKERS';
 
 export type BrokerConnectionStatus =
   | 'DISCONNECTED'
