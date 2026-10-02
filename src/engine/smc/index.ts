@@ -17,6 +17,14 @@ export {
   assertInstitutionalRule
 } from './actionPlanValidator';
 export { SmcCanvasOverlayPainter, paintOverlayToCanvas } from './smcCanvasOverlayPainter';
+export {
+  buildOverlayPrimitives,
+  orderBlocksToPrimitives,
+  fairValueGapsToPrimitives,
+  sweepsToPrimitives
+} from './overlayPrimitives';
+
+export type { OverlayProjectionInput } from './overlayPrimitives';
 
 export type { SmcEngineConfig, SmcEngineStats } from './smcEngine';
 export type { ConfluenceGateConfig, GateDecision } from './confluenceGate';

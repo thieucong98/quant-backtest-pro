@@ -41,6 +41,10 @@ import { VisualChartTradingOverlay } from './VisualChartTradingOverlay';
 import { PriceScaleContextMenu } from './PriceScaleContextMenu';
 import { QuickTradeDock } from './QuickTradeDock';
 import { PropFirmHUD } from './PropFirmHUD';
+import { AICopilotHUD } from './AICopilotHUD';
+import { MTFMatrixWidget } from './MTFMatrixWidget';
+import { SmcCanvasOverlay } from './SmcCanvasOverlay';
+import { useSmcBacktestStream } from '../../hooks/useSmcBacktestStream';
 
 /**
  * Tính toán nến Heikin-Ashi làm mượt xu hướng
@@ -173,6 +177,9 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
   const lastRenderedIndexRef = useRef<number>(-1);
   const lastCandlesRef = useRef<any[] | null>(null);
   const lastChartTypeRef = useRef<ChartType>(chartType);
+
+  // Tier 1 SMC perception stream → overlay primitives + MTF vector
+  const smcStream = useSmcBacktestStream(candles ?? [], timeframe);
 
 
   // Tạo Main Series theo Chart Type đã chọn
@@ -1222,6 +1229,19 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
           {/* AI BOT FLOATING HUD */}
           <AIBotHUD />
 
+          {/* APEX AI COPILOT HUD — AUT-26 streaming LLM Chain-of-Thought */}
+          <AICopilotHUD
+            mtf={smcStream.mtf}
+            perf={{
+              lastBarLatencyMs: smcStream.stats.lastBarLatencyMs,
+              avgLatencyMs: smcStream.stats.avgLatencyMs,
+            }}
+            compact={false}
+          />
+
+          {/* MTF SEMANTIC MATRIX — H4/D1 bias, OB/FVG state, sweeps, CHoCH, session */}
+          <MTFMatrixWidget mtf={smcStream.mtf} compact={false} />
+
           {/* PROP FIRM CHALLENGE SHIELD */}
           {isPropFirmMode && (
             <PropFirmHUD
@@ -1340,6 +1360,14 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
 
       {/* Overlay Drawing Canvas */}
       <DrawingCanvas chart={chartRef.current} series={mainSeriesRef.current} />
+
+      {/* SMC CANVAS OVERLAY — paints OB / FVG / Sweep / R:R on top of chart */}
+      <SmcCanvasOverlay
+        chartRef={chartRef as unknown as React.MutableRefObject<unknown>}
+        primitives={smcStream.primitives}
+        height="100%"
+        visible={true}
+      />
 
       {/* TradingView Price Scale Context Menu */}
       {contextMenuPos && (

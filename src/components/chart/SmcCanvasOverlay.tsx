@@ -20,8 +20,8 @@ export interface SmcCanvasOverlayProps {
   chartRef: React.MutableRefObject<unknown>;
   /** Visible primitives stream from engine. */
   primitives: readonly OverlayPrimitive[];
-  /** Height of the overlay pane. */
-  height?: number;
+  /** Height of the overlay pane. Accepts CSS length strings (e.g. "100%") or pixel numbers. */
+  height?: number | string;
   /** Optional toggle overlay (e.g. hide all). */
   visible?: boolean;
   /** Optional toggles for each primitive kind. */
@@ -100,7 +100,7 @@ export const SmcCanvasOverlay: React.FC<SmcCanvasOverlayProps> = ({ chartRef, pr
     <div
       ref={containerRef}
       className="smc-canvas-overlay"
-      style={{ height }}
+      style={typeof height === 'number' ? { height: `${height}px` } : { height }}
       aria-label={t.apexCopilotOverlayToggle}
     >
       <canvas ref={canvasRef} className="smc-overlay-canvas" />

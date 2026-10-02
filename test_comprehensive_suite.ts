@@ -18,6 +18,7 @@ import { SmcEngine } from './src/engine/smc/smcEngine';
 import { isSMCWorkerInboundAction, isSMCWorkerOutboundEvent, type SMCWorkerInboundAction, type SMCFrameSnapshot } from './src/types/smc';
 import { parseCopilotStream, tryParseActionPlan } from './src/engine/smc/sseCopilotStream';
 import { ActionPlanValidator } from './src/engine/smc/actionPlanValidator';
+import { buildOverlayPrimitives } from './src/engine/smc/overlayPrimitives';
 
 interface TestResult {
   suite: string;
@@ -1079,7 +1080,41 @@ async function runComprehensiveTests() {
   assert(!invalidPremium.ok, 'CoPilotStream', 'LONG at PREMIUM fails validator (location rule)');
 
   // =========================================================================
-  // 20. SUMMARY OF TEST SUITE RESULTS
+  // 20. SMC Overlay Primitive Bridge (AUT-26 chart wiring)
+  // =========================================================================
+  console.log('\n--- 20. SMC Overlay Primitive Bridge ---');
+  {
+    const overlayObs = [
+      { id: 'ob-a', direction: 'BULLISH', top: 1.2, bottom: 1.15, originBarIndex: 0, timestamp: 100, state: 'UNMITIGATED', fillRatio: 0.1 },
+      { id: 'ob-b', direction: 'BEARISH', top: 1.3, bottom: 1.25, originBarIndex: 1, timestamp: 200, state: 'PARTIAL', fillRatio: 0.4 },
+      { id: 'ob-c', direction: 'BULLISH', top: 1.4, bottom: 1.35, originBarIndex: 2, timestamp: 300, state: 'FULLY_MITIGATED', fillRatio: 1 },
+    ] as any[];
+    const overlayFvgs = [
+      { id: 'fvg-a', direction: 'BULLISH', top: 1.21, bottom: 1.18, ce: 1.195, originBarIndex: 5, timestamp: 500, state: 'OPEN', fillRatio: 0 },
+      { id: 'fvg-b', direction: 'BEARISH', top: 1.32, bottom: 1.29, ce: 1.305, originBarIndex: 6, timestamp: 600, state: 'FILLED', fillRatio: 1 },
+    ] as any[];
+    const overlaySwps = [
+      { id: 'swp-a', kind: 'BSL_SWEEP', poolLevel: 1.35, wickRejectionRatio: 0.6, volumeMultiplier: 1.8, originBarIndex: 10, timestamp: 1000 },
+      { id: 'swp-b', kind: 'SSL_SWEEP', poolLevel: 1.05, wickRejectionRatio: 0.55, volumeMultiplier: 1.5, originBarIndex: 11, timestamp: 1100 },
+    ] as any[];
+    const prims = buildOverlayPrimitives({
+      orderBlocks: overlayObs,
+      fairValueGaps: overlayFvgs,
+      sweeps: overlaySwps,
+      nowTimestamp: 2000,
+      barSeconds: 60,
+    });
+    assert(prims.length === 5, 'OverlayBridge', 'Mitigated OB + filled FVG filtered out');
+    const kinds = new Set(prims.map(p => p.kind));
+    assert(kinds.has('ORDER_BLOCK_BULLISH'), 'OverlayBridge', 'Bullish OB primitive emitted');
+    assert(kinds.has('ORDER_BLOCK_BEARISH'), 'OverlayBridge', 'Bearish OB primitive emitted');
+    assert(kinds.has('SWEEP_BSL') && kinds.has('SWEEP_SSL'), 'OverlayBridge', 'Both sweep kinds emitted');
+    assert(prims.every(p => p.timeEnd > 2000), 'OverlayBridge', 'Primitives extend into the future horizon');
+    assert(new Set(prims.map(p => p.id)).size === prims.length, 'OverlayBridge', 'All primitive ids are unique');
+  }
+
+  // =========================================================================
+  // 21. SUMMARY OF TEST SUITE RESULTS
   // =========================================================================
   console.log('\n===============================================================');
   const total = testResults.length;
