@@ -1,9 +1,12 @@
 /**
- * Quant Backtest Pro — Architecture Specification v2.0
- * ReplaySyncWorker: Dedicated Multi-Chart Web Worker Synchronization Engine
- * 
- * Standard: RFC-002-TECH-v2 / ADR-0002
- * Author: Vulcan (Senior Full-Stack SWE)
+ * Quant Backtest Pro — Multi-Chart Replay Sync + Algorithmic SMC Engine Worker
+ *
+ * Owns two co-resident engine surfaces inside an isolated worker boundary:
+ *  1. RFC-002-TECH-v2 / ADR-0002: ReplaySyncEngine (multi-chart sync + simulated OMS)
+ *  2. RFC-003-TECH-v2.1: SmcEngine (Tier 1 SMC perception + bulk-replay + MTF bar streaming)
+ *
+ * Incoming messages are discriminated and dispatched to the correct engine
+ * based on the `kind` / `type` discriminator field.
  */
 
 import { Candle, Timeframe } from '../types/market';
@@ -16,6 +19,11 @@ import {
   isWorkerInboundAction,
 } from '../types/workerSync';
 import { TIMEFRAME_SECONDS } from '../types/timeframeBuffer';
+
+import type { SMCWorkerInboundAction, SMCWorkerOutboundEvent } from '../types/smc';
+import { isSMCWorkerInboundAction } from '../types/smc';
+import { SmcEngine, type SmcEngineStats } from '../engine/smc/smcEngine';
+
 import { TimestampIndexBuffer, floorTimestampToTimeframe } from '../engine/timeframeBuffer';
 
 export type EventPostCallback = (event: WorkerOutboundEvent) => void;
@@ -559,17 +567,93 @@ export class ReplaySyncEngine {
   }
 }
 
+
 // -----------------------------------------------------------------------------
-// Web Worker Environment Self-Initialization
+// Web Worker Environment Self-Initialization (combined multi-chart + SMC engines)
 // -----------------------------------------------------------------------------
 if (typeof self !== 'undefined' && typeof (self as any).postMessage === 'function') {
-  const engine = new ReplaySyncEngine((event: WorkerOutboundEvent) => {
+  // ---- Multi-chart replay sync engine (RFC-002 / ADR-0002) ----
+  const syncEngine = new ReplaySyncEngine((event: WorkerOutboundEvent) => {
     (self as any).postMessage(event);
   });
 
+  // ---- Algorithmic SMC engine (RFC-003 / AUT-26) ----
+  const smcEngine = new SmcEngine({
+    symbol: 'BTCUSDT',
+    higherTF: 'H4',
+    lowerTF: 'M5',
+    fractalRadiusHTF: 5,
+    fractalRadiusLTF: 2,
+    confluenceThreshold: 0.75,
+  });
+
+  let smcStatsTimer: ReturnType<typeof setInterval> | null = null;
+
+  function emitSmcPerformanceMetrics(): void {
+    const stats: SmcEngineStats = smcEngine.getStats();
+    (self as any).postMessage({
+      kind: 'SMC_PERFORMANCE_METRICS',
+      payload: {
+        lastBarLatencyMs: stats.lastBarLatencyMs,
+        avgLatencyMs: stats.avgLatencyMs,
+        heapAllocBytes: stats.heapAllocBytes,
+        framesEmitted: stats.framesEmitted,
+      },
+    });
+  }
+
+  function handleSmcAction(msg: SMCWorkerInboundAction): void {
+    switch (msg.kind) {
+      case 'SMC_INIT_CONFIG': {
+        smcEngine.reset();
+        break;
+      }
+      case 'SMC_UPDATE_BAR': {
+        const { bar, higherTFCandle } = msg.payload;
+        const frame = smcEngine.updateBar(bar, higherTFCandle);
+        if (frame) {
+          (self as any).postMessage({ kind: 'SMC_FRAME_SNAPSHOT', payload: frame });
+        }
+        break;
+      }
+      case 'SMC_BULK_REPLAY': {
+        const { bars, higherTFBars } = msg.payload;
+        smcEngine.bulkReplay(bars, higherTFBars);
+        const lastBar = bars[bars.length - 1];
+        if (lastBar) {
+          const frame = smcEngine.buildFrameSnapshot(lastBar);
+          (self as any).postMessage({ kind: 'SMC_FRAME_SNAPSHOT', payload: frame });
+        }
+        break;
+      }
+      case 'SMC_RESET_STATE': {
+        smcEngine.reset(msg.payload.preservePivots);
+        break;
+      }
+      case 'SMC_SET_GATE_THRESHOLD': {
+        smcEngine.setGateThreshold(msg.payload.sigmaMin);
+        break;
+      }
+      default: {
+        break;
+      }
+    }
+  }
+
   self.addEventListener('message', (event: MessageEvent) => {
-    if (isWorkerInboundAction(event.data)) {
-      engine.handleAction(event.data);
+    const data: unknown = event.data;
+    if (isWorkerInboundAction(data)) {
+      syncEngine.handleAction(data);
+      return;
+    }
+    if (isSMCWorkerInboundAction(data)) {
+      handleSmcAction(data);
     }
   });
+
+  if (typeof setInterval === 'function') {
+    smcStatsTimer = setInterval(() => {
+      emitSmcPerformanceMetrics();
+    }, 1000);
+  }
 }
