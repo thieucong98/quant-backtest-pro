@@ -816,7 +816,35 @@ export const ja: TranslationDict = {
   "authRequiredDataSave": "このデータセットをアカウントデータベースに保存するにはログインしてください。",
   "quickDemoLogin": "クイックアクセス（デモ）",
   "loginNow": "今すぐログイン",
-  "guestSandboxTooltip": "ローカルのゲストサンドボックスモードです。AIスタジオ、クラウドセッション、MT5接続を利用するにはログインしてください。"
+  "guestSandboxTooltip": "ローカルのゲストサンドボックスモードです。AIスタジオ、クラウドセッション、MT5接続を利用するにはログインしてください。",
+
+  // Multi-Chart Layout & Synchronization (v2.0)
+  "singleLayout": "シングルチャート",
+  "dualHorizontalLayout": "水平分割（左右）",
+  "dualVerticalLayout": "垂直分割（上下）",
+  "crosshairSyncActive": "十字線同期: オン",
+  "crosshairSyncInactive": "十字線同期: オフ",
+  "timeSyncActive": "時間同期: オン",
+  "timeSyncInactive": "時間同期: オフ",
+  "primaryTimeframe": "チャートA (主)",
+  "secondaryTimeframe": "チャートB (副)",
+  "htfDeveloping": "上位足形成中",
+  "syncStatusLocked": "同期中",
+  "syncStatusUnlocked": "独立",
+  "layoutMode": "レイアウト",
+  "resetView": "ビューをリセット",
+  "chartAPane": "チャートA",
+  "chartBPane": "チャートB",
+
+  // Quant Execution Bridge (v2.0)
+  "bridgeConnected": "Bridge: 接続済み",
+  "bridgeConnecting": "Bridge: 接続中...",
+  "bridgeDisconnected": "Bridge: 切断",
+  "bridgeError": "Bridge: エラー",
+  "bridgeLatency": "レイテンシ",
+  "bridgeCircuitBreakerActive": "サーキットブレーカー: 作動中",
+  "bridgeCircuitBreakerNormal": "サーキットブレーカー: 正常",
+  "bridgeResetCircuitBreaker": "サーキットブレーカーをリセット",
+  "bridgePropShieldActive": "プロップシールド: 保護中",
+  "bridgeWebhookActive": "Webhook受信: 有効"
 };
-
-

@@ -161,3 +161,36 @@ export class IndicatorCalculator {
     return min === Infinity ? 0 : min;
   }
 }
+
+
+/**
+ * Calculate Heikin-Ashi candles from raw candlestick data
+ */
+export function calculateHeikinAshi(rawCandles: Candle[]): Candle[] {
+  if (rawCandles.length === 0) return [];
+  const haList: Candle[] = [];
+
+  let prevHaOpen = rawCandles[0].open;
+  let prevHaClose = rawCandles[0].close;
+
+  for (let i = 0; i < rawCandles.length; i++) {
+    const c = rawCandles[i];
+    const haClose = (c.open + c.high + c.low + c.close) / 4;
+    const haOpen = i === 0 ? (c.open + c.close) / 2 : (prevHaOpen + prevHaClose) / 2;
+    const haHigh = Math.max(c.high, haOpen, haClose);
+    const haLow = Math.min(c.low, haOpen, haClose);
+
+    haList.push({
+      timestamp: c.timestamp,
+      open: haOpen,
+      high: haHigh,
+      low: haLow,
+      close: haClose,
+      volume: c.volume
+    });
+
+    prevHaOpen = haOpen;
+    prevHaClose = haClose;
+  }
+  return haList;
+}

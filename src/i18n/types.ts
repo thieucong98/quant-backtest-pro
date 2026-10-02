@@ -848,5 +848,33 @@ export interface TranslationDict {
   quickDemoLogin: string;
   loginNow: string;
   guestSandboxTooltip: string;
-}
+  // Multi-Chart Layout & Synchronization (v2.0)
+  singleLayout: string;
+  dualHorizontalLayout: string;
+  dualVerticalLayout: string;
+  crosshairSyncActive: string;
+  crosshairSyncInactive: string;
+  timeSyncActive: string;
+  timeSyncInactive: string;
+  primaryTimeframe: string;
+  secondaryTimeframe: string;
+  htfDeveloping: string;
+  syncStatusLocked: string;
+  syncStatusUnlocked: string;
+  layoutMode: string;
+  resetView: string;
+  chartAPane: string;
+  chartBPane: string;
 
+  // Quant Execution Bridge (v2.0)
+  bridgeConnected: string;
+  bridgeConnecting: string;
+  bridgeDisconnected: string;
+  bridgeError: string;
+  bridgeLatency: string;
+  bridgeCircuitBreakerActive: string;
+  bridgeCircuitBreakerNormal: string;
+  bridgeResetCircuitBreaker: string;
+  bridgePropShieldActive: string;
+  bridgeWebhookActive: string;
+}

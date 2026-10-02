@@ -816,7 +816,35 @@ export const zh: TranslationDict = {
   "authRequiredDataSave": "请登录以将此数据集保存到您的账户数据库中。",
   "quickDemoLogin": "快速体验（模拟交易员）",
   "loginNow": "立即登录",
-  "guestSandboxTooltip": "您当前处于本地访客沙盒模式。登录以解锁 AI 策略工作室、云端会话及 MT5 连接。"
+  "guestSandboxTooltip": "您当前处于本地访客沙盒模式。登录以解锁 AI 策略工作室、云端会话及 MT5 连接。",
+
+  // Multi-Chart Layout & Synchronization (v2.0)
+  "singleLayout": "单图表",
+  "dualHorizontalLayout": "水平分屏（左右）",
+  "dualVerticalLayout": "垂直分屏（上下）",
+  "crosshairSyncActive": "十字光标同步: 开启",
+  "crosshairSyncInactive": "十字光标同步: 关闭",
+  "timeSyncActive": "时间同步: 开启",
+  "timeSyncInactive": "时间同步: 关闭",
+  "primaryTimeframe": "图表 A (主)",
+  "secondaryTimeframe": "图表 B (辅)",
+  "htfDeveloping": "大周期形成中",
+  "syncStatusLocked": "已锁定同步",
+  "syncStatusUnlocked": "独立",
+  "layoutMode": "布局",
+  "resetView": "重置视图",
+  "chartAPane": "图表 A",
+  "chartBPane": "图表 B",
+
+  // Quant Execution Bridge (v2.0)
+  "bridgeConnected": "Bridge: 已连接",
+  "bridgeConnecting": "Bridge: 正在连接...",
+  "bridgeDisconnected": "Bridge: 已断开",
+  "bridgeError": "Bridge: 错误",
+  "bridgeLatency": "延迟",
+  "bridgeCircuitBreakerActive": "熔断器: 已触发",
+  "bridgeCircuitBreakerNormal": "熔断器: 正常",
+  "bridgeResetCircuitBreaker": "重置熔断器",
+  "bridgePropShieldActive": "自营风控盾: 保护中",
+  "bridgeWebhookActive": "Webhook 接收: 已激活"
 };
-
-

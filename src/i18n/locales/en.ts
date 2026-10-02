@@ -816,7 +816,35 @@ export const en: TranslationDict = {
   "authRequiredDataSave": "Please log in to save this dataset to your account database.",
   "quickDemoLogin": "Quick Access (Demo Trader)",
   "loginNow": "Log In Now",
-  "guestSandboxTooltip": "You are in local guest sandbox mode. Log in to unlock AI Studio, cloud sessions, and MT5 connection."
+  "guestSandboxTooltip": "You are in local guest sandbox mode. Log in to unlock AI Studio, cloud sessions, and MT5 connection.",
+
+  // Multi-Chart Layout & Synchronization (v2.0)
+  "singleLayout": "Single Chart",
+  "dualHorizontalLayout": "Dual Split (Horizontal)",
+  "dualVerticalLayout": "Dual Split (Vertical)",
+  "crosshairSyncActive": "Crosshair Sync: Active",
+  "crosshairSyncInactive": "Crosshair Sync: Off",
+  "timeSyncActive": "Time Sync: Active",
+  "timeSyncInactive": "Time Sync: Off",
+  "primaryTimeframe": "Chart A (Primary)",
+  "secondaryTimeframe": "Chart B (Secondary)",
+  "htfDeveloping": "HTF Forming",
+  "syncStatusLocked": "Locked",
+  "syncStatusUnlocked": "Independent",
+  "layoutMode": "Layout",
+  "resetView": "Reset View",
+  "chartAPane": "Chart A",
+  "chartBPane": "Chart B",
+
+  // Quant Execution Bridge (v2.0)
+  "bridgeConnected": "Bridge: Connected",
+  "bridgeConnecting": "Bridge: Connecting...",
+  "bridgeDisconnected": "Bridge: Disconnected",
+  "bridgeError": "Bridge: Error",
+  "bridgeLatency": "Latency",
+  "bridgeCircuitBreakerActive": "Circuit Breaker: Tripped",
+  "bridgeCircuitBreakerNormal": "Circuit Breaker: Normal",
+  "bridgeResetCircuitBreaker": "Reset Circuit Breaker",
+  "bridgePropShieldActive": "Prop Shield: Guarding",
+  "bridgeWebhookActive": "Webhook Ingestion: Active"
 };
-
-

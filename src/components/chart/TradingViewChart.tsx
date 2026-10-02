@@ -45,34 +45,8 @@ import { PropFirmHUD } from './PropFirmHUD';
 /**
  * Tính toán nến Heikin-Ashi làm mượt xu hướng
  */
-export function calculateHeikinAshi(rawCandles: Candle[]): Candle[] {
-  if (rawCandles.length === 0) return [];
-  const haList: Candle[] = [];
-
-  let prevHaOpen = rawCandles[0].open;
-  let prevHaClose = rawCandles[0].close;
-
-  for (let i = 0; i < rawCandles.length; i++) {
-    const c = rawCandles[i];
-    const haClose = (c.open + c.high + c.low + c.close) / 4;
-    const haOpen = i === 0 ? (c.open + c.close) / 2 : (prevHaOpen + prevHaClose) / 2;
-    const haHigh = Math.max(c.high, haOpen, haClose);
-    const haLow = Math.min(c.low, haOpen, haClose);
-
-    haList.push({
-      timestamp: c.timestamp,
-      open: haOpen,
-      high: haHigh,
-      low: haLow,
-      close: haClose,
-      volume: c.volume
-    });
-
-    prevHaOpen = haOpen;
-    prevHaClose = haClose;
-  }
-  return haList;
-}
+import { calculateHeikinAshi } from "../../engine/indicators";
+export { calculateHeikinAshi };
 
 /**
  * Thời lượng mỗi Timeframe tính theo giây
@@ -87,7 +61,20 @@ const TIMEFRAME_SECONDS: Record<Timeframe, number> = {
   D1: 86400
 };
 
-export const TradingViewChart: React.FC = () => {
+
+export interface TradingViewChartProps {
+  id?: string;
+  isSecondary?: boolean;
+  timeframeOverride?: Timeframe;
+  onChartReady?: (chart: IChartApi, series: ISeriesApi<any>) => void;
+}
+
+export const TradingViewChart: React.FC<TradingViewChartProps> = ({
+  id = 'primary',
+  isSecondary = false,
+  timeframeOverride,
+  onChartReady,
+}) => {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const mainSeriesRef = useRef<ISeriesApi<any> | null>(null);
@@ -352,9 +339,13 @@ export const TradingViewChart: React.FC = () => {
       }
     });
 
-    chartRef.current = chart;
+        chartRef.current = chart;
     mainSeriesRef.current = mainSeries;
     volumeSeriesRef.current = volumeSeries;
+
+    if (onChartReady) {
+      onChartReady(chart, mainSeries);
+    }
 
     const handleResize = () => {
       if (chartContainerRef.current && chartRef.current) {
