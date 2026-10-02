@@ -31,9 +31,12 @@ Welcome to **QuantBacktest Pro** codebase. All AI coding agents, assistants, and
   - Step 2: Create & checkout dedicated branch: `git checkout -b <type>/<name>`.
   - Step 3: Implement changes and verify all Quality Gates (`npx tsc --noEmit`, `npm run check:i18n`, `npm test`, `npm run build`).
   - Step 4: Commit atomically with Conventional Commits format (`feat(...)`, `fix(...)`, `refactor(...)`, etc.).
-  - Step 5: Merge into base branch or prepare pull request cleanly per user instructions.
-- **Local Commits Only**: Always create clean, descriptive local git commits after completing work.
-- **NEVER RUN `git push`**: Do not push to remote origin unless explicitly instructed by the user (e.g. "push code").
+  - Step 5: Push dedicated branch to remote origin (`git push -u origin <type>/<name>`).
+  - Step 6: Create Pull Request / Merge Request targeting base branch (`main`).
+- **End-of-Task Delivery & PR Requirement (NO PREMATURE PRs)**:
+  - Do NOT push or create a Pull Request for every individual commit or intermediate step.
+  - ONLY push the branch and open a Pull Request when the ENTIRE user request/feature scope is 100% completed and all Quality Gates pass (`tsc`, `check:i18n`, `test`, `build`).
+  - Never push unverified code or broken commits to origin. Never force-push (`--force`) to shared branches.
 
 ---
 
