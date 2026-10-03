@@ -180,27 +180,40 @@ export class AIStreamingGenerator {
 
           try {
             const parsed = JSON.parse(payload);
-            const delta = parsed.choices?.[0]?.delta?.content || '';
-            if (delta) {
-              tokensCount++;
-              rawAccumulator += delta;
+            const deltaContent = parsed.choices?.[0]?.delta?.content || '';
+            const deltaReasoning = parsed.choices?.[0]?.delta?.reasoning_content || parsed.choices?.[0]?.delta?.reasoning || '';
 
-              // Parse <think> tokens
+            if (deltaReasoning) {
+              tokensCount++;
+              insideThink = true;
+              reasoning += deltaReasoning;
+              callbacks.onReasoningDelta?.(deltaReasoning);
+              reportProgress('GENERATING');
+            }
+
+            if (deltaContent) {
+              tokensCount++;
+              rawAccumulator += deltaContent;
+
+              // Parse <think> tokens if model embeds them in content
               if (rawAccumulator.includes('<think>') && !rawAccumulator.includes('</think>')) {
                 insideThink = true;
                 const thinkIndex = rawAccumulator.indexOf('<think>') + 7;
                 const currentThink = rawAccumulator.substring(thinkIndex);
                 reasoning = currentThink;
-                callbacks.onReasoningDelta?.(delta);
+                callbacks.onReasoningDelta?.(deltaContent);
               } else if (rawAccumulator.includes('</think>')) {
                 insideThink = false;
                 const parts = rawAccumulator.split('</think>');
                 reasoning = parts[0].replace('<think>', '').trim();
                 code = parts[1].trim();
-                callbacks.onCodeDelta?.(delta);
+                callbacks.onCodeDelta?.(deltaContent);
               } else {
-                code += delta;
-                callbacks.onCodeDelta?.(delta);
+                if (insideThink && !deltaReasoning) {
+                  insideThink = false;
+                }
+                code += deltaContent;
+                callbacks.onCodeDelta?.(deltaContent);
               }
 
               reportProgress('GENERATING');

@@ -1015,6 +1015,7 @@ export interface TranslationDict {
   autopsyFomoRisk: string;
   autopsySlMoved: string;
   autopsyPerfectExecution: string;
+  autopsyClose: string;
 
   // 4. Prop Firm Pass Score & Monte Carlo 1,000-Path
   propFirmPassScore: string;

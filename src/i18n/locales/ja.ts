@@ -982,6 +982,7 @@ export const ja: TranslationDict = {
   "autopsyFomoRisk": "高値掴み・FOMOエントリー",
   "autopsySlMoved": "損切り幅の拡大または無計画なSL",
   "autopsyPerfectExecution": "正しいセットアップ（確率的損失）",
+  "autopsyClose": "診断を閉じる",
 
   "propFirmPassScore": "プロップファーム合格確率",
   "propFirmPassRate": "目標達成率 (+10%)",

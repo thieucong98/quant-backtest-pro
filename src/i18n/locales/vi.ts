@@ -982,6 +982,7 @@ export const vi: TranslationDict = {
   "autopsyFomoRisk": "Đua giá hưng phấn / Vào lệnh FOMO",
   "autopsySlMoved": "Dời Stop Loss hoặc SL quá rộng",
   "autopsyPerfectExecution": "Thực thi chuẩn bài (Phương sai xác suất)",
+  "autopsyClose": "Đóng Chẩn Đoán",
 
   "propFirmPassScore": "Xác Suất Đậu Quỹ Prop Firm",
   "propFirmPassRate": "Tỷ lệ chạm Target (+10%)",
