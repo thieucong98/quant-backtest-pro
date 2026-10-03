@@ -911,6 +911,11 @@ export const vi: TranslationDict = {
   "apexCopilotAppliedToast": "Đã áp dụng kế hoạch hành động",
   "apexCopilotNoPlanToast": "Không có kế hoạch hợp lệ để áp dụng.",
   "apexCopilotTelemetry": "Telemetri hiệu năng SMC",
+  "apexCopilotDragHandle": "Kéo để di chuyển vị trí",
+  "apexCopilotDockLeft": "Ghim bên trái",
+  "apexCopilotDockRight": "Ghim bên phải",
+  "apexCopilotAutoWarning": "Đang bật tự động: Lệnh sẽ được mở ngay khi có Plan",
+  "apexCopilotInteractivePromptHelp": "Hỏi Copilot hoặc chọn gợi ý nhanh để phân tích tín hiệu",
   // Multi-Chart Layout & Synchronization (v2.0)
   "singleLayout": "Biểu đồ đơn",
   "dualHorizontalLayout": "Chia đôi (Ngang)",

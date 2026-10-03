@@ -415,7 +415,10 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
       timeScale: {
         borderColor: 'rgba(51, 65, 85, 0.5)',
         timeVisible: true,
-        secondsVisible: false
+        secondsVisible: false,
+        rightOffset: 15,
+        barSpacing: 8,
+        minBarSpacing: 2
       },
       rightPriceScale: {
         visible: priceScalePosition === 'right',
@@ -1057,12 +1060,34 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
         }));
         volumeSeriesRef.current.setData(volumeData);
 
+        const datasetChanged = lastCandlesRef.current !== effectiveCandles;
         lastCandlesRef.current = effectiveCandles;
         lastRenderedIndexRef.current = currentIndex;
-        chartRef.current?.timeScale().scrollToRealTime();
-      }
 
-      // Render Markers
+        // Chỉ cuộn tới RealTime khi tải dataset hoàn toàn mới (đổi cặp tiền hoặc nạp file)
+        // Không cuộn khi scrub hoặc đặt lệnh để bảo tồn trạng thái quan sát của người dùng
+        if (datasetChanged) {
+          chartRef.current?.timeScale().scrollToRealTime();
+        }
+      }
+    } catch (err) {
+      console.error('Error rendering chart candles:', err);
+    }
+  }, [
+    effectiveCandles,
+    currentIndex,
+    instrument.digits,
+    instrument.symbol,
+    timeframe,
+    chartType
+  ]);
+
+  // Render Markers & Economic News tách biệt hoàn toàn khỏi Candle setData
+  // Đảm bảo việc thêm/sửa marker (vào lệnh, đặt TP/SL) KHÔNG BAO GIỜ reset góc nhìn hay zoom của biểu đồ
+  useEffect(() => {
+    if (!mainSeriesRef.current || effectiveCandles.length === 0) return;
+
+    try {
       const currentMaxTime = effectiveCandles[currentIndex]?.timestamp || 0;
       const maxSec = currentMaxTime > 1e11 ? Math.floor(currentMaxTime / 1000) : Math.floor(currentMaxTime);
       const activeMarkers = markers
@@ -1177,7 +1202,7 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
       const allMarkers = [...activeMarkers, ...newsMarkers].sort((a, b) => (a.time as number) - (b.time as number));
       mainSeriesRef.current.setMarkers(allMarkers);
     } catch (err) {
-      console.error('Error rendering chart candles:', err);
+      console.error('Error rendering chart markers:', err);
     }
   }, [
     effectiveCandles,
@@ -1189,10 +1214,8 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
     economicNewsDisplayMode,
     economicNewsOnlyCurrentPair,
     selectedCalendarCurrency,
-    instrument.digits,
     instrument.symbol,
-    timeframe,
-    chartType
+    timeframe
   ]);
 
   // Cập nhật đường giá hiển thị cho Open Positions (Hỗ trợ cả Sandbox & Live Broker Positions)
@@ -1436,8 +1459,8 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
               )}
             </div>
 
-            {/* FLOATING ACTIVE ASSISTANT PANEL */}
-            {activeAssistantPanel && (
+            {/* FLOATING ACTIVE ASSISTANT PANEL (Except Copilot which is rendered as a draggable overlay) */}
+            {activeAssistantPanel && activeAssistantPanel !== 'copilot' && (
               <div className="pointer-events-auto w-full max-w-[350px] animate-in fade-in slide-in-from-top-2 duration-150 shadow-2xl">
                 {activeAssistantPanel === 'hub' && (
                   <AssistantHubFlyout
@@ -1447,20 +1470,6 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
                     isPropFirmMode={isPropFirmMode}
                     autoTradingEnabled={autoTradingEnabled}
                     currentStrategyName={activeStrategy?.name}
-                  />
-                )}
-
-                {activeAssistantPanel === 'copilot' && (
-                  <AICopilotHUD
-                    mtf={smcStream.mtf}
-                    perf={{
-                      lastBarLatencyMs: smcStream.stats.lastBarLatencyMs,
-                      avgLatencyMs: smcStream.stats.avgLatencyMs,
-                    }}
-                    compact={false}
-                    onClose={() => setActiveAssistantPanel(null)}
-                    onAsk={handleCopilotAsk}
-                    onPlan={handleCopilotPlan}
                   />
                 )}
 
@@ -1619,6 +1628,21 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
           onClose={() => setContextMenuPos(null)}
           onResetPriceScale={handleResetPriceScale}
           onOpenSettings={() => setShortcutsModalOpen(true)}
+        />
+      )}
+
+      {/* APEX AI COPILOT FLOATING DRAGGABLE HUD */}
+      {activeAssistantPanel === 'copilot' && (
+        <AICopilotHUD
+          mtf={smcStream.mtf}
+          perf={{
+            lastBarLatencyMs: smcStream.stats.lastBarLatencyMs,
+            avgLatencyMs: smcStream.stats.avgLatencyMs,
+          }}
+          compact={false}
+          onClose={() => setActiveAssistantPanel(null)}
+          onAsk={handleCopilotAsk}
+          onPlan={handleCopilotPlan}
         />
       )}
     </div>

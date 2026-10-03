@@ -911,6 +911,11 @@ export const ja: TranslationDict = {
   "apexCopilotAppliedToast": "アクションプランを適用しました",
   "apexCopilotNoPlanToast": "適用可能なプランがありません。",
   "apexCopilotTelemetry": "SMCパフォーマンステレメトリ",
+  "apexCopilotDragHandle": "ドラッグして位置を移動",
+  "apexCopilotDockLeft": "左側に固定",
+  "apexCopilotDockRight": "右側に固定",
+  "apexCopilotAutoWarning": "自動発注有効: プラン生成時に即座に注文が実行されます",
+  "apexCopilotInteractivePromptHelp": "Copilotに質問するかクイック操作を選択して分析",
   // Multi-Chart Layout & Synchronization (v2.0)
   "singleLayout": "シングルチャート",
   "dualHorizontalLayout": "水平分割（左右）",
