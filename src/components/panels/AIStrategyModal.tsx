@@ -31,7 +31,9 @@ import {
   BarChart3,
   Layers,
   ArrowRight,
-  Lock
+  Lock,
+  Terminal,
+  Radio
 } from 'lucide-react';
 import { PREBUILT_STRATEGIES } from '../../engine/strategySandbox';
 import { AIService, AIProvider, LLMConfig, DEFAULT_LLM_CONFIG, AI_PROVIDER_MODELS } from '../../engine/aiService';
@@ -48,6 +50,10 @@ import { AIStrategyDefinition } from '../../types/strategy';
 import { strategiesApi } from '../../api';
 import { ExportStrategyModal } from './ExportStrategyModal';
 import { useAuthStore } from '../../store/authStore';
+import { AIStreamingGenerator, StreamingProgress } from '../../engine/aiStreamingGenerator';
+import { VisualStrategyBuilderModal } from './VisualStrategyBuilderModal';
+import { SignalWebhookSettingsTab } from './SignalWebhookSettingsTab';
+import { MonteCarloEngine, MonteCarloSimulationResult } from '../../engine/monteCarloEngine';
 
 const MiniSparkline: React.FC<{ data?: number[]; isPositive: boolean }> = ({ data, isPositive }) => {
   if (!data || data.length < 2) return <span className="text-slate-600 font-mono text-[10px]">-</span>;
@@ -111,11 +117,15 @@ export const AIStrategyModal: React.FC = () => {
 
   const t = getTranslation(language);
 
-  const [activeTab, setActiveTab] = useState<'studio' | 'optimizer' | 'my-strategies' | 'templates' | 'settings'>('studio');
+  const [activeTab, setActiveTab] = useState<'studio' | 'visual' | 'optimizer' | 'my-strategies' | 'templates' | 'webhooks' | 'settings'>('studio');
+
+  const generatorRef = useRef<AIStreamingGenerator>(new AIStreamingGenerator());
+  const [streamingProgress, setStreamingProgress] = useState<StreamingProgress | null>(null);
+  const [cotReasoning, setCotReasoning] = useState<string>('');
 
   useEffect(() => {
     if (isAIModalOpen && aiModalTab) {
-      setActiveTab(aiModalTab);
+      setActiveTab(aiModalTab as any);
     }
   }, [isAIModalOpen, aiModalTab]);
   const [prompt, setPrompt] = useState('');
@@ -155,6 +165,22 @@ export const AIStrategyModal: React.FC = () => {
       return true;
     });
   }, [optSummary, filterMinTrades, filterProfitable]);
+
+  const bestItemMonteCarlo = useMemo(() => {
+    if (!optSummary?.bestItem) return null;
+    const spark = optSummary.bestItem.sparkline || [];
+    let pnls = spark.slice(1).map((val, idx) => val - spark[idx]);
+    if (pnls.length === 0) {
+      pnls = [
+        optSummary.bestItem.report.netProfit > 0 ? optSummary.bestItem.tpPips * 10 : -optSummary.bestItem.slPips * 10,
+        -optSummary.bestItem.slPips * 5,
+        optSummary.bestItem.tpPips * 8,
+        -optSummary.bestItem.slPips * 7,
+        optSummary.bestItem.tpPips * 12
+      ];
+    }
+    return MonteCarloEngine.runPropFirmSimulation(pnls, account.initialBalance || 10000, 1000);
+  }, [optSummary?.bestItem, account.initialBalance]);
 
   const parsedRules = useMemo(() => {
     let sl = 25;
@@ -312,73 +338,99 @@ export const AIStrategyModal: React.FC = () => {
     setIsGenerating(true);
     setCompileStatus('IDLE');
     setErrorMessage('');
+    setCotReasoning('');
+    setStrategyCode('');
 
     try {
-      const result = await AIService.generateStrategy(prompt, llmConfig, instrument.symbol);
-      let finalCode = result.code;
-      let finalParams: Record<string, any> = {};
+      await generatorRef.current.generateStrategyStream(
+        prompt,
+        llmConfig,
+        instrument.symbol,
+        {
+          onProgress: (prog) => {
+            setStreamingProgress(prog);
+            if (prog.reasoning) setCotReasoning(prog.reasoning);
+            if (prog.code) setStrategyCode(prog.code);
+          },
+          onReasoningDelta: (delta) => {
+            setCotReasoning((prev) => prev + delta);
+          },
+          onCodeDelta: (delta) => {
+            setStrategyCode((prev) => prev + delta);
+          },
+          onComplete: async (result) => {
+            let finalCode = result.code;
+            let finalParams: Record<string, any> = {};
 
-      // 🔍 AI Auto-Tuning: Tự động quét SL/TP tối ưu cho Symbol hiện tại
-      if (autoTuneAfterGen && candles && candles.length >= 10) {
-        setIsAutoTuning(true);
-        addStrategyLog('INFO', `[AI Auto-Tune] Auto-scanning & optimizing SL/TP for ${instrument.symbol}...`);
-        try {
-          const ranges = StrategyOptimizerEngine.getSymbolDefaultRanges(instrument);
-          const autoOptSummary = await StrategyOptimizerEngine.runBatchOptimization(
-            result.code,
-            {},
-            candles,
-            instrument,
-            {
-              slRange: ranges.slRange,
-              tpRange: ranges.tpRange,
-              initialBalance: account.initialBalance || 10000,
-              lotSize: 0.1,
-              metricSortBy: 'netProfit'
+            // 🔍 AI Auto-Tuning: Tự động quét SL/TP tối ưu cho Symbol hiện tại
+            if (autoTuneAfterGen && candles && candles.length >= 10) {
+              setIsAutoTuning(true);
+              addStrategyLog('INFO', `[AI Auto-Tune] Auto-scanning & optimizing SL/TP for ${instrument.symbol}...`);
+              try {
+                const ranges = StrategyOptimizerEngine.getSymbolDefaultRanges(instrument);
+                const autoOptSummary = await StrategyOptimizerEngine.runBatchOptimization(
+                  result.code,
+                  {},
+                  candles,
+                  instrument,
+                  {
+                    slRange: ranges.slRange,
+                    tpRange: ranges.tpRange,
+                    initialBalance: account.initialBalance || 10000,
+                    lotSize: 0.1,
+                    metricSortBy: 'netProfit'
+                  }
+                );
+                setOptSummary(autoOptSummary);
+                if (autoOptSummary.bestItem) {
+                  setSelectedOptItem(autoOptSummary.bestItem);
+                  finalCode = StrategyOptimizerEngine.replaceSLTPInCode(
+                    result.code,
+                    autoOptSummary.bestItem.slPips,
+                    autoOptSummary.bestItem.tpPips
+                  );
+                  finalParams = {
+                    slPips: autoOptSummary.bestItem.slPips,
+                    tpPips: autoOptSummary.bestItem.tpPips
+                  };
+                  addStrategyLog(
+                    'SIGNAL',
+                    `[AI Auto-Tune] Optimized for ${instrument.symbol}: SL=${autoOptSummary.bestItem.slPips}p, TP=${autoOptSummary.bestItem.tpPips}p (Winrate: ${autoOptSummary.bestItem.report.winRate}%, Net: +${autoOptSummary.bestItem.report.netProfit.toFixed(1)})`
+                  );
+                }
+              } catch (optErr: any) {
+                console.warn('Auto-tune failed, using default params', optErr);
+              } finally {
+                setIsAutoTuning(false);
+              }
             }
-          );
-          setOptSummary(autoOptSummary);
-          if (autoOptSummary.bestItem) {
-            setSelectedOptItem(autoOptSummary.bestItem);
-            finalCode = StrategyOptimizerEngine.replaceSLTPInCode(
-              result.code,
-              autoOptSummary.bestItem.slPips,
-              autoOptSummary.bestItem.tpPips
-            );
-            finalParams = {
-              slPips: autoOptSummary.bestItem.slPips,
-              tpPips: autoOptSummary.bestItem.tpPips
+
+            setStrategyName(result.name);
+            setStrategyDesc(result.description);
+            setStrategyCode(finalCode);
+
+            // Tự động áp dụng chiến lược vừa tạo
+            const newStrat: AIStrategyDefinition = {
+              id: 'ai_strat_' + Date.now(),
+              name: result.name,
+              description: result.description,
+              code: finalCode,
+              parameters: finalParams,
+              enabled: true,
+              createdAt: Date.now()
             };
-            addStrategyLog(
-              'SIGNAL',
-              `[AI Auto-Tune] Optimized for ${instrument.symbol}: SL=${autoOptSummary.bestItem.slPips}p, TP=${autoOptSummary.bestItem.tpPips}p (Winrate: ${autoOptSummary.bestItem.report.winRate}%, Net: +${autoOptSummary.bestItem.report.netProfit.toFixed(1)})`
-            );
+
+            setActiveStrategy(newStrat);
+            setCompileStatus('SUCCESS');
+            addStrategyLog('SIGNAL', `[AI Copilot] Generated and loaded strategy: "${result.name}"`);
+          },
+          onError: (err) => {
+            setCompileStatus('ERROR');
+            setErrorMessage(err.message || 'Error generating strategy.');
+            addStrategyLog('ERROR', `[AI Generator Error] ${err.message}`);
           }
-        } catch (optErr: any) {
-          console.warn('Auto-tune failed, using default params', optErr);
-        } finally {
-          setIsAutoTuning(false);
         }
-      }
-
-      setStrategyName(result.name);
-      setStrategyDesc(result.description);
-      setStrategyCode(finalCode);
-
-      // Tự động áp dụng chiến lược vừa tạo
-      const newStrat: AIStrategyDefinition = {
-        id: 'ai_strat_' + Date.now(),
-        name: result.name,
-        description: result.description,
-        code: finalCode,
-        parameters: finalParams,
-        enabled: true,
-        createdAt: Date.now()
-      };
-
-      setActiveStrategy(newStrat);
-      setCompileStatus('SUCCESS');
-      addStrategyLog('SIGNAL', `[AI Copilot] Generated and loaded strategy: "${result.name}"`);
+      );
     } catch (err: any) {
       setCompileStatus('ERROR');
       setErrorMessage(err.message || 'Error generating strategy.');
@@ -387,6 +439,13 @@ export const AIStrategyModal: React.FC = () => {
       setIsGenerating(false);
       setIsAutoTuning(false);
     }
+  };
+
+  const handleCancelStreaming = () => {
+    generatorRef.current.cancel();
+    setIsGenerating(false);
+    setIsAutoTuning(false);
+    addStrategyLog('INFO', '[AI Generator] Strategy generation cancelled by user.');
   };
 
   const handleApplyStrategy = () => {
@@ -732,6 +791,19 @@ export const AIStrategyModal: React.FC = () => {
               <span>{t.studioAndSandboxTab}</span>
             </button>
 
+            {/* TAB VISUAL BUILDER */}
+            <button
+              onClick={() => setActiveTab('visual')}
+              className={`px-3 sm:px-3.5 py-2.5 font-bold transition-all border-b-2 flex items-center gap-1.5 whitespace-nowrap ${
+                activeTab === 'visual'
+                  ? 'border-cyan-500 text-cyan-400 bg-cyan-950/20'
+                  : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/50'
+              }`}
+            >
+              <Layers className="w-3.5 h-3.5" />
+              <span>{t.visualBuilderTab}</span>
+            </button>
+
             {/* TAB OPTIMIZER */}
             <button
               onClick={() => setActiveTab('optimizer')}
@@ -772,11 +844,24 @@ export const AIStrategyModal: React.FC = () => {
               <span>{t.templatesTab}</span>
             </button>
 
+            {/* TAB WEBHOOKS */}
+            <button
+              onClick={() => setActiveTab('webhooks')}
+              className={`px-3 sm:px-3.5 py-2.5 font-bold transition-all border-b-2 flex items-center gap-1.5 whitespace-nowrap ${
+                activeTab === 'webhooks'
+                  ? 'border-indigo-500 text-indigo-400 bg-indigo-950/20'
+                  : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/50'
+              }`}
+            >
+              <Radio className="w-3.5 h-3.5" />
+              <span>{t.webhookTab}</span>
+            </button>
+
             <button
               onClick={() => setActiveTab('settings')}
               className={`px-3 sm:px-3.5 py-2.5 font-bold transition-all border-b-2 flex items-center gap-1.5 whitespace-nowrap ${
                 activeTab === 'settings'
-                  ? 'border-indigo-500 text-indigo-400 bg-indigo-950/20'
+                  ? 'border-purple-500 text-purple-400 bg-purple-950/20'
                   : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/50'
               }`}
             >
@@ -870,6 +955,62 @@ export const AIStrategyModal: React.FC = () => {
                     )}
                   </button>
                 </div>
+
+                {/* REAL-TIME CHAIN-OF-THOUGHT STREAMING TERMINAL */}
+                {(isGenerating || cotReasoning.length > 0) && (
+                  <div className="bg-[#0b0e14] border border-purple-500/40 rounded-xl p-3 space-y-2 font-mono text-[11px] shadow-lg animate-in fade-in">
+                    <div className="flex items-center justify-between border-b border-purple-900/50 pb-1.5">
+                      <div className="flex items-center gap-1.5 text-purple-300 font-bold">
+                        <Terminal className="w-3.5 h-3.5 text-purple-400" />
+                        <span>{t.streamingCotTerminal}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {streamingProgress && (
+                          <span className="text-[10px] text-purple-400/80 bg-purple-950/60 px-1.5 py-0.5 rounded border border-purple-800/40">
+                            {streamingProgress.tokensPerSec} {t.streamingTokensSec}
+                          </span>
+                        )}
+                        <span
+                          className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${
+                            isGenerating
+                              ? streamingProgress?.isThinking
+                                ? 'bg-amber-950/80 text-amber-300 border border-amber-600/40 animate-pulse'
+                                : 'bg-purple-950/80 text-purple-300 border border-purple-600/40 animate-pulse'
+                              : 'bg-emerald-950/80 text-emerald-300 border border-emerald-600/40'
+                          }`}
+                        >
+                          {isGenerating
+                            ? streamingProgress?.isThinking
+                              ? t.streamingThinking
+                              : t.streamingStatusGenerating
+                            : t.streamingStatusDone}
+                        </span>
+                      </div>
+                    </div>
+
+                    {cotReasoning && (
+                      <div className="max-h-36 overflow-y-auto pr-1 text-slate-300 leading-relaxed bg-black/40 p-2 rounded border border-slate-800/80 whitespace-pre-wrap select-text">
+                        <span className="text-purple-400 font-bold block mb-1">
+                          🧠 {t.streamingThinking}:
+                        </span>
+                        {cotReasoning}
+                      </div>
+                    )}
+
+                    {isGenerating && (
+                      <div className="flex justify-end pt-1">
+                        <button
+                          type="button"
+                          onClick={handleCancelStreaming}
+                          className="px-2.5 py-1 bg-rose-950/80 hover:bg-rose-900 border border-rose-500/50 text-rose-300 text-[10px] font-bold rounded flex items-center gap-1 transition-colors"
+                        >
+                          <X className="w-3 h-3" />
+                          <span>{t.streamingStopBtn}</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* COPILOT ADVICE / STATUS */}
                 <div className="bg-slate-900/40 border border-slate-800/80 p-3 rounded-xl space-y-1.5 text-xs">
@@ -1263,6 +1404,49 @@ export const AIStrategyModal: React.FC = () => {
                         <span>Max DD: {optSummary.bestItem.report.maxDrawdownPercent.toFixed(1)}%</span>
                         <span>{optSummary.bestItem.report.totalTrades} {t.tradesCol}</span>
                       </div>
+
+                      {/* PROP FIRM PASS SCORE & MONTE CARLO (1,000-PATH) */}
+                      {bestItemMonteCarlo && (
+                        <div className="mt-3 p-2.5 rounded-lg bg-slate-950/90 border border-emerald-500/40 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-bold text-amber-300 flex items-center gap-1">
+                              <Sparkles className="w-3 h-3 text-amber-400" />
+                              <span>{t.propFirmPassScore}</span>
+                            </span>
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-950 border border-emerald-500/50 text-emerald-300 font-mono">
+                              {bestItemMonteCarlo.starRating === 'ELITE'
+                                ? t.propFirmRatingElite
+                                : bestItemMonteCarlo.starRating === 'SOLID'
+                                ? t.propFirmRatingGood
+                                : t.propFirmRatingRisky}
+                            </span>
+                          </div>
+
+                          <div className="grid grid-cols-3 gap-1.5 font-mono text-[10px] text-center">
+                            <div className="bg-slate-900/90 p-1.5 rounded border border-slate-800">
+                              <span className="text-slate-500 block text-[8px]">{t.propFirmPassRate}</span>
+                              <span className="font-bold text-emerald-400 text-xs">{bestItemMonteCarlo.passTargetRate}%</span>
+                            </div>
+                            <div className="bg-slate-900/90 p-1.5 rounded border border-slate-800">
+                              <span className="text-slate-500 block text-[8px]">{t.propFirmDailyLossRisk}</span>
+                              <span className={`font-bold text-xs ${bestItemMonteCarlo.dailyLossBreachRisk > 5 ? 'text-rose-400' : 'text-emerald-400'}`}>
+                                {bestItemMonteCarlo.dailyLossBreachRisk}%
+                              </span>
+                            </div>
+                            <div className="bg-slate-900/90 p-1.5 rounded border border-slate-800">
+                              <span className="text-slate-500 block text-[8px]">{t.propFirmMaxDdRisk}</span>
+                              <span className={`font-bold text-xs ${bestItemMonteCarlo.maxDrawdownBreachRisk > 10 ? 'text-rose-400' : 'text-emerald-400'}`}>
+                                {bestItemMonteCarlo.maxDrawdownBreachRisk}%
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="text-[9px] text-slate-500 flex items-center justify-between font-mono pt-0.5">
+                            <span>{t.propFirmMonteCarloSims}: 1,000 paths</span>
+                            <span className="text-slate-400 font-semibold">Median: ${bestItemMonteCarlo.medianFinalBalance.toFixed(0)}</span>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     <button
@@ -1643,6 +1827,29 @@ export const AIStrategyModal: React.FC = () => {
                   </div>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* TAB: VISUAL STRATEGY BUILDER */}
+          {activeTab === 'visual' && (
+            <div className="h-full">
+              <VisualStrategyBuilderModal
+                onLoadStrategyCode={(name, desc, code) => {
+                  setStrategyName(name);
+                  setStrategyDesc(desc);
+                  setStrategyCode(code);
+                  setActiveTab('studio');
+                  setCompileStatus('SUCCESS');
+                  addStrategyLog('INFO', `Loaded visual strategy "${name}" into AI Studio`);
+                }}
+              />
+            </div>
+          )}
+
+          {/* TAB: SIGNAL WEBHOOKS */}
+          {activeTab === 'webhooks' && (
+            <div className="h-full">
+              <SignalWebhookSettingsTab />
             </div>
           )}
 

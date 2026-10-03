@@ -8,7 +8,7 @@
 
 ## 🎯 Mục Lục & Tổng Quan Hệ Thống
 
-Tài liệu này là **nguồn thông tin chuẩn mực duy nhất (Single Source of Truth)** thống kê toàn bộ **58 tính năng trên 9 phân hệ kiến trúc cốt lõi** của nền tảng **QuantBacktest Pro**.
+Tài liệu này là **nguồn thông tin chuẩn mực duy nhất (Single Source of Truth)** thống kê toàn bộ **63 tính năng trên 10 phân hệ kiến trúc cốt lõi** của nền tảng **QuantBacktest Pro**.
 
 | Mã Phân Hệ | Tên Phân Hệ Nghiệp Vụ | Số Tính Năng | Thành Phần Mã Nguồn Cốt Lõi |
 | :--- | :--- | :---: | :--- |
@@ -21,6 +21,7 @@ Tài liệu này là **nguồn thông tin chuẩn mực duy nhất (Single Sourc
 | **`F-ANL`** | [7. Báo Cáo Định Lượng & Mô Phỏng Monte Carlo](#7-báo-cáo-định-lượng--mô-phỏng-monte-carlo-f-anl) | 5 | `src/components/panels/AnalyticsDashboardModal.tsx`, `src/engine/analytics.ts` |
 | **`F-SYS`** | [8. Kết Nối Sàn MT5, Cloud Tunnel & Hạ Tầng](#8-kết-nối-sàn-mt5-cloud-tunnel--hạ-tầng-f-sys) | 6 | `src/components/panels/BrokerConnectionModal.tsx`, `src/components/panels/TunnelModal.tsx`, `src/components/panels/SessionManagerModal.tsx` |
 | **`F-SMC`** | [9. Cỗ Máy Smart Money Concepts & AI Copilot](#9-cỗ-máy-smart-money-concepts--ai-copilot-f-smc) | 10 | `src/engine/smc/smcEngine.ts`, `src/components/chart/AICopilotHUD.tsx`, `src/security/aesVault.ts` |
+| **`F-BRK`** | [10. 5 Ý Tưởng Đột Phá Nâng Cấp Nền Tảng (v2.2)](#10-5-ý-tưởng-đột-phá-nâng-cấp-nền-tảng-v22-f-brk) | 5 | `src/engine/aiStreamingGenerator.ts`, `src/engine/visualBlockCompiler.ts`, `src/engine/aiTradeAutopsy.ts`, `src/engine/monteCarloEngine.ts`, `src/engine/signalWebhookDispatcher.ts` |
 
 ---
 
@@ -640,6 +641,64 @@ Tài liệu này là **nguồn thông tin chuẩn mực duy nhất (Single Sourc
 | `F-SMC-08` | MTF Trend Matrix | SMC Interface | Multi-Timeframe | ✅ PASS | Suite 18: SMC Worker Sync Protocol |
 | `F-SMC-09` | Action Plan Validator | SMC Governance | Institutional Rule | ✅ PASS | Suite 19: ActionPlanValidator Tests |
 | `F-SMC-10` | Secure Key Vault AES-GCM | Bảo mật | Web Crypto FIPS | ✅ PASS | `tests/security/aesVault.test.ts` (22 tests) |
+| `F-BRK-01` | Sinh Chiến Lược AI Streaming Thời Gian Thực | Trí tuệ nhân tạo | SSE Token Stream | ✅ PASS | Suite 21: AI Streaming Generator |
+| `F-BRK-02` | Bộ Lắp Ghép Khối Trực Quan (No-Code) | Trí tuệ nhân tạo | Bộ biên dịch AST | ✅ PASS | Suite 21: Visual Block Compiler |
+| `F-BRK-03` | Khám Nghiệm Lệnh Thua & Chẩn Đoán AI | Phân tích / Chẩn đoán | Phân loại nguyên nhân | ✅ PASS | Suite 21: Trade Autopsy Engine |
+| `F-BRK-04` | Điểm Xác Suất Vượt Quỹ Prop Firm | Phân tích / Quản trị rủi ro | Mô phỏng 1.000 kịch bản | ✅ PASS | Suite 21: Monte Carlo Simulation |
+| `F-BRK-05` | Bộ Bắn Tín Hiệu Webhook Đa Kênh | Hạ tầng | Telegram / Discord | ✅ PASS | Suite 21: Webhook Dispatcher |
+
+---
+
+## 10. 5 Ý Tưởng Đột Phá Nâng Cấp Nền Tảng (v2.2) (`F-BRK`)
+
+### Bảng Thống Kê Phân Hệ
+| Mã | Tên Kỹ Thuật | Tên Hiển Thị (EN / VI) | Đường Dẫn Điều Hướng Giao Diện (Navigator) | Đường Dẫn Mã Nguồn |
+| :--- | :--- | :--- | :--- | :--- |
+| `F-BRK-01` | Sinh Chiến Lược AI Streaming Thời Gian Thực | `AI Real-Time Strategy Stream` / `Sinh Chiến Lược AI Streaming Thời Gian Thực` | Header ➔ AI Strategy Studio ➔ Tab Studio | `src/engine/aiStreamingGenerator.ts`, `src/components/panels/AIStrategyModal.tsx` |
+| `F-BRK-02` | Bộ Lắp Ghép Khối Trực Quan | `Visual Builder (No-Code)` / `Bộ Lắp Ghép Khối Trực Quan` | Header ➔ AI Strategy Studio ➔ Tab Khối Trực Quan | `src/engine/visualBlockCompiler.ts`, `src/components/panels/VisualStrategyBuilderModal.tsx` |
+| `F-BRK-03` | Khám Nghiệm Lệnh Thua & Chẩn Đoán AI | `AI Trade Autopsy` / `Khám Nghiệm Lệnh Thua` | Dock Dưới ➔ Lệnh Đã Đóng ➔ Lệnh Thua ➔ Bấm `Khám Nghiệm AI` | `src/engine/aiTradeAutopsy.ts`, `src/components/panels/AITradeAutopsyModal.tsx` |
+| `F-BRK-04` | Điểm Xác Suất Vượt Quỹ Prop Firm | `Prop Firm Pass Probability` / `Điểm Xác Suất Vượt Quỹ Prop Firm` | Header ➔ AI Strategy Studio ➔ Tab Tối Ưu Hóa ➔ Thẻ Cấu Hình Tốt Nhất | `src/engine/monteCarloEngine.ts`, `src/components/panels/AIStrategyModal.tsx` |
+| `F-BRK-05` | Bộ Bắn Tín Hiệu Webhook Đa Kênh | `Signal Webhook Dispatcher` / `Bộ Bắn Tín Hiệu Webhook Đa Kênh` | Header ➔ AI Strategy Studio ➔ Tab Webhook | `src/engine/signalWebhookDispatcher.ts`, `src/components/panels/SignalWebhookSettingsTab.tsx` |
+
+### Chi Tiết Kỹ Thuật & Tiêu Chí Kiểm Thử (QA Checklist)
+
+#### `F-BRK-01` - Sinh Chiến Lược AI Streaming Thời Gian Thực & Terminal Suy Luận CoT
+- **Điều hướng:** Bấm `AI Strategy Studio` trên Header ➔ Tab Studio ➔ Nhập câu lệnh ý tưởng giao dịch ➔ Bấm `Sinh Chiến Lược`.
+- **Chức năng:** Truyền nhận token theo thời gian thực (SSE), hiển thị tốc độ tokens/giây, bóc tách thẻ `<think>...</think>` vào terminal suy luận tương tác chuyên nghiệp, hỗ trợ nút Dừng luồng an toàn.
+- **QA Checklist:**
+  1. Kích hoạt sinh chiến lược -> Terminal CoT mở ra hiển thị quá trình tư duy và mã nguồn sinh ra theo từng token.
+  2. Huy hiệu tokens/giây nhảy số thực tế.
+  3. Bấm `Dừng sinh mã` -> Luồng dừng ngay lập tức, không gây treo giao diện.
+
+#### `F-BRK-02` - Bộ Lắp Ghép Khối Trực Quan (No-Code Quant Composer)
+- **Điều hướng:** Bấm `AI Strategy Studio` ➔ Chuyển sang Tab `Khối Trực Quan (No-Code)`.
+- **Chức năng:** Soạn thảo quy tắc thuật toán trực quan bằng khối điều kiện (RSI, EMA, SMC Order Block), toán tử so sánh và quản trị rủi ro SL/TP. Tự động biên dịch 2 chiều với mã nguồn JavaScript Sandbox.
+- **QA Checklist:**
+  1. Thêm khối điều kiện mới -> Thiết lập RSI < 30 và Hành động MUA.
+  2. Bấm Xem trước mã -> Hàm `onCandle` JavaScript được biên dịch tương ứng chính xác.
+  3. Bấm `Nạp vào Studio` -> Chiến lược được chuyển ngay vào trình soạn thảo mã Sandbox.
+
+#### `F-BRK-03` - Khám Nghiệm Lệnh Thua & Chẩn Đoán AI Chuyên Sâu
+- **Điều hướng:** Bảng điều khiển dưới ➔ Tab `Vị Thế` ➔ Tab con `Lệnh Đã Đóng` ➔ Tìm lệnh có PnL âm ➔ Bấm nút `Khám Nghiệm AI`.
+- **Chức năng:** Khám nghiệm pháp y lệnh thua bóc tách hộp đen dữ liệu thị trường, chấm điểm kỷ luật 0-100, phân loại 5 nguyên nhân gốc rễ (Va chạm tin tức mạnh, Đánh ngược xu hướng khung lớn, FOMO đuổi giá, Lỗi quản trị SL, Biến động xác suất tự nhiên), đưa ra toa thuốc định lượng.
+- **QA Checklist:**
+  1. Bấm nút `Khám Nghiệm AI` tại lệnh thua -> Modal khám nghiệm mở ra ngay lập tức.
+  2. Vòng đo điểm kỷ luật, huy hiệu nguyên nhân gốc rễ và toa thuốc định lượng hiển thị đầy đủ, chính xác.
+
+#### `F-BRK-04` - Điểm Xác Suất Vượt Quỹ Prop Firm & Mô Phỏng Monte Carlo 1.000 Lần
+- **Điều hướng:** Bấm `AI Strategy Studio` ➔ Tab `Tối Ưu Hóa` ➔ Chạy Tối ưu hóa lưới SL/TP ➔ Xem thẻ `Cấu Hình Tối Ưu Nhất`.
+- **Chức năng:** Mô phỏng 1.000 kịch bản ngẫu nhiên có hoàn lại (Bootstrap Monte Carlo) đánh giá theo quy chế thi quỹ (mục tiêu lãi 10%, giới hạn lỗ ngày 5%, drawdown tổng 10%), xếp hạng sao từ Xuất sắc đến Nguy cơ cao.
+- **QA Checklist:**
+  1. Chạy tối ưu hóa trên ít nhất 10 nến -> Thẻ cấu hình tối ưu hiển thị huy hiệu `Điểm Xác Suất Vượt Quỹ`.
+  2. Kiểm tra tỷ lệ đỗ mục tiêu, rủi ro vi phạm lỗ ngày và số dư trung vị của 1.000 kịch bản.
+
+#### `F-BRK-05` - Bộ Bắn Tín Hiệu Webhook Đa Kênh Thời Gian Thực
+- **Điều hướng:** Bấm `AI Strategy Studio` ➔ Tab `Webhook`.
+- **Chức năng:** Bắn cảnh báo khớp lệnh tức thời với định dạng Markdown chuyên nghiệp tới Telegram Bot API và Discord Webhook, đính kèm ảnh chụp biểu đồ Canvas.
+- **QA Checklist:**
+  1. Nhập thông tin Bot Token Telegram + Chat ID hoặc Discord Webhook URL.
+  2. Bấm `Kiểm tra gửi thử` -> Nhận thông báo xanh gửi thành công.
+  3. Bật `BẬT BỘ BẮN TÍN HIỆU` -> Mỗi khi có lệnh tay hoặc lệnh thuật toán khớp, webhook tự động phát tín hiệu không đồng bộ.
 
 ---
 

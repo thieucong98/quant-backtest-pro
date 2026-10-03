@@ -18,6 +18,7 @@ import { soundFx } from '../engine/audioEngine';
 import { useAuthStore } from './authStore';
 import { idbStorage } from '../storage/idbStorage';
 import { createPropFirmSlice, PropFirmSlice } from './slices/createPropFirmSlice';
+import { SignalWebhookDispatcher } from '../engine/signalWebhookDispatcher';
 
 interface BacktestStore extends PropFirmSlice {
   // Session Persistence
@@ -760,6 +761,18 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
                 tooltip: params.comment || 'AI Signal Buy'
               };
               set(s => ({ markers: [...s.markers, newMarker] }));
+
+              // Webhook signal dispatch
+              SignalWebhookDispatcher.dispatchSignal({
+                symbol: instrument.symbol,
+                action: 'BUY',
+                entryPrice: pos.entryPrice,
+                stopLoss: pos.stopLoss,
+                takeProfit: pos.takeProfit,
+                lotSize: pos.lotSize,
+                timestamp: pos.openTime,
+                comment: pos.comment
+              }).catch(() => {});
             }
           },
           sell: (params: any) => {
@@ -789,6 +802,18 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
                 tooltip: params.comment || 'AI Signal Sell'
               };
               set(s => ({ markers: [...s.markers, newMarker] }));
+
+              // Webhook signal dispatch
+              SignalWebhookDispatcher.dispatchSignal({
+                symbol: instrument.symbol,
+                action: 'SELL',
+                entryPrice: pos.entryPrice,
+                stopLoss: pos.stopLoss,
+                takeProfit: pos.takeProfit,
+                lotSize: pos.lotSize,
+                timestamp: pos.openTime,
+                comment: pos.comment
+              }).catch(() => {});
             }
           },
           closeAll: () => {
@@ -958,6 +983,19 @@ export const useBacktestStore = create<BacktestStore>((set, get) => {
           markers: [...get().markers, marker]
         });
         syncCurrentSessionToStorage(get);
+
+        // Dispatch real-time signal via Webhook (Telegram/Discord)
+        SignalWebhookDispatcher.dispatchSignal({
+          symbol: get().instrument.symbol,
+          action: side,
+          entryPrice: pos.entryPrice,
+          stopLoss: pos.stopLoss,
+          takeProfit: pos.takeProfit,
+          lotSize: pos.lotSize,
+          timestamp: pos.openTime,
+          comment: pos.comment
+        }).catch(() => {});
+
         return true;
       }
       return false;
