@@ -1225,7 +1225,7 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
 
       {/* 2. TOP-RIGHT SMART STACKING CONTAINER (ZERO OVERLAPPING & CLEAR OF PRICE SCALE) */}
       <div className="absolute top-12 sm:top-14 xl:top-3 right-2 sm:right-20 md:right-22 z-20 flex flex-col items-end gap-2 font-mono max-w-[calc(100vw-1rem)] sm:max-w-[320px] pointer-events-none">
-        <div className="pointer-events-auto w-full flex flex-col items-end gap-2">
+        <div className="pointer-events-auto w-full flex flex-col items-end gap-2 max-h-[calc(100vh-130px)] overflow-y-auto overflow-x-hidden pr-0.5">
           {/* AI BOT FLOATING HUD */}
           <AIBotHUD />
 

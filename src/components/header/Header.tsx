@@ -770,20 +770,30 @@ export const Header: React.FC = () => {
                 </>
               )}
             </div>
+          </div>
 
-            {/* Language Switcher */}
-            <div className="relative shrink-0">
-              <button
-                onClick={() => setIsLangDropdownOpen(!isLangDropdownOpen)}
-                className="flex items-center gap-1 px-2 py-1.5 bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 rounded-lg text-xs font-mono text-slate-300 transition-colors"
-                title={t.languageLabel}
-              >
-                <span>{languages.find(l => l.code === language)?.flag}</span>
-                <span className="font-bold uppercase text-[11px]">{language}</span>
-              </button>
+          {/* Language Switcher (Visible on md+ screens: tablet, laptop, desktop) */}
+          <div className="relative shrink-0 hidden md:block">
+            <button
+              onClick={() => setIsLangDropdownOpen(!isLangDropdownOpen)}
+              className="flex items-center gap-1.5 px-2 py-1.5 bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-indigo-500/50 rounded-lg text-xs font-mono text-slate-300 transition-all shadow-xs active:scale-95"
+              title={t.languageLabel}
+            >
+              <span className="text-sm">{languages.find(l => l.code === language)?.flag}</span>
+              <span className="font-bold uppercase text-[11px] tracking-wide">{language}</span>
+              <ChevronDown className={`w-3 h-3 text-slate-400 transition-transform ${isLangDropdownOpen ? 'rotate-180' : ''}`} />
+            </button>
 
-              {isLangDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-36 glass-dropdown rounded-lg p-1.5 z-50 animate-in fade-in zoom-in-95">
+            {isLangDropdownOpen && (
+              <>
+                <div
+                  className="fixed inset-0 z-40"
+                  onClick={() => setIsLangDropdownOpen(false)}
+                />
+                <div className="absolute right-0 mt-2 w-40 glass-dropdown bg-[#111622] border border-slate-700/90 rounded-xl p-1.5 z-50 shadow-2xl animate-in fade-in zoom-in-95 font-sans">
+                  <div className="px-2 py-1 text-[10px] font-bold text-slate-500 uppercase tracking-wider font-mono border-b border-slate-800/80 mb-1">
+                    {t.languageLabel}
+                  </div>
                   {languages.map(item => (
                     <button
                       key={item.code}
@@ -791,17 +801,24 @@ export const Header: React.FC = () => {
                         setLanguage(item.code);
                         setIsLangDropdownOpen(false);
                       }}
-                      className={`w-full flex items-center justify-between p-1.5 rounded text-xs transition-colors ${language === item.code ? 'bg-indigo-950 text-indigo-300 font-bold' : 'text-slate-300 hover:bg-slate-800'}`}
+                      className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs transition-all ${
+                        language === item.code
+                          ? 'bg-indigo-600/30 text-indigo-300 border border-indigo-500/50 font-bold'
+                          : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
+                      }`}
                     >
                       <div className="flex items-center gap-2">
-                        <span>{item.flag}</span>
-                        <span>{item.label}</span>
+                        <span className="text-base">{item.flag}</span>
+                        <span className="text-xs font-medium">{item.label}</span>
                       </div>
+                      {language === item.code && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 shadow-xs shadow-indigo-400" />
+                      )}
                     </button>
                   ))}
                 </div>
-              )}
-            </div>
+              </>
+            )}
           </div>
 
           {/* USER PROFILE / AUTH BUTTON */}
@@ -1124,20 +1141,25 @@ export const Header: React.FC = () => {
             </div>
 
             {/* Bottom Drawer Section: Language & Auth */}
-            <div className="border-t border-slate-800 pt-3 space-y-3 mt-4">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] text-slate-400 flex items-center gap-1.5">
+            <div className="border-t border-slate-800 pt-3 pb-8 space-y-3 mt-4 shrink-0">
+              <div className="space-y-2">
+                <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider flex items-center gap-1.5 font-mono">
                   <Globe className="w-3.5 h-3.5 text-indigo-400" />
                   <span>{t.languageLabel}</span>
                 </span>
-                <div className="flex items-center gap-1">
+                <div className="grid grid-cols-2 gap-1.5">
                   {languages.map(item => (
                     <button
                       key={item.code}
                       onClick={() => setLanguage(item.code)}
-                      className={`px-1.5 py-0.5 rounded text-[11px] ${language === item.code ? 'bg-indigo-600 text-white font-bold' : 'text-slate-400 hover:bg-slate-800'}`}
+                      className={`flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs font-sans transition-all active:scale-95 ${
+                        language === item.code
+                          ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/30 border border-indigo-500'
+                          : 'bg-slate-900/90 text-slate-300 hover:bg-slate-800 border border-slate-800'
+                      }`}
                     >
-                      {item.flag}
+                      <span className="text-base">{item.flag}</span>
+                      <span className="truncate">{item.label}</span>
                     </button>
                   ))}
                 </div>
