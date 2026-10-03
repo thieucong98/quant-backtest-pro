@@ -107,6 +107,7 @@ export const AIStrategyModal: React.FC = () => {
     play,
     strategyRunner
   } = useBacktestStore();
+  const { isAuthenticated, setAuthModalOpen, loginDemoTrader } = useAuthStore();
 
   const t = getTranslation(language);
 
@@ -253,8 +254,6 @@ export const AIStrategyModal: React.FC = () => {
   };
 
   if (!isAIModalOpen) return null;
-
-  const { isAuthenticated, setAuthModalOpen, loginDemoTrader } = useAuthStore();
 
   if (!isAuthenticated) {
     return (
