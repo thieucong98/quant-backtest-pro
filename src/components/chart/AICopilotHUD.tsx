@@ -1,12 +1,26 @@
 /**
  * Quant Backtest Pro — Apex AI Copilot HUD
- * Glassmorphic streaming panel rendering live Tier 3 LLM reasoning + ActionPlan.
+ * Glassmorphic draggable floating streaming panel rendering live Tier 3 LLM reasoning + ActionPlan.
  *
  * Standard: RFC-003-TECH-v2.1 / ADR-0003
  */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { BrainCircuit, X } from 'lucide-react';
+import {
+  BrainCircuit,
+  X,
+  GripHorizontal,
+  Minus,
+  Maximize2,
+  AlertTriangle,
+  Send,
+  Sparkles,
+  CheckCircle2,
+  Shield,
+  Layers,
+  Activity,
+  Compass
+} from 'lucide-react';
 import { useBacktestStore } from '../../store/backtestStore';
 import { getTranslation } from '../../i18n';
 import type {
@@ -34,7 +48,16 @@ export interface AICopilotHUDProps {
 
 type Status = 'IDLE' | 'THINKING' | 'STREAMING' | 'READY' | 'ERROR' | 'LOCKED';
 
-export const AICopilotHUD: React.FC<AICopilotHUDProps> = ({ mtf, perf, compact = false, onPlan, onAsk, onClose }) => {
+const HUD_POSITION_STORAGE_KEY = 'quant_apex_copilot_position_v2';
+
+export const AICopilotHUD: React.FC<AICopilotHUDProps> = ({
+  mtf,
+  perf,
+  compact = false,
+  onPlan,
+  onAsk,
+  onClose
+}) => {
   const language = useBacktestStore(s => s.language) as 'vi' | 'en' | 'ja' | 'zh';
   const t = getTranslation(language);
   const tApex = useMemo(() => ({
@@ -80,6 +103,11 @@ export const AICopilotHUD: React.FC<AICopilotHUDProps> = ({ mtf, perf, compact =
     askQuickEntry: t.apexCopilotAskQuickEntry,
     askSetup: t.apexCopilotAskSetup,
     askRisk: t.apexCopilotAskRisk,
+    dragHandle: t.apexCopilotDragHandle,
+    dockLeft: t.apexCopilotDockLeft,
+    dockRight: t.apexCopilotDockRight,
+    autoWarning: t.apexCopilotAutoWarning,
+    interactivePromptHelp: t.apexCopilotInteractivePromptHelp,
     h4Label: t.apexCopilotMtfH4,
     d1Label: t.apexCopilotMtfD1,
     locationLabel: t.apexCopilotMtfLocation,
@@ -98,12 +126,35 @@ export const AICopilotHUD: React.FC<AICopilotHUDProps> = ({ mtf, perf, compact =
     authLogin: t.apexCopilotAuthLogin,
   }), [t]);
 
-  const [open, setOpen] = useState(true);
+  // Position & Dragging State
+  const [position, setPosition] = useState<{ x: number; y: number }>(() => {
+    try {
+      if (typeof localStorage !== 'undefined') {
+        const saved = localStorage.getItem(HUD_POSITION_STORAGE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (typeof parsed.x === 'number' && typeof parsed.y === 'number') {
+            return parsed;
+          }
+        }
+      }
+    } catch {}
+    // Default position: Top-Left of the chart (x: 24, y: 52), leaving the right side & price scale 100% visible
+    return { x: 24, y: 52 };
+  });
+
+  const [isMinimized, setIsMinimized] = useState<boolean>(false);
+  const [isDragging, setIsDragging] = useState<boolean>(false);
+  const dragStartRef = useRef<{ mouseX: number; mouseY: number; startX: number; startY: number } | null>(null);
+
   const [tab, setTab] = useState<'copilot' | 'mtf' | 'diag'>('copilot');
   const [status, setStatus] = useState<Status>('IDLE');
   const [reasoning, setReasoning] = useState('');
   const [plan, setPlan] = useState<ActionPlan | null>(null);
-  const [autoMode, setAutoMode] = useState(true);
+
+  // CRITICAL FIX: Default autoMode is strictly FALSE to prevent unprompted automatic orders
+  const [autoMode, setAutoMode] = useState<boolean>(false);
+
   const [question, setQuestion] = useState('');
   const [violationMsg, setViolationMsg] = useState<string | null>(null);
   const [appliedMsg, setAppliedMsg] = useState<string | null>(null);
@@ -121,6 +172,70 @@ export const AICopilotHUD: React.FC<AICopilotHUDProps> = ({ mtf, perf, compact =
     const id = setTimeout(() => setAppliedMsg(null), 3500);
     return () => clearTimeout(id);
   }, [appliedMsg]);
+
+  // Dragging handlers
+  const handleDragStart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    dragStartRef.current = {
+      mouseX: e.clientX,
+      mouseY: e.clientY,
+      startX: position.x,
+      startY: position.y
+    };
+    setIsDragging(true);
+  };
+
+  useEffect(() => {
+    if (!isDragging) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!dragStartRef.current) return;
+      const dx = e.clientX - dragStartRef.current.mouseX;
+      const dy = e.clientY - dragStartRef.current.mouseY;
+
+      const maxX = Math.max(10, window.innerWidth - (isMinimized ? 260 : 360));
+      const maxY = Math.max(10, window.innerHeight - 80);
+
+      const nextX = Math.min(Math.max(10, dragStartRef.current.startX + dx), maxX);
+      const nextY = Math.min(Math.max(10, dragStartRef.current.startY + dy), maxY);
+
+      setPosition({ x: nextX, y: nextY });
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+      dragStartRef.current = null;
+      try {
+        localStorage.setItem(HUD_POSITION_STORAGE_KEY, JSON.stringify(position));
+      } catch {}
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging, isMinimized, position]);
+
+  const snapDockLeft = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const newPos = { x: 20, y: 52 };
+    setPosition(newPos);
+    try {
+      localStorage.setItem(HUD_POSITION_STORAGE_KEY, JSON.stringify(newPos));
+    } catch {}
+  };
+
+  const snapDockRight = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const newPos = { x: Math.max(20, window.innerWidth - 380), y: 52 };
+    setPosition(newPos);
+    try {
+      localStorage.setItem(HUD_POSITION_STORAGE_KEY, JSON.stringify(newPos));
+    } catch {}
+  };
 
   const handleAsk = useCallback(async (q?: string) => {
     const userQ = q ?? question;
@@ -149,11 +264,14 @@ export const AICopilotHUD: React.FC<AICopilotHUDProps> = ({ mtf, perf, compact =
           const result = validatorRef.current.validate(parsed, mtf ?? null);
           if (!result.ok) {
             setViolationMsg(tApex.ruleViolation);
+            setStatus('READY');
           } else {
             setPlan(parsed);
             setStatus('READY');
+            // Only auto-dispatch if autoMode was explicitly turned on by the user
             if (autoMode) {
               onPlan?.(parsed);
+              setAppliedMsg(tApex.applied);
             }
           }
         } catch {
@@ -166,31 +284,118 @@ export const AICopilotHUD: React.FC<AICopilotHUDProps> = ({ mtf, perf, compact =
     } catch {
       setStatus('ERROR');
     }
-  }, [onAsk, question, mtf, tApex]);
+  }, [onAsk, question, mtf, tApex, autoMode, onPlan]);
+
+  const handleQuickAction = (q: string) => {
+    setQuestion(q);
+    handleAsk(q);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleAsk();
+    }
+  };
 
   const statusKey: Status = status;
   const statusText = tApex.status[statusKey.toLowerCase() as keyof typeof tApex.status] ?? tApex.status.idle;
 
+  if (compact) return null;
+
+  // MINIMIZED CAPSULE MODE
+  if (isMinimized) {
+    return (
+      <div
+        style={{
+          transform: `translate3d(${position.x}px, ${position.y}px, 0)`,
+          touchAction: 'none'
+        }}
+        className="fixed top-0 left-0 z-40 select-none bg-[#0c101d]/95 backdrop-blur-xl border border-indigo-500/40 rounded-full px-3 py-1.5 shadow-2xl flex items-center gap-2.5 font-mono text-xs cursor-default animate-in fade-in zoom-in-95 duration-150"
+      >
+        <div
+          onMouseDown={handleDragStart}
+          className="cursor-grab active:cursor-grabbing p-1 -ml-1 text-slate-500 hover:text-slate-300"
+          title={tApex.dragHandle}
+        >
+          <GripHorizontal className="w-3.5 h-3.5" />
+        </div>
+
+        <BrainCircuit className="w-4 h-4 text-indigo-400 shrink-0" />
+        <span className="font-bold text-slate-100 text-xs tracking-tight">Apex Copilot</span>
+
+        {plan && (
+          <span
+            className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+              plan.side === 'LONG'
+                ? 'bg-emerald-950 text-emerald-300 border border-emerald-500/40'
+                : plan.side === 'SHORT'
+                ? 'bg-rose-950 text-rose-300 border border-rose-500/40'
+                : 'bg-slate-800 text-slate-300'
+            }`}
+          >
+            {plan.side} (1:{plan.rrRatio.toFixed(1)})
+          </span>
+        )}
+
+        <div className="flex items-center gap-1 ml-1 border-l border-slate-700/60 pl-1.5">
+          <button
+            type="button"
+            onClick={() => setIsMinimized(false)}
+            className="p-1 rounded-md text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            title={tApex.expand}
+          >
+            <Maximize2 className="w-3.5 h-3.5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => onClose?.()}
+            className="p-1 rounded-md text-slate-400 hover:text-rose-400 hover:bg-rose-950/60 transition-colors"
+            title={tApex.close}
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // FULL DRAGGABLE HUD MODE
   return (
     <div
-      className={`apex-ai-copilot-hud apex-copilot-hud bg-[#0e1320]/95 backdrop-blur-xl border border-indigo-500/30 rounded-xl shadow-2xl overflow-hidden font-mono text-xs w-full max-w-[350px] transition-all duration-200 ${
-        compact ? 'max-w-[280px]' : ''
+      style={{
+        transform: `translate3d(${position.x}px, ${position.y}px, 0)`,
+        touchAction: 'none'
+      }}
+      className={`fixed top-0 left-0 z-40 apex-ai-copilot-hud bg-[#0b0f1a]/95 backdrop-blur-xl border border-indigo-500/35 rounded-2xl shadow-2xl overflow-hidden font-mono text-xs w-full max-w-[360px] animate-in fade-in duration-150 select-none ${
+        isDragging ? 'shadow-indigo-500/20 ring-1 ring-indigo-500/50' : ''
       }`}
       role="region"
       aria-label={tApex.title}
     >
-      {/* HUD Header */}
-      <header className="px-3 py-2 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between">
+      {/* HUD Header with Drag Handle & Window Controls */}
+      <header
+        onMouseDown={handleDragStart}
+        className="px-3.5 py-2.5 bg-slate-900/95 border-b border-slate-800/90 flex items-center justify-between cursor-grab active:cursor-grabbing transition-colors hover:bg-slate-900"
+      >
         <div className="flex items-center gap-2">
+          <div className="text-slate-500 hover:text-slate-300 p-0.5" title={tApex.dragHandle}>
+            <GripHorizontal className="w-4 h-4" />
+          </div>
           <BrainCircuit className="w-4 h-4 text-indigo-400 shrink-0" />
           <div className="flex flex-col">
-            <span className="font-bold text-xs text-indigo-100">{tApex.title}</span>
-            <span className="text-[9px] text-slate-500 hidden sm:inline">{tApex.sub}</span>
+            <span className="font-bold text-xs text-indigo-100 flex items-center gap-1.5">
+              <span>{tApex.title}</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-xs shadow-emerald-400" />
+            </span>
+            <span className="text-[9px] text-slate-400 leading-none mt-0.5">{tApex.sub}</span>
           </div>
         </div>
-        <div className="flex items-center gap-1.5">
+
+        <div className="flex items-center gap-1">
+          {/* Status Badge */}
           <span
-            className={`px-2 py-0.5 rounded text-[10px] font-bold tracking-tight ${
+            className={`px-1.5 py-0.5 rounded text-[9px] font-bold tracking-tight uppercase ${
               statusKey === 'READY'
                 ? 'bg-emerald-950 text-emerald-300 border border-emerald-500/40'
                 : statusKey === 'THINKING' || statusKey === 'STREAMING'
@@ -202,320 +407,387 @@ export const AICopilotHUD: React.FC<AICopilotHUDProps> = ({ mtf, perf, compact =
           >
             {statusText}
           </span>
+
+          {/* Quick Dock Snap Buttons */}
           <button
             type="button"
+            onClick={snapDockLeft}
+            className="p-1 rounded-md text-slate-400 hover:text-white hover:bg-slate-800 transition-colors hidden sm:inline-flex text-[10px] font-bold"
+            title={tApex.dockLeft}
+          >
+            ◀
+          </button>
+          <button
+            type="button"
+            onClick={snapDockRight}
+            className="p-1 rounded-md text-slate-400 hover:text-white hover:bg-slate-800 transition-colors hidden sm:inline-flex text-[10px] font-bold"
+            title={tApex.dockRight}
+          >
+            ▶
+          </button>
+
+          {/* Minimize Button */}
+          <button
+            type="button"
+            onClick={() => setIsMinimized(true)}
             className="p-1 rounded-md text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
-            onClick={() => (onClose ? onClose() : setOpen(o => !o))}
-            aria-label={onClose ? tApex.close : open ? tApex.collapse : tApex.expand}
-            title={onClose ? tApex.close : open ? tApex.collapse : tApex.expand}
+            title={tApex.collapse}
+          >
+            <Minus className="w-3.5 h-3.5" />
+          </button>
+
+          {/* Close Button */}
+          <button
+            type="button"
+            className="p-1 rounded-md text-slate-400 hover:text-rose-400 hover:bg-rose-950/60 transition-colors"
+            onClick={() => onClose?.()}
+            title={tApex.close}
           >
             <X className="w-3.5 h-3.5" />
           </button>
         </div>
       </header>
 
-      {open && (
-        <>
-          {/* Navigation Tabs */}
-          <nav className="flex items-center gap-1 px-3 py-1.5 bg-slate-950/60 border-b border-slate-800/80 text-[11px]">
-            <button
-              type="button"
-              className={`px-2.5 py-1 rounded-md transition-colors ${
-                tab === 'copilot'
-                  ? 'bg-indigo-600 text-white font-bold shadow-xs'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-              }`}
-              onClick={() => setTab('copilot')}
-            >
-              {tApex.copilotTab}
-            </button>
-            <button
-              type="button"
-              className={`px-2.5 py-1 rounded-md transition-colors ${
-                tab === 'mtf'
-                  ? 'bg-indigo-600 text-white font-bold shadow-xs'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-              }`}
-              onClick={() => setTab('mtf')}
-            >
-              {tApex.mtfTab}
-            </button>
-            <button
-              type="button"
-              className={`px-2.5 py-1 rounded-md transition-colors ${
-                tab === 'diag'
-                  ? 'bg-indigo-600 text-white font-bold shadow-xs'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-              }`}
-              onClick={() => setTab('diag')}
-            >
-              {tApex.diagTab}
-            </button>
-          </nav>
+      {/* Navigation Tabs */}
+      <nav className="flex items-center gap-1 px-3 py-1.5 bg-slate-950/70 border-b border-slate-800/80 text-[11px]">
+        <button
+          type="button"
+          className={`px-2.5 py-1 rounded-lg transition-colors flex items-center gap-1.5 ${
+            tab === 'copilot'
+              ? 'bg-indigo-600 text-white font-bold shadow-xs'
+              : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+          }`}
+          onClick={() => setTab('copilot')}
+        >
+          <Sparkles className="w-3 h-3 text-amber-400" />
+          <span>{tApex.copilotTab}</span>
+        </button>
+        <button
+          type="button"
+          className={`px-2.5 py-1 rounded-lg transition-colors flex items-center gap-1.5 ${
+            tab === 'mtf'
+              ? 'bg-indigo-600 text-white font-bold shadow-xs'
+              : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+          }`}
+          onClick={() => setTab('mtf')}
+        >
+          <Layers className="w-3 h-3 text-sky-400" />
+          <span>{tApex.mtfTab}</span>
+        </button>
+        <button
+          type="button"
+          className={`px-2.5 py-1 rounded-lg transition-colors flex items-center gap-1.5 ${
+            tab === 'diag'
+              ? 'bg-indigo-600 text-white font-bold shadow-xs'
+              : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+          }`}
+          onClick={() => setTab('diag')}
+        >
+          <Activity className="w-3 h-3 text-emerald-400" />
+          <span>{tApex.diagTab}</span>
+        </button>
+      </nav>
 
-          {/* Body Content */}
-          <section className="p-3 max-h-[460px] overflow-y-auto space-y-3 font-mono">
-            {tab === 'copilot' && (
-              <div className="space-y-3">
-                {/* Thinking / Reasoning Box */}
-                <div className="space-y-1">
-                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
-                    {tApex.thinking}
-                  </span>
-                  <div
-                    className="p-2 rounded-lg bg-slate-950/80 border border-slate-800/80 text-[11px] text-slate-300 max-h-24 overflow-y-auto"
-                    aria-live="polite"
+      {/* Body Content */}
+      <section className="p-3 max-h-[480px] overflow-y-auto space-y-3 font-mono">
+        {tab === 'copilot' && (
+          <div className="space-y-3">
+            {/* Thinking / Reasoning Box */}
+            <div className="space-y-1">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                {tApex.thinking}
+              </span>
+              <div
+                className="p-2 rounded-xl bg-slate-950/80 border border-slate-800/90 text-[11px] text-slate-300 max-h-24 overflow-y-auto whitespace-pre-wrap select-text leading-relaxed"
+                aria-live="polite"
+              >
+                {reasoning || tApex.none}
+              </div>
+            </div>
+
+            {/* Action Plan Card */}
+            <div className="space-y-1">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                {tApex.plan}
+              </span>
+              {plan ? (
+                <div className="p-3 rounded-xl bg-slate-950/90 border border-indigo-500/30 space-y-2 shadow-inner">
+                  <div className="flex justify-between items-center text-[11px]">
+                    <span className="text-slate-400">{tApex.side}:</span>
+                    <span
+                      className={`px-2 py-0.5 rounded font-extrabold text-[11px] ${
+                        plan.side === 'LONG'
+                          ? 'bg-emerald-950 text-emerald-300 border border-emerald-500/50'
+                          : plan.side === 'SHORT'
+                          ? 'bg-rose-950 text-rose-300 border border-rose-500/50'
+                          : 'bg-slate-800 text-slate-300'
+                      }`}
+                    >
+                      {plan.side === 'LONG'
+                        ? tApex.sideLong
+                        : plan.side === 'SHORT'
+                        ? tApex.sideShort
+                        : tApex.sideNoTrade}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-1.5 text-[11px]">
+                    <div className="flex justify-between p-1.5 rounded-lg bg-slate-900/80 border border-slate-800/60">
+                      <span className="text-slate-400">{tApex.entry}:</span>
+                      <span className="font-bold text-slate-200">{plan.entry.toFixed(5)}</span>
+                    </div>
+                    <div className="flex justify-between p-1.5 rounded-lg bg-slate-900/80 border border-slate-800/60">
+                      <span className="text-slate-400">{tApex.stopLoss}:</span>
+                      <span className="font-bold text-rose-400">{plan.stopLoss.toFixed(5)}</span>
+                    </div>
+                    <div className="flex justify-between p-1.5 rounded-lg bg-slate-900/80 border border-slate-800/60 col-span-2">
+                      <span className="text-slate-400">{tApex.takeProfit}:</span>
+                      <span className="font-bold text-teal-400">
+                        {plan.takeProfit.map(tp => tp.toFixed(5)).join(', ')}
+                      </span>
+                    </div>
+                    <div className="flex justify-between p-1.5 rounded-lg bg-slate-900/80 border border-slate-800/60">
+                      <span className="text-slate-400">{tApex.riskReward}:</span>
+                      <span className="font-bold text-indigo-300">1 : {plan.rrRatio.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between p-1.5 rounded-lg bg-slate-900/80 border border-slate-800/60">
+                      <span className="text-slate-400">{tApex.confidence}:</span>
+                      <span className="font-bold text-emerald-400">
+                        {(plan.confidence * 100).toFixed(0)}%
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="text-[10px] text-slate-400 border-t border-slate-800/80 pt-1.5 leading-relaxed">
+                    <span className="font-semibold text-slate-300">{tApex.rationale}:</span>{' '}
+                    {plan.rationale}
+                  </div>
+
+                  <div className="space-y-1 pt-1">
+                    <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider block">
+                      {tApex.checks}
+                    </span>
+                    <div className="flex flex-wrap gap-1">
+                      {plan.institutionalChecks.includes('HTF_BIAS_ALIGNED') && (
+                        <span className="px-1.5 py-0.5 rounded text-[9px] bg-emerald-950/80 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+                          <CheckCircle2 className="w-2.5 h-2.5" />
+                          <span>{tApex.checkHtf}</span>
+                        </span>
+                      )}
+                      {plan.institutionalChecks.includes('KEY_POI_TAP') && (
+                        <span className="px-1.5 py-0.5 rounded text-[9px] bg-emerald-950/80 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+                          <CheckCircle2 className="w-2.5 h-2.5" />
+                          <span>{tApex.checkPoi}</span>
+                        </span>
+                      )}
+                      {plan.institutionalChecks.includes('LIQUIDITY_SWEEP_CONFIRMED') && (
+                        <span className="px-1.5 py-0.5 rounded text-[9px] bg-emerald-950/80 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+                          <CheckCircle2 className="w-2.5 h-2.5" />
+                          <span>{tApex.checkSweep}</span>
+                        </span>
+                      )}
+                      {plan.institutionalChecks.includes('LTF_CHOCH_CONFIRMED') && (
+                        <span className="px-1.5 py-0.5 rounded text-[9px] bg-emerald-950/80 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+                          <CheckCircle2 className="w-2.5 h-2.5" />
+                          <span>{tApex.checkChoCh}</span>
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* PROMINENT MANUAL APPLY PLAN BUTTON */}
+                  <button
+                    type="button"
+                    className="w-full py-2 mt-1 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs transition-all shadow-lg shadow-emerald-600/30 active:scale-98 flex items-center justify-center gap-1.5 cursor-pointer"
+                    onClick={() => {
+                      if (plan) onPlan?.(plan);
+                      setAppliedMsg(tApex.applied);
+                    }}
                   >
-                    {reasoning || tApex.none}
-                  </div>
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>{tApex.applyEntry}</span>
+                  </button>
                 </div>
-
-                {/* Plan Card */}
-                <div className="space-y-1">
-                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
-                    {tApex.plan}
-                  </span>
-                  {plan ? (
-                    <div className="p-2.5 rounded-lg bg-slate-900/90 border border-indigo-500/20 space-y-1.5 shadow-inner">
-                      <div className="flex justify-between items-center text-[11px]">
-                        <span className="text-slate-400">{tApex.side}:</span>
-                        <span
-                          className={`px-2 py-0.5 rounded font-extrabold text-[10px] ${
-                            plan.side === 'LONG'
-                              ? 'bg-emerald-950 text-emerald-300 border border-emerald-500/40'
-                              : plan.side === 'SHORT'
-                              ? 'bg-rose-950 text-rose-300 border border-rose-500/40'
-                              : 'bg-slate-800 text-slate-300'
-                          }`}
-                        >
-                          {plan.side === 'LONG'
-                            ? tApex.sideLong
-                            : plan.side === 'SHORT'
-                            ? tApex.sideShort
-                            : tApex.sideNoTrade}
-                        </span>
-                      </div>
-                      <div className="grid grid-cols-2 gap-1 text-[10px]">
-                        <div className="flex justify-between text-slate-400">
-                          <span>{tApex.entry}:</span>
-                          <span className="font-bold text-slate-200">{plan.entry.toFixed(5)}</span>
-                        </div>
-                        <div className="flex justify-between text-slate-400">
-                          <span>{tApex.stopLoss}:</span>
-                          <span className="font-bold text-rose-300">{plan.stopLoss.toFixed(5)}</span>
-                        </div>
-                        <div className="flex justify-between text-slate-400 col-span-2">
-                          <span>{tApex.takeProfit}:</span>
-                          <span className="font-bold text-teal-300">
-                            {plan.takeProfit.map(tp => tp.toFixed(5)).join(', ')}
-                          </span>
-                        </div>
-                        <div className="flex justify-between text-slate-400">
-                          <span>{tApex.riskReward}:</span>
-                          <span className="font-bold text-indigo-300">1 : {plan.rrRatio.toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between text-slate-400">
-                          <span>{tApex.confidence}:</span>
-                          <span className="font-bold text-emerald-300">
-                            {(plan.confidence * 100).toFixed(0)}%
-                          </span>
-                        </div>
-                      </div>
-                      <div className="text-[10px] text-slate-400 border-t border-slate-800/80 pt-1">
-                        <span className="font-semibold text-slate-300">{tApex.rationale}:</span>{' '}
-                        {plan.rationale}
-                      </div>
-                      <div className="space-y-1 pt-1">
-                        <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider block">
-                          {tApex.checks}
-                        </span>
-                        <div className="flex flex-wrap gap-1">
-                          {plan.institutionalChecks.includes('HTF_BIAS_ALIGNED') && (
-                            <span className="px-1.5 py-0.5 rounded text-[9px] bg-emerald-950/80 text-emerald-300 border border-emerald-500/30">
-                              {tApex.checkHtf}
-                            </span>
-                          )}
-                          {plan.institutionalChecks.includes('KEY_POI_TAP') && (
-                            <span className="px-1.5 py-0.5 rounded text-[9px] bg-emerald-950/80 text-emerald-300 border border-emerald-500/30">
-                              {tApex.checkPoi}
-                            </span>
-                          )}
-                          {plan.institutionalChecks.includes('LIQUIDITY_SWEEP_CONFIRMED') && (
-                            <span className="px-1.5 py-0.5 rounded text-[9px] bg-emerald-950/80 text-emerald-300 border border-emerald-500/30">
-                              {tApex.checkSweep}
-                            </span>
-                          )}
-                          {plan.institutionalChecks.includes('LTF_CHOCH_CONFIRMED') && (
-                            <span className="px-1.5 py-0.5 rounded text-[9px] bg-emerald-950/80 text-emerald-300 border border-emerald-500/30">
-                              {tApex.checkChoCh}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        className="w-full py-1.5 mt-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition-colors shadow-sm active:scale-98"
-                        onClick={() => {
-                          if (plan) onPlan?.(plan);
-                          setAppliedMsg(tApex.applied);
-                        }}
-                      >
-                        {tApex.applyEntry}
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="p-2 rounded-lg bg-slate-950/60 border border-slate-800 text-slate-500 italic text-[11px]">
-                      {tApex.none}
-                    </div>
-                  )}
+              ) : (
+                <div className="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800 text-slate-500 italic text-[11px] text-center">
+                  {tApex.none}
                 </div>
+              )}
+            </div>
 
-                {/* Input Prompt Section */}
-                <div className="space-y-1.5 pt-2 border-t border-slate-800">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block" htmlFor="apex-ask-input">
-                    {tApex.askLabel}
-                  </label>
-                  <textarea
-                    id="apex-ask-input"
-                    className="w-full bg-slate-950/90 border border-slate-800 rounded-lg p-2 text-xs text-slate-100 placeholder-slate-500 focus:outline-hidden focus:border-indigo-500 transition-colors"
-                    rows={2}
-                    placeholder={tApex.askPlaceholder}
-                    value={question}
-                    onChange={e => setQuestion(e.target.value)}
-                  />
-                  <div className="flex flex-wrap gap-1">
-                    <button
-                      type="button"
-                      className="px-2 py-0.5 rounded-md bg-indigo-950/80 hover:bg-indigo-900 border border-indigo-500/30 text-indigo-300 text-[10px] transition-colors"
-                      onClick={() => handleAsk(tApex.askQuickEntry)}
-                    >
-                      {tApex.askQuickEntry}
-                    </button>
-                    <button
-                      type="button"
-                      className="px-2 py-0.5 rounded-md bg-indigo-950/80 hover:bg-indigo-900 border border-indigo-500/30 text-indigo-300 text-[10px] transition-colors"
-                      onClick={() => handleAsk(tApex.askSetup)}
-                    >
-                      {tApex.askSetup}
-                    </button>
-                    <button
-                      type="button"
-                      className="px-2 py-0.5 rounded-md bg-indigo-950/80 hover:bg-indigo-900 border border-indigo-500/30 text-indigo-300 text-[10px] transition-colors"
-                      onClick={() => handleAsk(tApex.askRisk)}
-                    >
-                      {tApex.askRisk}
-                    </button>
-                  </div>
-                  <div className="flex items-center justify-between pt-1">
-                    <div className="flex items-center gap-1.5">
-                      <button
-                        type="button"
-                        className="px-3 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-bold text-xs transition-colors shadow-xs active:scale-95"
-                        onClick={() => handleAsk()}
-                        disabled={!question.trim() || status === 'THINKING' || status === 'STREAMING'}
-                      >
-                        {tApex.send}
-                      </button>
-                      <button
-                        type="button"
-                        className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs transition-colors active:scale-95"
-                        onClick={() => {
-                          setStatus('IDLE');
-                          setReasoning('');
-                          setPlan(null);
-                        }}
-                      >
-                        {tApex.cancel}
-                      </button>
-                    </div>
-                    <label className="flex items-center gap-1 text-[10px] text-slate-400 cursor-pointer select-none">
-                      <input
-                        type="checkbox"
-                        checked={autoMode}
-                        onChange={e => setAutoMode(e.target.checked)}
-                        className="accent-indigo-500 rounded"
-                      />
-                      <span>{autoMode ? tApex.autoOn : tApex.autoOff}</span>
-                    </label>
-                  </div>
-                </div>
+            {/* Input Prompt Section */}
+            <div className="space-y-2 pt-2 border-t border-slate-800">
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block" htmlFor="apex-ask-input">
+                {tApex.askLabel}
+              </label>
 
-                {/* Toasts */}
-                {violationMsg && (
-                  <div className="p-2 rounded-lg bg-rose-950/90 border border-rose-500/40 text-rose-300 text-[11px] font-bold">
-                    {violationMsg}
-                  </div>
-                )}
-                {appliedMsg && (
-                  <div className="p-2 rounded-lg bg-emerald-950/90 border border-emerald-500/40 text-emerald-300 text-[11px] font-bold">
-                    {appliedMsg}
-                  </div>
-                )}
-              </div>
-            )}
+              <textarea
+                id="apex-ask-input"
+                className="w-full bg-slate-950/90 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-hidden focus:border-indigo-500 transition-colors font-mono resize-none"
+                rows={2}
+                placeholder={tApex.askPlaceholder}
+                value={question}
+                onChange={e => setQuestion(e.target.value)}
+                onKeyDown={handleKeyDown}
+              />
 
-            {tab === 'mtf' && (
-              <div className="space-y-2 text-xs">
-                {mtf ? (
-                  <>
-                    <pre className="p-2 rounded-lg bg-slate-950/90 border border-slate-800 text-[10px] text-slate-300 whitespace-pre-wrap font-mono max-h-36 overflow-y-auto">
-                      {rendererRef.current.render(mtf)}
-                    </pre>
-                    <div className="grid grid-cols-2 gap-1 text-[10px]">
-                      <div className="flex justify-between p-1.5 rounded-lg bg-slate-900/60 border border-slate-800/80">
-                        <span className="text-slate-400">{tApex.h4Label}:</span>
-                        <span className="font-bold text-slate-200">{mtf.bias.h4}</span>
-                      </div>
-                      <div className="flex justify-between p-1.5 rounded-lg bg-slate-900/60 border border-slate-800/80">
-                        <span className="text-slate-400">{tApex.d1Label}:</span>
-                        <span className="font-bold text-slate-200">{mtf.bias.d1}</span>
-                      </div>
-                      <div className="flex justify-between p-1.5 rounded-lg bg-slate-900/60 border border-slate-800/80">
-                        <span className="text-slate-400">{tApex.locationLabel}:</span>
-                        <span className="font-bold text-amber-300">{mtf.location}</span>
-                      </div>
-                      <div className="flex justify-between p-1.5 rounded-lg bg-slate-900/60 border border-slate-800/80">
-                        <span className="text-slate-400">{tApex.side}:</span>
-                        <span className="font-bold text-indigo-300">{mtf.activeOB.direction}</span>
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  <div className="p-2 rounded-lg bg-slate-950/60 border border-slate-800 text-slate-500 italic text-[11px]">
-                    {tApex.none}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {tab === 'diag' && (
-              <div className="space-y-2 text-xs">
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
-                  {tApex.telemetry}
+              {/* QUICK ACTION BUTTONS */}
+              <div className="space-y-1">
+                <span className="text-[9px] text-slate-500 block">
+                  {tApex.interactivePromptHelp}
                 </span>
-                <div className="space-y-1.5 p-2 rounded-lg bg-slate-950/90 border border-slate-800 text-[10px]">
-                  <div className="flex justify-between text-slate-400">
-                    <span>{tApex.latency}:</span>
-                    <span className="font-bold text-emerald-400">
-                      {perf ? `${perf.lastBarLatencyMs.toFixed(2)} ms` : tApex.none}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-slate-400">
-                    <span>{tApex.avgLatency}:</span>
-                    <span className="font-bold text-emerald-400">
-                      {perf ? `${perf.avgLatencyMs.toFixed(2)} ms` : tApex.none}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-slate-400">
-                    <span>{tApex.budget}:</span>
-                    <span className="font-mono text-slate-300">≤ 5.00 ms</span>
-                  </div>
+                <div className="flex flex-wrap gap-1.5">
+                  <button
+                    type="button"
+                    className="px-2.5 py-1 rounded-lg bg-indigo-950/70 hover:bg-indigo-900 border border-indigo-500/30 text-indigo-300 text-[10px] font-bold transition-all active:scale-95 flex items-center gap-1"
+                    onClick={() => handleQuickAction(tApex.askQuickEntry)}
+                  >
+                    <Sparkles className="w-3 h-3 text-amber-400" />
+                    <span>{tApex.askQuickEntry}</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="px-2.5 py-1 rounded-lg bg-indigo-950/70 hover:bg-indigo-900 border border-indigo-500/30 text-indigo-300 text-[10px] font-bold transition-all active:scale-95 flex items-center gap-1"
+                    onClick={() => handleQuickAction(tApex.askSetup)}
+                  >
+                    <Compass className="w-3 h-3 text-sky-400" />
+                    <span>{tApex.askSetup}</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="px-2.5 py-1 rounded-lg bg-indigo-950/70 hover:bg-indigo-900 border border-indigo-500/30 text-indigo-300 text-[10px] font-bold transition-all active:scale-95 flex items-center gap-1"
+                    onClick={() => handleQuickAction(tApex.askRisk)}
+                  >
+                    <Shield className="w-3 h-3 text-teal-400" />
+                    <span>{tApex.askRisk}</span>
+                  </button>
                 </div>
               </div>
+
+              {/* SEND, CANCEL & SAFE AUTO TOGGLE */}
+              <div className="flex items-center justify-between pt-1.5">
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-bold text-xs transition-colors shadow-sm active:scale-95 flex items-center gap-1.5"
+                    onClick={() => handleAsk()}
+                    disabled={!question.trim() || status === 'THINKING' || status === 'STREAMING'}
+                  >
+                    <Send className="w-3 h-3" />
+                    <span>{tApex.send}</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs transition-colors active:scale-95"
+                    onClick={() => {
+                      setStatus('IDLE');
+                      setReasoning('');
+                      setPlan(null);
+                      setQuestion('');
+                    }}
+                  >
+                    {tApex.cancel}
+                  </button>
+                </div>
+
+                <label className="flex items-center gap-1.5 text-[10px] text-slate-400 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={autoMode}
+                    onChange={e => setAutoMode(e.target.checked)}
+                    className="accent-indigo-500 rounded cursor-pointer"
+                  />
+                  <span className={autoMode ? 'text-amber-400 font-bold' : ''}>
+                    {autoMode ? tApex.autoOn : tApex.autoOff}
+                  </span>
+                </label>
+              </div>
+
+              {/* Auto Mode Warning Banner */}
+              {autoMode && (
+                <div className="p-2 rounded-xl bg-amber-950/60 border border-amber-500/40 text-amber-300 text-[10px] flex items-start gap-1.5 animate-in fade-in">
+                  <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
+                  <span>{tApex.autoWarning}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Toasts & Notifications */}
+            {violationMsg && (
+              <div className="p-2 rounded-xl bg-rose-950/90 border border-rose-500/40 text-rose-300 text-[11px] font-bold flex items-center gap-1.5 animate-in fade-in">
+                <AlertTriangle className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+                <span>{violationMsg}</span>
+              </div>
             )}
-          </section>
-        </>
-      )}
+            {appliedMsg && (
+              <div className="p-2 rounded-xl bg-emerald-950/90 border border-emerald-500/40 text-emerald-300 text-[11px] font-bold flex items-center gap-1.5 animate-in fade-in">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                <span>{appliedMsg}</span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {tab === 'mtf' && (
+          <div className="space-y-2 text-xs">
+            {mtf ? (
+              <>
+                <pre className="p-2.5 rounded-xl bg-slate-950/90 border border-slate-800 text-[10px] text-slate-300 whitespace-pre-wrap font-mono max-h-40 overflow-y-auto leading-relaxed">
+                  {rendererRef.current.render(mtf)}
+                </pre>
+                <div className="grid grid-cols-2 gap-1.5 text-[10px]">
+                  <div className="flex justify-between p-2 rounded-xl bg-slate-900/60 border border-slate-800/80">
+                    <span className="text-slate-400">{tApex.h4Label}:</span>
+                    <span className="font-bold text-slate-200">{mtf.bias.h4}</span>
+                  </div>
+                  <div className="flex justify-between p-2 rounded-xl bg-slate-900/60 border border-slate-800/80">
+                    <span className="text-slate-400">{tApex.d1Label}:</span>
+                    <span className="font-bold text-slate-200">{mtf.bias.d1}</span>
+                  </div>
+                  <div className="flex justify-between p-2 rounded-xl bg-slate-900/60 border border-slate-800/80">
+                    <span className="text-slate-400">{tApex.locationLabel}:</span>
+                    <span className="font-bold text-amber-300">{mtf.location}</span>
+                  </div>
+                  <div className="flex justify-between p-2 rounded-xl bg-slate-900/60 border border-slate-800/80">
+                    <span className="text-slate-400">{tApex.side}:</span>
+                    <span className="font-bold text-indigo-300">{mtf.activeOB.direction}</span>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800 text-slate-500 italic text-[11px] text-center">
+                {tApex.none}
+              </div>
+            )}
+          </div>
+        )}
+
+        {tab === 'diag' && (
+          <div className="space-y-2 text-xs">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+              {tApex.telemetry}
+            </span>
+            <div className="space-y-2 p-2.5 rounded-xl bg-slate-950/90 border border-slate-800 text-[10px]">
+              <div className="flex justify-between text-slate-400">
+                <span>{tApex.latency}:</span>
+                <span className="font-bold text-emerald-400">
+                  {perf ? `${perf.lastBarLatencyMs.toFixed(2)} ms` : tApex.none}
+                </span>
+              </div>
+              <div className="flex justify-between text-slate-400">
+                <span>{tApex.avgLatency}:</span>
+                <span className="font-bold text-emerald-400">
+                  {perf ? `${perf.avgLatencyMs.toFixed(2)} ms` : tApex.none}
+                </span>
+              </div>
+              <div className="flex justify-between text-slate-400">
+                <span>{tApex.budget}:</span>
+                <span className="font-mono text-slate-300">≤ 5.00 ms</span>
+              </div>
+            </div>
+          </div>
+        )}
+      </section>
     </div>
   );
 };

@@ -911,6 +911,11 @@ export const en: TranslationDict = {
   "apexCopilotAppliedToast": "Action plan applied",
   "apexCopilotNoPlanToast": "No valid plan to apply.",
   "apexCopilotTelemetry": "SMC Performance Telemetry",
+  "apexCopilotDragHandle": "Drag to reposition",
+  "apexCopilotDockLeft": "Dock Left",
+  "apexCopilotDockRight": "Dock Right",
+  "apexCopilotAutoWarning": "Auto-execution active: Orders execute immediately on plan",
+  "apexCopilotInteractivePromptHelp": "Ask Copilot or select a quick action to analyze setup",
   // Multi-Chart Layout & Synchronization (v2.0)
   "singleLayout": "Single Chart",
   "dualHorizontalLayout": "Dual Split (Horizontal)",
