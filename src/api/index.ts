@@ -4,15 +4,92 @@ export * from './trades';
 export * from './tunnel';
 export * from './calendar';
 
+const OFFLINE_STRATEGIES_KEY = 'quant_offline_strategies';
+
+function getOfflineStrategies(): any[] {
+  try {
+    const raw = localStorage.getItem(OFFLINE_STRATEGIES_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveOfflineStrategies(list: any[]): void {
+  try {
+    localStorage.setItem(OFFLINE_STRATEGIES_KEY, JSON.stringify(list));
+  } catch (err) {
+    console.warn('Failed to save strategies to localStorage', err);
+  }
+}
+
 export const strategiesApi = {
-  list: () => api.get<any[]>('/strategies'),
-  get: (id: string) => api.get<any>(`/strategies/${id}`),
-  create: (data: { name: string; description?: string; code: string; parameters?: any; enabled?: boolean }) =>
-    api.post<any>('/strategies', data),
-  update: (id: string, data: any) =>
-    api.put<any>(`/strategies/${id}`, data),
-  delete: (id: string) =>
-    api.delete(`/strategies/${id}`)
+  list: async () => {
+    try {
+      const data = await api.get<any[]>('/strategies');
+      if (Array.isArray(data)) {
+        saveOfflineStrategies(data);
+        return data;
+      }
+    } catch {
+      // Offline fallback
+    }
+    return getOfflineStrategies();
+  },
+  get: async (id: string) => {
+    try {
+      return await api.get<any>(`/strategies/${id}`);
+    } catch {
+      const list = getOfflineStrategies();
+      const found = list.find((s: any) => s.id === id);
+      if (found) return found;
+      throw new Error(`Strategy ${id} not found in offline storage`);
+    }
+  },
+  create: async (data: { name: string; description?: string; code: string; parameters?: any; enabled?: boolean }) => {
+    try {
+      return await api.post<any>('/strategies', data);
+    } catch {
+      // Offline resilient save
+      const list = getOfflineStrategies();
+      const newStrategy = {
+        id: 'strat_local_' + Date.now(),
+        name: data.name,
+        description: data.description || '',
+        code: data.code,
+        parameters: data.parameters || {},
+        enabled: data.enabled ?? true,
+        createdAt: new Date().toISOString()
+      };
+      const updated = [newStrategy, ...list];
+      saveOfflineStrategies(updated);
+      return newStrategy;
+    }
+  },
+  update: async (id: string, data: any) => {
+    try {
+      return await api.put<any>(`/strategies/${id}`, data);
+    } catch {
+      const list = getOfflineStrategies();
+      const idx = list.findIndex((s: any) => s.id === id);
+      if (idx !== -1) {
+        list[idx] = { ...list[idx], ...data, updatedAt: new Date().toISOString() };
+        saveOfflineStrategies(list);
+        return list[idx];
+      }
+      throw new Error(`Strategy ${id} not found in offline storage`);
+    }
+  },
+  delete: async (id: string) => {
+    try {
+      return await api.delete(`/strategies/${id}`);
+    } catch {
+      const list = getOfflineStrategies();
+      const filtered = list.filter((s: any) => s.id !== id);
+      saveOfflineStrategies(filtered);
+      return { success: true };
+    }
+  }
 };
 
 export const datasetsApi = {

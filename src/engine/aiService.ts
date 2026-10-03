@@ -72,14 +72,15 @@ return {
 
   onCandle(candle, indicators, account, api) {
     // 1. Tính toán chỉ báo qua thư viện indicators:
-    // indicators.sma(period, source='close')
-    // indicators.ema(period, source='close')
-    // indicators.rsi(period, source='close')
-    // indicators.macd(fast, slow, signal, source='close') -> { macd, signal, histogram }
-    // indicators.bollingerBands(period, stdDev, source='close') -> { upper, middle, lower }
-    // indicators.atr(period)
-    // indicators.highest(period)
-    // indicators.lowest(period)
+    // indicators.sma(period, offset=0)
+    // indicators.ema(period, offset=0)
+    // indicators.rsi(period, offset=0)
+    // indicators.macd(fast, slow, signal, offset=0) -> { macd, signal, hist }
+    // indicators.bollingerBands(period, stdDev, offset=0) -> { upper, middle, lower }
+    // indicators.atr(period, offset=0)
+    // indicators.highest(period, offset=0)
+    // indicators.lowest(period, offset=0)
+    // QUAN TRỌNG: offset là số nến trước đó (number: 0 = nến hiện tại, 1 = nến trước). TUYỆT ĐỐI KHÔNG truyền chuỗi như 'close' vào offset.
 
     // 2. Kiểm tra điều kiện quản trị vị thế:
     if (account.openPositionsCount > 0) return; // hoặc quản trị nhiều lệnh

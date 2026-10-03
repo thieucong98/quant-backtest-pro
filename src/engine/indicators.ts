@@ -27,8 +27,16 @@ export class IndicatorCalculator {
     };
   }
 
+  private sanitizeOffset(offset: any): number {
+    if (typeof offset === 'number' && !isNaN(offset)) {
+      return Math.max(0, Math.floor(offset));
+    }
+    return 0;
+  }
+
   public sma(period: number, offset: number = 0): number {
-    const end = this.effectiveLength - offset;
+    const safeOffset = this.sanitizeOffset(offset);
+    const end = this.effectiveLength - safeOffset;
     const start = end - period;
     if (start < 0 || end <= 0) return this.candles[this.effectiveLength - 1]?.close || 0;
 
@@ -40,8 +48,9 @@ export class IndicatorCalculator {
   }
 
   public ema(period: number, offset: number = 0): number {
-    const end = this.effectiveLength - offset;
-    if (end <= period) return this.sma(period, offset);
+    const safeOffset = this.sanitizeOffset(offset);
+    const end = this.effectiveLength - safeOffset;
+    if (end <= period) return this.sma(period, safeOffset);
 
     const k = 2 / (period + 1);
     let emaVal = this.candles[0].close;
@@ -53,7 +62,8 @@ export class IndicatorCalculator {
   }
 
   public rsi(period: number = 14, offset: number = 0): number {
-    const end = this.effectiveLength - offset;
+    const safeOffset = this.sanitizeOffset(offset);
+    const end = this.effectiveLength - safeOffset;
     if (end <= period + 1) return 50;
 
     let gains = 0;
@@ -85,7 +95,8 @@ export class IndicatorCalculator {
   }
 
   public atr(period: number = 14, offset: number = 0): number {
-    const end = this.effectiveLength - offset;
+    const safeOffset = this.sanitizeOffset(offset);
+    const end = this.effectiveLength - safeOffset;
     if (end <= 1) return 0;
 
     const trs: number[] = [];
@@ -107,8 +118,9 @@ export class IndicatorCalculator {
   }
 
   public bollingerBands(period: number = 20, stdDevMult: number = 2, offset: number = 0): { upper: number; middle: number; lower: number } {
-    const middle = this.sma(period, offset);
-    const end = this.effectiveLength - offset;
+    const safeOffset = this.sanitizeOffset(offset);
+    const middle = this.sma(period, safeOffset);
+    const end = this.effectiveLength - safeOffset;
     const start = Math.max(0, end - period);
     
     let varianceSum = 0;
@@ -128,8 +140,9 @@ export class IndicatorCalculator {
   }
 
   public macd(fast: number = 12, slow: number = 26, signal: number = 9, offset: number = 0): { macd: number; signal: number; hist: number } {
-    const fastEma = this.ema(fast, offset);
-    const slowEma = this.ema(slow, offset);
+    const safeOffset = this.sanitizeOffset(offset);
+    const fastEma = this.ema(fast, safeOffset);
+    const slowEma = this.ema(slow, safeOffset);
     const macdLine = fastEma - slowEma;
 
     // Approximate Signal EMA
@@ -142,7 +155,8 @@ export class IndicatorCalculator {
   }
 
   public highest(period: number, offset: number = 0): number {
-    const end = this.effectiveLength - offset;
+    const safeOffset = this.sanitizeOffset(offset);
+    const end = this.effectiveLength - safeOffset;
     const start = Math.max(0, end - period);
     let max = -Infinity;
     for (let i = start; i < end; i++) {
@@ -152,7 +166,8 @@ export class IndicatorCalculator {
   }
 
   public lowest(period: number, offset: number = 0): number {
-    const end = this.effectiveLength - offset;
+    const safeOffset = this.sanitizeOffset(offset);
+    const end = this.effectiveLength - safeOffset;
     const start = Math.max(0, end - period);
     let min = Infinity;
     for (let i = start; i < end; i++) {

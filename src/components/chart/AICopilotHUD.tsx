@@ -152,7 +152,9 @@ export const AICopilotHUD: React.FC<AICopilotHUDProps> = ({ mtf, perf, compact =
           } else {
             setPlan(parsed);
             setStatus('READY');
-            onPlan?.(parsed);
+            if (autoMode) {
+              onPlan?.(parsed);
+            }
           }
         } catch {
           setViolationMsg(tApex.noPlan);
@@ -353,7 +355,10 @@ export const AICopilotHUD: React.FC<AICopilotHUDProps> = ({ mtf, perf, compact =
                       <button
                         type="button"
                         className="w-full py-1.5 mt-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition-colors shadow-sm active:scale-98"
-                        onClick={() => setAppliedMsg(tApex.applied)}
+                        onClick={() => {
+                          if (plan) onPlan?.(plan);
+                          setAppliedMsg(tApex.applied);
+                        }}
                       >
                         {tApex.applyEntry}
                       </button>
