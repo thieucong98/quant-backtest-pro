@@ -19,6 +19,8 @@ import { isSMCWorkerInboundAction, isSMCWorkerOutboundEvent, type SMCWorkerInbou
 import { parseCopilotStream, tryParseActionPlan } from './src/engine/smc/sseCopilotStream';
 import { ActionPlanValidator } from './src/engine/smc/actionPlanValidator';
 import { buildOverlayPrimitives } from './src/engine/smc/overlayPrimitives';
+import * as fs from 'fs';
+import { useBacktestStore } from './src/store/backtestStore';
 
 interface TestResult {
   suite: string;
@@ -409,6 +411,21 @@ async function runComprehensiveTests() {
     runner.executeCandle(sampleCandles[i], indLib, mockAcc, mockApi as any);
   }
   assert(signalsGenerated > 0, 'StrategySandbox', `EMA Scalper generated ${signalsGenerated} trading signals on sample candles`);
+
+  // Test AI Studio Modal Store State transitions
+  useBacktestStore.getState().setAIModalOpen(true, 'optimizer');
+  assert(useBacktestStore.getState().isAIModalOpen === true, 'StrategySandbox', 'setAIModalOpen(true) opens modal');
+  assert(useBacktestStore.getState().aiModalTab === 'optimizer', 'StrategySandbox', 'aiModalTab correctly set to optimizer');
+  useBacktestStore.getState().setAIModalOpen(false);
+  assert(useBacktestStore.getState().isAIModalOpen === false, 'StrategySandbox', 'setAIModalOpen(false) closes modal');
+
+  // Test AI Strategy Modal Rules of Hooks Invariant (No hooks called after early return)
+  const aiModalCode = fs.readFileSync('src/components/panels/AIStrategyModal.tsx', 'utf-8');
+  const earlyReturnIdx = aiModalCode.indexOf('if (!isAIModalOpen) return null;');
+  assert(earlyReturnIdx !== -1, 'StrategySandbox', 'AIStrategyModal has if (!isAIModalOpen) return null guard');
+  const afterEarlyReturn = aiModalCode.slice(earlyReturnIdx);
+  const hookCalls = afterEarlyReturn.match(/\buse[A-Z]\w*\s*\(/g);
+  assert(hookCalls === null, 'StrategySandbox', 'AIStrategyModal strictly complies with Rules of Hooks (zero conditional hooks after early return)', { hookCalls });
 
 
   // =========================================================================
