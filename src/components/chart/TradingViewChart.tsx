@@ -30,6 +30,7 @@ import {
   Scale,
   BrainCircuit,
   Layers,
+  Sparkles,
   X
 } from 'lucide-react';
 import { useBacktestStore } from '../../store/backtestStore';
@@ -43,6 +44,8 @@ import { AIBotHUD } from '../panels/AIBotHUD';
 import { VisualChartTradingOverlay } from './VisualChartTradingOverlay';
 import { PriceScaleContextMenu } from './PriceScaleContextMenu';
 import { QuickTradeDock } from './QuickTradeDock';
+import { MobileQuickTradeBar } from './MobileQuickTradeBar';
+import { AssistantHubFlyout } from './AssistantHubFlyout';
 import { PropFirmHUD } from './PropFirmHUD';
 import { AICopilotHUD } from './AICopilotHUD';
 import { MTFMatrixWidget } from './MTFMatrixWidget';
@@ -151,7 +154,9 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
     setScaleMode,
     triggerResetPriceScale,
     openOrderModalWithPrice,
-    setShortcutsModalOpen
+    setShortcutsModalOpen,
+    activeStrategy,
+    autoTradingEnabled
   } = useBacktestStore();
 
   const {
@@ -177,7 +182,8 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
   }, [isLiveActive]);
 
   // Trading Assistant Dock active panel state (null = collapsed, leaves chart 100% clean)
-  const [activeAssistantPanel, setActiveAssistantPanel] = useState<'copilot' | 'mtf' | 'propfirm' | null>(null);
+  const [activeAssistantPanel, setActiveAssistantPanel] = useState<'copilot' | 'mtf' | 'propfirm' | 'hub' | null>(null);
+  const activeAssistantCount = (activeStrategy ? 1 : 0) + 1 + 1 + (isPropFirmMode ? 1 : 0);
 
   // Track last rendered index and candles array reference
   const lastRenderedIndexRef = useRef<number>(-1);
@@ -1217,135 +1223,194 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
       onContextMenu={handleContextMenu}
       onDoubleClick={handleDoubleClick}
     >
-      {/* 1. ONE-CLICK QUICK TRADING DOCK (TOP-LEFT OVERLAY) */}
-      <QuickTradeDock
-        currentCandle={currentCandle}
-        currentBid={currentBid}
-        currentAsk={currentAsk}
-        instrument={instrument}
-        isLiveActive={isLiveActive}
-        activeBroker={activeBroker}
-        currentLiveTick={currentLiveTick}
-        account={account}
-      />
+      {/* 1. UNIFIED TOP OVERLAY CONTAINER (Guarantees zero overlap & proper execution priority) */}
+      {!isSecondary && (
+        <div className="absolute top-2 left-2 right-[96px] z-20 flex items-start justify-between pointer-events-none gap-2 select-none">
+          {/* LEFT: PRIMARY EXECUTION DOCK (Desktop & Tablet: hidden on mobile where bottom execution bar is active) */}
+          <div className="hidden sm:block pointer-events-auto shrink-0">
+            <QuickTradeDock
+              currentCandle={currentCandle}
+              currentBid={currentBid}
+              currentAsk={currentAsk}
+              instrument={instrument}
+              isLiveActive={isLiveActive}
+              activeBroker={activeBroker}
+              currentLiveTick={currentLiveTick}
+              account={account}
+            />
+          </div>
 
-      {/* 2. TOP-RIGHT TRADING ASSISTANT DOCK & FLOATING PANELS */}
-      <div className="absolute top-2 right-[96px] z-20 flex flex-col items-end gap-2 font-mono pointer-events-none">
-        {/* DOCK BAR (Unified horizontal pill bar with 1-click toggles) */}
-        <div className="pointer-events-auto flex items-center flex-nowrap justify-end gap-1.5 bg-[#101522]/90 backdrop-blur-md border border-slate-800/90 rounded-xl p-1 shadow-2xl">
-          {/* AI BOT FLOATING HUD (If strategy active) */}
-          <AIBotHUD />
+          {/* RIGHT: SECONDARY ASSISTANT & MONITORING HUB */}
+          <div className="pointer-events-auto flex flex-col items-end gap-1.5 font-mono ml-auto">
+            {/* ASSISTANT DOCK BAR */}
+            <div className="flex items-center flex-nowrap justify-end gap-1.5 bg-[#101522]/90 backdrop-blur-md border border-slate-800/90 rounded-xl p-1 shadow-2xl">
+              {/* Desktop Full View (>= 2xl / 1536px): individual pills */}
+              <div className="hidden 2xl:flex items-center gap-1.5">
+                {/* AI BOT FLOATING HUD (If strategy active) */}
+                <AIBotHUD />
 
-          {/* APEX AI COPILOT PILL */}
-          <button
-            type="button"
-            onClick={() => setActiveAssistantPanel(curr => (curr === 'copilot' ? null : 'copilot'))}
-            className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-mono transition-all active:scale-95 ${
-              activeAssistantPanel === 'copilot'
-                ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/30'
-                : 'text-slate-300 hover:text-white hover:bg-slate-800/80'
-            }`}
-            title={t.apexCopilotTitle}
-          >
-            <BrainCircuit className={`w-3.5 h-3.5 ${activeAssistantPanel === 'copilot' ? 'text-white' : 'text-indigo-400'}`} />
-            <span className="hidden xl:inline text-[11px] font-bold">Copilot</span>
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-xs shadow-emerald-400" />
-          </button>
+                {/* APEX AI COPILOT PILL */}
+                <button
+                  type="button"
+                  onClick={() => setActiveAssistantPanel(curr => (curr === 'copilot' ? null : 'copilot'))}
+                  className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-mono transition-all active:scale-95 ${
+                    activeAssistantPanel === 'copilot'
+                      ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/30'
+                      : 'text-slate-300 hover:text-white hover:bg-slate-800/80'
+                  }`}
+                  title={t.apexCopilotTitle}
+                >
+                  <BrainCircuit className={`w-3.5 h-3.5 ${activeAssistantPanel === 'copilot' ? 'text-white' : 'text-indigo-400'}`} />
+                  <span className="hidden xl:inline text-[11px] font-bold">Copilot</span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-xs shadow-emerald-400" />
+                </button>
 
-          {/* MTF MATRIX PILL */}
-          <button
-            type="button"
-            onClick={() => setActiveAssistantPanel(curr => (curr === 'mtf' ? null : 'mtf'))}
-            className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-mono transition-all active:scale-95 ${
-              activeAssistantPanel === 'mtf'
-                ? 'bg-sky-600 text-white font-bold shadow-md shadow-sky-600/30'
-                : 'text-slate-300 hover:text-white hover:bg-slate-800/80'
-            }`}
-            title={t.apexCopilotMtfTitle}
-          >
-            <Layers className={`w-3.5 h-3.5 ${activeAssistantPanel === 'mtf' ? 'text-white' : 'text-sky-400'}`} />
-            <span className="hidden xl:inline text-[11px] font-bold">MTF</span>
-            {smcStream.mtf && (
-              <span
-                className={`text-[10px] font-black ${
-                  smcStream.mtf.bias.h4 === 'BULLISH'
-                    ? 'text-emerald-400'
-                    : smcStream.mtf.bias.h4 === 'BEARISH'
-                    ? 'text-rose-400'
-                    : 'text-slate-400'
-                }`}
-              >
-                {smcStream.mtf.bias.h4 === 'BULLISH' ? '▲' : smcStream.mtf.bias.h4 === 'BEARISH' ? '▼' : '■'}
-              </span>
-            )}
-          </button>
+                {/* MTF MATRIX PILL */}
+                <button
+                  type="button"
+                  onClick={() => setActiveAssistantPanel(curr => (curr === 'mtf' ? null : 'mtf'))}
+                  className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-mono transition-all active:scale-95 ${
+                    activeAssistantPanel === 'mtf'
+                      ? 'bg-sky-600 text-white font-bold shadow-md shadow-sky-600/30'
+                      : 'text-slate-300 hover:text-white hover:bg-slate-800/80'
+                  }`}
+                  title={t.apexCopilotMtfTitle}
+                >
+                  <Layers className={`w-3.5 h-3.5 ${activeAssistantPanel === 'mtf' ? 'text-white' : 'text-sky-400'}`} />
+                  <span className="hidden xl:inline text-[11px] font-bold">MTF</span>
+                  {smcStream.mtf && (
+                    <span
+                      className={`text-[10px] font-black ${
+                        smcStream.mtf.bias.h4 === 'BULLISH'
+                          ? 'text-emerald-400'
+                          : smcStream.mtf.bias.h4 === 'BEARISH'
+                          ? 'text-rose-400'
+                          : 'text-slate-400'
+                      }`}
+                    >
+                      {smcStream.mtf.bias.h4 === 'BULLISH' ? '▲' : smcStream.mtf.bias.h4 === 'BEARISH' ? '▼' : '■'}
+                    </span>
+                  )}
+                </button>
 
-          {/* PROP FIRM PILL (When prop firm mode is enabled) */}
-          {isPropFirmMode && (
-            <button
-              type="button"
-              onClick={() => setActiveAssistantPanel(curr => (curr === 'propfirm' ? null : 'propfirm'))}
-              className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-mono transition-all active:scale-95 ${
-                activeAssistantPanel === 'propfirm'
-                  ? 'bg-amber-600 text-white font-bold shadow-md shadow-amber-600/30'
-                  : 'text-slate-300 hover:text-white hover:bg-slate-800/80'
-              }`}
-              title={t.propFirmShieldTitle}
-            >
-              <Shield className={`w-3.5 h-3.5 ${activeAssistantPanel === 'propfirm' ? 'text-white' : 'text-amber-400'}`} />
-              <span className="hidden xl:inline text-[11px] font-bold">Prop Firm</span>
-            </button>
-          )}
+                {/* PROP FIRM PILL (When prop firm mode is enabled) */}
+                {isPropFirmMode && (
+                  <button
+                    type="button"
+                    onClick={() => setActiveAssistantPanel(curr => (curr === 'propfirm' ? null : 'propfirm'))}
+                    className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-mono transition-all active:scale-95 ${
+                      activeAssistantPanel === 'propfirm'
+                        ? 'bg-amber-600 text-white font-bold shadow-md shadow-amber-600/30'
+                        : 'text-slate-300 hover:text-white hover:bg-slate-800/80'
+                    }`}
+                    title={t.propFirmShieldTitle}
+                  >
+                    <Shield className={`w-3.5 h-3.5 ${activeAssistantPanel === 'propfirm' ? 'text-white' : 'text-amber-400'}`} />
+                    <span className="hidden xl:inline text-[11px] font-bold">Prop Firm</span>
+                  </button>
+                )}
+              </div>
 
-          {/* COUNTDOWN TIMER PILL */}
-          {countdownText && (
-            <div
-              className="flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-900/90 text-amber-300 text-[11px] font-mono font-bold border border-slate-800"
-              title={t.candleCloseCountdown}
-            >
-              <Clock className="w-3 h-3 text-amber-400 animate-pulse" />
-              <span>{countdownText}</span>
+              {/* Laptop / Tablet / Compact View (< 2xl): Consolidated Assistant Hub Pill */}
+              <div className="flex 2xl:hidden items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => setActiveAssistantPanel(curr => (curr === 'hub' ? null : 'hub'))}
+                  className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-mono transition-all active:scale-95 ${
+                    activeAssistantPanel !== null
+                      ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/30'
+                      : 'bg-slate-900/90 text-slate-300 hover:text-white hover:bg-slate-800'
+                  }`}
+                  title={t.assistantHub}
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+                  <span className="text-[11px] font-bold">
+                    {t.assistantHub}
+                  </span>
+                  <span className="px-1.5 py-0.2 rounded-full bg-indigo-500/30 text-indigo-300 text-[10px] font-bold">
+                    {activeAssistantCount}
+                  </span>
+                </button>
+              </div>
+
+              {/* COUNTDOWN TIMER PILL */}
+              {countdownText && (
+                <div
+                  className="flex items-center gap-1 px-1.5 sm:px-2 py-1 rounded-lg bg-slate-900/90 text-amber-300 text-[10px] sm:text-[11px] font-mono font-bold border border-slate-800"
+                  title={t.candleCloseCountdown}
+                >
+                  <Clock className="w-3 h-3 text-amber-400 animate-pulse" />
+                  <span>{countdownText}</span>
+                </div>
+              )}
             </div>
-          )}
-        </div>
 
-        {/* FLOATING ACTIVE ASSISTANT PANEL */}
-        {activeAssistantPanel && (
-          <div className="pointer-events-auto w-full max-w-[350px] animate-in fade-in slide-in-from-top-2 duration-150 shadow-2xl">
-            {activeAssistantPanel === 'copilot' && (
-              <AICopilotHUD
-                mtf={smcStream.mtf}
-                perf={{
-                  lastBarLatencyMs: smcStream.stats.lastBarLatencyMs,
-                  avgLatencyMs: smcStream.stats.avgLatencyMs,
-                }}
-                compact={false}
-                onClose={() => setActiveAssistantPanel(null)}
-              />
-            )}
+            {/* FLOATING ACTIVE ASSISTANT PANEL */}
+            {activeAssistantPanel && (
+              <div className="pointer-events-auto w-full max-w-[350px] animate-in fade-in slide-in-from-top-2 duration-150 shadow-2xl">
+                {activeAssistantPanel === 'hub' && (
+                  <AssistantHubFlyout
+                    onClose={() => setActiveAssistantPanel(null)}
+                    onSelectAssistant={(panel) => setActiveAssistantPanel(panel)}
+                    smcMtf={smcStream.mtf}
+                    isPropFirmMode={isPropFirmMode}
+                    autoTradingEnabled={autoTradingEnabled}
+                    currentStrategyName={activeStrategy?.name}
+                  />
+                )}
 
-            {activeAssistantPanel === 'mtf' && (
-              <MTFMatrixWidget
-                mtf={smcStream.mtf}
-                compact={false}
-                onClose={() => setActiveAssistantPanel(null)}
-              />
-            )}
+                {activeAssistantPanel === 'copilot' && (
+                  <AICopilotHUD
+                    mtf={smcStream.mtf}
+                    perf={{
+                      lastBarLatencyMs: smcStream.stats.lastBarLatencyMs,
+                      avgLatencyMs: smcStream.stats.avgLatencyMs,
+                    }}
+                    compact={false}
+                    onClose={() => setActiveAssistantPanel(null)}
+                  />
+                )}
 
-            {activeAssistantPanel === 'propfirm' && isPropFirmMode && (
-              <div className="relative">
-                <PropFirmHUD
-                  account={account}
-                  propFirmDailyLossLimit={propFirmDailyLossLimit}
-                  propFirmMaxDrawdownLimit={propFirmMaxDrawdownLimit}
-                  propFirmProfitTarget={propFirmProfitTarget}
-                  propFirmStartingDayBalance={propFirmStartingDayBalance}
-                />
+                {activeAssistantPanel === 'mtf' && (
+                  <MTFMatrixWidget
+                    mtf={smcStream.mtf}
+                    compact={false}
+                    onClose={() => setActiveAssistantPanel(null)}
+                  />
+                )}
+
+                {activeAssistantPanel === 'propfirm' && isPropFirmMode && (
+                  <div className="relative">
+                    <PropFirmHUD
+                      account={account}
+                      propFirmDailyLossLimit={propFirmDailyLossLimit}
+                      propFirmMaxDrawdownLimit={propFirmMaxDrawdownLimit}
+                      propFirmProfitTarget={propFirmProfitTarget}
+                      propFirmStartingDayBalance={propFirmStartingDayBalance}
+                    />
+                  </div>
+                )}
               </div>
             )}
           </div>
-        )}
-      </div>
+        </div>
+      )}
+
+      {/* 2. MOBILE BOTTOM EXECUTION POD (For mobile screens < 640px) */}
+      {!isSecondary && (
+        <div className="sm:hidden absolute bottom-2 left-2 right-2 z-20 pointer-events-auto">
+          <MobileQuickTradeBar
+            currentCandle={currentCandle}
+            currentBid={currentBid}
+            currentAsk={currentAsk}
+            instrument={instrument}
+            isLiveActive={isLiveActive}
+            activeBroker={activeBroker}
+            currentLiveTick={currentLiveTick}
+            account={account}
+          />
+        </div>
+      )}
 
       {/* 3. SYMBOL WATERMARK BACKGROUND OVERLAY */}
       {showWatermark && (
@@ -1361,9 +1426,9 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
 
       {/* 4. TRADINGVIEW BOTTOM-RIGHT SCALE TOOLBAR */}
       <div
-        className={`absolute bottom-6 ${
+        className={`hidden sm:flex absolute bottom-6 ${
           priceScalePosition === 'right' ? 'right-16' : 'right-4'
-        } z-20 flex items-center gap-1 bg-[#111622]/90 backdrop-blur-md border border-slate-800 rounded-lg p-1 text-[10px] font-mono shadow-xl`}
+        } z-20 items-center gap-1 bg-[#111622]/90 backdrop-blur-md border border-slate-800 rounded-lg p-1 text-[10px] font-mono shadow-xl`}
       >
         <button
           onClick={toggleLogScale}

@@ -803,6 +803,12 @@ export const vi: TranslationDict = {
   "mobileToggleTools": "Bật/Tắt công cụ",
   "statusOn": "BẬT",
   "statusOff": "TẮT",
+  "assistantHub": "Trợ Lý AI",
+  "assistantHubDesc": "Quản lý Copilot, MTF Matrix, Prop Firm & Bot AI",
+  "activeAssistants": "Trợ lý đang chạy",
+  "mobileQuickBuy": "MUA",
+  "mobileQuickSell": "BÁN",
+  "mobileLotPicker": "Chọn khối lượng nhanh",
 
   // Auth Gates & Access Control
   "guestModeBadge": "Chế độ Khách",

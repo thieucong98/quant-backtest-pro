@@ -803,6 +803,12 @@ export const en: TranslationDict = {
   "mobileToggleTools": "Toggle Tools",
   "statusOn": "ON",
   "statusOff": "OFF",
+  "assistantHub": "AI Assistants",
+  "assistantHubDesc": "Manage Copilot, MTF Matrix, Prop Firm & AI Bot",
+  "activeAssistants": "Active Assistants",
+  "mobileQuickBuy": "BUY",
+  "mobileQuickSell": "SELL",
+  "mobileLotPicker": "Quick Lot Selector",
 
   // Auth Gates & Access Control
   "guestModeBadge": "Guest Sandbox",

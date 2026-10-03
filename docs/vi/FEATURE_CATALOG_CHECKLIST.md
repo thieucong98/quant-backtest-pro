@@ -201,10 +201,16 @@ Tài liệu này là **nguồn thông tin chuẩn mực duy nhất (Single Sourc
 
 ### Chi Tiết Kỹ Thuật & Tiêu Chí Kiểm Thử (QA Checklist)
 
-#### `F-OMS-01` - Bảng Lệnh Nhanh Quick Trade Dock
-- **Điều hướng:** Bảng nổi ở góc trên-trái biểu đồ. Thanh điều khiển siêu gọn 28px chuẩn TradingView: `BUY` (Xanh ngọc), `SELL` (Đỏ hồng), nút tăng giảm Lot nội tuyến, chip bật tắt SL/TP, và Popover quản lý rủi ro nâng cao (`[⚖️]`).
-- **Chức năng:** Khớp lệnh thị trường 1-click tức thì kèm chi phí spread, tự động gắn SL/TP, cửa sổ popover quản lý rủi ro theo yêu cầu (lot presets, tỷ lệ R:R từ 1:1.5 đến 1:5, bước nhảy pips), cùng cơ chế co gọn lũy tiến thông minh (tự động thu nhỏ thành pill 24px trên màn hình < 1024px).
-- **QA Checklist:** Đặt Auto SL = 15 pips, Auto TP = 30 pips -> Bấm BUY -> Lệnh mở tức thì với tỷ lệ R:R = 1:2 hiển thị đường SL/TP trực tiếp trên canvas biểu đồ và tab Vị Thế. Bấm icon `[⚖️]` để tùy chỉnh lot presets và tỷ lệ R:R mà không che khuất nến giá.
+#### `F-OMS-01` - Hệ Thống Đặt Lệnh Nhanh Thích Ứng (Adaptive Quick Trade Execution Suite)
+- **Điều hướng:** Bảng nổi góc trên-trái biểu đồ (Desktop/Tablet) & Thanh đặt lệnh bám đáy màn hình (Mobile).
+  - **Desktop/Tablet:** Thanh điều khiển 28px chuẩn TradingView: `BUY` (Xanh ngọc), `Khối lượng Lot`, `SELL` (Đỏ hồng), chip SL/TP nội tuyến và Popover quản lý rủi ro (`[⚖️]`). Khi thu nhỏ bằng nút `[ ⌃ ]`, chuyển thành thanh pill nguyên khối `[BUY Giá | Lot | SELL Giá]` giữ nguyên khả năng khớp lệnh 1-chạm cho cả 2 chiều BUY và SELL.
+  - **Mobile (< 640px):** Thanh đặt lệnh đáy chuyên dụng `MobileQuickTradeBar` bám sát phía trên thanh Replay: Nút BUY lớn (42%), cụm chỉnh Lot (16%), nút SELL lớn (42%), hiển thị spread realtime và chip bật tắt SL/TP tiện lợi bằng ngón tay cái.
+  - **Điều phối tính năng phụ:** `AssistantHubFlyout` tự động gom các widget phụ (Bot HUD, Copilot, MTF Matrix, Prop Firm) trên màn hình < 2xl thành 1 huy hiệu duy nhất `[✨ Trợ Lý AI]`, đảm bảo 0% khả năng che lấp hoặc xung đột với cụm khớp lệnh BUY/SELL.
+- **Chức năng:** Khớp lệnh thị trường 1-click tức thì kèm chi phí spread, tự động gắn SL/TP, cửa sổ popover quản lý rủi ro theo yêu cầu (lot presets, tỷ lệ R:R từ 1:1.5 đến 1:5, bước nhảy pips).
+- **QA Checklist:**
+  1. Desktop: Bấm BUY/SELL 1-click -> Lệnh khớp tức thì, đường vị thế và SL/TP xuất hiện trực tiếp trên biểu đồ.
+  2. Mobile (375px): Thanh đặt lệnh đáy hiển thị to rõ cho BUY/SELL/LOT, không bị che khuất bởi công cụ biểu đồ.
+  3. Kiểm tra thu gọn: Bấm thu nhỏ dock đỉnh -> Thanh pill mini vẫn cho phép bấm trực tiếp BUY và SELL không cần mở rộng.
 
 #### `F-OMS-02` - Hộp Thoại Đặt Lệnh Nâng Cao (Order Entry Modal)
 - **Điều hướng:** Bấm nút `Đặt Lệnh (Order Entry)` trên Header (hoặc phím tắt `B`/`S`).
