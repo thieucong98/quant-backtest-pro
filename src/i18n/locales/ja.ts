@@ -803,6 +803,12 @@ export const ja: TranslationDict = {
   "mobileToggleTools": "ツール切替",
   "statusOn": "オン",
   "statusOff": "オフ",
+  "assistantHub": "AIアシスタント",
+  "assistantHubDesc": "Copilot、MTFマトリックス、プロップファーム、AI Botを管理",
+  "activeAssistants": "稼働中のアシスタント",
+  "mobileQuickBuy": "買い",
+  "mobileQuickSell": "売り",
+  "mobileLotPicker": "クイックLot選択",
 
   // Auth Gates & Access Control
   "guestModeBadge": "ゲストモード",

@@ -834,6 +834,12 @@ export interface TranslationDict {
   mobileToggleTools: string;
   statusOn: string;
   statusOff: string;
+  assistantHub: string;
+  assistantHubDesc: string;
+  activeAssistants: string;
+  mobileQuickBuy: string;
+  mobileQuickSell: string;
+  mobileLotPicker: string;
 
   // Auth Gates & Access Control
   guestModeBadge: string;

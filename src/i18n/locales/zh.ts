@@ -803,6 +803,12 @@ export const zh: TranslationDict = {
   "mobileToggleTools": "切换工具",
   "statusOn": "开启",
   "statusOff": "关闭",
+  "assistantHub": "AI助手",
+  "assistantHubDesc": "管理 Copilot、MTF矩阵、自营风控及策略Bot",
+  "activeAssistants": "活跃助手",
+  "mobileQuickBuy": "买入",
+  "mobileQuickSell": "卖出",
+  "mobileLotPicker": "快速手数选择",
 
   // Auth Gates & Access Control
   "guestModeBadge": "访客模式",
