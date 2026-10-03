@@ -904,7 +904,7 @@ export const en: TranslationDict = {
   "apexCopilotApplyEntry": "Apply Plan",
   "apexCopilotAppliedToast": "Action plan applied",
   "apexCopilotNoPlanToast": "No valid plan to apply.",
-  "apexCopilotTelemetry": "SMC Performance Telemetry"
+  "apexCopilotTelemetry": "SMC Performance Telemetry",
   // Multi-Chart Layout & Synchronization (v2.0)
   "singleLayout": "Single Chart",
   "dualHorizontalLayout": "Dual Split (Horizontal)",

@@ -904,7 +904,7 @@ export const vi: TranslationDict = {
   "apexCopilotApplyEntry": "Áp dụng kế hoạch",
   "apexCopilotAppliedToast": "Đã áp dụng kế hoạch hành động",
   "apexCopilotNoPlanToast": "Không có kế hoạch hợp lệ để áp dụng.",
-  "apexCopilotTelemetry": "Telemetri hiệu năng SMC"
+  "apexCopilotTelemetry": "Telemetri hiệu năng SMC",
   // Multi-Chart Layout & Synchronization (v2.0)
   "singleLayout": "Biểu đồ đơn",
   "dualHorizontalLayout": "Chia đôi (Ngang)",

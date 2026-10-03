@@ -1047,7 +1047,7 @@ async function runComprehensiveTests() {
   const buf18 = { reasoning: '', action: '', meta: null };
   let parsedPlan: any = null;
   parseCopilotStream('data:{"type":"reasoning","delta":"HTF bias is bullish. Location is discount.","timestamp":1}', buf18, {});
-  parseCopilotStream('data:{"type":"action","delta":"<action_plan>{\"side\":\"LONG\",\"entry\":1.1,\"stopLoss\":1.05,\"takeProfit\":[1.2,1.25],\"rrRatio\":5,\"confidence\":0.7,\"rationale\":\"aligned\",\"institutionalChecks\":[\"HTF_BIAS_ALIGNED\",\"KEY_POI_TAP\"]}","timestamp":2}', buf18, {});
+  parseCopilotStream('data:{"type":"action","delta":"<action_plan>{\\\"side\\\":\\\"LONG\\\",\\\"entry\\\":1.1,\\\"stopLoss\\\":1.05,\\\"takeProfit\\\":[1.2,1.25],\\\"rrRatio\\\":5,\\\"confidence\\\":0.7,\\\"rationale\\\":\\\"aligned\\\",\\\"institutionalChecks\\\":[\\\"HTF_BIAS_ALIGNED\\\",\\\"KEY_POI_TAP\\\"]}","timestamp":2}', buf18, {});
   parseCopilotStream('data:[DONE]', buf18, { onActionPlan: (p) => (parsedPlan = p), onDone: () => undefined });
   assert(parsedPlan !== null, 'CoPilotStream', 'SSE stream parser assembles ActionPlan on [DONE]');
   if (parsedPlan) assert(parsedPlan.side === 'LONG', 'CoPilotStream', 'Parsed ActionPlan side is LONG');

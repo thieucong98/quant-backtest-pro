@@ -904,7 +904,7 @@ export const zh: TranslationDict = {
   "apexCopilotApplyEntry": "应用方案",
   "apexCopilotAppliedToast": "方案已应用",
   "apexCopilotNoPlanToast": "没有可应用的方案。",
-  "apexCopilotTelemetry": "SMC 性能遥测"
+  "apexCopilotTelemetry": "SMC 性能遥测",
   // Multi-Chart Layout & Synchronization (v2.0)
   "singleLayout": "单图表",
   "dualHorizontalLayout": "水平分屏（左右）",

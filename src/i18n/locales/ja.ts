@@ -904,7 +904,7 @@ export const ja: TranslationDict = {
   "apexCopilotApplyEntry": "プランを適用",
   "apexCopilotAppliedToast": "アクションプランを適用しました",
   "apexCopilotNoPlanToast": "適用可能なプランがありません。",
-  "apexCopilotTelemetry": "SMCパフォーマンステレメトリ"
+  "apexCopilotTelemetry": "SMCパフォーマンステレメトリ",
   // Multi-Chart Layout & Synchronization (v2.0)
   "singleLayout": "シングルチャート",
   "dualHorizontalLayout": "水平分割（左右）",

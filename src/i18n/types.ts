@@ -849,6 +849,24 @@ export interface TranslationDict {
   loginNow: string;
   guestSandboxTooltip: string;
 
+  // Multi-Chart Layout & Synchronization (v2.0)
+  singleLayout: string;
+  dualHorizontalLayout: string;
+  dualVerticalLayout: string;
+  crosshairSyncActive: string;
+  crosshairSyncInactive: string;
+  timeSyncActive: string;
+  timeSyncInactive: string;
+  primaryTimeframe: string;
+  secondaryTimeframe: string;
+  htfDeveloping: string;
+  syncStatusLocked: string;
+  syncStatusUnlocked: string;
+  layoutMode: string;
+  resetView: string;
+  chartAPane: string;
+  chartBPane: string;
+
   // Apex AI Copilot (AUT-26 - Algorithmic SMC Engine, Streaming LLM & Copilot HUD)
   apexCopilotTitle: string;
   apexCopilotSub: string;
