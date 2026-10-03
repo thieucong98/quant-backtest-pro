@@ -51,6 +51,7 @@ export const Header: React.FC = () => {
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
   const [isMobileTfOpen, setIsMobileTfOpen] = useState(false);
+  const [isExtendedTfOpen, setIsExtendedTfOpen] = useState(false);
 
   const {
     instrument,
@@ -105,6 +106,9 @@ export const Header: React.FC = () => {
   const t = getTranslation(language);
 
   const timeframes: Timeframe[] = ['M1', 'M5', 'M15', 'M30', 'H1', 'H4', 'D1'];
+  const coreTimeframes: Timeframe[] = ['M1', 'M5', 'M15', 'H1', 'D1'];
+  const extendedTimeframes: Timeframe[] = ['M30', 'H4'];
+  const isExtendedActive = extendedTimeframes.includes(timeframe);
 
   const languages: { code: 'vi' | 'en' | 'ja' | 'zh'; label: string; flag: string }[] = [
     { code: 'vi', label: 'Tiếng Việt', flag: '🇻🇳' },
@@ -203,10 +207,10 @@ export const Header: React.FC = () => {
             )}
           </div>
 
-          {/* Market Watch Toggle Button */}
+          {/* Market Watch Toggle Button (Clean icon-only TradingView style) */}
           <button
             onClick={() => setMarketWatchOpen(!isMarketWatchOpen)}
-            className={`hidden sm:flex items-center gap-1.5 px-2 py-1.5 rounded-lg border text-xs font-mono transition-all shrink-0 ${
+            className={`hidden sm:flex items-center justify-center p-2 rounded-lg border text-xs font-mono transition-all shrink-0 ${
               isMarketWatchOpen
                 ? 'bg-indigo-600 text-white border-indigo-500 shadow-sm'
                 : 'bg-slate-900/90 text-slate-300 border-slate-700/80 hover:border-indigo-500/50 hover:bg-slate-800'
@@ -214,17 +218,16 @@ export const Header: React.FC = () => {
             title={t.marketWatchTooltip}
           >
             <Layers className="w-3.5 h-3.5 text-indigo-400" />
-            <span className="hidden 2xl:inline text-[11px] font-bold">{t.marketWatchTitle}</span>
           </button>
 
-          {/* Timeframe Selector (Responsive: Compact on small screens) */}
+          {/* Timeframe Selector (Responsive: Core timeframes + dropdown for secondary) */}
           <div className="hidden sm:flex items-center bg-slate-900/90 rounded-lg p-0.5 border border-slate-800 shrink-0">
             <Clock className="w-3 h-3 text-slate-500 ml-1 mr-0.5 hidden 2xl:inline" />
-            {timeframes.map(tf => (
+            {coreTimeframes.map(tf => (
               <button
                 key={tf}
                 onClick={() => setTimeframe(tf)}
-                className={`px-1.5 2xl:px-2 py-1 rounded text-xs font-mono font-medium transition-all ${
+                className={`px-1.5 py-1 rounded text-xs font-mono font-medium transition-all ${
                   timeframe === tf
                     ? 'bg-indigo-600 text-white font-bold shadow-xs'
                     : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
@@ -233,6 +236,50 @@ export const Header: React.FC = () => {
                 {tf}
               </button>
             ))}
+
+            {/* Dropdown for extended timeframes */}
+            <div className="relative">
+              <button
+                onClick={() => setIsExtendedTfOpen(!isExtendedTfOpen)}
+                className={`flex items-center gap-0.5 px-1.5 py-1 rounded text-xs font-mono font-medium transition-all ${
+                  isExtendedActive
+                    ? 'bg-indigo-600 text-white font-bold'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+                }`}
+                title={t.timeframe}
+              >
+                <span>{isExtendedActive ? timeframe : '•••'}</span>
+                <ChevronDown className="w-2.5 h-2.5 text-slate-400" />
+              </button>
+
+              {isExtendedTfOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setIsExtendedTfOpen(false)}
+                  />
+                  <div className="absolute left-0 mt-1.5 w-24 bg-[#111622] border border-slate-800 rounded-xl shadow-2xl p-1 z-50 animate-in fade-in zoom-in-95 font-mono text-xs space-y-0.5">
+                    {extendedTimeframes.map(tf => (
+                      <button
+                        key={tf}
+                        onClick={() => {
+                          setTimeframe(tf);
+                          setIsExtendedTfOpen(false);
+                        }}
+                        className={`w-full px-2 py-1.5 rounded-lg text-left text-xs transition-colors flex items-center justify-between ${
+                          timeframe === tf
+                            ? 'bg-indigo-600 text-white font-bold'
+                            : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                        }`}
+                      >
+                        <span>{tf}</span>
+                        {timeframe === tf && <span className="text-[10px]">✓</span>}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
           </div>
 
           {/* Chart Type Selector Dropdown (TradingView Style) */}
@@ -309,51 +356,7 @@ export const Header: React.FC = () => {
             )}
           </div>
 
-          {/* Drawing Tools Quick Bar (Desktop Only) */}
-          <div className="hidden 2xl:flex items-center gap-0.5 bg-slate-900/90 rounded-lg p-0.5 border border-slate-800">
-            <button
-              onClick={() => setActiveTool('cursor')}
-              title={t.cursorToolTitle}
-              className={`p-1.5 rounded text-xs ${activeTool === 'cursor' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-slate-200'}`}
-            >
-              ↖
-            </button>
-            <button
-              onClick={() => setActiveTool('trendline')}
-              title={t.trendlineToolTitle}
-              className={`p-1.5 rounded text-xs font-mono ${activeTool === 'trendline' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-slate-200'}`}
-            >
-              ╱
-            </button>
-            <button
-              onClick={() => setActiveTool('horizontal')}
-              title={t.horizontalRayToolTitle}
-              className={`p-1.5 rounded text-xs ${activeTool === 'horizontal' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-slate-200'}`}
-            >
-              <Minus className="w-3.5 h-3.5" />
-            </button>
-            <button
-              onClick={() => setActiveTool('fibonacci')}
-              title={t.fibonacciToolTitle}
-              className={`p-1.5 rounded text-xs font-mono font-bold ${activeTool === 'fibonacci' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-slate-200'}`}
-            >
-              Fib
-            </button>
-            <button
-              onClick={() => setActiveTool('rectangle')}
-              title={t.rectangleToolTitle}
-              className={`p-1.5 rounded text-xs ${activeTool === 'rectangle' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-slate-200'}`}
-            >
-              <Maximize2 className="w-3.5 h-3.5" />
-            </button>
-            <button
-              onClick={clearDrawings}
-              title={t.clearAllDrawingsTitle}
-              className="p-1.5 rounded text-xs text-slate-500 hover:text-red-400"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-            </button>
-          </div>
+
 
           {/* Economic Calendar Quick Controls */}
           <div className="relative shrink-0 hidden sm:block">
@@ -504,7 +507,7 @@ export const Header: React.FC = () => {
         </div>
 
         {/* RIGHT: ACCOUNT METRICS & ACTIONS */}
-        <div className="flex items-center gap-1.5 md:gap-2 shrink-0">
+        <div className="flex items-center gap-1.5 md:gap-2 shrink-0 ml-auto pl-2">
           {/* LIVE BROKER MODE SWITCHER & CONNECTION HUD */}
           <div className="flex items-center gap-1 shrink-0">
             <button
@@ -587,10 +590,10 @@ export const Header: React.FC = () => {
           {/* New Order Button */}
           <button
             onClick={() => setOrderModalOpen(true)}
-            className="flex items-center gap-1.5 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white px-2.5 py-1.5 rounded-lg text-xs font-semibold shadow-md shadow-indigo-600/30 transition-all active:scale-95 shrink-0"
+            className="flex items-center gap-1.5 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white px-2 2xl:px-2.5 py-1.5 rounded-lg text-xs font-semibold shadow-md shadow-indigo-600/30 transition-all active:scale-95 shrink-0"
           >
             <PlusCircle className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">{t.orderEntry}</span>
+            <span className="hidden 2xl:inline">{t.orderEntry}</span>
           </button>
 
           {/* Desktop & Laptop Action Buttons Group */}
@@ -604,7 +607,7 @@ export const Header: React.FC = () => {
                 }
                 setAIModalOpen(true);
               }}
-              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition-all active:scale-95 shrink-0 ${
+              className={`flex items-center gap-1.5 px-2 2xl:px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition-all active:scale-95 shrink-0 ${
                 autoTradingEnabled
                   ? 'bg-purple-950/90 border-purple-500 text-purple-200 shadow-lg shadow-purple-500/25 animate-pulse'
                   : 'bg-slate-900/90 border-slate-700/80 text-slate-300 hover:bg-slate-800'
@@ -622,7 +625,7 @@ export const Header: React.FC = () => {
             <div className="relative shrink-0">
               <button
                 onClick={() => setIsMoreMenuOpen(!isMoreMenuOpen)}
-                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-all active:scale-95 ${
+                className={`flex items-center gap-1.5 px-2 2xl:px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-all active:scale-95 ${
                   isMoreMenuOpen
                     ? 'bg-indigo-600 text-white border-indigo-500 shadow-sm'
                     : 'bg-slate-900/90 text-slate-300 border-slate-700/80 hover:bg-slate-800 hover:border-slate-600'
@@ -630,7 +633,7 @@ export const Header: React.FC = () => {
                 title={t.moreToolsDesc}
               >
                 <MoreHorizontal className="w-3.5 h-3.5 text-slate-300" />
-                <span className="text-xs font-semibold">{t.moreTools}</span>
+                <span className="text-xs font-semibold hidden 2xl:inline">{t.moreTools}</span>
                 {isTunnelActive && (
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-xs shadow-emerald-400 animate-pulse" />
                 )}
@@ -770,20 +773,30 @@ export const Header: React.FC = () => {
                 </>
               )}
             </div>
+          </div>
 
-            {/* Language Switcher */}
-            <div className="relative shrink-0">
-              <button
-                onClick={() => setIsLangDropdownOpen(!isLangDropdownOpen)}
-                className="flex items-center gap-1 px-2 py-1.5 bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 rounded-lg text-xs font-mono text-slate-300 transition-colors"
-                title={t.languageLabel}
-              >
-                <span>{languages.find(l => l.code === language)?.flag}</span>
-                <span className="font-bold uppercase text-[11px]">{language}</span>
-              </button>
+          {/* Language Switcher (Visible on md+ screens: tablet, laptop, desktop) */}
+          <div className="relative shrink-0 hidden md:block">
+            <button
+              onClick={() => setIsLangDropdownOpen(!isLangDropdownOpen)}
+              className="flex items-center gap-1.5 px-2 py-1.5 bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-indigo-500/50 rounded-lg text-xs font-mono text-slate-300 transition-all shadow-xs active:scale-95"
+              title={t.languageLabel}
+            >
+              <span className="text-sm">{languages.find(l => l.code === language)?.flag}</span>
+              <span className="font-bold uppercase text-[11px] tracking-wide">{language}</span>
+              <ChevronDown className={`w-3 h-3 text-slate-400 transition-transform ${isLangDropdownOpen ? 'rotate-180' : ''}`} />
+            </button>
 
-              {isLangDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-36 glass-dropdown rounded-lg p-1.5 z-50 animate-in fade-in zoom-in-95">
+            {isLangDropdownOpen && (
+              <>
+                <div
+                  className="fixed inset-0 z-40"
+                  onClick={() => setIsLangDropdownOpen(false)}
+                />
+                <div className="absolute right-0 mt-2 w-40 glass-dropdown bg-[#111622] border border-slate-700/90 rounded-xl p-1.5 z-50 shadow-2xl animate-in fade-in zoom-in-95 font-sans">
+                  <div className="px-2 py-1 text-[10px] font-bold text-slate-500 uppercase tracking-wider font-mono border-b border-slate-800/80 mb-1">
+                    {t.languageLabel}
+                  </div>
                   {languages.map(item => (
                     <button
                       key={item.code}
@@ -791,42 +804,50 @@ export const Header: React.FC = () => {
                         setLanguage(item.code);
                         setIsLangDropdownOpen(false);
                       }}
-                      className={`w-full flex items-center justify-between p-1.5 rounded text-xs transition-colors ${language === item.code ? 'bg-indigo-950 text-indigo-300 font-bold' : 'text-slate-300 hover:bg-slate-800'}`}
+                      className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs transition-all ${
+                        language === item.code
+                          ? 'bg-indigo-600/30 text-indigo-300 border border-indigo-500/50 font-bold'
+                          : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
+                      }`}
                     >
                       <div className="flex items-center gap-2">
-                        <span>{item.flag}</span>
-                        <span>{item.label}</span>
+                        <span className="text-base">{item.flag}</span>
+                        <span className="text-xs font-medium">{item.label}</span>
                       </div>
+                      {language === item.code && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 shadow-xs shadow-indigo-400" />
+                      )}
                     </button>
                   ))}
                 </div>
-              )}
-            </div>
+              </>
+            )}
           </div>
 
           {/* USER PROFILE / AUTH BUTTON */}
           {isAuthenticated && user ? (
             <button
               onClick={() => setProfileModalOpen(true)}
-              className="flex items-center gap-2 pl-1.5 pr-2.5 py-1 bg-slate-900 hover:bg-slate-800 border border-slate-700/80 rounded-full transition-all active:scale-95 shrink-0"
+              className="flex items-center gap-1.5 pl-1.5 pr-2 py-1 bg-slate-900 hover:bg-slate-800 border border-slate-700/80 rounded-full transition-all active:scale-95 shrink-0"
+              title={user.name}
             >
               <img
                 src={user.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80'}
                 alt={user.name}
-                className="w-5 h-5 rounded-full object-cover border border-indigo-500/50"
+                className="w-5 h-5 rounded-full object-cover border border-indigo-500/50 shrink-0"
               />
-              <span className="text-xs font-semibold text-slate-200 hidden 2xl:inline max-w-[80px] truncate">
+              <span className="text-xs font-semibold text-slate-200 hidden 2xl:inline max-w-[65px] truncate">
                 {user.name}
               </span>
-              <span className="px-1 py-0.2 rounded text-[9px] font-extrabold bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950">
-                {user.tier}
+              <span className="px-1.5 py-0.2 rounded text-[9px] font-extrabold bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 uppercase tracking-tighter shrink-0">
+                {user.tier === 'INSTITUTIONAL' ? 'PRO' : user.tier}
               </span>
             </button>
           ) : (
             <div className="flex items-center gap-1.5 shrink-0">
               <span
                 title={t.guestSandboxTooltip}
-                className="hidden md:inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold bg-amber-950/80 border border-amber-500/40 text-amber-300 font-mono"
+                className="hidden 2xl:inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold bg-amber-950/80 border border-amber-500/40 text-amber-300 font-mono"
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
                 {t.guestModeBadge}
@@ -1124,20 +1145,25 @@ export const Header: React.FC = () => {
             </div>
 
             {/* Bottom Drawer Section: Language & Auth */}
-            <div className="border-t border-slate-800 pt-3 space-y-3 mt-4">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] text-slate-400 flex items-center gap-1.5">
+            <div className="border-t border-slate-800 pt-3 pb-8 space-y-3 mt-4 shrink-0">
+              <div className="space-y-2">
+                <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider flex items-center gap-1.5 font-mono">
                   <Globe className="w-3.5 h-3.5 text-indigo-400" />
                   <span>{t.languageLabel}</span>
                 </span>
-                <div className="flex items-center gap-1">
+                <div className="grid grid-cols-2 gap-1.5">
                   {languages.map(item => (
                     <button
                       key={item.code}
                       onClick={() => setLanguage(item.code)}
-                      className={`px-1.5 py-0.5 rounded text-[11px] ${language === item.code ? 'bg-indigo-600 text-white font-bold' : 'text-slate-400 hover:bg-slate-800'}`}
+                      className={`flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs font-sans transition-all active:scale-95 ${
+                        language === item.code
+                          ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/30 border border-indigo-500'
+                          : 'bg-slate-900/90 text-slate-300 hover:bg-slate-800 border border-slate-800'
+                      }`}
                     >
-                      {item.flag}
+                      <span className="text-base">{item.flag}</span>
+                      <span className="truncate">{item.label}</span>
                     </button>
                   ))}
                 </div>

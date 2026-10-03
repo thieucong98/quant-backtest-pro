@@ -8,7 +8,7 @@
 
 ## 🎯 Executive Summary & Navigation Index
 
-This document provides a single source of truth for all **48 features across 8 core architectural modules** in **QuantBacktest Pro**.
+This document provides a single source of truth for all **58 features across 9 core architectural modules** in **QuantBacktest Pro**.
 
 | Module Code | Module Name | Features Count | Primary Source Components |
 | :--- | :--- | :---: | :--- |
@@ -20,6 +20,7 @@ This document provides a single source of truth for all **48 features across 8 c
 | **`F-STR`** | [6. AI Strategy Studio, Optimizer & Bot Exporter Hub](#6-ai-strategy-studio-optimizer--bot-exporter-hub-f-str) | 14 | `src/components/panels/AIStrategyModal.tsx`, `src/engine/strategyOptimizer.ts`, `src/engine/strategyExporter.ts` |
 | **`F-ANL`** | [7. Institutional Analytics & Monte Carlo Risk Engine](#7-institutional-analytics--monte-carlo-risk-engine-f-anl) | 5 | `src/components/panels/AnalyticsDashboardModal.tsx`, `src/engine/analytics.ts` |
 | **`F-SYS`** | [8. Live MT5 Broker, Cloud Tunnel & System Infrastructure](#8-live-mt5-broker-cloud-tunnel--system-infrastructure-f-sys) | 6 | `src/components/panels/BrokerConnectionModal.tsx`, `src/components/panels/TunnelModal.tsx`, `src/components/panels/SessionManagerModal.tsx` |
+| **`F-SMC`** | [9. Smart Money Concepts & AI Copilot Engine](#9-smart-money-concepts--ai-copilot-engine-f-smc) | 10 | `src/engine/smc/smcEngine.ts`, `src/components/chart/AICopilotHUD.tsx`, `src/security/aesVault.ts` |
 
 ---
 
@@ -454,7 +455,114 @@ This document provides a single source of truth for all **48 features across 8 c
 
 ---
 
-## 9. QA Tester Verification Master Matrix
+## 9. Smart Money Concepts & AI Copilot Engine (`F-SMC`)
+
+### Summary Table
+| ID | Feature Technical Name | UI Display Name (EN / VI) | UI Navigation Path | Source Code Path |
+| :--- | :--- | :--- | :--- | :--- |
+| `F-SMC-01` | Fractal Pivot & Monotonic Detection | `Fractal Pivot Detection` / `Nhận Diện Đỉnh/Đáy Fractal` | Chart Canvas ➔ SMC Overlay Layer | `src/engine/smc/smcEngine.ts:L40` |
+| `F-SMC-02` | Market Structure Engine (BOS / CHoCH) | `BOS & CHoCH Engine` / `Cấu Trúc Thị Trường BOS/CHoCH` | Chart Canvas ➔ Displacement Structure Labels | `src/engine/smc/smcEngine.ts:L310` |
+| `F-SMC-03` | Order Block (OB) Engine | `Order Block Engine` / `Cỗ Máy Khối Lệnh OB` | Chart Canvas ➔ Bullish/Bearish OB Price Zones | `src/engine/smc/smcEngine.ts:L450`, `src/engine/smc/overlayPrimitives.ts` |
+| `F-SMC-04` | Fair Value Gap (FVG) Imbalance Engine | `Fair Value Gap (FVG)` / `Khoảng Trống Giá FVG` | Chart Canvas ➔ 3-Bar Imbalance Shaded Box | `src/engine/smc/smcEngine.ts:L560` |
+| `F-SMC-05` | Liquidity Sweeps & Premium/Discount Equilibrium | `Liquidity Sweeps & Equilibrium` / `Quét Thanh Khoản & Vùng Giá` | Chart Canvas ➔ BSL/SSL Sweep Badges & 50% EQ Line | `src/engine/smc/smcEngine.ts:L680` |
+| `F-SMC-06` | Multi-Timeframe Confluence Gate | `Confluence Score Gate` / `Cổng Đánh Giá Hợp Lưu` | Floating HUD ➔ Weighted Confluence Metric | `src/engine/smc/confluenceGate.ts` |
+| `F-SMC-07` | Apex AI Copilot HUD & Streaming CoT | `Apex AI Copilot HUD` / `Trợ Lý AI Copilot Trực Tiếp` | Top-Right Chart Floating Dock ➔ Copilot Panel | `src/components/chart/AICopilotHUD.tsx`, `src/engine/smc/sseCopilotStream.ts` |
+| `F-SMC-08` | Multi-Timeframe (MTF) Trend Matrix Widget | `Multi-Timeframe Matrix` / `Ma Trận Đa Khung Thời Gian` | Top-Right Chart Floating Dock ➔ MTF Widget | `src/components/chart/MTFMatrixWidget.tsx` |
+| `F-SMC-09` | Institutional Action Plan Validator | `Action Plan Institutional Validator` / `Bộ Kiểm Định Kế Hoạch` | Copilot HUD ➔ Apply Plan Button & Violation Toasts | `src/engine/smc/actionPlanValidator.ts` |
+| `F-SMC-10` | AES-256-GCM Secure Key Vault | `Secure Key Vault (AES-GCM)` / `Két Sắt Khóa Bí Mật AES-256` | User Profile Modal ➔ Key Vault & Security Tab | `src/security/aesVault.ts` |
+
+### Detailed Specification & QA Checklist
+
+#### `F-SMC-01` - Fractal Pivot & Monotonic Detection
+- **UI Navigation:** Automatically computed on the bar stream and visually rendered as swing high/low anchor points.
+- **Functionality:** Double-ended monotonic queue (`MonotonicMinMaxQueue`) over typed arrays (`Int32Array`, `Float64Array`) achieving amortized $O(1)$ per bar and $< 0.005$ ms latency on 10,000 bars.
+- **QA Verification:**
+  1. Replay 5 bars forming a swing apex -> System correctly marks a Pivot High on the central peak bar.
+  2. Replay 5 bars forming a swing trough -> System correctly marks a Pivot Low.
+  3. Reset replay -> Monotonic queue resets cleanly without memory leaks or residual indices.
+
+#### `F-SMC-02` - Market Structure Engine (BOS / CHoCH)
+- **UI Navigation:** Realtime structure event labels rendered on the chart at the exact breakout candle.
+- **Functionality:**
+  - Break of Structure (BOS): Trend continuation detection when price breaks the previous fractal swing high/low.
+  - Change of Character (CHoCH): Early trend reversal signal when price breaches the structural counter-pivot.
+- **QA Verification:**
+  1. Candle displaces decisively above recent swing high -> Emits `BOS_BULLISH` label with horizontal extension line.
+  2. Candle subsequently violates recent swing low -> Emits `CHoCH_BEARISH` label and switches directional bias.
+
+#### `F-SMC-03` - Order Block (OB) Engine
+- **UI Navigation:** Bullish (emerald) and Bearish (rose) rectangular price zones extending into the future horizon.
+- **Functionality:** Identifies unmitigated institutional order blocks from high-displacement impulses. Automatically flags status as `MITIGATED` and fades opacity once price enters the zone.
+- **QA Verification:**
+  1. Down-close candle precedes strong upward expansion -> Bullish OB box forms from candle Low to High.
+  2. Future price pulls back and enters the box -> Status changes to `MITIGATED` immediately.
+
+#### `F-SMC-04` - Fair Value Gap (FVG) Imbalance Engine
+- **UI Navigation:** Shaded geometric zones marking 3-bar liquidity voids between candle 1 wick and candle 3 wick.
+- **Functionality:** Calculates pip magnitude, tracks dynamic fill ratio, and registers Consequent Encroachment (50% midpoint fill).
+- **QA Verification:**
+  1. Rapid 3-bar surge leaves space between Bar 1 High and Bar 3 Low -> Bullish FVG zone is drawn.
+  2. Price retraces into the gap -> Fill ratio updates dynamically; fully filled gaps transition to closed.
+
+#### `F-SMC-05` - Liquidity Sweeps & Premium/Discount Equilibrium
+- **UI Navigation:** Sweep flags (`BSL_SWEEP`, `SSL_SWEEP`) and 50% Equilibrium price reference line.
+- **Functionality:**
+  - Detects liquidity traps where price wicks beyond a swing level but closes back inside.
+  - Maps market pricing into Premium (> 50%) and Discount (< 50%) zones based on the active trading range.
+- **QA Verification:**
+  1. Price spikes above swing high and closes lower -> `SWEEP_BSL` signal fires.
+  2. Long trade plans generated at Premium are marked sub-optimal; Discount entries receive favorable location scoring.
+
+#### `F-SMC-06` - Multi-Timeframe Confluence Gate
+- **UI Navigation:** Confluence percentage score displayed on the Apex AI Copilot HUD.
+- **Functionality:** Aggregates weighted scores from HTF alignment (H4/D1), active unmitigated POIs, sweep confirmations, and active trading session (London/NY). Suppresses LLM inference calls when score $< 65$.
+- **QA Verification:**
+  1. Isolated low-probability setup -> Score remains below 50; no LLM tokens wasted.
+  2. Aligned HTF trend + Sweep + Discount OB -> Score exceeds 65; LLM Chain-of-Thought stream triggers automatically.
+
+#### `F-SMC-07` - Apex AI Copilot HUD & Streaming CoT
+- **UI Navigation:** Top-right chart floating dock (expandable, collapsable, multi-tab).
+- **Functionality:**
+  - Real-time Server-Sent Events (SSE) streaming displaying token-by-token Chain-of-Thought reasoning.
+  - Automatic extraction of typed `ActionPlan` (Side, Entry, SL, TP, R:R, Confidence).
+  - 1-Click "Apply Plan" action button routing parameters directly into OMS order entry.
+- **QA Verification:**
+  1. Click collapse button -> Panel collapses smoothly into a compact icon badge.
+  2. SSE stream initiates -> Reasoning deltas animate cleanly with monospace terminal typography.
+  3. ActionPlan received -> Entry, Stop Loss, and Take Profit targets populate with calculated R:R.
+
+#### `F-SMC-08` - Multi-Timeframe (MTF) Trend Matrix Widget
+- **UI Navigation:** Compact widget docked below the Apex Copilot on the chart view.
+- **Functionality:** Compact qualitative matrix tracking H4 & D1 directional bias, Premium/Discount zone, active POIs, and current market session (Tokyo / London / New York).
+- **QA Verification:**
+  1. H4 and D1 agree on bullish direction -> Matrix displays green `BULLISH` tag.
+  2. Clock crosses 13:00 UTC -> Session pill switches to `NEW YORK`.
+
+#### `F-SMC-09` - Institutional Action Plan Validator
+- **UI Navigation:** Intercepts AI action plans and manual order submissions from Copilot.
+- **Functionality:** Enforces strict institutional risk guardrails:
+  - Rejects LONG orders in Premium zones.
+  - Rejects SHORT orders in Discount zones.
+  - Mandates Risk-to-Reward ratio $\ge 2.0$.
+  - Requires Stop Loss placement beyond the structural protection level.
+- **QA Verification:**
+  1. AI proposes LONG in Premium -> Validator blocks plan, displays red toast, disables execution button.
+  2. AI proposes LONG in Discount with R:R = 2.6 -> Validator grants instant approval.
+
+#### `F-SMC-10` - AES-256-GCM Secure Key Vault
+- **UI Navigation:** Built into user security and credential storage layers.
+- **Functionality:**
+  - FIPS-grade AES-256-GCM encryption with PBKDF2-SHA-256 (250,000 iterations) and 16-byte random salt.
+  - Per-record 12-byte random IV and domain-bound Authenticated Additional Data (AAD).
+  - Wipes plaintext and CryptoKey references from RAM immediately on `lockVault()`.
+- **QA Verification:**
+  1. Unlock with correct passphrase -> Secret decrypted with matching fingerprint prefix.
+  2. Lock vault -> All read operations throw `VaultLockedError`.
+  3. Tampered IV or wrong passphrase -> Decryption fails with `VaultCorruptedError`.
+
+---
+
+## 10. QA Tester Verification Master Matrix
 
 | ID | Feature | Category | Test Type | Status | Automated Test Suite Reference |
 | :--- | :--- | :--- | :--- | :---: | :--- |
@@ -516,10 +624,21 @@ This document provides a single source of truth for all **48 features across 8 c
 | `F-SYS-04` | Multi-Session Manager | Infrastructure | State Persistence | ✅ PASS | Session CRUD & AutoSave |
 | `F-SYS-05` | Keyboard Shortcuts Helper | Infrastructure | UI UX Accessibility | ✅ PASS | Global Hotkey Bindings |
 | `F-SYS-06` | Cross-Platform Launchers | Infrastructure | CLI / Shell | ✅ PASS | `dev:all`, `start_all.sh`, `.bat` |
+| `F-SMC-01` | Fractal Pivot Detection | SMC Perception | O(1) Queue | ✅ PASS | Suite 17: SMC Engine & `tests/engine/smc.fractal.test.ts` |
+| `F-SMC-02` | Structure BOS / CHoCH | SMC Perception | State Machine | ✅ PASS | Suite 17: BOS/CHoCH & `tests/engine/smc.bosChoch.test.ts` |
+| `F-SMC-03` | Order Block Engine | SMC Perception | Zone Analysis | ✅ PASS | Suite 20: Overlay Primitives Bridge |
+| `F-SMC-04` | Fair Value Gap Engine | SMC Perception | Imbalance / Pips | ✅ PASS | Suite 17 & `tests/engine/smcAccuracy.test.ts` |
+| `F-SMC-05` | Liquidity Sweeps BSL/SSL | SMC Perception | Sweep Detection | ✅ PASS | Suite 20: Liquidity Sweep Primitives |
+| `F-SMC-06` | Confluence Score Gate | SMC Reasoning | Gating $\ge 65$ | ✅ PASS | Suite 17 & `confluenceGate.ts` |
+| `F-SMC-07` | Apex AI Copilot HUD | SMC Interface | SSE Streaming | ✅ PASS | Suite 19: AI Co-Pilot Streaming & CoT |
+| `F-SMC-08` | MTF Trend Matrix Widget | SMC Interface | Multi-Timeframe | ✅ PASS | Suite 18: SMC Worker Sync Protocol |
+| `F-SMC-09` | Action Plan Validator | SMC Governance | Institutional Rule | ✅ PASS | Suite 19: ActionPlanValidator Tests |
+| `F-SMC-10` | Secure Key Vault AES-GCM | Security | Web Crypto FIPS | ✅ PASS | `tests/security/aesVault.test.ts` (22 tests) |
 
 ---
 
-## 10. Conclusion & Maintenance Rules
+## 11. Conclusion & Maintenance Rules
 
 1. **Drift-Resistance**: When modifying or adding any feature in `src/`, update its respective row in both `docs/FEATURE_CATALOG_CHECKLIST.md` and `docs/vi/FEATURE_CATALOG_CHECKLIST.md`.
 2. **Acceptance Verification**: Every newly implemented feature must pass its assigned QA verification steps and automated test suite check before being merged to `main`.
+

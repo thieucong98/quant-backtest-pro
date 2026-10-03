@@ -6,24 +6,18 @@
  */
 
 import React, { useMemo } from 'react';
+import { Layers, X } from 'lucide-react';
 import { useBacktestStore } from '../../store/backtestStore';
 import { getTranslation } from '../../i18n';
-import type { MTFSemanticVector, PremiumDiscountLocation } from '../../types/smc';
+import type { MTFSemanticVector } from '../../types/smc';
 
 export interface MTFMatrixWidgetProps {
   mtf?: MTFSemanticVector | null;
   compact?: boolean;
+  onClose?: () => void;
 }
 
-function locClass(loc: PremiumDiscountLocation): string {
-  return `mtf-loc mtf-loc-${loc.toLowerCase()}`;
-}
-
-function biasClass(b: 'BULLISH' | 'BEARISH' | 'NEUTRAL'): string {
-  return `mtf-bias mtf-bias-${b.toLowerCase()}`;
-}
-
-export const MTFMatrixWidget: React.FC<MTFMatrixWidgetProps> = ({ mtf, compact = false }) => {
+export const MTFMatrixWidget: React.FC<MTFMatrixWidgetProps> = ({ mtf, compact = false, onClose }) => {
   const language = useBacktestStore(s => s.language) as 'vi' | 'en' | 'ja' | 'zh';
   const t = getTranslation(language);
   const labels = useMemo(() => ({
@@ -52,13 +46,29 @@ export const MTFMatrixWidget: React.FC<MTFMatrixWidgetProps> = ({ mtf, compact =
     volHigh: t.apexCopilotVolHigh,
     volExtreme: t.apexCopilotVolExtreme,
     none: t.apexCopilotNone,
+    close: t.apexCopilotClose,
   }), [t]);
 
   if (!mtf) {
     return (
-      <div className={`mtf-matrix-widget ${compact ? 'mtf-compact' : ''}`}>
-        <header className="mtf-matrix-header">{labels.title}</header>
-        <div className="mtf-matrix-empty">{labels.none}</div>
+      <div className={`mtf-matrix-widget bg-[#0e1320]/95 backdrop-blur-xl border border-sky-500/30 rounded-xl shadow-2xl p-3 text-xs font-mono w-full ${compact ? 'max-w-[280px]' : 'max-w-[340px]'}`}>
+        <header className="flex items-center justify-between pb-2 border-b border-slate-800 mb-2">
+          <div className="flex items-center gap-1.5">
+            <Layers className="w-4 h-4 text-sky-400" />
+            <span className="font-bold text-xs text-slate-100">{labels.title}</span>
+          </div>
+          {onClose && (
+            <button
+              type="button"
+              onClick={onClose}
+              className="p-1 rounded-md text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+              title={labels.close}
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </header>
+        <div className="p-3 text-center text-slate-500 italic text-[11px]">{labels.none}</div>
       </div>
     );
   }
@@ -70,44 +80,63 @@ export const MTFMatrixWidget: React.FC<MTFMatrixWidgetProps> = ({ mtf, compact =
   const volLabel = mtf.volatility.atrBucket === 'LOW' ? labels.volLow : mtf.volatility.atrBucket === 'NORMAL' ? labels.volNormal : mtf.volatility.atrBucket === 'HIGH' ? labels.volHigh : labels.volExtreme;
 
   return (
-    <div className={`mtf-matrix-widget ${compact ? 'mtf-compact' : ''}`}>
-      <header className="mtf-matrix-header">{labels.title}</header>
-      <div className="mtf-matrix-grid">
-        <div className="mtf-cell">
-          <span className="mtf-cell-label">{labels.h4}</span>
-          <span className={biasClass(mtf.bias.h4)}>{biasH4}</span>
+    <div className={`mtf-matrix-widget bg-[#0e1320]/95 backdrop-blur-xl border border-sky-500/30 rounded-xl shadow-2xl p-3 text-xs font-mono w-full ${compact ? 'max-w-[280px]' : 'max-w-[340px]'}`}>
+      <header className="flex items-center justify-between pb-2 border-b border-slate-800 mb-2">
+        <div className="flex items-center gap-1.5">
+          <Layers className="w-4 h-4 text-sky-400" />
+          <span className="font-bold text-xs text-slate-100">{labels.title}</span>
         </div>
-        <div className="mtf-cell">
-          <span className="mtf-cell-label">{labels.d1}</span>
-          <span className={biasClass(mtf.bias.d1)}>{biasD1}</span>
+        {onClose && (
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-1 rounded-md text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            title={labels.close}
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        )}
+      </header>
+      <div className="grid grid-cols-2 gap-1.5">
+        <div className="p-2 rounded-lg bg-slate-900/80 border border-slate-800/80 flex flex-col gap-0.5">
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{labels.h4}</span>
+          <span className={`text-[11px] font-extrabold ${mtf.bias.h4 === 'BULLISH' ? 'text-emerald-400' : mtf.bias.h4 === 'BEARISH' ? 'text-rose-400' : 'text-slate-300'}`}>
+            {biasH4}
+          </span>
         </div>
-        <div className="mtf-cell">
-          <span className="mtf-cell-label">{labels.location}</span>
-          <span className={locClass(mtf.location)}>{locLabel}</span>
+        <div className="p-2 rounded-lg bg-slate-900/80 border border-slate-800/80 flex flex-col gap-0.5">
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{labels.d1}</span>
+          <span className={`text-[11px] font-extrabold ${mtf.bias.d1 === 'BULLISH' ? 'text-emerald-400' : mtf.bias.d1 === 'BEARISH' ? 'text-rose-400' : 'text-slate-300'}`}>
+            {biasD1}
+          </span>
         </div>
-        <div className="mtf-cell">
-          <span className="mtf-cell-label">{labels.ob}</span>
-          <span className="mtf-cell-value">{mtf.activeOB.direction} · {mtf.activeOB.state} · {mtf.activeOB.fillRatioBucket}%</span>
+        <div className="p-2 rounded-lg bg-slate-900/80 border border-slate-800/80 flex flex-col gap-0.5">
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{labels.location}</span>
+          <span className="text-[11px] font-bold text-amber-300">{locLabel}</span>
         </div>
-        <div className="mtf-cell">
-          <span className="mtf-cell-label">{labels.fvg}</span>
-          <span className="mtf-cell-value">{mtf.activeFVG.direction} · {mtf.activeFVG.state} · {mtf.activeFVG.fillRatioBucket}%</span>
+        <div className="p-2 rounded-lg bg-slate-900/80 border border-slate-800/80 flex flex-col gap-0.5">
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{labels.ob}</span>
+          <span className="text-[10px] font-mono text-slate-200 truncate">{mtf.activeOB.direction} · {mtf.activeOB.state} · {mtf.activeOB.fillRatioBucket}%</span>
         </div>
-        <div className="mtf-cell">
-          <span className="mtf-cell-label">{labels.sweep}</span>
-          <span className="mtf-cell-value">{mtf.recentSweep.kind} · {mtf.recentSweep.barsAgo}</span>
+        <div className="p-2 rounded-lg bg-slate-900/80 border border-slate-800/80 flex flex-col gap-0.5">
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{labels.fvg}</span>
+          <span className="text-[10px] font-mono text-slate-200 truncate">{mtf.activeFVG.direction} · {mtf.activeFVG.state} · {mtf.activeFVG.fillRatioBucket}%</span>
         </div>
-        <div className="mtf-cell">
-          <span className="mtf-cell-label">{labels.choch}</span>
-          <span className="mtf-cell-value">{mtf.recentCHoCH.direction} · {mtf.recentCHoCH.barsAgo}</span>
+        <div className="p-2 rounded-lg bg-slate-900/80 border border-slate-800/80 flex flex-col gap-0.5">
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{labels.sweep}</span>
+          <span className="text-[10px] font-mono text-slate-200 truncate">{mtf.recentSweep.kind} · {mtf.recentSweep.barsAgo}</span>
         </div>
-        <div className="mtf-cell">
-          <span className="mtf-cell-label">{labels.volatility}</span>
-          <span className="mtf-cell-value">{volLabel}</span>
+        <div className="p-2 rounded-lg bg-slate-900/80 border border-slate-800/80 flex flex-col gap-0.5">
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{labels.choch}</span>
+          <span className="text-[10px] font-mono text-slate-200 truncate">{mtf.recentCHoCH.direction} · {mtf.recentCHoCH.barsAgo}</span>
         </div>
-        <div className="mtf-cell">
-          <span className="mtf-cell-label">{labels.session}</span>
-          <span className="mtf-cell-value">{sessionLabel}</span>
+        <div className="p-2 rounded-lg bg-slate-900/80 border border-slate-800/80 flex flex-col gap-0.5">
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{labels.volatility}</span>
+          <span className="text-[11px] font-mono text-slate-200">{volLabel}</span>
+        </div>
+        <div className="p-2 rounded-lg bg-slate-900/80 border border-slate-800/80 flex flex-col gap-0.5 col-span-2">
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{labels.session}</span>
+          <span className="text-[11px] font-mono text-slate-200">{sessionLabel}</span>
         </div>
       </div>
     </div>
