@@ -153,39 +153,42 @@ export const AuthModal: React.FC = () => {
         </div>
 
         {/* 1-CLICK DEFAULT DEMO ACCOUNT CARD */}
-        <div className="mx-3 sm:mx-6 mb-3 bg-gradient-to-r from-indigo-950/60 to-purple-950/60 border border-indigo-500/40 rounded-xl p-2.5 flex items-center justify-between gap-2 shadow-inner">
-          <div className="flex items-center gap-2 min-w-0">
-            <div className="w-7 h-7 rounded-lg bg-indigo-600/30 border border-indigo-400/30 flex items-center justify-center shrink-0">
-              <KeyRound className="w-3.5 h-3.5 text-indigo-300" />
-            </div>
-            <div className="min-w-0">
-              <div className="text-[11px] font-bold text-indigo-200 flex items-center gap-1">
+        <div className="mx-3 sm:mx-6 mb-3 bg-gradient-to-r from-indigo-950/70 via-slate-900/90 to-purple-950/70 border border-indigo-500/40 rounded-xl p-3 flex flex-col gap-2 shadow-inner">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-indigo-600/30 border border-indigo-400/30 flex items-center justify-center shrink-0">
+                <KeyRound className="w-3.5 h-3.5 text-indigo-300" />
+              </div>
+              <div className="text-[11px] font-bold text-indigo-200 flex items-center gap-1.5">
                 <span>{t.defaultAccountBadge}</span>
-                <span className="px-1.5 py-0.2 bg-teal-500/20 text-teal-300 rounded text-[9px] font-mono border border-teal-500/30">INSTITUTIONAL</span>
+                <span className="px-1.5 py-0.5 bg-teal-500/20 text-teal-300 rounded text-[9px] font-mono border border-teal-500/30 font-bold">
+                  INSTITUTIONAL
+                </span>
               </div>
-              <div className="text-[10px] text-slate-400 font-mono truncate">
-                admin@quantbacktest.pro • QuantPro@2026
-              </div>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={handleFillDefaultAccount}
+                className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg text-[10px] font-medium transition-all border border-slate-700/80 active:scale-95"
+                title={t.fillFormBtn}
+              >
+                {t.fillFormBtn}
+              </button>
+              <button
+                type="button"
+                onClick={handleOneClickDemo}
+                disabled={isLoading}
+                className="px-3 py-1 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white rounded-lg text-[10px] font-bold flex items-center gap-1 shadow-md shadow-indigo-600/25 transition-all active:scale-95 disabled:opacity-50"
+              >
+                {isLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+                <span>{t.oneClickEnterBtn}</span>
+              </button>
             </div>
           </div>
-          <div className="flex items-center gap-1 shrink-0">
-            <button
-              type="button"
-              onClick={handleFillDefaultAccount}
-              className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg text-[10px] font-medium transition-all"
-              title={t.fillFormBtn}
-            >
-              {t.fillFormBtn}
-            </button>
-            <button
-              type="button"
-              onClick={handleOneClickDemo}
-              disabled={isLoading}
-              className="px-2.5 py-1 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white rounded-lg text-[10px] font-bold flex items-center gap-1 shadow-xs transition-all active:scale-95"
-            >
-              <Sparkles className="w-3 h-3" />
-              <span>{t.oneClickEnterBtn}</span>
-            </button>
+          <div className="flex items-center justify-between bg-black/30 rounded-lg px-2.5 py-1 text-[10px] font-mono border border-slate-800/80 text-slate-300">
+            <span className="text-slate-400">admin@quantbacktest.pro</span>
+            <span className="text-indigo-300 font-bold">QuantPro@2026</span>
           </div>
         </div>
 
