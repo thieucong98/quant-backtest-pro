@@ -154,7 +154,7 @@ export const AITradeAutopsyModal: React.FC<AITradeAutopsyModalProps> = ({
             className="px-4 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs transition-colors shadow-sm active:scale-95"
             onClick={onClose}
           >
-            {t.saveChanges}
+            {t.autopsyClose}
           </button>
         </footer>
       </div>

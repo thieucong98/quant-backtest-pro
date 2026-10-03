@@ -982,6 +982,7 @@ export const zh: TranslationDict = {
   "autopsyFomoRisk": "追涨杀跌 / FOMO 追单",
   "autopsySlMoved": "止损距离过大或随意改动",
   "autopsyPerfectExecution": "规则执行正确 (正常概率方差)",
+  "autopsyClose": "关闭诊断",
 
   "propFirmPassScore": "自营考核 (Prop Firm) 通过概率",
   "propFirmPassRate": "达标止盈率 (+10%)",

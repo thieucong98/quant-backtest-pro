@@ -982,6 +982,7 @@ export const en: TranslationDict = {
   "autopsyFomoRisk": "Chasing Extended Price / FOMO Entry",
   "autopsySlMoved": "Wide or Unplanned Stop Loss",
   "autopsyPerfectExecution": "Valid Setup (Probabilistic Variance)",
+  "autopsyClose": "Close Diagnosis",
 
   "propFirmPassScore": "Prop Firm Pass Probability",
   "propFirmPassRate": "Pass Target Rate (+10%)",
