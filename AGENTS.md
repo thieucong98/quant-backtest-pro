@@ -60,3 +60,12 @@ Welcome to **QuantBacktest Pro** codebase. All AI coding agents, assistants, and
 - **Visual Asset Language Parity**: UI screenshots in `README.md` must display English interface labels (`docs/assets/en/`). Localized readmes like `README.vi.md` must display matching localized interface labels (`docs/assets/vi/`).
 - **Parity Across Translations**: Any updates to feature sets, test counts, or commands in `README.md` must be mirrored in `README.vi.md`.
 
+---
+
+## 6. Mandatory Feature Catalog & Checklist Parity (CRITICAL)
+- **ZERO UNTRACKED CAPABILITIES**: Every new user-facing capability, architectural module, or analytical engine MUST be indexed and documented in BOTH:
+  - `docs/FEATURE_CATALOG_CHECKLIST.md` (English primary edition)
+  - `docs/vi/FEATURE_CATALOG_CHECKLIST.md` (Vietnamese localized edition)
+- **TEST CRITERIA & NAVIGATION MANDATE**: Each catalog entry must define the Module ID, Technical Name, Display Name (EN/VI), UI Navigation Path, Source Code Path, and QA Acceptance Checklist criteria with step-by-step verification flows.
+- **SYNCHRONIZED TOTALS**: Whenever new features are introduced, update the summary tables, navigation indices, and total feature counts across all localized checklists and README documentation.
+
