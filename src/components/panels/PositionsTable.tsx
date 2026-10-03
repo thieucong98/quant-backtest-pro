@@ -21,7 +21,8 @@ import {
   Calendar,
   RotateCcw,
   LayoutGrid,
-  List
+  List,
+  ShieldAlert
 } from 'lucide-react';
 import { INSTRUMENTS } from '../../config/instruments';
 import { useBacktestStore } from '../../store/backtestStore';
@@ -31,6 +32,8 @@ import { Position } from '../../types/order';
 import { BrokerPosition } from '../../types/broker';
 import { EconomicCalendarTab } from './EconomicCalendarTab';
 import { BottomPanelSplitter } from './BottomPanelSplitter';
+import { AITradeAutopsyModal } from './AITradeAutopsyModal';
+import { AITradeAutopsyEngine, TradeAutopsyReport } from '../../engine/aiTradeAutopsy';
 
 export const PositionsTable: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'open' | 'pending' | 'history' | 'logs' | 'calendar'>('open');
@@ -40,6 +43,7 @@ export const PositionsTable: React.FC = () => {
   const [selectedTag, setSelectedTag] = useState<string>('SMC Order Block');
   const [noteText, setNoteText] = useState<string>('');
   const [viewMode, setViewMode] = useState<'auto' | 'cards' | 'table'>('auto');
+  const [autopsyReport, setAutopsyReport] = useState<TradeAutopsyReport | null>(null);
 
   const {
     openPositions,
@@ -556,7 +560,19 @@ export const PositionsTable: React.FC = () => {
                 <div className="text-slate-300">{formatPrice(trade.symbol, trade.closePrice)}</div>
               </div>
             </div>
-            <div className="text-[10px] text-slate-500 text-right">{formatTime(trade.closeTime)}</div>
+            <div className="flex items-center justify-between text-[10px] text-slate-500 pt-1 border-t border-slate-800/60">
+              <span>{formatTime(trade.closeTime)}</span>
+              {trade.realizedPnL < 0 && (
+                <button
+                  type="button"
+                  onClick={() => setAutopsyReport(AITradeAutopsyEngine.diagnoseTrade(trade, instrument, candles, economicNews))}
+                  className="px-2 py-0.5 rounded bg-rose-950/80 hover:bg-rose-900 border border-rose-500/40 text-rose-300 font-bold flex items-center gap-1 transition-colors active:scale-95"
+                >
+                  <ShieldAlert className="w-3 h-3 text-rose-400" />
+                  <span>{t.autopsyBtn}</span>
+                </button>
+              )}
+            </div>
           </div>
         ))}
       </div>
@@ -1116,6 +1132,7 @@ export const PositionsTable: React.FC = () => {
                         <th className="py-1.5 px-2">Price</th>
                         <th className="py-1.5 px-2">Comm / Swap</th>
                         <th className="py-1.5 px-3 text-right">{t.realizedPnL}</th>
+                        <th className="py-1.5 px-2 text-center">{t.actions}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1123,7 +1140,7 @@ export const PositionsTable: React.FC = () => {
                         // LIVE DEALS
                         liveDeals.length === 0 ? (
                           <tr>
-                            <td colSpan={7} className="text-center py-8 text-slate-500">
+                            <td colSpan={8} className="text-center py-8 text-slate-500">
                               No trade history on {activeBroker}.
                             </td>
                           </tr>
@@ -1161,6 +1178,7 @@ export const PositionsTable: React.FC = () => {
                               >
                                 {deal.profit >= 0 ? '+' : ''}${deal.profit.toFixed(2)}
                               </td>
+                              <td className="py-1.5 px-2 text-center text-slate-600">---</td>
                             </tr>
                           ))
                         )
@@ -1168,7 +1186,7 @@ export const PositionsTable: React.FC = () => {
                         // REPLAY TRADES
                         closedPositions.length === 0 ? (
                           <tr>
-                            <td colSpan={7} className="text-center py-8 text-slate-500">
+                            <td colSpan={8} className="text-center py-8 text-slate-500">
                               {t.noHistory}
                             </td>
                           </tr>
@@ -1213,6 +1231,19 @@ export const PositionsTable: React.FC = () => {
                                 }`}
                               >
                                 {trade.realizedPnL >= 0 ? '+' : ''}${trade.realizedPnL.toFixed(2)}
+                              </td>
+                              <td className="py-1.5 px-2 text-center">
+                                {trade.realizedPnL < 0 && (
+                                  <button
+                                    type="button"
+                                    onClick={() => setAutopsyReport(AITradeAutopsyEngine.diagnoseTrade(trade, instrument, candles, economicNews))}
+                                    className="px-2 py-0.5 rounded bg-rose-950/80 hover:bg-rose-900 border border-rose-500/40 text-rose-300 text-[10px] font-bold inline-flex items-center gap-1 transition-colors active:scale-95"
+                                    title={t.autopsyBtn}
+                                  >
+                                    <ShieldAlert className="w-3 h-3 text-rose-400" />
+                                    <span>{t.autopsyBtn}</span>
+                                  </button>
+                                )}
                               </td>
                             </tr>
                           ))
@@ -1315,6 +1346,13 @@ export const PositionsTable: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* AI TRADE AUTOPSY FORENSIC MODAL */}
+      <AITradeAutopsyModal
+        isOpen={!!autopsyReport}
+        onClose={() => setAutopsyReport(null)}
+        report={autopsyReport}
+      />
     </div>
   );
 };

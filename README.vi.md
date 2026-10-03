@@ -8,7 +8,7 @@
 [![Ngôn ngữ: Tiếng Việt](https://img.shields.io/badge/Ngôn%20ngữ-Tiếng%20Việt-red.svg?style=for-the-badge)](#)
 [![Language: English](https://img.shields.io/badge/Language-English-blue.svg?style=for-the-badge)](README.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-emerald.svg?style=for-the-badge)](LICENSE)
-[![Tests: 100% Passed](https://img.shields.io/badge/Tests-143%2F143%20Passed-success.svg?style=for-the-badge)](#)
+[![Tests: 100% Passed](https://img.shields.io/badge/Tests-208%2F208%20Passed-success.svg?style=for-the-badge)](#)
 [![Docker Ready](https://img.shields.io/badge/Docker-Sẵn%20sàng-2496ED.svg?style=for-the-badge&logo=docker&logoColor=white)](Dockerfile)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6.svg?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-19.0-61DAFB.svg?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)

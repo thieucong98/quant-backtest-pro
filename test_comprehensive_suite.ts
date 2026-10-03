@@ -21,6 +21,11 @@ import { ActionPlanValidator } from './src/engine/smc/actionPlanValidator';
 import { buildOverlayPrimitives } from './src/engine/smc/overlayPrimitives';
 import * as fs from 'fs';
 import { useBacktestStore } from './src/store/backtestStore';
+import { AIStreamingGenerator } from './src/engine/aiStreamingGenerator';
+import { VisualBlockCompiler, DEFAULT_VISUAL_STRATEGY } from './src/engine/visualBlockCompiler';
+import { AITradeAutopsyEngine } from './src/engine/aiTradeAutopsy';
+import { MonteCarloEngine } from './src/engine/monteCarloEngine';
+import { SignalWebhookDispatcher } from './src/engine/signalWebhookDispatcher';
 
 interface TestResult {
   suite: string;
@@ -1131,7 +1136,115 @@ async function runComprehensiveTests() {
   }
 
   // =========================================================================
-  // 21. SUMMARY OF TEST SUITE RESULTS
+  // 21. 5 BREAKTHROUGH UPGRADES ENGINES (v2.2 MASTER RELEASE)
+  // =========================================================================
+  console.log('\n--- 21. 5 Breakthrough Upgrades Suite (v2.2) ---');
+
+  // Test 21.1: AI Streaming Generator CoT extraction & fallback
+  {
+    const gen = new AIStreamingGenerator();
+    let receivedCode = '';
+    await gen.generateStrategyStream(
+      'EMA 20/50 Scalper',
+      { provider: 'builtin', model: 'builtin', apiKey: '', baseUrl: '' },
+      'EURUSD',
+      {
+        onProgress: (p) => {
+          if (p.code) receivedCode = p.code;
+        }
+      }
+    );
+    assert(receivedCode.length > 50, 'Breakthrough_Streaming', 'Streaming generator synthesized valid strategy code');
+    assert(receivedCode.includes('parameters') && receivedCode.includes('onCandle'), 'Breakthrough_Streaming', 'Generated code contains algorithmic contract');
+  }
+
+  // Test 21.2: Visual Block Strategy Builder Compiler & Decompiler
+  {
+    const compiledJs = VisualBlockCompiler.compileBlocksToJs(DEFAULT_VISUAL_STRATEGY);
+    assert(compiledJs.includes('onCandle(candle, indicators, account, api)'), 'Breakthrough_VisualBuilder', 'Visual model compiles to executable onCandle JS function');
+    assert(compiledJs.includes('indicators.rsi') || compiledJs.includes('indicators.ema'), 'Breakthrough_VisualBuilder', 'Visual rules contain indicator queries');
+
+    // Decompiler
+    const decompiledModel = VisualBlockCompiler.decompileJsToBlocks(compiledJs);
+    assert(decompiledModel.rules.length > 0, 'Breakthrough_VisualBuilder', 'Decompiler successfully recovered rule blocks from JS');
+  }
+
+  // Test 21.3: AI Trade Post-Mortem & Diagnostic Autopsy
+  {
+    const losingTrade: Position = {
+      id: 'trade_loss_1',
+      orderId: 'ord_1',
+      symbol: 'EURUSD',
+      side: 'BUY',
+      lotSize: 0.5,
+      entryPrice: 1.0900,
+      closePrice: 1.0850,
+      stopLoss: 1.0850,
+      takeProfit: 1.1000,
+      highestPriceSinceOpen: 1.0905,
+      lowestPriceSinceOpen: 1.0848,
+      commission: 3.5,
+      swap: 0,
+      openTime: 1700000000000,
+      closeTime: 1700001800000,
+      floatingPnL: -250,
+      realizedPnL: -250,
+      status: 'CLOSED',
+      closeReason: 'SL'
+    };
+
+    const mockNews = [
+      {
+        id: 'news_1',
+        title: 'US Non-Farm Payrolls',
+        impact: 'HIGH' as const,
+        currency: 'USD',
+        timestamp: 1700000600, // 10 mins into trade
+        actual: '250K',
+        forecast: '180K',
+        previous: '150K'
+      }
+    ];
+
+    const autopsyReport = AITradeAutopsyEngine.diagnoseTrade(
+      losingTrade,
+      INSTRUMENTS['EURUSD'],
+      [],
+      mockNews,
+      null
+    );
+
+    assert(autopsyReport.rootCause === 'NEWS_COLLISION', 'Breakthrough_Autopsy', 'Autopsy correctly identified NEWS_COLLISION root cause');
+    assert(autopsyReport.disciplineScore >= 0 && autopsyReport.disciplineScore <= 100, 'Breakthrough_Autopsy', 'Discipline score is bounded between 0 and 100');
+    assert(autopsyReport.prescription.length >= 2, 'Breakthrough_Autopsy', 'Actionable prescriptions generated');
+  }
+
+  // Test 21.4: Prop Firm Pass Probability & Monte Carlo 1,000-Path Engine
+  {
+    const samplePnLs = [120, -60, 150, -80, 200, -70, 110, -50, 180, -90];
+    const mcResult = MonteCarloEngine.runPropFirmSimulation(samplePnLs, 10000, 1000, 10, 5, 10);
+    assert(mcResult.simulationsCount === 1000, 'Breakthrough_MonteCarlo', 'Executed exact 1,000 bootstrap simulations');
+    assert(mcResult.passTargetRate >= 0 && mcResult.passTargetRate <= 100, 'Breakthrough_MonteCarlo', 'Pass rate probability in valid range');
+    assert(mcResult.dailyLossBreachRisk >= 0 && mcResult.dailyLossBreachRisk <= 100, 'Breakthrough_MonteCarlo', 'Daily loss breach risk in valid range');
+    assert(['ELITE', 'SOLID', 'MODERATE', 'HIGH_RISK'].includes(mcResult.starRating), 'Breakthrough_MonteCarlo', 'Star rating classified into prop firm categories');
+    assert(mcResult.samplePaths.length > 0, 'Breakthrough_MonteCarlo', 'Sample trajectory paths emitted for visualization');
+  }
+
+  // Test 21.5: Real-Time Webhook Signal Dispatcher
+  {
+    SignalWebhookDispatcher.saveConfig({
+      enabled: false,
+      telegramToken: 'test_token',
+      telegramChatId: 'test_chat',
+      discordWebhookUrl: 'https://discord.com/api/webhooks/test'
+    });
+    const loaded = SignalWebhookDispatcher.loadConfig();
+    assert(loaded.telegramToken === 'test_token', 'Breakthrough_Webhook', 'Webhook configuration persisted and retrieved');
+    assert(loaded.discordWebhookUrl === 'https://discord.com/api/webhooks/test', 'Breakthrough_Webhook', 'Discord webhook URL persisted');
+  }
+
+  // =========================================================================
+  // 22. SUMMARY OF TEST SUITE RESULTS
   // =========================================================================
   console.log('\n===============================================================');
   const total = testResults.length;

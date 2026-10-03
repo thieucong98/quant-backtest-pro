@@ -8,7 +8,7 @@
 
 ## 🎯 Executive Summary & Navigation Index
 
-This document provides a single source of truth for all **58 features across 9 core architectural modules** in **QuantBacktest Pro**.
+This document provides a single source of truth for all **63 features across 10 core architectural modules** in **QuantBacktest Pro**.
 
 | Module Code | Module Name | Features Count | Primary Source Components |
 | :--- | :--- | :---: | :--- |
@@ -21,6 +21,7 @@ This document provides a single source of truth for all **58 features across 9 c
 | **`F-ANL`** | [7. Institutional Analytics & Monte Carlo Risk Engine](#7-institutional-analytics--monte-carlo-risk-engine-f-anl) | 5 | `src/components/panels/AnalyticsDashboardModal.tsx`, `src/engine/analytics.ts` |
 | **`F-SYS`** | [8. Live MT5 Broker, Cloud Tunnel & System Infrastructure](#8-live-mt5-broker-cloud-tunnel--system-infrastructure-f-sys) | 6 | `src/components/panels/BrokerConnectionModal.tsx`, `src/components/panels/TunnelModal.tsx`, `src/components/panels/SessionManagerModal.tsx` |
 | **`F-SMC`** | [9. Smart Money Concepts & AI Copilot Engine](#9-smart-money-concepts--ai-copilot-engine-f-smc) | 10 | `src/engine/smc/smcEngine.ts`, `src/components/chart/AICopilotHUD.tsx`, `src/security/aesVault.ts` |
+| **`F-BRK`** | [10. 5 Breakthrough Upgrades Suite (v2.2)](#10-5-breakthrough-upgrades-suite-v22-f-brk) | 5 | `src/engine/aiStreamingGenerator.ts`, `src/engine/visualBlockCompiler.ts`, `src/engine/aiTradeAutopsy.ts`, `src/engine/monteCarloEngine.ts`, `src/engine/signalWebhookDispatcher.ts` |
 
 ---
 
@@ -641,6 +642,64 @@ This document provides a single source of truth for all **58 features across 9 c
 | `F-SMC-08` | MTF Trend Matrix Widget | SMC Interface | Multi-Timeframe | ✅ PASS | Suite 18: SMC Worker Sync Protocol |
 | `F-SMC-09` | Action Plan Validator | SMC Governance | Institutional Rule | ✅ PASS | Suite 19: ActionPlanValidator Tests |
 | `F-SMC-10` | Secure Key Vault AES-GCM | Security | Web Crypto FIPS | ✅ PASS | `tests/security/aesVault.test.ts` (22 tests) |
+| `F-BRK-01` | Real-Time SSE Streaming Strategy Generator | Algorithmic AI | SSE Token Stream | ✅ PASS | Suite 21: AI Streaming Generator |
+| `F-BRK-02` | Visual Block Strategy Builder (No-Code) | Algorithmic AI | AST Compiler | ✅ PASS | Suite 21: Visual Block Compiler |
+| `F-BRK-03` | AI Trade Post-Mortem & Autopsy | Analytics / Forensic | Root Cause ML | ✅ PASS | Suite 21: Trade Autopsy Engine |
+| `F-BRK-04` | Prop Firm Pass Probability Monte Carlo | Analytics / Risk | 1,000-Path Sim | ✅ PASS | Suite 21: Monte Carlo Simulation |
+| `F-BRK-05` | Real-Time Signal Webhook Dispatcher | Infrastructure | Telegram/Discord | ✅ PASS | Suite 21: Webhook Dispatcher |
+
+---
+
+## 10. 5 Breakthrough Upgrades Suite (v2.2) (`F-BRK`)
+
+### Summary Table
+| ID | Feature Technical Name | UI Display Name (EN / VI) | UI Navigation Path | Source Code Path |
+| :--- | :--- | :--- | :--- | :--- |
+| `F-BRK-01` | Real-Time SSE Streaming Strategy Generator | `AI Real-Time Strategy Stream` / `Sinh Chiến Lược AI Streaming Thời Gian Thực` | Header ➔ AI Strategy Studio ➔ Studio Tab | `src/engine/aiStreamingGenerator.ts`, `src/components/panels/AIStrategyModal.tsx` |
+| `F-BRK-02` | Visual Block Strategy Builder | `Visual Builder (No-Code)` / `Bộ Lắp Ghép Khối Trực Quan` | Header ➔ AI Strategy Studio ➔ Visual Builder Tab | `src/engine/visualBlockCompiler.ts`, `src/components/panels/VisualStrategyBuilderModal.tsx` |
+| `F-BRK-03` | AI Trade Post-Mortem & Autopsy | `AI Trade Autopsy` / `Khám Nghiệm Lệnh Thua` | Bottom Panel ➔ Closed Positions ➔ Losing Trade ➔ Click `AI Autopsy` | `src/engine/aiTradeAutopsy.ts`, `src/components/panels/AITradeAutopsyModal.tsx` |
+| `F-BRK-04` | Prop Firm Pass Probability Monte Carlo | `Prop Firm Pass Probability` / `Điểm Xác Suất Vượt Quỹ Prop Firm` | Header ➔ AI Strategy Studio ➔ Optimizer Tab ➔ Best Setup Card | `src/engine/monteCarloEngine.ts`, `src/components/panels/AIStrategyModal.tsx` |
+| `F-BRK-05` | Real-Time Signal Webhook Dispatcher | `Signal Webhook Dispatcher` / `Bộ Bắn Tín Hiệu Webhook Đa Kênh` | Header ➔ AI Strategy Studio ➔ Webhooks Tab | `src/engine/signalWebhookDispatcher.ts`, `src/components/panels/SignalWebhookSettingsTab.tsx` |
+
+### Detailed Specification & QA Checklist
+
+#### `F-BRK-01` - Real-Time SSE Streaming Strategy Generator & CoT Terminal
+- **UI Navigation:** Click `AI Strategy Studio` on Header ➔ Studio Tab ➔ Enter natural language prompt ➔ Click `Generate Strategy`.
+- **Functionality:** Streams tokens with live speed telemetry (tokens/sec), parses `<think>...</think>` into interactive Chain-of-Thought terminal, and includes live Cancel button.
+- **QA Verification:**
+  1. Trigger generation -> CoT terminal appears displaying real-time reasoning and code deltas.
+  2. Verify tokens/sec badge updates dynamically.
+  3. Click `Stop Generation` -> Stream aborts cleanly without UI freezes.
+
+#### `F-BRK-02` - Visual Block Strategy Builder (No-Code Quant Composer)
+- **UI Navigation:** Click `AI Strategy Studio` ➔ Switch to `Visual Builder` Tab.
+- **Functionality:** No-code visual rule block composer with trigger selectors (RSI, EMA, SMC Order Block), comparison operators, and SL/TP inputs. Compiles bidirectionally to/from JavaScript sandbox code.
+- **QA Verification:**
+  1. Add new condition block -> Set RSI < 30 and Action BUY.
+  2. Switch to Code Preview -> Generated `onCandle` JavaScript function reflects block logic.
+  3. Click `Load into AI Studio` -> Strategy transfers directly into Sandbox editor.
+
+#### `F-BRK-03` - AI Trade Post-Mortem & Diagnostic Autopsy
+- **UI Navigation:** Bottom dock ➔ `Positions` tab ➔ `Closed Positions` subtab ➔ Locate any trade with negative PnL ➔ Click `AI Autopsy` button.
+- **Functionality:** Deep forensic diagnosis extracting trade blackbox telemetry, computing 0-100 Discipline score, classifying into 5 root causes (News Collision, Counter HTF Trend, FOMO Chase, SL Management, Probabilistic Variance), and generating quantitative prescriptions.
+- **QA Verification:**
+  1. Click `AI Autopsy` on losing trade -> Forensic modal opens instantly.
+  2. Verify Discipline score gauge, Root Cause badge, and prescription checklist render accurately.
+
+#### `F-BRK-04` - Prop Firm Pass Probability & 1,000-Path Monte Carlo Stress Testing
+- **UI Navigation:** Click `AI Strategy Studio` ➔ `Optimizer` Tab ➔ Run SL/TP Grid Optimization ➔ Inspect `Best Overall Setup` card.
+- **Functionality:** 1,000-iteration bootstrap Monte Carlo simulation evaluating prop firm challenge constraints (10% profit target, 5% max daily loss, 10% max overall drawdown) and assigning star ratings (`ELITE`, `SOLID`, `MODERATE`, `HIGH_RISK`).
+- **QA Verification:**
+  1. Run optimizer on at least 10 bars -> Best setup card renders `Prop Firm Pass Probability` badge.
+  2. Inspect Pass Target Rate, Daily Loss Breach Risk, and 1,000-Path Median balance.
+
+#### `F-BRK-05` - Real-Time Multi-Channel Signal Webhook Dispatcher
+- **UI Navigation:** Click `AI Strategy Studio` ➔ `Webhooks` Tab.
+- **Functionality:** Dispatches instant trade execution alerts with formatted Markdown embed to Telegram Bot API and Discord Webhooks, with chart canvas snapshot attachment.
+- **QA Verification:**
+  1. Enter Telegram Token + Chat ID or Discord Webhook URL.
+  2. Click `Test Webhook Ping` -> Verified green success toast.
+  3. Toggle `DISPATCHER ON` -> Executing market or algorithmic order fires webhook payload asynchronously.
 
 ---
 

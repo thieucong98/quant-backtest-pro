@@ -970,4 +970,71 @@ export interface TranslationDict {
   bridgeResetCircuitBreaker: string;
   bridgePropShieldActive: string;
   bridgeWebhookActive: string;
+
+  // --- 5 Breakthrough Upgrades (v2.2) ---
+  // 1. Streaming Generator & CoT Terminal
+  streamingGeneratorTitle: string;
+  streamingCotTerminal: string;
+  streamingStopBtn: string;
+  streamingTokensSec: string;
+  streamingStatusGenerating: string;
+  streamingStatusDone: string;
+  streamingStatusCancelled: string;
+  streamingThinking: string;
+
+  // 2. Visual Block Strategy Builder
+  visualBuilderTitle: string;
+  visualBuilderSubtitle: string;
+  visualBuilderTab: string;
+  visualAddCondition: string;
+  visualAddAction: string;
+  visualCompileToJs: string;
+  visualCompiledSuccess: string;
+  visualBlockTrigger: string;
+  visualBlockOperator: string;
+  visualBlockAction: string;
+  visualBlockRsiOversold: string;
+  visualBlockRsiOverbought: string;
+  visualBlockEmaBullCross: string;
+  visualBlockEmaBearCross: string;
+  visualBlockSmcObBuy: string;
+  visualBlockSmcObSell: string;
+  visualBlockActionBuy: string;
+  visualBlockActionSell: string;
+
+  // 3. AI Trade Post-Mortem & Diagnostic Autopsy
+  autopsyTitle: string;
+  autopsySubtitle: string;
+  autopsyBtn: string;
+  autopsyDisciplineScore: string;
+  autopsyRootCause: string;
+  autopsyMarketContext: string;
+  autopsyPrescription: string;
+  autopsyNewsImpact: string;
+  autopsyCounterTrend: string;
+  autopsyFomoRisk: string;
+  autopsySlMoved: string;
+  autopsyPerfectExecution: string;
+
+  // 4. Prop Firm Pass Score & Monte Carlo 1,000-Path
+  propFirmPassScore: string;
+  propFirmPassRate: string;
+  propFirmDailyLossRisk: string;
+  propFirmMaxDdRisk: string;
+  propFirmMonteCarloSims: string;
+  propFirmRatingElite: string;
+  propFirmRatingGood: string;
+  propFirmRatingRisky: string;
+
+  // 5. Real-Time Webhook Signal Dispatcher
+  webhookSettingsTitle: string;
+  webhookTelegramToken: string;
+  webhookTelegramChatId: string;
+  webhookDiscordUrl: string;
+  webhookTestPing: string;
+  webhookPingSuccess: string;
+  webhookPingFailed: string;
+  webhookAutoDispatch: string;
+  webhookAttachSnapshot: string;
+  webhookTab: string;
 }
