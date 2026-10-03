@@ -201,10 +201,16 @@ This document provides a single source of truth for all **58 features across 9 c
 
 ### Detailed Specification & QA Checklist
 
-#### `F-OMS-01` - Quick Trade Floating Dock
-- **UI Navigation:** Top-left floating panel. Ultra-compact 28px TradingView-style execution dock: `BUY` (Emerald), `SELL` (Rose), inline Lot stepper, SL/TP toggle chips, and Risk/R:R Popover (`[⚖️]`).
-- **Functionality:** 1-click execution with Ask/Bid spread calculation, auto SL/TP placement, on-demand risk parameters popover (lot presets, R:R multipliers 1:1.5 - 1:5, pip adjustments), and progressive responsive collapse (compact pill on screens < 1024px).
-- **QA Verification:** Set Auto SL = 15, Auto TP = 30 -> Click BUY -> Position opens immediately with R:R = 1:2 on chart canvas and in Open Positions tab. Toggle `[⚖️]` to adjust lot presets and R:R ratios cleanly without obstructing chart candles.
+#### `F-OMS-01` - Adaptive Quick Trade Execution Suite
+- **UI Navigation:** Top-left floating panel (Desktop/Tablet) & Bottom-anchored execution bar (Mobile).
+  - **Desktop/Tablet:** Ultra-compact 28px TradingView-style execution dock: `BUY` (Emerald), `LOT Stepper`, `SELL` (Rose), inline SL/TP toggle chips, and Risk/R:R Popover (`[⚖️]`). When collapsed, minimizes to atomic duo pill `[BUY Price | Lot | SELL Price]` retaining direct 1-click execution for both sides.
+  - **Mobile (< 640px):** Dedicated thumb-friendly `MobileQuickTradeBar` anchored above Replay Bar: Large Emerald `BUY [Ask]` (42%), Center Lot Stepper (16%), Large Rose `SELL [Bid]` (42%), with live spread and auto SL/TP chips.
+  - **Secondary Assistant Coordination:** `AssistantHubFlyout` consolidates Bot HUD, Copilot, MTF Matrix, and Prop Firm on screens < 2xl into a single `[✨ AI Assistants]` badge, guaranteeing zero overlap with trading execution.
+- **Functionality:** 1-click execution with Ask/Bid spread calculation, auto SL/TP placement, on-demand risk parameters popover (lot presets, R:R multipliers 1:1.5 - 1:5, pip adjustments).
+- **QA Verification:**
+  1. Desktop: Place BUY/SELL with 1-click -> Orders execute immediately with visual SL/TP lines on chart canvas.
+  2. Mobile (375px): Bottom execution bar displays large thumb targets for BUY/SELL/LOT with zero overlap from chart controls.
+  3. Collapse test: Minimize top dock -> Mini duo pill preserves immediate 1-click BUY and SELL capability.
 
 #### `F-OMS-02` - Advanced Order Entry Modal
 - **UI Navigation:** Header `Order Entry` button.

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowUpRight, ArrowDownRight, Minus, Plus, Scale, ChevronUp } from 'lucide-react';
+import { ArrowUpRight, ArrowDownRight, Minus, Plus, Scale, ChevronUp, ChevronDown } from 'lucide-react';
 import { Candle, InstrumentSpec } from '../../types/market';
 import { AccountState } from '../../types/order';
 import { LiveTickUpdate } from '../../types/broker';
@@ -45,19 +45,7 @@ export const QuickTradeDock: React.FC<QuickTradeDockProps> = ({
   const [useAutoTP, setUseAutoTP] = useState<boolean>(true);
   const [autoTPPips, setAutoTPPips] = useState<number>(40);
   const [showSettings, setShowSettings] = useState<boolean>(false);
-  const [isQuickDockOpen, setIsQuickDockOpen] = useState<boolean>(
-    typeof window !== 'undefined' ? window.innerWidth >= 1024 : true
-  );
-
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth < 1024) {
-        setIsQuickDockOpen(false);
-      }
-    };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  const [isQuickDockOpen, setIsQuickDockOpen] = useState<boolean>(true);
 
   const pipDollarValue = currentCandle
     ? MultiAssetMathEngine.calculatePipValue(instrument, quickLot, currentBid)
@@ -128,7 +116,7 @@ export const QuickTradeDock: React.FC<QuickTradeDockProps> = ({
   };
 
   return (
-    <div className="absolute top-2 left-2 z-20 flex flex-col gap-1.5 pointer-events-auto font-mono">
+    <div className="relative z-20 flex flex-col gap-1.5 pointer-events-auto font-mono">
       {/* LIVE STREAM STATUS RIBBON */}
       {isLiveActive && (
         <div className="bg-rose-950/90 border border-rose-500/50 backdrop-blur-md px-2 py-0.5 rounded-lg flex items-center gap-1.5 text-[10px] font-mono text-rose-200 shadow-xl max-w-fit animate-pulse">
@@ -384,15 +372,41 @@ export const QuickTradeDock: React.FC<QuickTradeDockProps> = ({
             )}
           </div>
         ) : (
-          <button
-            onClick={() => setIsQuickDockOpen(true)}
-            className="bg-[#101522]/90 border border-slate-800/90 px-2.5 py-1 rounded-xl flex items-center gap-1.5 shadow-xl backdrop-blur-md hover:bg-slate-800 text-xs font-bold font-mono text-slate-200 transition-all hover:scale-105"
-            title={t.expandQuickTradeTooltip}
-          >
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-[11px]">{t.quickTrade}</span>
-            <span className="text-slate-400 font-normal text-[10px]">({quickLot}L)</span>
-          </button>
+          <div className="bg-[#101522]/95 border border-slate-800/90 rounded-xl p-1 shadow-2xl backdrop-blur-md flex items-center gap-1 font-mono text-xs animate-in fade-in">
+            {/* 1-Click Mini BUY */}
+            <button
+              onClick={() => handleQuickTrade('BUY')}
+              className="px-2 py-0.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 text-white font-bold rounded-lg text-[10px] flex items-center gap-0.5 active:scale-95 transition-all shadow-xs"
+              title={t.buyAtAskTooltip.replace('{price}', currentAsk.toFixed(instrument.digits))}
+            >
+              <ArrowUpRight className="w-3 h-3" />
+              <span>{currentAsk.toFixed(instrument.digits)}</span>
+            </button>
+
+            {/* Mini Lot indicator */}
+            <span className="px-1 text-[10px] font-bold text-slate-300">
+              {quickLot}L
+            </span>
+
+            {/* 1-Click Mini SELL */}
+            <button
+              onClick={() => handleQuickTrade('SELL')}
+              className="px-2 py-0.5 bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 text-white font-bold rounded-lg text-[10px] flex items-center gap-0.5 active:scale-95 transition-all shadow-xs"
+              title={t.sellAtBidTooltip.replace('{price}', currentBid.toFixed(instrument.digits))}
+            >
+              <ArrowDownRight className="w-3 h-3" />
+              <span>{currentBid.toFixed(instrument.digits)}</span>
+            </button>
+
+            {/* Expand Toggle */}
+            <button
+              onClick={() => setIsQuickDockOpen(true)}
+              className="p-1 text-slate-400 hover:text-white"
+              title={t.expandQuickTradeTooltip}
+            >
+              <ChevronDown className="w-3.5 h-3.5" />
+            </button>
+          </div>
         )}
       </div>
     </div>
