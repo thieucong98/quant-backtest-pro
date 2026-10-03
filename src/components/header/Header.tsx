@@ -600,22 +600,16 @@ export const Header: React.FC = () => {
           <div className="hidden xl:flex items-center gap-1.5 shrink-0">
             {/* AI Strategy Studio Button */}
             <button
-              onClick={() => {
-                if (!isAuthenticated) {
-                  setAuthModalOpen(true, 'login');
-                  return;
-                }
-                setAIModalOpen(true);
-              }}
+              onClick={() => setAIModalOpen(true)}
               className={`flex items-center gap-1.5 px-2 2xl:px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition-all active:scale-95 shrink-0 ${
                 autoTradingEnabled
                   ? 'bg-purple-950/90 border-purple-500 text-purple-200 shadow-lg shadow-purple-500/25 animate-pulse'
                   : 'bg-slate-900/90 border-slate-700/80 text-slate-300 hover:bg-slate-800'
               }`}
-              title="AI Strategy Studio"
+              title={t.aiStudioTitle}
             >
               <BrainCircuit className="w-3.5 h-3.5 text-purple-400" />
-              <span className="hidden 2xl:inline">AI Studio</span>
+              <span className="hidden 2xl:inline">{t.aiStudio}</span>
               {autoTradingEnabled && (
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
               )}
@@ -1038,16 +1032,12 @@ export const Header: React.FC = () => {
                 <button
                   onClick={() => {
                     setIsMobileDrawerOpen(false);
-                    if (!isAuthenticated) {
-                      setAuthModalOpen(true, 'login');
-                      return;
-                    }
                     setAIModalOpen(true);
                   }}
                   className="w-full px-3 py-2 rounded-lg flex items-center gap-2.5 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
                 >
                   <BrainCircuit className="w-4 h-4 text-purple-400" />
-                  <span>AI Strategy Studio</span>
+                  <span>{t.aiStudio}</span>
                 </button>
 
                 <button
