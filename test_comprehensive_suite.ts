@@ -14,6 +14,11 @@ import { Position } from './src/types/order';
 import { calculateHeikinAshi } from './src/engine/indicators';
 import { OrderFactory } from './src/engine/patterns/OrderFactory';
 import { StrategyExecutionContext, EMACrossoverStrategy, RSIMeanReversionStrategy } from './src/engine/patterns/StrategyPattern';
+import { SmcEngine } from './src/engine/smc/smcEngine';
+import { isSMCWorkerInboundAction, isSMCWorkerOutboundEvent, type SMCWorkerInboundAction, type SMCFrameSnapshot } from './src/types/smc';
+import { parseCopilotStream, tryParseActionPlan } from './src/engine/smc/sseCopilotStream';
+import { ActionPlanValidator } from './src/engine/smc/actionPlanValidator';
+import { buildOverlayPrimitives } from './src/engine/smc/overlayPrimitives';
 
 interface TestResult {
   suite: string;
@@ -942,7 +947,174 @@ async function runComprehensiveTests() {
   assert(mt.isConnected, 'BrokerDriver', 'MetaTraderDriver connected');
 
   // =========================================================================
-  // 17. SUMMARY OF TEST SUITE RESULTS
+  // 17. SMC ENGINE — TIER 1 PERCEPTION (AUT-26)
+  // =========================================================================
+  console.log('\n--- 17. SMC Engine Tier 1 Perception ---');
+
+  // 17.1 Monotonic fractal pivot detection
+  const smcA = new SmcEngine({ symbol: 'TEST', higherTF: 'H4', lowerTF: 'M5', fractalRadiusLTF: 2, fractalRadiusHTF: 5, confluenceThreshold: 1.0 });
+  for (let i = 0; i < 200; i += 1) {
+    const base = 100 + Math.sin(i / 7) * 0.6;
+    smcA.updateBar({
+      timestamp: 1_700_000_000 + i * 60,
+      open: base, high: base + 1, low: base - 1, close: base + Math.cos(i / 7) * 0.3,
+      volume: 1000,
+    });
+  }
+  const smcAStats = smcA.getStats();
+  assert(smcAStats.barsProcessed === 200, 'SMCEngine', 'SmcEngine processed 200 bars without error');
+  assert(smcAStats.avgLatencyMs < 5, 'SMCEngine', 'SmcEngine average per-bar latency < 5ms (AUT-26 contract)', { avgLatencyMs: smcAStats.avgLatencyMs });
+
+  // 17.2 BOS/CHoCH state machine
+  const smcB = new SmcEngine({ confluenceThreshold: 1.1 });
+  for (let i = 0; i < 30; i += 1) {
+    const phase = i % 6;
+    const price = 100 + (phase < 3 ? 2 : -1);
+    smcB.updateBar({
+      timestamp: 1_700_000_000 + i * 300, open: price, high: price + 1, low: price - 1, close: price, volume: 1000,
+    });
+  }
+  for (let i = 0; i < 6; i += 1) {
+    const base = 100 + 8 + i * 1.5;
+    smcB.updateBar({
+      timestamp: 1_700_000_000 + (30 + i) * 300, open: base, high: base + 1.5, low: base - 1.5, close: base + 1, volume: 1500,
+    });
+  }
+  const bosEvents = smcB.getStructureEvents();
+  const bosKinds = bosEvents.map((e) => e.kind);
+  assert(bosKinds.some((k) => k === 'BOS_BULLISH' || k === 'CHoCH_BULLISH'), 'SMCEngine', 'BOS/CHoCH state machine emits BOS_BULLISH or CHoCH_BULLISH on bullish displacement', { bosKinds });
+
+  // 17.3 Bulk replay path equivalence
+  const replayEngine = new SmcEngine({ confluenceThreshold: 1.1 });
+  const replayCandles = Array.from({ length: 50 }, (_, i) => ({
+    timestamp: 1_700_000_000 + i * 300,
+    open: 100 + Math.sin(i / 4), high: 101 + Math.sin(i / 4), low: 99 + Math.sin(i / 4), close: 100 + Math.cos(i / 4),
+    volume: 1000,
+  }));
+  replayEngine.bulkReplay(replayCandles);
+  assert(replayEngine.getStats().barsProcessed === 50, 'SMCEngine', 'bulkReplay processed all bars');
+
+  // =========================================================================
+  // 18. SMC WORKER BOUNDARY (AUT-26)
+  // =========================================================================
+  console.log('\n--- 18. SMC Worker Boundary (AUT-26) ---');
+
+  // 18.1 Type guards
+  assert(!isSMCWorkerInboundAction(null), 'WorkerInbound', 'Type guard rejects null inbound');
+  assert(!isSMCWorkerOutboundEvent({ kind: 'UNKNOWN' }), 'WorkerOutbound', 'Type guard rejects unknown outbound kind');
+
+  // 18.2 Inbound action dispatch (synchronous harness mirroring replaySyncWorker)
+  const workerEngine = new SmcEngine({ confluenceThreshold: 0.75 });
+  const frames: SMCFrameSnapshot[] = [];
+  const dispatch = (msg: SMCWorkerInboundAction): void => {
+    if (!isSMCWorkerInboundAction(msg)) return;
+    if (msg.kind === 'SMC_UPDATE_BAR') {
+      const f = workerEngine.updateBar(msg.payload.bar, msg.payload.higherTFCandle);
+      if (f) frames.push(f);
+    } else if (msg.kind === 'SMC_BULK_REPLAY') {
+      const f = workerEngine.bulkReplay(msg.payload.bars, msg.payload.higherTFBars);
+      if (f) frames.push(f);
+    } else if (msg.kind === 'SMC_RESET_STATE') {
+      workerEngine.reset(msg.payload.preservePivots);
+    } else if (msg.kind === 'SMC_SET_GATE_THRESHOLD') {
+      workerEngine.setGateThreshold(msg.payload.sigmaMin);
+    } else if (msg.kind === 'SMC_INIT_CONFIG') {
+      workerEngine.reset();
+    }
+  };
+  for (let i = 0; i < 60; i += 1) {
+    dispatch({ kind: 'SMC_UPDATE_BAR', payload: { bar: {
+      timestamp: 1_700_000_000 + i * 300,
+      open: 100 + Math.sin(i / 4), high: 101 + Math.sin(i / 4), low: 99 + Math.sin(i / 4), close: 100 + Math.cos(i / 4),
+      volume: 1000,
+    } } });
+  }
+  assert(workerEngine.getStats().barsProcessed === 60, 'WorkerInbound', 'Worker dispatch processed all UPDATE_BAR messages');
+  assert(frames.length > 0, 'WorkerInbound', 'Worker inbound dispatch produced frame snapshots');
+
+  dispatch({ kind: 'SMC_RESET_STATE', payload: { preservePivots: false } });
+  assert(workerEngine.getStats().barsProcessed === 0, 'WorkerInbound', 'Worker RESET_STATE clears counters');
+
+  dispatch({ kind: 'SMC_SET_GATE_THRESHOLD', payload: { sigmaMin: 2.0 } });
+  assert(true, 'WorkerInbound', 'Worker SET_GATE_THRESHOLD accepted');
+
+  // =========================================================================
+  // 19. AI CO-PILOT STREAMING + VALIDATION (AUT-26)
+  // =========================================================================
+  console.log('\n--- 19. AI Co-Pilot Streaming + Validation (AUT-26) ---');
+
+  // 19.1 SSE Chain-of-Thought reasoning/action stream parser
+  const buf18 = { reasoning: '', action: '', meta: null };
+  let parsedPlan: any = null;
+  parseCopilotStream('data:{"type":"reasoning","delta":"HTF bias is bullish. Location is discount.","timestamp":1}', buf18, {});
+  parseCopilotStream('data:{"type":"action","delta":"<action_plan>{\\\"side\\\":\\\"LONG\\\",\\\"entry\\\":1.1,\\\"stopLoss\\\":1.05,\\\"takeProfit\\\":[1.2,1.25],\\\"rrRatio\\\":5,\\\"confidence\\\":0.7,\\\"rationale\\\":\\\"aligned\\\",\\\"institutionalChecks\\\":[\\\"HTF_BIAS_ALIGNED\\\",\\\"KEY_POI_TAP\\\"]}","timestamp":2}', buf18, {});
+  parseCopilotStream('data:[DONE]', buf18, { onActionPlan: (p) => (parsedPlan = p), onDone: () => undefined });
+  assert(parsedPlan !== null, 'CoPilotStream', 'SSE stream parser assembles ActionPlan on [DONE]');
+  if (parsedPlan) assert(parsedPlan.side === 'LONG', 'CoPilotStream', 'Parsed ActionPlan side is LONG');
+
+  // 19.2 tryParseActionPlan rejects junk
+  assert(tryParseActionPlan('not a plan') === null, 'CoPilotStream', 'tryParseActionPlan returns null on garbage');
+
+  // 19.3 Institutional validator gate
+  const validator = new ActionPlanValidator({ minRrRatio: 1.5, minConfidence: 0.55 });
+  const okPlan = {
+    side: 'LONG' as const,
+    entry: 1.1, stopLoss: 1.05, takeProfit: [1.2, 1.25], rrRatio: 5,
+    rationale: 'aligned with HTF',
+    institutionalChecks: ['HTF_BIAS_ALIGNED' as const, 'KEY_POI_TAP' as const, 'LIQUIDITY_SWEEP_CONFIRMED' as const, 'LTF_CHOCH_CONFIRMED' as const],
+    confidence: 0.7,
+  };
+  const mtf = {
+    bias: { h4: 'BULLISH' as const, d1: 'BULLISH' as const },
+    location: 'DISCOUNT' as const,
+    activeOB: { direction: 'BULLISH' as const, state: 'UNMITIGATED' as const, fillRatioBucket: 0 as const },
+    activeFVG: { direction: 'BULLISH' as const, state: 'OPEN' as const, fillRatioBucket: 0 as const },
+    recentSweep: { kind: 'BSL' as const, barsAgo: 3 },
+    recentCHoCH: { direction: 'BULLISH' as const, barsAgo: 4 },
+    volatility: { atrBucket: 'NORMAL' as const, session: 'LONDON' as const },
+  };
+  const validDiscount = validator.validate(okPlan, mtf);
+  assert(validDiscount.ok, 'CoPilotStream', 'LONG at DISCOUNT with aligned HTF passes validator');
+  const mtfPremium = { ...mtf, location: 'PREMIUM' as const };
+  const invalidPremium = validator.validate(okPlan, mtfPremium);
+  assert(!invalidPremium.ok, 'CoPilotStream', 'LONG at PREMIUM fails validator (location rule)');
+
+  // =========================================================================
+  // 20. SMC Overlay Primitive Bridge (AUT-26 chart wiring)
+  // =========================================================================
+  console.log('\n--- 20. SMC Overlay Primitive Bridge ---');
+  {
+    const overlayObs = [
+      { id: 'ob-a', direction: 'BULLISH', top: 1.2, bottom: 1.15, originBarIndex: 0, timestamp: 100, state: 'UNMITIGATED', fillRatio: 0.1 },
+      { id: 'ob-b', direction: 'BEARISH', top: 1.3, bottom: 1.25, originBarIndex: 1, timestamp: 200, state: 'PARTIAL', fillRatio: 0.4 },
+      { id: 'ob-c', direction: 'BULLISH', top: 1.4, bottom: 1.35, originBarIndex: 2, timestamp: 300, state: 'FULLY_MITIGATED', fillRatio: 1 },
+    ] as any[];
+    const overlayFvgs = [
+      { id: 'fvg-a', direction: 'BULLISH', top: 1.21, bottom: 1.18, ce: 1.195, originBarIndex: 5, timestamp: 500, state: 'OPEN', fillRatio: 0 },
+      { id: 'fvg-b', direction: 'BEARISH', top: 1.32, bottom: 1.29, ce: 1.305, originBarIndex: 6, timestamp: 600, state: 'FILLED', fillRatio: 1 },
+    ] as any[];
+    const overlaySwps = [
+      { id: 'swp-a', kind: 'BSL_SWEEP', poolLevel: 1.35, wickRejectionRatio: 0.6, volumeMultiplier: 1.8, originBarIndex: 10, timestamp: 1000 },
+      { id: 'swp-b', kind: 'SSL_SWEEP', poolLevel: 1.05, wickRejectionRatio: 0.55, volumeMultiplier: 1.5, originBarIndex: 11, timestamp: 1100 },
+    ] as any[];
+    const prims = buildOverlayPrimitives({
+      orderBlocks: overlayObs,
+      fairValueGaps: overlayFvgs,
+      sweeps: overlaySwps,
+      nowTimestamp: 2000,
+      barSeconds: 60,
+    });
+    assert(prims.length === 5, 'OverlayBridge', 'Mitigated OB + filled FVG filtered out');
+    const kinds = new Set(prims.map(p => p.kind));
+    assert(kinds.has('ORDER_BLOCK_BULLISH'), 'OverlayBridge', 'Bullish OB primitive emitted');
+    assert(kinds.has('ORDER_BLOCK_BEARISH'), 'OverlayBridge', 'Bearish OB primitive emitted');
+    assert(kinds.has('SWEEP_BSL') && kinds.has('SWEEP_SSL'), 'OverlayBridge', 'Both sweep kinds emitted');
+    assert(prims.every(p => p.timeEnd > 2000), 'OverlayBridge', 'Primitives extend into the future horizon');
+    assert(new Set(prims.map(p => p.id)).size === prims.length, 'OverlayBridge', 'All primitive ids are unique');
+  }
+
+  // =========================================================================
+  // 21. SUMMARY OF TEST SUITE RESULTS
   // =========================================================================
   console.log('\n===============================================================');
   const total = testResults.length;

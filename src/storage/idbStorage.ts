@@ -138,3 +138,4 @@ class IDBStorageAdapter {
 }
 
 export const idbStorage = new IDBStorageAdapter();
+export { IDBStorageAdapter };
