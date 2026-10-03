@@ -91,9 +91,10 @@ This document provides a single source of truth for all **58 features across 9 c
 
 #### `F-HDR-08` - User Profile & Institutional Authentication
 - **UI Navigation:** Click user avatar or `Login` / `Profile` button on the far right of the header.
-- **Functionality:** Supports login/registration with JWT authentication, role verification (`INSTITUTIONAL`), and profile settings.
+- **Functionality:** Supports login/registration with JWT authentication, role verification (`INSTITUTIONAL`), resilient offline/demo fallback mode with zero network error blocking, and profile settings.
 - **QA Verification:**
-  1. Log in with `institutional-user@quantbacktest.pro` -> Badge updates to `INSTITUTIONAL`.
+  1. Log in with `admin@quantbacktest.pro` or click 1-Click "Enter Now" (Vào Ngay) default card -> Instant login with `INSTITUTIONAL` session and full profile badge.
+  2. Test in offline / standalone mode -> Seamless fallback without blocking network error banners.
 
 ---
 
@@ -201,9 +202,9 @@ This document provides a single source of truth for all **58 features across 9 c
 ### Detailed Specification & QA Checklist
 
 #### `F-OMS-01` - Quick Trade Floating Dock
-- **UI Navigation:** Top-left floating panel. Buttons: Large `BUY` (Blue) and `SELL` (Red), Lot Presets (`0.01`, `0.1`, `1.0`), Auto SL/TP pip inputs, Dynamic R:R ratio badge.
-- **Functionality:** 1-click execution with automatic Ask/Bid spread accounting and instant position opening.
-- **QA Verification:** Set Auto SL = 15, Auto TP = 30 -> Click BUY -> Position opens immediately with R:R = 1:2.
+- **UI Navigation:** Top-left floating panel. Ultra-compact 28px TradingView-style execution dock: `BUY` (Emerald), `SELL` (Rose), inline Lot stepper, SL/TP toggle chips, and Risk/R:R Popover (`[⚖️]`).
+- **Functionality:** 1-click execution with Ask/Bid spread calculation, auto SL/TP placement, on-demand risk parameters popover (lot presets, R:R multipliers 1:1.5 - 1:5, pip adjustments), and progressive responsive collapse (compact pill on screens < 1024px).
+- **QA Verification:** Set Auto SL = 15, Auto TP = 30 -> Click BUY -> Position opens immediately with R:R = 1:2 on chart canvas and in Open Positions tab. Toggle `[⚖️]` to adjust lot presets and R:R ratios cleanly without obstructing chart candles.
 
 #### `F-OMS-02` - Advanced Order Entry Modal
 - **UI Navigation:** Header `Order Entry` button.

@@ -69,9 +69,9 @@ export const DualChartView: React.FC = () => {
   return (
     <div className="relative w-full h-full flex flex-col bg-[#0b0e14] overflow-hidden select-none">
       {/* 1. Multi-Chart Floating Control Toolbar */}
-      <div className="absolute top-2 right-14 z-30 flex items-center gap-1.5 bg-[#121824]/90 backdrop-blur-md px-2.5 py-1.5 rounded-lg border border-[#1e293b]/70 shadow-xl text-xs">
+      <div className="absolute top-2 right-2 z-30 flex items-center gap-1.5 bg-[#101522]/90 backdrop-blur-md p-1 rounded-xl border border-slate-800/90 shadow-2xl text-xs">
         {/* Layout Switcher */}
-        <div className="flex items-center bg-[#0b0e14]/80 p-0.5 rounded-md border border-[#1e293b]/50">
+        <div className="flex items-center bg-[#0b0e14]/80 p-0.5 rounded-lg border border-slate-800/80">
           <button
             onClick={() => setLayout('SINGLE')}
             className={`p-1.5 rounded transition-all ${

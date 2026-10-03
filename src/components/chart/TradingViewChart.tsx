@@ -1230,9 +1230,9 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
       />
 
       {/* 2. TOP-RIGHT TRADING ASSISTANT DOCK & FLOATING PANELS */}
-      <div className="absolute top-12 sm:top-14 xl:top-3 right-2 sm:right-16 md:right-18 z-20 flex flex-col items-end gap-2 font-mono pointer-events-none">
+      <div className="absolute top-2 right-[96px] z-20 flex flex-col items-end gap-2 font-mono pointer-events-none">
         {/* DOCK BAR (Unified horizontal pill bar with 1-click toggles) */}
-        <div className="pointer-events-auto flex items-center flex-wrap justify-end gap-1.5 bg-[#101522]/90 backdrop-blur-md border border-slate-800/90 rounded-xl p-1 shadow-2xl">
+        <div className="pointer-events-auto flex items-center flex-nowrap justify-end gap-1.5 bg-[#101522]/90 backdrop-blur-md border border-slate-800/90 rounded-xl p-1 shadow-2xl">
           {/* AI BOT FLOATING HUD (If strategy active) */}
           <AIBotHUD />
 
@@ -1240,7 +1240,7 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
           <button
             type="button"
             onClick={() => setActiveAssistantPanel(curr => (curr === 'copilot' ? null : 'copilot'))}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono transition-all active:scale-95 ${
+            className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-mono transition-all active:scale-95 ${
               activeAssistantPanel === 'copilot'
                 ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/30'
                 : 'text-slate-300 hover:text-white hover:bg-slate-800/80'
@@ -1248,7 +1248,7 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
             title={t.apexCopilotTitle}
           >
             <BrainCircuit className={`w-3.5 h-3.5 ${activeAssistantPanel === 'copilot' ? 'text-white' : 'text-indigo-400'}`} />
-            <span className="text-[11px] font-bold">Copilot</span>
+            <span className="hidden xl:inline text-[11px] font-bold">Copilot</span>
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-xs shadow-emerald-400" />
           </button>
 
@@ -1256,7 +1256,7 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
           <button
             type="button"
             onClick={() => setActiveAssistantPanel(curr => (curr === 'mtf' ? null : 'mtf'))}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono transition-all active:scale-95 ${
+            className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-mono transition-all active:scale-95 ${
               activeAssistantPanel === 'mtf'
                 ? 'bg-sky-600 text-white font-bold shadow-md shadow-sky-600/30'
                 : 'text-slate-300 hover:text-white hover:bg-slate-800/80'
@@ -1264,7 +1264,7 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
             title={t.apexCopilotMtfTitle}
           >
             <Layers className={`w-3.5 h-3.5 ${activeAssistantPanel === 'mtf' ? 'text-white' : 'text-sky-400'}`} />
-            <span className="text-[11px] font-bold">MTF</span>
+            <span className="hidden xl:inline text-[11px] font-bold">MTF</span>
             {smcStream.mtf && (
               <span
                 className={`text-[10px] font-black ${
@@ -1285,7 +1285,7 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
             <button
               type="button"
               onClick={() => setActiveAssistantPanel(curr => (curr === 'propfirm' ? null : 'propfirm'))}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono transition-all active:scale-95 ${
+              className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-mono transition-all active:scale-95 ${
                 activeAssistantPanel === 'propfirm'
                   ? 'bg-amber-600 text-white font-bold shadow-md shadow-amber-600/30'
                   : 'text-slate-300 hover:text-white hover:bg-slate-800/80'
@@ -1293,7 +1293,7 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
               title={t.propFirmShieldTitle}
             >
               <Shield className={`w-3.5 h-3.5 ${activeAssistantPanel === 'propfirm' ? 'text-white' : 'text-amber-400'}`} />
-              <span className="text-[11px] font-bold">Prop Firm</span>
+              <span className="hidden xl:inline text-[11px] font-bold">Prop Firm</span>
             </button>
           )}
 

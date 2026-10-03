@@ -91,9 +91,10 @@ Tài liệu này là **nguồn thông tin chuẩn mực duy nhất (Single Sourc
 
 #### `F-HDR-08` - Hồ Sơ Người Dùng & Xác Thực
 - **Điều hướng:** Bấm nút Avatar / Tài khoản ở góc ngoài cùng bên phải Header.
-- **Chức năng:** Đăng nhập, đăng ký tài khoản, phân quyền hạng `INSTITUTIONAL`, quản lý khóa bảo mật.
+- **Chức năng:** Đăng nhập, đăng ký tài khoản, phân quyền hạng `INSTITUTIONAL`, cơ chế dự phòng offline/demo tự động không phụ thuộc máy chủ trung gian, quản lý khóa bảo mật.
 - **QA Checklist:**
-  1. Đăng nhập bằng `institutional-user@quantbacktest.pro` -> Huy hiệu `INSTITUTIONAL` xuất hiện trên Header.
+  1. Đăng nhập bằng `admin@quantbacktest.pro` hoặc bấm nút "Vào Ngay" tại thẻ tài khoản mặc định -> Đăng nhập thành công tức thì với phiên `INSTITUTIONAL` và huy hiệu PRO trên Header.
+  2. Thử nghiệm khi ngắt kết nối backend -> Cơ chế Fallback kích hoạt tự động, không chặn lỗi mạng Network Error.
 
 ---
 
@@ -201,9 +202,9 @@ Tài liệu này là **nguồn thông tin chuẩn mực duy nhất (Single Sourc
 ### Chi Tiết Kỹ Thuật & Tiêu Chí Kiểm Thử (QA Checklist)
 
 #### `F-OMS-01` - Bảng Lệnh Nhanh Quick Trade Dock
-- **Điều hướng:** Bảng nổi ở góc trên-trái biểu đồ. Nút lớn `BUY` (Xanh) và `SELL` (Đỏ), các mức lot mẫu (`0.01`, `0.1`, `1.0`), ô nhập SL/TP theo pips, huy hiệu tỷ lệ R:R tự động.
-- **Chức năng:** Khớp lệnh thị trường 1-click tức thì kèm chi phí chênh lệch giá Bid/Ask thực tế.
-- **QA Checklist:** Đặt Auto SL = 15 pips, Auto TP = 30 pips -> Bấm BUY -> Lệnh mở tức thì với tỷ lệ R:R = 1:2.
+- **Điều hướng:** Bảng nổi ở góc trên-trái biểu đồ. Thanh điều khiển siêu gọn 28px chuẩn TradingView: `BUY` (Xanh ngọc), `SELL` (Đỏ hồng), nút tăng giảm Lot nội tuyến, chip bật tắt SL/TP, và Popover quản lý rủi ro nâng cao (`[⚖️]`).
+- **Chức năng:** Khớp lệnh thị trường 1-click tức thì kèm chi phí spread, tự động gắn SL/TP, cửa sổ popover quản lý rủi ro theo yêu cầu (lot presets, tỷ lệ R:R từ 1:1.5 đến 1:5, bước nhảy pips), cùng cơ chế co gọn lũy tiến thông minh (tự động thu nhỏ thành pill 24px trên màn hình < 1024px).
+- **QA Checklist:** Đặt Auto SL = 15 pips, Auto TP = 30 pips -> Bấm BUY -> Lệnh mở tức thì với tỷ lệ R:R = 1:2 hiển thị đường SL/TP trực tiếp trên canvas biểu đồ và tab Vị Thế. Bấm icon `[⚖️]` để tùy chỉnh lot presets và tỷ lệ R:R mà không che khuất nến giá.
 
 #### `F-OMS-02` - Hộp Thoại Đặt Lệnh Nâng Cao (Order Entry Modal)
 - **Điều hướng:** Bấm nút `Đặt Lệnh (Order Entry)` trên Header (hoặc phím tắt `B`/`S`).

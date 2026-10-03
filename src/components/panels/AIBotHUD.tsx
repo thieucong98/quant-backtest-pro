@@ -50,37 +50,41 @@ export const AIBotHUD: React.FC = () => {
   const isHoldingPosition = botOpenTrades.length > 0;
 
   return (
-    <div className="w-full flex justify-end font-sans select-none animate-in fade-in duration-200">
-      {/* MINIMIZED PILL VIEW */}
-      {isMinimized ? (
-        <div
-          onClick={() => setIsMinimized(false)}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#111622]/95 hover:bg-slate-900 border border-purple-500/40 shadow-xl backdrop-blur-md cursor-pointer transition-all hover:scale-[1.02] group"
-          title={t.botExpandInfoTooltip}
-        >
-          <div className="relative flex items-center justify-center">
-            <BrainCircuit className="w-4 h-4 text-purple-400" />
-            {autoTradingEnabled && (
-              <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-            )}
-          </div>
-          <span className="text-[11px] font-bold text-slate-200 font-mono truncate max-w-[120px]">
-            {activeStrategy.name}
-          </span>
-          <span
-            className={`text-[10px] font-bold font-mono px-1.5 py-0.2 rounded ${
-              botRealizedPnL >= 0
-                ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-500/40'
-                : 'bg-rose-950/80 text-rose-300 border border-rose-500/40'
-            }`}
-          >
-            {botRealizedPnL >= 0 ? '+' : ''}${botRealizedPnL.toFixed(1)}
-          </span>
-          <ChevronDown className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-200" />
+    <div className="relative inline-flex shrink-0 font-sans select-none animate-in fade-in duration-200">
+      {/* MINIMIZED INLINE PILL */}
+      <div
+        onClick={() => setIsMinimized(!isMinimized)}
+        className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono cursor-pointer transition-all active:scale-95 ${
+          !isMinimized
+            ? 'bg-purple-600 text-white font-bold shadow-md shadow-purple-600/30'
+            : 'text-slate-300 hover:text-white hover:bg-slate-800/80 bg-slate-900/60 border border-purple-500/30'
+        }`}
+        title={t.botExpandInfoTooltip}
+      >
+        <div className="relative flex items-center justify-center">
+          <BrainCircuit className={`w-3.5 h-3.5 ${!isMinimized ? 'text-white' : 'text-purple-400'}`} />
+          {autoTradingEnabled && (
+            <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+          )}
         </div>
-      ) : (
-        /* EXPANDED DETAILED HUD CARD */
-        <div className="w-[300px] rounded-xl bg-[#111622]/95 hover:bg-slate-950/95 border border-slate-700/80 shadow-2xl backdrop-blur-md overflow-hidden transition-all duration-200">
+        <span className="hidden md:inline text-[11px] font-bold truncate max-w-[80px] lg:max-w-[120px]">
+          {activeStrategy.name}
+        </span>
+        <span
+          className={`text-[10px] font-bold font-mono px-1 py-0.2 rounded ${
+            botRealizedPnL >= 0
+              ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-500/40'
+              : 'bg-rose-950/80 text-rose-300 border border-rose-500/40'
+          }`}
+        >
+          {botRealizedPnL >= 0 ? '+' : ''}${botRealizedPnL.toFixed(1)}
+        </span>
+        <ChevronDown className={`w-3 h-3 transition-transform ${!isMinimized ? 'rotate-180 text-white' : 'text-slate-400'}`} />
+      </div>
+
+      {/* EXPANDED DETAILED HUD CARD (FLOATING FLYOUT) */}
+      {!isMinimized && (
+        <div className="absolute top-9 right-0 z-50 w-[300px] rounded-xl bg-[#111622]/98 border border-slate-700/80 shadow-2xl backdrop-blur-md overflow-hidden animate-in fade-in zoom-in-95 duration-150">
           {/* HEADER */}
           <div className="px-3 py-2 bg-gradient-to-r from-purple-950/60 via-slate-900/80 to-indigo-950/60 border-b border-slate-800/80 flex items-center justify-between">
             <div className="flex items-center gap-2 overflow-hidden">
@@ -141,7 +145,7 @@ export const AIBotHUD: React.FC = () => {
                 }`}
               >
                 {autoTradingEnabled ? <Play className="w-2.5 h-2.5 fill-current" /> : <Pause className="w-2.5 h-2.5" />}
-                <span>{autoTradingEnabled ? 'ON' : 'OFF'}</span>
+                <span>{autoTradingEnabled ? t.btnOn : t.btnOff}</span>
               </button>
             </div>
 
