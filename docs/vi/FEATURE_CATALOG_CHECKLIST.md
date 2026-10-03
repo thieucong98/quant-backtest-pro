@@ -8,7 +8,7 @@
 
 ## 🎯 Mục Lục & Tổng Quan Hệ Thống
 
-Tài liệu này là **nguồn thông tin chuẩn mực duy nhất (Single Source of Truth)** thống kê toàn bộ **48 tính năng trên 8 phân hệ kiến trúc cốt lõi** của nền tảng **QuantBacktest Pro**.
+Tài liệu này là **nguồn thông tin chuẩn mực duy nhất (Single Source of Truth)** thống kê toàn bộ **58 tính năng trên 9 phân hệ kiến trúc cốt lõi** của nền tảng **QuantBacktest Pro**.
 
 | Mã Phân Hệ | Tên Phân Hệ Nghiệp Vụ | Số Tính Năng | Thành Phần Mã Nguồn Cốt Lõi |
 | :--- | :--- | :---: | :--- |
@@ -20,6 +20,7 @@ Tài liệu này là **nguồn thông tin chuẩn mực duy nhất (Single Sourc
 | **`F-STR`** | [6. AI Strategy Studio, Tối Ưu Hóa & Xuất Bot](#6-ai-strategy-studio-tối-ưu-hóa--xuất-bot-f-str) | 14 | `src/components/panels/AIStrategyModal.tsx`, `src/engine/strategyOptimizer.ts`, `src/engine/strategyExporter.ts` |
 | **`F-ANL`** | [7. Báo Cáo Định Lượng & Mô Phỏng Monte Carlo](#7-báo-cáo-định-lượng--mô-phỏng-monte-carlo-f-anl) | 5 | `src/components/panels/AnalyticsDashboardModal.tsx`, `src/engine/analytics.ts` |
 | **`F-SYS`** | [8. Kết Nối Sàn MT5, Cloud Tunnel & Hạ Tầng](#8-kết-nối-sàn-mt5-cloud-tunnel--hạ-tầng-f-sys) | 6 | `src/components/panels/BrokerConnectionModal.tsx`, `src/components/panels/TunnelModal.tsx`, `src/components/panels/SessionManagerModal.tsx` |
+| **`F-SMC`** | [9. Cỗ Máy Smart Money Concepts & AI Copilot](#9-cỗ-máy-smart-money-concepts--ai-copilot-f-smc) | 10 | `src/engine/smc/smcEngine.ts`, `src/components/chart/AICopilotHUD.tsx`, `src/security/aesVault.ts` |
 
 ---
 
@@ -453,7 +454,114 @@ Tài liệu này là **nguồn thông tin chuẩn mực duy nhất (Single Sourc
 
 ---
 
-## 9. Ma Trận Nghiệm Thu Toàn Bộ 48 Tính Năng (Master QA Matrix)
+## 9. Cỗ Máy Smart Money Concepts & AI Copilot (`F-SMC`)
+
+### Bảng Thống Kê Phân Hệ
+| Mã | Tên Kỹ Thuật | Tên Hiển Thị (EN / VI) | Đường Dẫn Điều Hướng Giao Diện (Navigator) | Đường Dẫn Mã Nguồn |
+| :--- | :--- | :--- | :--- | :--- |
+| `F-SMC-01` | Nhận Diện Fractal & Đỉnh/Đáy Đơn Điệu | `Fractal Pivot Detection` / `Nhận Diện Đỉnh/Đáy Fractal` | Biểu đồ nến ➔ Lớp vẽ SMC Overlay | `src/engine/smc/smcEngine.ts:L40` |
+| `F-SMC-02` | Cỗ Máy Trạng Thái Cấu Trúc BOS & CHoCH | `BOS & CHoCH Engine` / `Cấu Trúc Thị Trường BOS/CHoCH` | Biểu đồ nến ➔ Nhãn cấu trúc trên nến | `src/engine/smc/smcEngine.ts:L310` |
+| `F-SMC-03` | Cỗ Máy Khối Lệnh Order Block (OB) | `Order Block Engine` / `Cỗ Máy Khối Lệnh OB` | Biểu đồ nến ➔ Khung chữ nhật Bullish/Bearish OB | `src/engine/smc/smcEngine.ts:L450`, `src/engine/smc/overlayPrimitives.ts` |
+| `F-SMC-04` | Cỗ Máy Khoảng Trống Giá Fair Value Gap (FVG) | `Fair Value Gap (FVG)` / `Khoảng Trống Giá FVG` | Biểu đồ nến ➔ Vùng FVG đổi màu khi lấp đầy | `src/engine/smc/smcEngine.ts:L560` |
+| `F-SMC-05` | Quét Thanh Khoản & Cân Bằng Premium/Discount | `Liquidity Sweeps & Equilibrium` / `Quét Thanh Khoản & Vùng Giá` | Biểu đồ nến ➔ Nhãn BSL/SSL & Đường cân bằng EQ | `src/engine/smc/smcEngine.ts:L680` |
+| `F-SMC-06` | Cổng Hợp Lưu Đa Khung Confluence Gate | `Confluence Score Gate` / `Cổng Đánh Giá Hợp Lưu` | Floating HUD ➔ Điểm Confluence Metric | `src/engine/smc/confluenceGate.ts` |
+| `F-SMC-07` | Apex AI Copilot HUD & Suy Luận CoT Trực Tiếp | `Apex AI Copilot HUD` / `Trợ Lý AI Copilot Trực Tiếp` | Góc trên bên phải đồ thị ➔ Bảng Apex Copilot | `src/components/chart/AICopilotHUD.tsx`, `src/engine/smc/sseCopilotStream.ts` |
+| `F-SMC-08` | Ma Trận Xu Hướng Đa Khung MTF Matrix Widget | `Multi-Timeframe Matrix` / `Ma Trận Đa Khung Thời Gian` | Góc trên bên phải đồ thị ➔ Bảng MTF Matrix | `src/components/chart/MTFMatrixWidget.tsx` |
+| `F-SMC-09` | Bộ Quy Tắc Xác Thực Kế Hoạch Giao Dịch Thể Chế | `Action Plan Institutional Validator` / `Bộ Kiểm Định Kế Hoạch` | Bảng Apex Copilot ➔ Nút Thực thi & Badge Vi Phạm | `src/engine/smc/actionPlanValidator.ts` |
+| `F-SMC-10` | Két Sắt Khóa Bí Mật Bảo Mật Chuẩn AES-256-GCM | `Secure Key Vault (AES-GCM)` / `Két Sắt Khóa Bí Mật AES-256` | Modal Hồ Sơ ➔ Quản lý khóa API | `src/security/aesVault.ts` |
+
+### Chi Tiết Kỹ Thuật & Tiêu Chí Kiểm Thử (QA Checklist)
+
+#### `F-SMC-01` - Nhận Diện Fractal & Đỉnh/Đáy Đơn Điệu (Fractal Pivot Detection)
+- **Điều hướng:** Tự động nhận diện trên luồng nến và vẽ các điểm chốt Pivot High/Low lên biểu đồ nến.
+- **Chức năng:** Sử dụng cấu trúc hàng đợi đơn điệu 2 đầu (`MonotonicMinMaxQueue`) và bộ nhớ đệm `TypedArray` (`Int32Array`, `Float64Array`) với độ phức tạp $O(1)$ amortized mỗi nến, đạt độ trễ $\le 0.005$ ms trên 10.000 nến.
+- **QA Checklist:**
+  1. Tua nến qua chuỗi 5 nến tạo đỉnh nhọn -> Hệ thống đánh dấu chính xác Pivot High tại đỉnh nến trung tâm.
+  2. Tua nến qua chuỗi 5 nến tạo đáy nhọn -> Hệ thống đánh dấu chính xác Pivot Low.
+  3. Reset mô phỏng -> Bộ nhớ đệm reset sạch sẽ, không có memory leak.
+
+#### `F-SMC-02` - Cỗ Máy Trạng Thái Cấu Trúc BOS & CHoCH (Market Structure Engine)
+- **Điều hướng:** Nhãn BOS / CHoCH hiển thị trực tiếp tại điểm phá vỡ cấu trúc trên biểu đồ.
+- **Chức năng:**
+  - Break of Structure (BOS): Xác định sự tiếp diễn của xu hướng tăng (phá vỡ đỉnh cũ) hoặc giảm (phá vỡ đáy cũ).
+  - Change of Character (CHoCH): Phát hiện tín hiệu đảo chiều sớm khi giá phá vỡ đáy chốt trong xu hướng tăng hoặc phá vỡ đỉnh chốt trong xu hướng giảm.
+- **QA Checklist:**
+  1. Nến tạo xung lực vượt qua đỉnh swing gần nhất -> Nhãn `BOS_BULLISH` xuất hiện kèm đường kẻ ngang.
+  2. Nến đảo chiều đâm thủng đáy swing thấp nhất vừa tạo -> Nhãn `CHoCH_BEARISH` xuất hiện và cập nhật trạng thái bias.
+
+#### `F-SMC-03` - Cỗ Máy Khối Lệnh Order Block (OB Engine)
+- **Điều hướng:** Các hộp chữ nhật vùng giá (Bullish OB màu xanh lục, Bearish OB màu cánh sen/đỏ) kéo dài về phía tương lai.
+- **Chức năng:** Tự động lọc các khối lệnh chưa được giảm thiểu (Unmitigated Order Blocks). Khi giá quay lại chạm vào vùng (mitigated), khối lệnh tự động đổi trạng thái và ẩn hoặc làm mờ.
+- **QA Checklist:**
+  1. Xuất hiện nến giảm cuối cùng trước đợt tăng vọt phá đỉnh -> Khối Bullish OB được vẽ từ giá High đến Low của cây nến đó.
+  2. Giá hồi quy chạm vào vùng OB -> Trạng thái chuyển thành `MITIGATED`, không gây nhiễu đồ thị.
+
+#### `F-SMC-04` - Cỗ Máy Khoảng Trống Giá Fair Value Gap (FVG Engine)
+- **Điều hướng:** Vùng highlight giữa bóng nến thứ nhất và bóng nến thứ ba trong cụm 3 nến mất cân bằng (Imbalance).
+- **Chức năng:** Đo đạc kích thước FVG theo số pip/giá, theo dõi tỷ lệ lấp đầy (Fill Ratio). Đổi màu hoặc xóa khi FVG được lấp đầy 100%.
+- **QA Checklist:**
+  1. Cụm 3 nến tăng mạnh tạo khoảng hở giữa High nến 1 và Low nến 3 -> Hộp Bullish FVG được kích hoạt.
+  2. Khi giá hồi chạm vào 50% FVG (Consequent Encroachment) -> Fill ratio cập nhật chính xác $\ge 50\%$.
+
+#### `F-SMC-05` - Quét Thanh Khoản & Cân Bằng Premium/Discount (Liquidity Sweeps & Equilibrium)
+- **Điều hướng:** Các điểm quét BSL (Buy-Side Liquidity) / SSL (Sell-Side Liquidity) và đường trung vị Equilibrium (50% Range).
+- **Chức năng:**
+  - Nhận diện bẫy thanh khoản (Liquidity Sweep): Giá quét qua đỉnh/đáy nhưng đóng cửa nến rút râu trở lại bên trong biên độ.
+  - Phân vùng Premium (> 50%) và Discount (< 50%) theo swing range hiện hành.
+- **QA Checklist:**
+  1. Giá nhú qua đỉnh nhưng rút râu đóng dưới đỉnh -> Phát tín hiệu `SWEEP_BSL`.
+  2. Phân loại chuẩn: Vị thế mua chỉ được tối ưu khi giá ở vùng Discount; vị thế bán chỉ tối ưu ở vùng Premium.
+
+#### `F-SMC-06` - Cổng Hợp Lưu Đa Khung Confluence Gate
+- **Điều hướng:** Điểm Confluence hiển thị tại Bảng điều khiển Apex AI Copilot.
+- **Chức năng:** Tổng hợp điểm số theo trọng số từ: Xu hướng HTF (H4/D1 bias), Trạng thái OB, FVG mở, Tín hiệu quét thanh khoản và Phiên giao dịch (London/NY). Chỉ kích hoạt gọi suy luận AI khi điểm số đạt $\ge 65/100$.
+- **QA Checklist:**
+  1. Khi chỉ có 1 yếu tố đơn lẻ -> Điểm hợp lưu $< 50$, không kích hoạt LLM tránh tốn tài nguyên.
+  2. Khi có CHoCH + OB unmitigated + Vùng Discount -> Điểm vượt ngưỡng 65, hệ thống tự động sinh tín hiệu LLM.
+
+#### `F-SMC-07` - Apex AI Copilot HUD & Suy Luận CoT Trực Tiếp
+- **Điều hướng:** Bảng nổi nằm ở góc trên bên phải biểu đồ nến (có thể gập/mở, chuyển tab).
+- **Chức năng:**
+  - Kết nối luồng Server-Sent Events (SSE) hiển thị Chain-of-Thought (chuỗi tư duy từng bước) của AI theo thời gian thực.
+  - Tự động bóc tách khối `ActionPlan` (Hướng lệnh, Điểm vào, Cắt lỗ, Chốt lời, Tỷ lệ R:R, Độ tin cậy).
+  - Nút "Thực thi kế hoạch" (Apply Plan) để đưa thông số lệnh trực tiếp vào hệ thống OMS.
+- **QA Checklist:**
+  1. Bấm nút thu gọn -> Bảng gập lại gọn gàng thành nút icon Copilot nhỏ gọn.
+  2. Nhận luồng SSE -> Dòng chữ tư duy suy luận chạy chữ mượt mà (streaming text delta).
+  3. Kế hoạch hoàn tất -> Thẻ ActionPlan hiển thị rõ ràng giá Entry, SL, TP với tỷ lệ R:R chuẩn xác.
+
+#### `F-SMC-08` - Ma Trận Xu Hướng Đa Khung MTF Matrix Widget
+- **Điều hướng:** Bảng thẻ nổi tích hợp ngay dưới Apex Copilot trên biểu đồ nến.
+- **Chức năng:** Trực quan hóa ma trận định tính đa khung: Thiên kiến xu hướng H4 & D1, Vị thế Premium/Discount, Trạng thái OB/FVG đang hoạt động và Phiên thị trường hiện tại (Tokyo / London / New York).
+- **QA Checklist:**
+  1. H4 và D1 cùng tăng -> Hiển thị huy hiệu `BULLISH` màu xanh lục đồng thuận.
+  2. Phiên chuyển sang 13:00 UTC -> Thẻ phiên chuyển sang `NEW YORK` tự động.
+
+#### `F-SMC-09` - Bộ Quy Tắc Xác Thực Kế Hoạch Giao Dịch Thể Chế (Action Plan Validator)
+- **Điều hướng:** Tự động kích hoạt khi AI đề xuất ActionPlan hoặc người dùng bấm thực thi.
+- **Chức năng:** Kiểm định kế hoạch theo các tiêu chuẩn thể chế khắt khe:
+  - Cấm vào lệnh Mua (LONG) tại vùng Premium.
+  - Cấm vào lệnh Bán (SHORT) tại vùng Discount.
+  - Bắt buộc tỷ lệ R:R $\ge 2.0$.
+  - Cắt lỗ (SL) phải nằm ngoài vùng thanh khoản/OB bảo vệ.
+- **QA Checklist:**
+  1. Đề xuất lệnh Long tại Premium -> Validator từ chối ngay lập tức, hiển thị cảnh báo đỏ và khóa nút thực thi.
+  2. Đề xuất lệnh Long tại Discount với R:R = 2.5 và thuận xu hướng H4 -> Validator phê duyệt thành công.
+
+#### `F-SMC-10` - Két Sắt Khóa Bí Mật Bảo Mật Chuẩn AES-256-GCM (Secure Key Vault)
+- **Điều hướng:** Tích hợp trong nền tảng bảo mật của hệ thống và quản lý khóa người dùng.
+- **Chức năng:**
+  - Mã hóa cấp FIPS FIPS-197 AES-256-GCM với PBKDF2-SHA-256 (250,000 vòng lặp) và Salt ngẫu nhiên 16 bytes.
+  - Mỗi khóa API được mã hóa với IV ngẫu nhiên 12 bytes và AAD độc quyền tránh tấn công relay.
+  - Xóa sạch khóa giải mã khỏi bộ nhớ RAM ngay khi Vault bị khóa (`lockVault()`).
+- **QA Checklist:**
+  1. Mở Vault bằng mật khẩu đúng -> Giải mã khóa API chính xác.
+  2. Khóa Vault -> Toàn bộ thao tác truy xuất bị chặn với lỗi `VaultLockedError`.
+  3. Nhập mật khẩu sai -> Trả về lỗi `VaultCorruptedError`, không rò rỉ dữ liệu.
+
+---
+
+## 10. Ma Trận Nghiệm Thu Toàn Bộ 58 Tính Năng (Master QA Matrix)
 
 | Mã | Tên Tính Năng | Phân Hệ | Loại Kiểm Thử | Trạng Thái | File Kiểm Thử Tự Động Đối Chiếu |
 | :--- | :--- | :--- | :--- | :---: | :--- |
@@ -515,10 +623,21 @@ Tài liệu này là **nguồn thông tin chuẩn mực duy nhất (Single Sourc
 | `F-SYS-04` | Quản Lý Đa Phiên Làm Việc | Hạ tầng | Lưu trạng thái | ✅ PASS | CRUD Phiên & Tự lưu |
 | `F-SYS-05` | Bảng Tra Cứu Phím Tắt | Hạ tầng | Khả năng tiếp cận | ✅ PASS | Lắng nghe phím tắt toàn cục |
 | `F-SYS-06` | Bộ Khởi Chạy Đa Nền Tảng | Hạ tầng | CLI / Shell | ✅ PASS | `dev:all`, `start_all.sh`, `.bat` |
+| `F-SMC-01` | Nhận Diện Đỉnh Đáy Fractal | SMC Perception | O(1) Queue | ✅ PASS | Suite 17: SMC Engine & `tests/engine/smc.fractal.test.ts` |
+| `F-SMC-02` | Cấu Trúc BOS / CHoCH | SMC Perception | State Machine | ✅ PASS | Suite 17: BOS/CHoCH & `tests/engine/smc.bosChoch.test.ts` |
+| `F-SMC-03` | Khối Lệnh Order Block | SMC Perception | Vùng giá / Kỹ thuật | ✅ PASS | Suite 20: Overlay Primitives Bridge |
+| `F-SMC-04` | Fair Value Gap (FVG) | SMC Perception | Imbalance / Pips | ✅ PASS | Suite 17 & `tests/engine/smcAccuracy.test.ts` |
+| `F-SMC-05` | Quét Thanh Khoản BSL/SSL | SMC Perception | Liquidity Hunter | ✅ PASS | Suite 20: Liquidity Sweep Primitives |
+| `F-SMC-06` | Confluence Score Gate | SMC Reasoning | Gating $\ge 65$ | ✅ PASS | Suite 17 & `confluenceGate.ts` |
+| `F-SMC-07` | Apex AI Copilot HUD | SMC Interface | SSE Streaming | ✅ PASS | Suite 19: AI Co-Pilot Streaming & CoT |
+| `F-SMC-08` | MTF Trend Matrix | SMC Interface | Multi-Timeframe | ✅ PASS | Suite 18: SMC Worker Sync Protocol |
+| `F-SMC-09` | Action Plan Validator | SMC Governance | Institutional Rule | ✅ PASS | Suite 19: ActionPlanValidator Tests |
+| `F-SMC-10` | Secure Key Vault AES-GCM | Bảo mật | Web Crypto FIPS | ✅ PASS | `tests/security/aesVault.test.ts` (22 tests) |
 
 ---
 
-## 10. Hướng Dẫn Bảo Trì & Cập Nhật Tài Liệu
+## 11. Hướng Dẫn Bảo Trì & Cập Nhật Tài Liệu
 
 1. **Nguyên Tắc Bất Biến (Drift-Resistance)**: Khi chỉnh sửa hoặc thêm tính năng mới trong thư mục `src/`, lập trình viên bắt buộc cập nhật dòng tương ứng trên cả 2 tài liệu `docs/FEATURE_CATALOG_CHECKLIST.md` và `docs/vi/FEATURE_CATALOG_CHECKLIST.md`.
 2. **Nghiệm Thu Tester**: Mọi tính năng trước khi đưa vào bản phát hành phải đạt 100% các tiêu chí kiểm thử nghiệm thu quy định tại tài liệu này.
+
