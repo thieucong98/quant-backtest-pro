@@ -12,21 +12,39 @@ if (isProduction && (!process.env.JWT_SECRET || process.env.JWT_SECRET === 'dev-
 const JWT_SECRET = process.env.JWT_SECRET || (isProduction ? 'prod-secret-fallback-override-required' : 'dev-secret');
 
 // Middleware: Strict JWT requirement for private endpoints
-export function requireAuth(req: Request, res: Response, next: Function) {
+export async function requireAuth(req: Request, res: Response, next: Function) {
   try {
     const authHeader = req.headers.authorization;
     const token = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : null;
-    if (!token) {
-      res.status(401).json({ error: 'Yêu cầu đăng nhập. Vui lòng cung cấp Bearer token hợp lệ.' });
-      return;
+    if (token) {
+      try {
+        const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
+        if (decoded?.userId) {
+          (req as any).userId = decoded.userId;
+          return next();
+        }
+      } catch (tokenErr) {
+        if (isProduction) {
+          res.status(401).json({ error: 'Token không hợp lệ hoặc đã hết hạn.' });
+          return;
+        }
+      }
     }
-    const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
-    if (!decoded?.userId) {
-      res.status(401).json({ error: 'Token không hợp lệ hoặc đã hết hạn.' });
-      return;
+
+    // In local development mode: auto fallback to seeded dev account if unauthenticated
+    if (!isProduction) {
+      try {
+        const defaultUser = await getOrCreateDefaultUser();
+        if (defaultUser) {
+          (req as any).userId = defaultUser.id;
+          return next();
+        }
+      } catch (e) {
+        // Fall through to 401 if database is inaccessible
+      }
     }
-    (req as any).userId = decoded.userId;
-    next();
+
+    res.status(401).json({ error: 'Yêu cầu đăng nhập. Vui lòng cung cấp Bearer token hợp lệ.' });
   } catch (err: any) {
     res.status(401).json({ error: 'Token không hợp lệ hoặc đã hết hạn.' });
   }

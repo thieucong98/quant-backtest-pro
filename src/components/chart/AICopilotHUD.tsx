@@ -41,7 +41,10 @@ export interface AICopilotHUDProps {
   /** Optional hook for the parent to subscribe to plan events. */
   onPlan?: (plan: ActionPlan) => void;
   /** Optional hook to invoke a streaming inference. */
-  onAsk?: (question: string) => Promise<CoTStreamChunk[]>;
+  onAsk?: (
+    question: string,
+    onChunk?: (chunk: CoTStreamChunk) => void
+  ) => Promise<CoTStreamChunk[]>;
   /** Optional hook to close the HUD panel */
   onClose?: () => void;
 }
@@ -244,19 +247,37 @@ export const AICopilotHUD: React.FC<AICopilotHUDProps> = ({
     setReasoning('');
     setPlan(null);
     setViolationMsg(null);
+    setAppliedMsg(null);
+
+    let accReason = '';
+    let accPlan = '';
+
     try {
-      const chunks = await onAsk(userQ);
-      let accReason = '';
-      let accPlan = '';
-      for (const c of chunks) {
-        if (c.type === 'reasoning') accReason += c.delta;
-        else if (c.type === 'action') accPlan += c.delta;
-        else if (c.type === 'done') break;
-        else if (c.type === 'error') {
+      const chunks = await onAsk(userQ, (chunk) => {
+        if (chunk.type === 'reasoning') {
+          accReason += chunk.delta;
+          setReasoning(accReason);
+          setStatus('STREAMING');
+        } else if (chunk.type === 'action') {
+          accPlan += chunk.delta;
+        } else if (chunk.type === 'error') {
           setStatus('ERROR');
-          return;
+        }
+      });
+
+      if (chunks && chunks.length > 0) {
+        for (const c of chunks) {
+          if (c.type === 'reasoning' && !accReason.includes(c.delta)) {
+            accReason += c.delta;
+          } else if (c.type === 'action' && !accPlan.includes(c.delta)) {
+            accPlan += c.delta;
+          } else if (c.type === 'error') {
+            setStatus('ERROR');
+            return;
+          }
         }
       }
+
       setReasoning(accReason);
       if (accPlan.trim()) {
         try {

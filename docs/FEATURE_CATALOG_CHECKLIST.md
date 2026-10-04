@@ -531,14 +531,15 @@ This document provides a single source of truth for all **63 features across 10 
 #### `F-SMC-07` - Apex AI Copilot HUD & Streaming CoT
 - **UI Navigation:** Top-bar / chart floating dock ➔ Click `Copilot` pill (draggable anywhere across chart canvas).
 - **Functionality:**
-  - Real-time Server-Sent Events (SSE) streaming displaying token-by-token Chain-of-Thought reasoning.
+  - Real-time Server-Sent Events (SSE) streaming displaying token-by-token Chain-of-Thought reasoning connecting directly to AI Gateway (`/api/copilot/stream`, `/api/copilot/ask`) and user-configured LLM providers (`MiniMax`, `OpenAI`, `Gemini`, `Claude`, `DeepSeek`, `Ollama`).
   - Automatic extraction of typed `ActionPlan` (Side, Entry, SL, TP, R:R, Confidence).
   - **Ergonomic Floating & Docking**: Freely draggable window with persistent localStorage coordinates (defaults to top-left `(24, 52)` leaving price scale and candles 100% unobstructed), one-click dock snapping (`◀ Dock Left`, `▶ Dock Right`), and ultra-compact capsule minimize mode (`[-]` / `[↗]`).
   - **Manual Confirmation by Default**: `autoMode` initializes strictly to `false` to guarantee quick actions (e.g. `Best entry now?`) only display analysis and require explicit user consent via the prominent "Apply Plan" button.
   - **Chart Viewport & Zoom Preservation**: Decoupled trade execution and economic markers from candle dataset re-renders with 15-bar rightOffset, preventing chart view resets or candle clipping against the right axis.
+  - **Live Network & AI Interaction**: Typing in "Ask Copilot" and clicking "Send" dispatches active network requests to backend AI Gateway (`/api/copilot/stream` / `/api/copilot/ask`) with live streaming token telemetry, input reset, and offline algorithmic fallback.
 - **QA Verification:**
   1. Click collapse `[-]` button -> Panel collapses smoothly into a sleek floating capsule pill.
-  2. Click Quick Action (`Best entry now?`) -> Plan renders with calculated Entry, SL, TP, and R:R; **zero automated orders are placed**.
+  2. Type question or click Quick Action (`Best entry now?`) -> Live network request triggers in DevTools (`/api/copilot/stream` or `/api/copilot/ask`); CoT reasoning streams token-by-token; **zero automated orders are placed**.
   3. Click "Apply Plan" -> Market order executes with SL/TP lines drawn on chart; **chart zoom, pan position, and 15-bar right breathing room remain 100% stable without resetting**.
   4. Drag HUD or click `◀` / `▶` -> HUD snaps to edges or follows cursor smoothly within viewport bounds.
 

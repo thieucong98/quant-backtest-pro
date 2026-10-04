@@ -530,14 +530,15 @@ Tài liệu này là **nguồn thông tin chuẩn mực duy nhất (Single Sourc
 #### `F-SMC-07` - Apex AI Copilot HUD & Suy Luận CoT Trực Tiếp
 - **Điều hướng:** Thanh công cụ / bảng nổi biểu đồ ➔ Bấm nút `Copilot` (kéo thả tự do trên toàn màn hình biểu đồ).
 - **Chức năng:**
-  - Kết nối luồng Server-Sent Events (SSE) hiển thị Chain-of-Thought (chuỗi tư duy từng bước) của AI theo thời gian thực.
+  - Kết nối luồng Server-Sent Events (SSE) hiển thị Chain-of-Thought (chuỗi tư duy từng bước) của AI theo thời gian thực tương tác trực tiếp với AI Gateway (`/api/copilot/stream`, `/api/copilot/ask`) và các mô hình LLM người dùng đã cấu hình (`MiniMax`, `OpenAI`, `Gemini`, `Claude`, `DeepSeek`, `Ollama`).
   - Tự động bóc tách khối `ActionPlan` (Hướng lệnh, Điểm vào, Cắt lỗ, Chốt lời, Tỷ lệ R:R, Độ tin cậy).
   - **Công thái học kéo thả & Dock linh hoạt**: Cửa sổ nổi tự do kéo thả lưu tọa độ qua `localStorage` (mặc định góc trên trái `(24, 52)` không bao giờ che khuất nến hay thước đo giá bên phải), hỗ trợ ghim nhanh 1 chạm (`◀ Ghim Trái`, `▶ Ghim Phải`), và chế độ viên thuốc con nhộng siêu gọn (`[-]` / `[↗]`).
   - **Xác nhận thủ công an toàn mặc định**: `autoMode` khởi tạo mặc định bằng `false`, cam kết các thao tác nhanh (như `Best entry now?`) chỉ hiển thị đề xuất phân tích và chỉ vào lệnh khi người dùng chủ động nhấn nút "Áp dụng kế hoạch" (Apply Plan).
   - **Bảo tồn góc nhìn & Zoom biểu đồ**: Tách rời hoàn toàn luồng hiển thị marker lệnh và tin tức khỏi hàm `setData()` của nến, đồng thời bổ sung lề thở `rightOffset: 15` để cây nến cuối cùng không bao giờ bị dính sát thước đo giá hay reset góc nhìn khi vào lệnh.
+  - **Tương tác Mạng & Backend Thời Gian Thực**: Nhập câu hỏi vào "Hỏi Copilot" và nhấn "Gửi" kích hoạt yêu cầu mạng thực tế tới backend AI Gateway (`/api/copilot/stream` / `/api/copilot/ask`) với tiến trình streaming CoT trực tiếp, dọn dẹp ô nhập và cơ chế dự phòng thuật toán SMC ngoại tuyến mượt mà.
 - **QA Checklist:**
   1. Bấm nút thu gọn `[-]` -> Bảng gập lại mượt mà thành viên nang con nhộng nhỏ gọn.
-  2. Bấm thao tác nhanh (`Best entry now?`) -> Kế hoạch hiển thị rõ ràng thông số; **tuyệt đối không tự động vào lệnh**.
+  2. Nhập câu hỏi hoặc bấm thao tác nhanh (`Best entry now?`) -> Kích hoạt yêu cầu mạng trong DevTools (`/api/copilot/stream` hoặc `/api/copilot/ask`); chuỗi tư duy CoT streaming từng token; **tuyệt đối không tự động vào lệnh**.
   3. Bấm "Áp dụng kế hoạch" (Apply Plan) -> Lệnh được khớp và vẽ đường SL/TP; **góc nhìn, mức zoom và lề thở 15 nến được bảo tồn nguyên vẹn 100% không bị reset**.
   4. Kéo thả HUD hoặc bấm `◀` / `▶` -> HUD bám dính mượt mà và lưu lại vị trí mong muốn.
 
