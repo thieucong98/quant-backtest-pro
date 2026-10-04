@@ -42,9 +42,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Multi-Channel Webhook Dispatcher**: Instant execution notifications to Telegram Bot API and Discord Webhooks with chart canvas attachments.
 
 ### 🧪 Verification & Quality Gates
-- **237 / 237 Automated Tests Passing (100%)**
+- **249 / 249 Automated Tests Passing (100%)**
 - 100% Internationalization parity across 4 locales (`vi`, `en`, `ja`, `zh`) with zero hardcoded strings.
 - Full bilingual tactical guides published: `docs/APEX_AI_COPILOT_GUIDE.md` & `docs/vi/APEX_AI_COPILOT_GUIDE.md`.
+
+### 🎯 Universal Dialog & Modal Dismissal (Universal `X` Close Buttons)
+- Comprehensive audit and enhancement across all application modals, drawers, and context popups (`PriceScaleContextMenu`, `AICopilotHUD`, `SessionManagerModal`, `ShortcutsModal`, `VisualStrategyBuilderModal`, `SignalWebhookSettingsTab`, etc.).
+- Enforced accessible top-right close buttons (`X`) with standard aria-labels and keyboard Escape listeners.
+
+### ⚡ Strategy Grid Optimizer & Robustness Engine
+- **Strategy Parameter Preservation**: Preserves user-defined custom parameters (e.g. `riskPercent`, `period`, `lookback`) during parameter sweep, replacing only targeted SL/TP values.
+- **Dual MACD Indicator Parity**: Seamlessly supports both `macd.hist` and `macd.histogram` property representations across visual blocks and programmatic scripts.
+- **Dataset Resiliency Fallback**: Automatic multi-symbol fallback dataset selection preventing empty candle zero-trade states during grid search.
+
+### 🛡️ AppSec Hardening & Architectural Consolidation
+- **SSRF Protection in Copilot Gateway**: Strict URL validation blocking link-local/cloud metadata addresses (`169.254.169.254`, `metadata.google.internal`) and requiring valid HTTP/HTTPS schemes.
+- **Strict Authentication Guard**: Enforced `401 Unauthorized` responses in `requireAuth` when credentials are absent or invalid across all environments.
+- **Cryptographic JWT Secret Fallback**: Ephemeral key generation with `crypto.randomBytes(32)` when `JWT_SECRET` is unset.
+- **Sandbox Security Consolidation (DRY)**: Reused `SANDBOX_SECURITY_PREAMBLE` across sandbox execution and strategy optimizer, eliminating redundant security preamble declarations.
+- **Mandatory Git Flow Fetch & Rebase Discipline**: Documented strict fetch-first rule in `AGENTS.md`.
 
 ---
 
