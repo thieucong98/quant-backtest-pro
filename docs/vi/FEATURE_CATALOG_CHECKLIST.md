@@ -528,15 +528,18 @@ Tài liệu này là **nguồn thông tin chuẩn mực duy nhất (Single Sourc
   2. Khi có CHoCH + OB unmitigated + Vùng Discount -> Điểm vượt ngưỡng 65, hệ thống tự động sinh tín hiệu LLM.
 
 #### `F-SMC-07` - Apex AI Copilot HUD & Suy Luận CoT Trực Tiếp
-- **Điều hướng:** Bảng nổi nằm ở góc trên bên phải biểu đồ nến (có thể gập/mở, chuyển tab).
+- **Điều hướng:** Thanh công cụ / bảng nổi biểu đồ ➔ Bấm nút `Copilot` (kéo thả tự do trên toàn màn hình biểu đồ).
 - **Chức năng:**
   - Kết nối luồng Server-Sent Events (SSE) hiển thị Chain-of-Thought (chuỗi tư duy từng bước) của AI theo thời gian thực.
   - Tự động bóc tách khối `ActionPlan` (Hướng lệnh, Điểm vào, Cắt lỗ, Chốt lời, Tỷ lệ R:R, Độ tin cậy).
-  - Nút "Thực thi kế hoạch" (Apply Plan) để đưa thông số lệnh trực tiếp vào hệ thống OMS.
+  - **Công thái học kéo thả & Dock linh hoạt**: Cửa sổ nổi tự do kéo thả lưu tọa độ qua `localStorage` (mặc định góc trên trái `(24, 52)` không bao giờ che khuất nến hay thước đo giá bên phải), hỗ trợ ghim nhanh 1 chạm (`◀ Ghim Trái`, `▶ Ghim Phải`), và chế độ viên thuốc con nhộng siêu gọn (`[-]` / `[↗]`).
+  - **Xác nhận thủ công an toàn mặc định**: `autoMode` khởi tạo mặc định bằng `false`, cam kết các thao tác nhanh (như `Best entry now?`) chỉ hiển thị đề xuất phân tích và chỉ vào lệnh khi người dùng chủ động nhấn nút "Áp dụng kế hoạch" (Apply Plan).
+  - **Bảo tồn góc nhìn & Zoom biểu đồ**: Tách rời hoàn toàn luồng hiển thị marker lệnh và tin tức khỏi hàm `setData()` của nến, đồng thời bổ sung lề thở `rightOffset: 15` để cây nến cuối cùng không bao giờ bị dính sát thước đo giá hay reset góc nhìn khi vào lệnh.
 - **QA Checklist:**
-  1. Bấm nút thu gọn -> Bảng gập lại gọn gàng thành nút icon Copilot nhỏ gọn.
-  2. Nhận luồng SSE -> Dòng chữ tư duy suy luận chạy chữ mượt mà (streaming text delta).
-  3. Kế hoạch hoàn tất -> Thẻ ActionPlan hiển thị rõ ràng giá Entry, SL, TP với tỷ lệ R:R chuẩn xác.
+  1. Bấm nút thu gọn `[-]` -> Bảng gập lại mượt mà thành viên nang con nhộng nhỏ gọn.
+  2. Bấm thao tác nhanh (`Best entry now?`) -> Kế hoạch hiển thị rõ ràng thông số; **tuyệt đối không tự động vào lệnh**.
+  3. Bấm "Áp dụng kế hoạch" (Apply Plan) -> Lệnh được khớp và vẽ đường SL/TP; **góc nhìn, mức zoom và lề thở 15 nến được bảo tồn nguyên vẹn 100% không bị reset**.
+  4. Kéo thả HUD hoặc bấm `◀` / `▶` -> HUD bám dính mượt mà và lưu lại vị trí mong muốn.
 
 #### `F-SMC-08` - Ma Trận Xu Hướng Đa Khung MTF Matrix Widget
 - **Điều hướng:** Bảng thẻ nổi tích hợp ngay dưới Apex Copilot trên biểu đồ nến.

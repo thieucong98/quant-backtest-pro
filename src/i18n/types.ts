@@ -959,6 +959,11 @@ export interface TranslationDict {
   apexCopilotAppliedToast: string;
   apexCopilotNoPlanToast: string;
   apexCopilotTelemetry: string;
+  apexCopilotDragHandle: string;
+  apexCopilotDockLeft: string;
+  apexCopilotDockRight: string;
+  apexCopilotAutoWarning: string;
+  apexCopilotInteractivePromptHelp: string;
   // Quant Execution Bridge (v2.0)
   bridgeConnected: string;
   bridgeConnecting: string;
