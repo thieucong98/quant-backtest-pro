@@ -1382,7 +1382,88 @@ async function runComprehensiveTests() {
   }
 
   // =========================================================================
-  // 25. SUMMARY OF TEST SUITE RESULTS
+  // 25. STRATEGY GRID OPTIMIZER & ROBUSTNESS ENGINE TESTS
+  // =========================================================================
+  console.log('\n--- 25. Strategy Grid Optimizer & Robustness Engine Tests ---');
+  {
+    const { StrategyOptimizerEngine } = await import('./src/engine/strategyOptimizer');
+    const { PREBUILT_STRATEGIES } = await import('./src/engine/strategySandbox');
+    const { IndicatorCalculator } = await import('./src/engine/indicators');
+    const { VisualBlockCompiler, DEFAULT_VISUAL_STRATEGY } = await import('./src/engine/visualBlockCompiler');
+    const { generateRealisticCandles } = await import('./src/config/sampleData');
+    const { INSTRUMENTS } = await import('./src/config/instruments');
+
+    // 25.1 cleanCode strips markdown code blocks
+    const fencedCode = '```javascript\nreturn { parameters: { slPips: 20 }, onCandle() {} };\n```';
+    const cleaned = StrategyOptimizerEngine.cleanCode(fencedCode);
+    assert(cleaned.startsWith('return {') && !cleaned.includes('```'), 'Optimizer_CleanCode', 'cleanCode strips markdown code block fences');
+
+    // 25.2 replaceSLTPInCode updates slPips and tpPips
+    const codeWithSLTP = 'return { parameters: { slPips: 15, tpPips: 30 } };';
+    const updatedSLTP = StrategyOptimizerEngine.replaceSLTPInCode(codeWithSLTP, 40, 80);
+    assert(updatedSLTP.includes('slPips: 40') && updatedSLTP.includes('tpPips: 80'), 'Optimizer_ReplaceSLTP', 'replaceSLTPInCode replaces standard slPips and tpPips');
+
+    // 25.3 replaceSLTPInCode updates visual block rule1_sl and rule1_tp
+    const visualBlockCode = 'return { parameters: { rule1_sl: 25, rule1_tp: 50 } };';
+    const updatedVisual = StrategyOptimizerEngine.replaceSLTPInCode(visualBlockCode, 35, 70);
+    assert(updatedVisual.includes('rule1_sl: 35') && updatedVisual.includes('rule1_tp: 70'), 'Optimizer_ReplaceVisualSLTP', 'replaceSLTPInCode replaces visual block rule1_sl and rule1_tp');
+
+    // 25.4 IndicatorCalculator macd returns histogram parity
+    const mockCandles = generateRealisticCandles('XAUUSD', 2650, 100, 5);
+    const indCalc = new IndicatorCalculator(mockCandles);
+    const macdRes = indCalc.macd(12, 26, 9);
+    assert(typeof macdRes.hist === 'number' && typeof macdRes.histogram === 'number' && macdRes.hist === macdRes.histogram, 'Optimizer_MacdParity', 'IndicatorCalculator macd returns both hist and histogram with parity');
+
+    // 25.5 Strategy Optimizer runs on EMA 9/21 with empty baseParameters (preserves internal parameters)
+    const testCandles = generateRealisticCandles('XAUUSD', 2650, 800, 5);
+    const goldInstrument = INSTRUMENTS['XAUUSD'];
+    const emaStrat = PREBUILT_STRATEGIES[0];
+    const emaOpt = await StrategyOptimizerEngine.runBatchOptimization(
+      emaStrat.code,
+      {},
+      testCandles,
+      goldInstrument,
+      {
+        slRange: { min: 20, max: 60, step: 20 },
+        tpRange: { min: 40, max: 120, step: 40 },
+        splitRatio: 0.7
+      }
+    );
+    assert(emaOpt.totalCombinations === 9, 'Optimizer_Combos', 'Calculates exact total combinations (3x3 = 9)');
+    assert(emaOpt.bestItem !== null && emaOpt.bestItem.report.totalTrades > 0, 'Optimizer_Execution', 'Generates non-zero trades with preserved default strategy parameters');
+    assert(emaOpt.heatmap.cells.length === 3 && emaOpt.heatmap.cells[0].length === 3, 'Optimizer_Heatmap', '2D Heatmap matrix correctly dimensioned (3x3)');
+
+    // 25.6 Strategy Optimizer runs on MACD Zero Line strategy without zero trades bug
+    const macdStrat = PREBUILT_STRATEGIES.find(s => s.id === 'strat_macd_trend')!;
+    const macdOpt = await StrategyOptimizerEngine.runBatchOptimization(
+      macdStrat.code,
+      {},
+      testCandles,
+      goldInstrument,
+      {
+        slRange: { min: 20, max: 40, step: 20 },
+        tpRange: { min: 40, max: 80, step: 40 }
+      }
+    );
+    assert(macdOpt.bestItem !== null && macdOpt.bestItem.report.totalTrades > 0, 'Optimizer_MacdExecution', 'MACD strategy successfully executes non-zero trades in grid search');
+
+    // 25.7 Strategy Optimizer executes visual block strategy
+    const visualJsCode = VisualBlockCompiler.compileBlocksToJs(DEFAULT_VISUAL_STRATEGY);
+    const visualOpt = await StrategyOptimizerEngine.runBatchOptimization(
+      visualJsCode,
+      {},
+      testCandles,
+      goldInstrument,
+      {
+        slRange: { min: 20, max: 40, step: 20 },
+        tpRange: { min: 40, max: 80, step: 40 }
+      }
+    );
+    assert(visualOpt.bestItem !== null && visualOpt.bestItem.report.totalTrades > 0, 'Optimizer_VisualExecution', 'Visual block strategy successfully executes non-zero trades in grid search');
+  }
+
+  // =========================================================================
+  // 26. SUMMARY OF TEST SUITE RESULTS
   // =========================================================================
   console.log('\n===============================================================');
   const total = testResults.length;

@@ -146,6 +146,25 @@ export class StrategyOptimizerEngine {
   }
 
   /**
+   * Làm sạch mã nguồn (bỏ markdown code blocks, backticks, text thừa ngoài return)
+   */
+  public static cleanCode(code: string): string {
+    let raw = (code || '').trim();
+    if (raw.includes('```javascript')) {
+      raw = raw.split('```javascript')[1].split('```')[0].trim();
+    } else if (raw.includes('```js')) {
+      raw = raw.split('```js')[1].split('```')[0].trim();
+    } else if (raw.includes('```')) {
+      raw = raw.split('```')[1].split('```')[0].trim();
+    }
+    const returnIdx = raw.indexOf('return {');
+    if (returnIdx !== -1) {
+      raw = raw.substring(returnIdx);
+    }
+    return raw;
+  }
+
+  /**
    * Cập nhật số pip SL và TP trong mã nguồn code chiến lược Javascript
    */
   public static replaceSLTPInCode(code: string, newSL: number, newTP: number): string {
@@ -159,11 +178,21 @@ export class StrategyOptimizerEngine {
       updated = updated.replace(/stopLossPips\s*:\s*\d+(\.\d+)?/gi, `stopLossPips: ${newSL}`);
     }
 
+    // Support visual builder rule-specific keys (rule1_sl, rule2_sl)
+    if (/rule\d+_sl\s*:\s*\d+(\.\d+)?/i.test(updated)) {
+      updated = updated.replace(/(rule\d+_sl\s*:\s*)\d+(\.\d+)?/gi, `$1${newSL}`);
+    }
+
     // tpPips: 40 -> tpPips: newTP
     if (/tpPips\s*:\s*\d+(\.\d+)?/i.test(updated)) {
       updated = updated.replace(/tpPips\s*:\s*\d+(\.\d+)?/gi, `tpPips: ${newTP}`);
     } else if (/takeProfitPips\s*:\s*\d+(\.\d+)?/i.test(updated)) {
       updated = updated.replace(/takeProfitPips\s*:\s*\d+(\.\d+)?/gi, `takeProfitPips: ${newTP}`);
+    }
+
+    // Support visual builder rule-specific keys (rule1_tp, rule2_tp)
+    if (/rule\d+_tp\s*:\s*\d+(\.\d+)?/i.test(updated)) {
+      updated = updated.replace(/(rule\d+_tp\s*:\s*)\d+(\.\d+)?/gi, `$1${newTP}`);
     }
 
     return updated;
@@ -193,13 +222,14 @@ export class StrategyOptimizerEngine {
       throw new Error('Dữ liệu nến không đủ hoặc dải tham số không hợp lệ để tối ưu hóa.');
     }
 
-    const validation = validateStrategyCode(strategyCode);
+    const cleanedCode = this.cleanCode(strategyCode);
+    const validation = validateStrategyCode(cleanedCode);
     if (!validation.valid) {
       throw new Error(validation.error);
     }
 
     // Chuẩn bị mã hàm thực thi chiến lược
-    const rawCode = strategyCode.trim();
+    const rawCode = cleanedCode.trim();
     const uncommented = rawCode
       .replace(/\/\*[\s\S]*?\*\//g, '')
       .replace(/\/\/.*/g, '')
@@ -210,7 +240,9 @@ export class StrategyOptimizerEngine {
       functionBody = `return (${rawCode});`;
     }
 
-    const isSplitApplied = Boolean(config.splitRatio && config.splitRatio >= 0.3 && config.splitRatio < 1.0);
+    // Chỉ chia tập Train/Test nếu có đủ nến (tối thiểu 50 nến) để không làm thiếu dữ liệu tính toán chỉ báo
+    const canApplySplit = candles.length >= 50;
+    const isSplitApplied = Boolean(canApplySplit && config.splitRatio && config.splitRatio >= 0.3 && config.splitRatio < 1.0);
     const splitIdx = isSplitApplied ? Math.floor(candles.length * (config.splitRatio || 0.7)) : candles.length;
     const isCandles = candles.slice(0, splitIdx);
     const oosCandles = isSplitApplied ? candles.slice(splitIdx) : [];
@@ -477,7 +509,31 @@ export class StrategyOptimizerEngine {
         };
       }
 
-      stratInstance.parameters = mergedParams;
+      // Giữ nguyên các tham số mặc định định nghĩa trong code chiến lược (như emaFast, emaSlow, rsiPeriod...)
+      const defaultStratParams = (stratInstance.parameters && typeof stratInstance.parameters === 'object')
+        ? stratInstance.parameters
+        : {};
+
+      stratInstance.parameters = {
+        ...defaultStratParams,
+        ...baseParameters,
+        slPips,
+        tpPips,
+        stopLossPips: slPips,
+        takeProfitPips: tpPips,
+        sl: slPips,
+        tp: tpPips,
+        lotSize
+      };
+
+      // Đồng bộ các tham số dạng khối của Visual Strategy Builder (rule1_sl, rule1_tp...)
+      for (const key of Object.keys(stratInstance.parameters)) {
+        if (/(?:^rule\d+_|^)sl(?:Pips)?$/i.test(key)) {
+          stratInstance.parameters[key] = slPips;
+        } else if (/(?:^rule\d+_|^)tp(?:Pips)?$/i.test(key)) {
+          stratInstance.parameters[key] = tpPips;
+        }
+      }
 
       // Khởi tạo OrderMatchingEngine in-memory độc lập
       const matchingEngine = new OrderMatchingEngine(initialBalance, instrument);
@@ -487,16 +543,14 @@ export class StrategyOptimizerEngine {
       const sparkline: number[] = [initialBalance];
       const sampleInterval = Math.max(1, Math.floor(candles.length / 10));
 
-      // Xây dựng API giả lập thực thi nhanh
+      // Xây dựng API giả lập thực thi nhanh với tham số quét của Grid Optimizer
       const api = {
-        buy: (params: any) => {
-          const useSLPips = params.stopLossPips !== undefined ? params.stopLossPips : slPips;
-          const useTPPips = params.takeProfitPips !== undefined ? params.takeProfitPips : tpPips;
+        buy: (params: any = {}) => {
+          const useSLPips = slPips;
+          const useTPPips = tpPips;
 
-          let slPrice = params.stopLossPrice;
-          let tpPrice = params.takeProfitPrice;
-          if (useSLPips && !slPrice) slPrice = currentCandle.close - (useSLPips * pipSize);
-          if (useTPPips && !tpPrice) tpPrice = currentCandle.close + (useTPPips * pipSize);
+          const slPrice = currentCandle.close - (useSLPips * pipSize);
+          const tpPrice = currentCandle.close + (useTPPips * pipSize);
 
           matchingEngine.executeMarketOrder({
             side: 'BUY',
@@ -508,14 +562,12 @@ export class StrategyOptimizerEngine {
             comment: params.comment || 'Opt Buy'
           });
         },
-        sell: (params: any) => {
-          const useSLPips = params.stopLossPips !== undefined ? params.stopLossPips : slPips;
-          const useTPPips = params.takeProfitPips !== undefined ? params.takeProfitPips : tpPips;
+        sell: (params: any = {}) => {
+          const useSLPips = slPips;
+          const useTPPips = tpPips;
 
-          let slPrice = params.stopLossPrice;
-          let tpPrice = params.takeProfitPrice;
-          if (useSLPips && !slPrice) slPrice = currentCandle.close + (useSLPips * pipSize);
-          if (useTPPips && !tpPrice) tpPrice = currentCandle.close - (useTPPips * pipSize);
+          const slPrice = currentCandle.close + (useSLPips * pipSize);
+          const tpPrice = currentCandle.close - (useTPPips * pipSize);
 
           matchingEngine.executeMarketOrder({
             side: 'SELL',
@@ -585,7 +637,10 @@ export class StrategyOptimizerEngine {
 
       const report = AnalyticsEngine.calculateReport(initialBalance, matchingEngine.closedPositions);
       return { report, sparkline };
-    } catch (e) {
+    } catch (e: any) {
+      if (typeof console !== 'undefined' && console.warn) {
+        console.warn(`[Optimizer Simulation] Error during run SL=${slPips} TP=${tpPips}:`, e?.message || e);
+      }
       return {
         report: AnalyticsEngine.calculateReport(initialBalance, []),
         sparkline: [initialBalance, initialBalance]
