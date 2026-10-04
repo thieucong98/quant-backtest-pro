@@ -25,23 +25,8 @@ export async function requireAuth(req: Request, res: Response, next: Function) {
           return next();
         }
       } catch (tokenErr) {
-        if (isProduction) {
-          res.status(401).json({ error: 'Token không hợp lệ hoặc đã hết hạn.' });
-          return;
-        }
-      }
-    }
-
-    // In local development mode: auto fallback to seeded dev account if unauthenticated
-    if (!isProduction) {
-      try {
-        const defaultUser = await getOrCreateDefaultUser();
-        if (defaultUser) {
-          (req as any).userId = defaultUser.id;
-          return next();
-        }
-      } catch (e) {
-        // Fall through to 401 if database is inaccessible
+        res.status(401).json({ error: 'Token không hợp lệ hoặc đã hết hạn.' });
+        return;
       }
     }
 
