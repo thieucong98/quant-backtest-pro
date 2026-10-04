@@ -17,6 +17,11 @@ Welcome to **QuantBacktest Pro** codebase. All AI coding agents, assistants, and
 ---
 
 ## 2. Professional Git Flow & Branching Standards (MANDATORY)
+- **MANDATORY FETCH & REBASE DISCIPLINE (ALWAYS FETCH FIRST)**:
+  - Before starting ANY task, workflow, or creating a new branch, ALWAYS run `git fetch origin` to ensure local repository has the latest remote state.
+  - The local base branch (`main`) MUST be brought up to date (`git checkout main && git pull --ff-only origin main`).
+  - ALL active feature/fix/refactor branches MUST be continuously rebased onto the latest `origin/main` (`git fetch origin && git rebase origin/main`) to maintain linear history, eliminate merge conflicts early, and strictly adhere to professional Git Flow.
+  - NEVER start work or build features on a stale commit or outdated branch.
 - **MANDATORY NEW BRANCH CHECKOUT BEFORE IMPLEMENTATION**:
   - NEVER implement new features, non-trivial enhancements, or bugfixes directly on `main`.
   - ALWAYS create and switch to a dedicated branch before making code changes:
@@ -27,12 +32,14 @@ Welcome to **QuantBacktest Pro** codebase. All AI coding agents, assistants, and
     - `test/<short-name>`: for adding or updating test suites.
     - `docs/<short-name>`: for standalone documentation updates.
 - **Professional Git Flow Lifecycle**:
-  - Step 1: Ensure base branch is clean (`git status`).
-  - Step 2: Create & checkout dedicated branch: `git checkout -b <type>/<name>`.
-  - Step 3: Implement changes and verify all Quality Gates (`npx tsc --noEmit`, `npm run check:i18n`, `npm test`, `npm run build`).
-  - Step 4: Commit atomically with Conventional Commits format (`feat(...)`, `fix(...)`, `refactor(...)`, etc.).
-  - Step 5: Push dedicated branch to remote origin (`git push -u origin <type>/<name>`).
-  - Step 6: Create Pull Request / Merge Request targeting base branch (`main`).
+  - Step 1: Fetch remote changes: `git fetch origin`.
+  - Step 2: Ensure base branch is clean and fully updated (`git checkout main && git pull --ff-only origin main`).
+  - Step 3: Create & checkout dedicated branch: `git checkout -b <type>/<name>`.
+  - Step 4: Before committing or delivering, rebase on latest `origin/main` (`git fetch origin && git rebase origin/main`).
+  - Step 5: Implement changes and verify all Quality Gates (`npx tsc --noEmit`, `npm run check:i18n`, `npm test`, `npm run build`).
+  - Step 6: Commit atomically with Conventional Commits format (`feat(...)`, `fix(...)`, `refactor(...)`, etc.).
+  - Step 7: Push dedicated branch to remote origin (`git push -u origin <type>/<name>`).
+  - Step 8: Create Pull Request / Merge Request targeting base branch (`main`).
 - **End-of-Task Delivery & PR Requirement (NO PREMATURE PRs)**:
   - Do NOT push or create a Pull Request for every individual commit or intermediate step.
   - ONLY push the branch and open a Pull Request when the ENTIRE user request/feature scope is 100% completed and all Quality Gates pass (`tsc`, `check:i18n`, `test`, `build`).

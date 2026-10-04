@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { Router, Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
@@ -7,9 +8,9 @@ export const usersRouter = Router();
 
 const isProduction = process.env.NODE_ENV === 'production';
 if (isProduction && (!process.env.JWT_SECRET || process.env.JWT_SECRET === 'dev-secret')) {
-  console.error('[SECURITY CRITICAL] JWT_SECRET must be set to a strong random value in production!');
+  console.error('[SECURITY CRITICAL] JWT_SECRET must be explicitly set to a strong random value in production!');
 }
-const JWT_SECRET = process.env.JWT_SECRET || (isProduction ? 'prod-secret-fallback-override-required' : 'dev-secret');
+const JWT_SECRET = process.env.JWT_SECRET || (isProduction ? crypto.randomBytes(32).toString('hex') : 'dev-secret');
 
 // Middleware: Strict JWT requirement for private endpoints
 export async function requireAuth(req: Request, res: Response, next: Function) {

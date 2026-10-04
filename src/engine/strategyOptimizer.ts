@@ -2,7 +2,7 @@ import { Candle, InstrumentSpec } from '../types/market';
 import { PerformanceReport, AnalyticsEngine } from './analytics';
 import { IndicatorCalculator } from './indicators';
 import { OrderMatchingEngine } from './orderMatchingEngine';
-import { validateStrategyCode } from './strategySandbox';
+import { validateStrategyCode, SANDBOX_SECURITY_PREAMBLE } from './strategySandbox';
 
 export interface OptimizationRange {
   min: number;
@@ -469,38 +469,8 @@ export class StrategyOptimizerEngine {
         lotSize
       };
 
-      // Khởi tạo thực thi hàm chiến lược trong Security Sandbox Scope
-      const sandboxPreamble = `
-        const window = undefined;
-        const document = undefined;
-        const localStorage = undefined;
-        const sessionStorage = undefined;
-        const indexedDB = undefined;
-        const fetch = undefined;
-        const WebSocket = undefined;
-        const XMLHttpRequest = undefined;
-        const globalThis = undefined;
-        const self = undefined;
-        const top = undefined;
-        const parent = undefined;
-        const frames = undefined;
-        const opener = undefined;
-        const location = undefined;
-        const navigator = undefined;
-        const Reflect = undefined;
-        const Proxy = undefined;
-        const Worker = undefined;
-        const SharedWorker = undefined;
-        const ServiceWorker = undefined;
-        const setTimeout = undefined;
-        const setInterval = undefined;
-        const setImmediate = undefined;
-        const alert = undefined;
-        const prompt = undefined;
-        const confirm = undefined;
-        const postMessage = undefined;
-      `;
-      const factory = new Function(sandboxPreamble + functionBody);
+      // Execute strategy within consolidated Security Sandbox Scope
+      const factory = new Function(SANDBOX_SECURITY_PREAMBLE + functionBody);
       const stratInstance = factory();
       if (!stratInstance || typeof stratInstance.onCandle !== 'function') {
         return {
