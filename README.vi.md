@@ -4,11 +4,11 @@
 
 > **Nền tảng Replay Đa Tài Sản, Khởi Tạo Thuật Toán AI & Xuất Bot Giao Dịch Đạt Chuẩn Tổ Chức Tài Chính (Institutional-Grade)**
 
-[![Phiên bản: v1.3.0](https://img.shields.io/badge/Phiên%20bản-v1.3.0-indigo.svg?style=for-the-badge)](https://github.com/thieucong98/quant-backtest-pro/releases/tag/v1.3.0)
+[![Phiên bản: v2.0.0](https://img.shields.io/badge/Phiên%20bản-v2.0.0-indigo.svg?style=for-the-badge)](https://github.com/thieucong98/quant-backtest-pro/releases/tag/v2.0.0)
 [![Ngôn ngữ: Tiếng Việt](https://img.shields.io/badge/Ngôn%20ngữ-Tiếng%20Việt-red.svg?style=for-the-badge)](#)
 [![Language: English](https://img.shields.io/badge/Language-English-blue.svg?style=for-the-badge)](README.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-emerald.svg?style=for-the-badge)](LICENSE)
-[![Tests: 100% Passed](https://img.shields.io/badge/Tests-208%2F208%20Passed-success.svg?style=for-the-badge)](#)
+[![Tests: 100% Passed](https://img.shields.io/badge/Tests-237%2F237%20Passed-success.svg?style=for-the-badge)](#)
 [![Docker Ready](https://img.shields.io/badge/Docker-Sẵn%20sàng-2496ED.svg?style=for-the-badge&logo=docker&logoColor=white)](Dockerfile)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6.svg?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-19.0-61DAFB.svg?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
@@ -308,7 +308,9 @@ QuantBacktest Pro được thiết kế theo mô hình tăng trưởng lấy l�
 | Tiếng Việt (Vietnamese) | Tiếng Anh (English Documentation) |
 | :--- | :--- |
 | 📘 [Hướng dẫn sử dụng](docs/vi/USER_GUIDE.md) | 📘 [User Guide](docs/USER_GUIDE.md) |
+| 🧠 [Cẩm nang Tác chiến Apex AI Copilot](docs/vi/APEX_AI_COPILOT_GUIDE.md) | 🧠 [Apex AI Copilot Tactical Guide](docs/APEX_AI_COPILOT_GUIDE.md) |
 | 📋 [Danh mục tính năng & QA Checklist](docs/vi/FEATURE_CATALOG_CHECKLIST.md) | 📋 [Feature Catalog & QA Checklist](docs/FEATURE_CATALOG_CHECKLIST.md) |
+| 📜 [Nhật ký thay đổi](CHANGELOG.md) | 📜 [Changelog](CHANGELOG.md) |
 | 🛠️ [Tài liệu lập trình viên](docs/vi/DEVELOPER_GUIDE.md) | 🛠️ [Developer Guide](docs/DEVELOPER_GUIDE.md) |
 | 🏛️ [Kiến trúc hệ thống](docs/vi/ARCHITECTURE.md) | 🏛️ [System Architecture](docs/ARCHITECTURE.md) |
 | 🤖 [Hướng dẫn xuất Bot giao dịch](docs/vi/STRATEGY_BOT_EXPORTER.md) | 🤖 [Strategy Bot Exporter Guide](docs/STRATEGY_BOT_EXPORTER.md) |
