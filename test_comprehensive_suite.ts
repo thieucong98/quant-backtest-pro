@@ -1378,7 +1378,15 @@ async function runComprehensiveTests() {
     // 24.6 Test server route has normalizeOpenAiEndpoint and /ping
     const copilotRouteContent = fs.readFileSync('server/routes/copilot.ts', 'utf-8');
     assert(copilotRouteContent.includes('export function normalizeOpenAiEndpoint'), 'GatewayRoute', 'server/routes/copilot.ts exports normalizeOpenAiEndpoint');
+    assert(copilotRouteContent.includes('export function validateGatewayUrl'), 'GatewayRoute', 'server/routes/copilot.ts exports validateGatewayUrl');
     assert(copilotRouteContent.includes("copilotRouter.post('/ping'"), 'GatewayRoute', 'server/routes/copilot.ts defines /ping endpoint');
+
+    // 24.7 Test Sandbox Preamble DRY export
+    const { SANDBOX_SECURITY_PREAMBLE } = await import('./src/engine/strategySandbox');
+    assert(typeof SANDBOX_SECURITY_PREAMBLE === 'string' && SANDBOX_SECURITY_PREAMBLE.includes('window = undefined'), 'SandboxDRY', 'strategySandbox exports consolidated SANDBOX_SECURITY_PREAMBLE');
+
+    const optimizerContent = fs.readFileSync('src/engine/strategyOptimizer.ts', 'utf-8');
+    assert(optimizerContent.includes('SANDBOX_SECURITY_PREAMBLE'), 'SandboxDRY', 'strategyOptimizer imports and uses shared SANDBOX_SECURITY_PREAMBLE');
   }
 
   // =========================================================================

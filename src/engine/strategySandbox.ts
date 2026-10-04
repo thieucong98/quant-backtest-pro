@@ -305,6 +305,42 @@ export function validateStrategyCode(code: string): { valid: boolean; error?: st
   return { valid: true };
 }
 
+/**
+ * Consolidated security preamble shadowing dangerous browser & node host globals.
+ * Shared between StrategyRunner and StrategyOptimizerEngine.
+ */
+export const SANDBOX_SECURITY_PREAMBLE = `
+  "use strict";
+  const window = undefined;
+  const document = undefined;
+  const localStorage = undefined;
+  const sessionStorage = undefined;
+  const indexedDB = undefined;
+  const fetch = undefined;
+  const WebSocket = undefined;
+  const XMLHttpRequest = undefined;
+  const globalThis = undefined;
+  const self = undefined;
+  const top = undefined;
+  const parent = undefined;
+  const frames = undefined;
+  const opener = undefined;
+  const location = undefined;
+  const navigator = undefined;
+  const Reflect = undefined;
+  const Proxy = undefined;
+  const Worker = undefined;
+  const SharedWorker = undefined;
+  const ServiceWorker = undefined;
+  const setTimeout = undefined;
+  const setInterval = undefined;
+  const setImmediate = undefined;
+  const alert = undefined;
+  const prompt = undefined;
+  const confirm = undefined;
+  const postMessage = undefined;
+`;
+
 export class StrategyRunner {
   private compiledStrategy: any = null;
   private parameters: Record<string, any> = {};
@@ -331,42 +367,11 @@ export class StrategyRunner {
         functionBody = `return (${rawCode});`;
       }
 
-      // Complete shadow environment of all host globals
-      const sandboxPreamble = `
-        const window = undefined;
-        const document = undefined;
-        const localStorage = undefined;
-        const sessionStorage = undefined;
-        const indexedDB = undefined;
-        const fetch = undefined;
-        const WebSocket = undefined;
-        const XMLHttpRequest = undefined;
-        const globalThis = undefined;
-        const self = undefined;
-        const top = undefined;
-        const parent = undefined;
-        const frames = undefined;
-        const opener = undefined;
-        const location = undefined;
-        const navigator = undefined;
-        const Reflect = undefined;
-        const Proxy = undefined;
-        const Worker = undefined;
-        const SharedWorker = undefined;
-        const ServiceWorker = undefined;
-        const setTimeout = undefined;
-        const setInterval = undefined;
-        const setImmediate = undefined;
-        const alert = undefined;
-        const prompt = undefined;
-        const confirm = undefined;
-        const postMessage = undefined;
-      `;
-      const factory = new Function(sandboxPreamble + functionBody);
+      const factory = new Function(SANDBOX_SECURITY_PREAMBLE + functionBody);
       this.compiledStrategy = factory();
 
       if (!this.compiledStrategy || typeof this.compiledStrategy.onCandle !== 'function') {
-        throw new Error('Chiến lược phải trả về một đối tượng chứa phương thức onCandle(candle, indicators, account, api).');
+        throw new Error('Strategy must return an object containing an onCandle(candle, indicators, account, api) method.');
       }
 
       // Merge parameters if defined inside the code

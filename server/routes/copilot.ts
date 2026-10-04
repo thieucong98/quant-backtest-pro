@@ -222,11 +222,39 @@ export function normalizeOpenAiEndpoint(baseUrl?: string): string {
   return `${clean}/v1/chat/completions`;
 }
 
+/**
+ * Validates Gateway URL to guard against SSRF, cloud metadata leaks, and invalid protocols.
+ */
+export function validateGatewayUrl(urlStr: string): { valid: boolean; error?: string } {
+  try {
+    const parsed = new URL(urlStr);
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      return { valid: false, error: 'Protocol must be http or https' };
+    }
+    const host = parsed.hostname.toLowerCase();
+    if (
+      host === '169.254.169.254' ||
+      host === 'metadata.google.internal' ||
+      host === 'instance-data' ||
+      host.endsWith('.internal')
+    ) {
+      return { valid: false, error: 'Access to cloud instance metadata service is prohibited' };
+    }
+    return { valid: true };
+  } catch {
+    return { valid: false, error: 'Invalid URL format' };
+  }
+}
+
 // POST /api/copilot/ping — Fast test connection for custom LLM Gateway
 copilotRouter.post('/ping', async (req: Request, res: Response) => {
   try {
     const { baseUrl, apiKey, model } = req.body;
     const url = normalizeOpenAiEndpoint(baseUrl);
+    const validation = validateGatewayUrl(url);
+    if (!validation.valid) {
+      return res.status(400).json({ success: false, message: validation.error || 'Invalid Gateway URL' });
+    }
     const start = Date.now();
 
     console.log(`[Copilot Engine] 🔍 Testing connection to Gateway: ${url} (model: ${model || 'default'})`);
@@ -294,7 +322,10 @@ copilotRouter.post('/ask', async (req: Request, res: Response) => {
     ) {
       try {
         const url = normalizeOpenAiEndpoint(llmConfig.baseUrl);
-
+        const validation = validateGatewayUrl(url);
+        if (!validation.valid) {
+          console.warn(`[Copilot Engine] ❌ Blocked unsafe Gateway URL in /ask: ${url} (${validation.error})`);
+        } else {
         const targetRRInstruction = intent.targetRR
           ? `MANDATORY RISK-TO-REWARD CONSTRAINT: The user explicitly specified target Risk:Reward ratio 1:${intent.targetRR}. You MUST calculate stopLoss and takeProfit such that |takeProfit - entry| / |entry - stopLoss| == ${intent.targetRR}. The "rrRatio" field inside <action_plan> MUST be ${intent.targetRR}.`
           : `Calibrate stopLoss and takeProfit according to institutional SMC risk parameters (aim for minimum 1:2 to 1:3 R:R).`;
@@ -374,8 +405,9 @@ User Query: "${question}"`;
           const errText = await llmResponse.text().catch(() => '');
           console.warn(`[Copilot Engine] ❌ /ask Gateway HTTP ${llmResponse.status}: ${errText.slice(0, 300)}`);
         }
-      } catch (llmErr: any) {
-        console.warn('[Copilot Engine] ⚠️ External LLM /ask failed, falling back to algorithmic inference:', llmErr?.message);
+        } catch (llmErr: any) {
+          console.warn('[Copilot Engine] ⚠️ External LLM /ask failed, falling back to algorithmic inference:', llmErr?.message);
+        }
       }
     }
 
@@ -419,8 +451,9 @@ copilotRouter.post('/stream', async (req: Request, res: Response) => {
       llmConfig.provider !== 'builtin'
     ) {
       const url = normalizeOpenAiEndpoint(llmConfig.baseUrl);
-
-      const targetRRInstruction = intent.targetRR
+      const validation = validateGatewayUrl(url);
+      if (validation.valid) {
+        const targetRRInstruction = intent.targetRR
         ? `MANDATORY RISK-TO-REWARD CONSTRAINT: The user explicitly requested a target Risk-to-Reward ratio of 1:${intent.targetRR}. You MUST set entry, stopLoss, and takeProfit such that the R:R (|takeProfit - entry| / |entry - stopLoss|) equals EXACTLY ${intent.targetRR}. The "rrRatio" field inside <action_plan> MUST be ${intent.targetRR}.`
         : `Calibrate stopLoss and takeProfit according to institutional SMC risk parameters (aim for minimum 1:2 to 1:3 R:R).`;
 
@@ -607,10 +640,13 @@ User Query: "${question || 'Phân tích tín hiệu'}"`;
           const notice = `⚠️ [Thông báo Gateway]: Gateway (${url}) phản hồi mã lỗi HTTP ${nonStreamRes.status}. Hệ thống tự động chuyển sang SMC Quant Engine.\n\n`;
           res.write(`data: ${JSON.stringify({ type: 'reasoning', delta: notice, timestamp: Date.now() })}\n\n`);
         }
-      } catch (nonStreamErr: any) {
-        console.warn(`[Copilot Engine] ❌ Non-streaming fetch exception:`, nonStreamErr?.message);
-        const notice = `⚠️ [Thông báo Gateway]: Không thể kết nối tới ${url} (${nonStreamErr?.message || 'Lỗi mạng'}). Hệ thống chuyển sang SMC Quant Engine.\n\n`;
-        res.write(`data: ${JSON.stringify({ type: 'reasoning', delta: notice, timestamp: Date.now() })}\n\n`);
+        } catch (nonStreamErr: any) {
+          console.warn(`[Copilot Engine] ❌ Non-streaming fetch exception:`, nonStreamErr?.message);
+          const notice = `⚠️ [Thông báo Gateway]: Không thể kết nối tới ${url} (${nonStreamErr?.message || 'Lỗi mạng'}). Hệ thống chuyển sang SMC Quant Engine.\n\n`;
+          res.write(`data: ${JSON.stringify({ type: 'reasoning', delta: notice, timestamp: Date.now() })}\n\n`);
+        }
+      } else {
+        console.warn(`[Copilot Engine] ❌ Blocked unsafe Gateway URL in /stream: ${url} (${validation.error})`);
       }
     }
 

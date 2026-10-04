@@ -237,7 +237,17 @@ tunnelRouter.post('/start', async (req: Request, res: Response) => {
   }
 
   const requestedProvider = (req.body?.provider || 'CLOUDFLARE').toUpperCase();
-  const requestedPort = Number(req.body?.port) || (await detectActiveFrontendPort());
+  const rawPort = req.body?.port;
+  let requestedPort: number;
+  if (rawPort !== undefined && rawPort !== null && rawPort !== '') {
+    const num = Number(rawPort);
+    if (!Number.isInteger(num) || num < 1024 || num > 65535) {
+      return res.status(400).json({ error: 'Cổng port phải là số nguyên hợp lệ trong khoảng 1024 - 65535.' });
+    }
+    requestedPort = num;
+  } else {
+    requestedPort = await detectActiveFrontendPort();
+  }
   const requestedPin = req.body?.pin || tunnelState.pin;
 
   tunnelState.port = requestedPort;
