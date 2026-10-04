@@ -34,25 +34,34 @@ export class IndicatorCalculator {
     return 0;
   }
 
+  private sanitizePeriod(period: any, defaultPeriod: number = 14): number {
+    if (typeof period === 'number' && !isNaN(period) && period > 0) {
+      return Math.max(1, Math.floor(period));
+    }
+    return defaultPeriod;
+  }
+
   public sma(period: number, offset: number = 0): number {
+    const safePeriod = this.sanitizePeriod(period, 14);
     const safeOffset = this.sanitizeOffset(offset);
     const end = this.effectiveLength - safeOffset;
-    const start = end - period;
+    const start = end - safePeriod;
     if (start < 0 || end <= 0) return this.candles[this.effectiveLength - 1]?.close || 0;
 
     let sum = 0;
     for (let i = start; i < end; i++) {
       sum += this.candles[i].close;
     }
-    return sum / period;
+    return sum / safePeriod;
   }
 
   public ema(period: number, offset: number = 0): number {
+    const safePeriod = this.sanitizePeriod(period, 14);
     const safeOffset = this.sanitizeOffset(offset);
     const end = this.effectiveLength - safeOffset;
-    if (end <= period) return this.sma(period, safeOffset);
+    if (end <= safePeriod) return this.sma(safePeriod, safeOffset);
 
-    const k = 2 / (period + 1);
+    const k = 2 / (safePeriod + 1);
     let emaVal = this.candles[0].close;
 
     for (let i = 1; i < end; i++) {
@@ -62,30 +71,31 @@ export class IndicatorCalculator {
   }
 
   public rsi(period: number = 14, offset: number = 0): number {
+    const safePeriod = this.sanitizePeriod(period, 14);
     const safeOffset = this.sanitizeOffset(offset);
     const end = this.effectiveLength - safeOffset;
-    if (end <= period + 1) return 50;
+    if (end <= safePeriod + 1) return 50;
 
     let gains = 0;
     let losses = 0;
 
-    for (let i = 1; i <= period; i++) {
+    for (let i = 1; i <= safePeriod; i++) {
       const diff = this.candles[i].close - this.candles[i - 1].close;
       if (diff >= 0) gains += diff;
       else losses -= diff;
     }
 
-    let avgGain = gains / period;
-    let avgLoss = losses / period;
+    let avgGain = gains / safePeriod;
+    let avgLoss = losses / safePeriod;
 
-    for (let i = period + 1; i < end; i++) {
+    for (let i = safePeriod + 1; i < end; i++) {
       const diff = this.candles[i].close - this.candles[i - 1].close;
       if (diff >= 0) {
-        avgGain = (avgGain * (period - 1) + diff) / period;
-        avgLoss = (avgLoss * (period - 1)) / period;
+        avgGain = (avgGain * (safePeriod - 1) + diff) / safePeriod;
+        avgLoss = (avgLoss * (safePeriod - 1)) / safePeriod;
       } else {
-        avgGain = (avgGain * (period - 1)) / period;
-        avgLoss = (avgLoss * (period - 1) - diff) / period;
+        avgGain = (avgGain * (safePeriod - 1)) / safePeriod;
+        avgLoss = (avgLoss * (safePeriod - 1) - diff) / safePeriod;
       }
     }
 
@@ -95,6 +105,7 @@ export class IndicatorCalculator {
   }
 
   public atr(period: number = 14, offset: number = 0): number {
+    const safePeriod = this.sanitizePeriod(period, 14);
     const safeOffset = this.sanitizeOffset(offset);
     const end = this.effectiveLength - safeOffset;
     if (end <= 1) return 0;
@@ -108,20 +119,21 @@ export class IndicatorCalculator {
       trs.push(tr);
     }
 
-    if (trs.length < period) return trs[trs.length - 1] || 0;
+    if (trs.length < safePeriod) return trs[trs.length - 1] || 0;
 
     let sum = 0;
-    for (let i = trs.length - period; i < trs.length; i++) {
+    for (let i = trs.length - safePeriod; i < trs.length; i++) {
       sum += trs[i];
     }
-    return sum / period;
+    return sum / safePeriod;
   }
 
   public bollingerBands(period: number = 20, stdDevMult: number = 2, offset: number = 0): { upper: number; middle: number; lower: number } {
+    const safePeriod = this.sanitizePeriod(period, 20);
     const safeOffset = this.sanitizeOffset(offset);
-    const middle = this.sma(period, safeOffset);
+    const middle = this.sma(safePeriod, safeOffset);
     const end = this.effectiveLength - safeOffset;
-    const start = Math.max(0, end - period);
+    const start = Math.max(0, end - safePeriod);
     
     let varianceSum = 0;
     const count = end - start;
@@ -139,25 +151,31 @@ export class IndicatorCalculator {
     };
   }
 
-  public macd(fast: number = 12, slow: number = 26, signal: number = 9, offset: number = 0): { macd: number; signal: number; hist: number } {
+  public macd(fast: number = 12, slow: number = 26, signal: number = 9, offset: number = 0): { macd: number; signal: number; hist: number; histogram: number } {
     const safeOffset = this.sanitizeOffset(offset);
-    const fastEma = this.ema(fast, safeOffset);
-    const slowEma = this.ema(slow, safeOffset);
+    const safeFast = this.sanitizePeriod(fast, 12);
+    const safeSlow = this.sanitizePeriod(slow, 26);
+    const safeSignal = this.sanitizePeriod(signal, 9);
+    const fastEma = this.ema(safeFast, safeOffset);
+    const slowEma = this.ema(safeSlow, safeOffset);
     const macdLine = fastEma - slowEma;
 
     // Approximate Signal EMA
     const signalLine = macdLine * 0.8; // smoothed
+    const histValue = macdLine - signalLine;
     return {
       macd: macdLine,
       signal: signalLine,
-      hist: macdLine - signalLine
+      hist: histValue,
+      histogram: histValue
     };
   }
 
   public highest(period: number, offset: number = 0): number {
+    const safePeriod = this.sanitizePeriod(period, 14);
     const safeOffset = this.sanitizeOffset(offset);
     const end = this.effectiveLength - safeOffset;
-    const start = Math.max(0, end - period);
+    const start = Math.max(0, end - safePeriod);
     let max = -Infinity;
     for (let i = start; i < end; i++) {
       if (this.candles[i].high > max) max = this.candles[i].high;
@@ -166,9 +184,10 @@ export class IndicatorCalculator {
   }
 
   public lowest(period: number, offset: number = 0): number {
+    const safePeriod = this.sanitizePeriod(period, 14);
     const safeOffset = this.sanitizeOffset(offset);
     const end = this.effectiveLength - safeOffset;
-    const start = Math.max(0, end - period);
+    const start = Math.max(0, end - safePeriod);
     let min = Infinity;
     for (let i = start; i < end; i++) {
       if (this.candles[i].low < min) min = this.candles[i].low;

@@ -5,7 +5,7 @@ export interface IndicatorLibrary {
   sma(period: number, offset?: number): number;
   ema(period: number, offset?: number): number;
   rsi(period?: number, offset?: number): number;
-  macd(fast?: number, slow?: number, signal?: number, offset?: number): { macd: number; signal: number; hist: number };
+  macd(fast?: number, slow?: number, signal?: number, offset?: number): { macd: number; signal: number; hist: number; histogram?: number };
   bollingerBands(period?: number, stdDev?: number, offset?: number): { upper: number; middle: number; lower: number };
   atr(period?: number, offset?: number): number;
   highest(period: number, offset?: number): number;

@@ -108,6 +108,8 @@ export const AIStrategyModal: React.FC = () => {
     addStrategyLog,
     instrument,
     candles,
+    rawM1Candles,
+    timeframe,
     account,
     language,
     play,
@@ -147,6 +149,7 @@ export const AIStrategyModal: React.FC = () => {
   const defaultRanges = StrategyOptimizerEngine.getSymbolDefaultRanges(instrument);
   const [slRange, setSlRange] = useState<OptimizationRange>(defaultRanges.slRange);
   const [tpRange, setTpRange] = useState<OptimizationRange>(defaultRanges.tpRange);
+  const [activePreset, setActivePreset] = useState<string | null>(null);
   const [optimizerSortBy, setOptimizerSortBy] = useState<'netProfit' | 'profitFactor' | 'winRate' | 'sharpeRatio' | 'riskRewardRatio'>('netProfit');
   const [isOptimizing, setIsOptimizing] = useState<boolean>(false);
   const [optProgress, setOptProgress] = useState<{ percent: number; current: number; total: number }>({ percent: 0, current: 0, total: 0 });
@@ -649,7 +652,15 @@ export const AIStrategyModal: React.FC = () => {
 
   // --- OPTIMIZER HANDLERS ---
   const handleRunOptimizer = async () => {
-    if (candles.length < 10) {
+    // Determine effective candles for optimization:
+    // If the active chart timeframe has very few candles (e.g. D1/H4 with < 50 candles),
+    // fallback to rawM1Candles so the optimizer has an adequate sample size for indicators.
+    let optCandles = candles;
+    if (optCandles.length < 50 && rawM1Candles && rawM1Candles.length >= 50) {
+      optCandles = rawM1Candles;
+    }
+
+    if (optCandles.length < 10) {
       alert(t.insufficientCandlesForOpt);
       return;
     }
@@ -665,11 +676,13 @@ export const AIStrategyModal: React.FC = () => {
       const summary = await StrategyOptimizerEngine.runBatchOptimization(
         strategyCode,
         activeStrategy?.parameters || {},
-        candles,
+        optCandles,
         instrument,
         {
           slRange,
           tpRange,
+          initialBalance: account?.initialBalance || 10000,
+          lotSize: 0.1,
           metricSortBy: optimizerSortBy,
           splitRatio: optEnableSplit ? 0.70 : 0
         },
@@ -719,6 +732,7 @@ export const AIStrategyModal: React.FC = () => {
   };
 
   const handleSelectPreset = (symbolPreset: string) => {
+    setActivePreset(symbolPreset);
     const mockSpec = { ...instrument, symbol: symbolPreset, category: symbolPreset.includes('XAU') ? 'METALS' : symbolPreset.includes('BTC') ? 'CRYPTO' : symbolPreset.includes('US30') ? 'INDICES' : 'FOREX' } as any;
     const ranges = StrategyOptimizerEngine.getSymbolDefaultRanges(mockSpec);
     setSlRange(ranges.slRange);
@@ -1210,22 +1224,28 @@ export const AIStrategyModal: React.FC = () => {
                     <p className="text-[11px] text-slate-400 mt-0.5">{t.optimizerDesc}</p>
                   </div>
 
-                  {/* SYMBOL PRESET SELECTOR */}
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="text-[10px] text-slate-500 font-mono mr-1">{t.symbolPreset}:</span>
-                    {['XAUUSD', 'EURUSD', 'BTCUSD', 'US30'].map((preset) => (
-                      <button
-                        key={preset}
-                        onClick={() => handleSelectPreset(preset)}
-                        className={`text-[10px] px-2 py-0.5 rounded font-mono border transition-colors ${
-                          instrument.symbol === preset
-                            ? 'bg-emerald-600 text-white border-emerald-500 font-bold'
-                            : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'
-                        }`}
-                      >
-                        {preset}
-                      </button>
-                    ))}
+                  {/* SYMBOL PRESET SELECTOR & DATASET INFO */}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-[10px] text-slate-400 font-mono mr-0.5">{t.symbolPreset}:</span>
+                    {['XAUUSD', 'EURUSD', 'BTCUSD', 'US30'].map((preset) => {
+                      const isSelected = activePreset === preset || (!activePreset && instrument.symbol === preset);
+                      return (
+                        <button
+                          key={preset}
+                          onClick={() => handleSelectPreset(preset)}
+                          className={`text-[10px] px-2 py-0.5 rounded font-mono border transition-all ${
+                            isSelected
+                              ? 'bg-emerald-600 text-white border-emerald-500 font-bold shadow-sm'
+                              : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'
+                          }`}
+                        >
+                          {preset}
+                        </button>
+                      );
+                    })}
+                    <span className="text-[10px] px-2 py-0.5 rounded font-mono bg-slate-950/70 border border-slate-800 text-slate-400">
+                      {instrument.symbol} • {candles.length} bars ({timeframe})
+                    </span>
                   </div>
                 </div>
 
