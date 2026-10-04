@@ -978,6 +978,18 @@ export interface TranslationDict {
   apexCopilotPromptRR3Template: string;
   apexCopilotPromptRR2Template: string;
   apexCopilotPromptRR4Template: string;
+  apexCopilotSettingsBtn: string;
+  apexCopilotSettingsTitle: string;
+  apexCopilotSettingsProviderLabel: string;
+  apexCopilotSettingsBaseUrl: string;
+  apexCopilotSettingsModel: string;
+  apexCopilotSettingsApiKey: string;
+  apexCopilotSettingsTestBtn: string;
+  apexCopilotSettingsSaveBtn: string;
+  apexCopilotSettingsTesting: string;
+  apexCopilotSettingsSuccess: string;
+  apexCopilotSettingsError: string;
+  apexCopilotSettingsSaved: string;
   // Quant Execution Bridge (v2.0)
   bridgeConnected: string;
   bridgeConnecting: string;

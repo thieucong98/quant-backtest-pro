@@ -1349,7 +1349,40 @@ async function runComprehensiveTests() {
   }
 
   // =========================================================================
-  // 24. SUMMARY OF TEST SUITE RESULTS
+  // 24. APEX COPILOT CUSTOM GATEWAY & ENDPOINT NORMALIZER TESTS
+  // =========================================================================
+  console.log('\n--- 24. Apex Copilot Custom Gateway & Endpoint Normalizer Tests ---');
+  {
+    const { normalizeOpenAiEndpoint, copilotApi } = await import('./src/api/copilot');
+
+    // 24.1 Test endpoint normalization with plain host
+    const url1 = normalizeOpenAiEndpoint('http://localhost:8000');
+    assert(url1 === 'http://localhost:8000/v1/chat/completions', 'GatewayNormalizer', 'Normalizes plain host to /v1/chat/completions');
+
+    // 24.2 Test endpoint normalization with /v1
+    const url2 = normalizeOpenAiEndpoint('http://localhost:8000/v1');
+    assert(url2 === 'http://localhost:8000/v1/chat/completions', 'GatewayNormalizer', 'Normalizes host with /v1 to /v1/chat/completions');
+
+    // 24.3 Test endpoint normalization with already complete /chat/completions
+    const url3 = normalizeOpenAiEndpoint('http://localhost:8000/v1/chat/completions');
+    assert(url3 === 'http://localhost:8000/v1/chat/completions', 'GatewayNormalizer', 'Preserves complete /chat/completions without duplicating');
+
+    // 24.4 Test endpoint normalization with trailing slash
+    const url4 = normalizeOpenAiEndpoint('https://api.openai.com/v1/');
+    assert(url4 === 'https://api.openai.com/v1/chat/completions', 'GatewayNormalizer', 'Removes trailing slash and appends /chat/completions');
+
+    // 24.5 Test empty / undefined fallback
+    const urlDefault = normalizeOpenAiEndpoint('');
+    assert(urlDefault === 'https://api.openai.com/v1/chat/completions', 'GatewayNormalizer', 'Empty string falls back to OpenAI /v1/chat/completions');
+
+    // 24.6 Test server route has normalizeOpenAiEndpoint and /ping
+    const copilotRouteContent = fs.readFileSync('server/routes/copilot.ts', 'utf-8');
+    assert(copilotRouteContent.includes('export function normalizeOpenAiEndpoint'), 'GatewayRoute', 'server/routes/copilot.ts exports normalizeOpenAiEndpoint');
+    assert(copilotRouteContent.includes("copilotRouter.post('/ping'"), 'GatewayRoute', 'server/routes/copilot.ts defines /ping endpoint');
+  }
+
+  // =========================================================================
+  // 25. SUMMARY OF TEST SUITE RESULTS
   // =========================================================================
   console.log('\n===============================================================');
   const total = testResults.length;

@@ -20,7 +20,7 @@
 
 ```
 +--------------------------------------------------------------+
-| [:::] [🧠] Apex AI Copilot (●) [⚡ Thuật toán SMC]  [◀] [▶] [-] [X] |
+| [:::] [🧠] Apex AI Copilot (●) [⚡ Thuật toán SMC] [⚙] [◀] [▶] [-] [X] |
 +--------------------------------------------------------------+
 | [✨ Copilot]   [🥞 MTF Matrix]   [⚡ Chẩn đoán]              |
 +--------------------------------------------------------------+
@@ -49,6 +49,7 @@
 
 ### Các Chi Tiết Điểm Nhấn Trên Giao Diện:
 - **Huy hiệu Động cơ Phản hồi (`[⚡ Thuật toán SMC]` / `[🧠 Model AI]`)**: Nằm ngay cạnh tên Copilot. Khi rê chuột sẽ hiển thị tooltip giải thích công cụ đang chạy và hướng dẫn đổi nhà cung cấp.
+- **Nút Cài Đặt Nhanh Gateway & Provider (`[⚙]`)**: Nằm trên thanh tiêu đề HUD, bấm vào để mở/đóng thẻ cấu hình nhà cung cấp LLM, Base URL, Model và API Key trực tiếp mà không cần rời khỏi màn hình biểu đồ.
 - **Biểu tượng Hướng dẫn tương tác (`(?)`)**: Nằm cạnh dòng chữ "HỎI COPILOT". Bấm vào để mở bảng hướng dẫn câu lệnh và cú pháp chuẩn.
 - **Nút chọn nhanh Tỷ lệ R:R (`[🎯 R:R 1:3]`, `[🎯 R:R 1:2]`, `[🎯 R:R 1:4]`)**: Bấm 1 chạm là câu lệnh yêu cầu tỷ lệ R:R tương ứng sẽ tự động được điền và gửi ngay đến AI mà không cần phải gõ thủ công.
 - **Thẻ Kế hoạch Hành động (Action Plan)**: Hiển thị chi tiết Giá vào, Cắt lỗ, Chốt lời, Tỷ lệ R:R làm nổi bật màu xanh ngọc khi đạt $\ge 1:3$, cùng 4 tiêu chí kiểm tra tổ chức:
@@ -89,19 +90,36 @@ Bộ bóc tách ý định tài chính của Copilot hỗ trợ cả tiếng Vi�
 
 ## 4. Hướng Dẫn Cấu Hình Mô Hình AI Đám Mây & AI Cục Bộ
 
-Người dùng có thể dễ dàng chuyển đổi bộ não phân tích từ **Thuật toán SMC cục bộ** sang các mô hình AI trực tuyến:
+Người dùng có thể chuyển đổi bộ não phân tích từ **Thuật toán SMC cục bộ** sang các mô hình AI hoặc LLM Gateway tùy chỉnh qua 2 cách thuận tiện:
 
+### Cách A: Cấu hình nhanh trực tiếp ngay trên thanh tiêu đề HUD (Khuyên dùng)
+1. Trên thanh tiêu đề của Copilot HUD, bấm vào biểu tượng **Cài đặt (`⚙`)**.
+2. Thẻ **Cấu hình LLM Gateway & Nhà cung cấp** sẽ thả xuống trực tiếp bên trong HUD:
+   - **Nhà cung cấp**: Chọn engine mong muốn (ví dụ: `Custom Gateway / Reverse Proxy`, `OpenAI`, `Google Gemini`, `DeepSeek`, `Ollama`).
+   - **Base URL**: Điền đường dẫn gateway (ví dụ: `https://my-llm-gateway.example.com`, `http://localhost:8000/v1`).
+   - **Model**: Điền hoặc chọn tên mô hình (ví dụ: `gpt-4o`, `deepseek-chat`, `claude-3-5-sonnet`).
+   - **API Key**: Điền mã khóa bí mật (bấm icon mắt để ẩn/hiện).
+3. Bấm nút **Kiểm tra kết nối (Test Ping)**:
+   - Hệ thống gửi gói tin kiểm tra kết nối qua `/api/copilot/ping` với thông số cấu hình.
+   - Hiển thị độ trễ mạng thực tế theo mili-giây (ví dụ: `Kết nối thành công (142ms)`) hoặc thông báo lỗi chẩn đoán chi tiết nếu gateway không phản hồi.
+4. Bấm **Lưu cấu hình**:
+   - Cấu hình được lưu vào bộ nhớ cục bộ và tự động kích hoạt thông qua cơ chế broadcast sự kiện.
+   - Huy hiệu động cơ trên thanh HUD lập tức cập nhật sang mô hình tùy chỉnh (ví dụ: `[🧠 gpt-4o]`) mà không cần tải lại trang.
+
+### Cách B: Qua cửa sổ Chiến Lược AI Studio
 1. Bấm vào nút **Trợ lý AI** trên thanh tiêu đề hoặc mở mục **Chiến lược AI**.
-2. Chọn tab **Cài đặt**.
-3. Chọn nhà cung cấp mô hình mong muốn:
-   - **Google Gemini Official API**: Dán API Key từ Google AI Studio (`AIza...`).
-   - **OpenAI / OpenRouter / Groq**: Dán API Key (`sk-...`) và chọn model (`gpt-4o`, `gpt-4o-mini`, `o1-mini`).
-   - **DeepSeek Official AI**: Dán DeepSeek API Key và chọn `deepseek-chat` hoặc `deepseek-coder`.
-   - **Anthropic Claude**: Dán API Key của Claude.
-   - **Ollama Local LLM**: Chạy mô hình offline trên máy tính cá nhân (`http://localhost:11434`, ví dụ `llama3.2`, `deepseek-coder-v2`).
-   - **Custom Reverse Proxy Tunnel**: Kết nối qua URL Reverse Proxy tương thích chuẩn OpenAI.
-4. Bấm **Lưu cấu hình**.
-5. Trở lại biểu đồ giao dịch. Huy hiệu trên HUD Copilot sẽ ngay lập tức chuyển sang mô hình vừa chọn (ví dụ: `[🧠 gpt-4o]`).
+2. Chọn tab **Cài đặt** và nhập thông số cấu hình.
+3. Bấm **Lưu cấu hình**.
+
+### Kiến Trúc: Tự Động Chuẩn Hóa URL & Cơ Chế Phân Phát Kép (Dual Delivery)
+- **Tự động chuẩn hóa Endpoint URL**: Bộ chuẩn hóa URL tại backend xử lý mọi định dạng người dùng nhập vào:
+  - `https://api.openai.com` $\rightarrow$ `https://api.openai.com/v1/chat/completions`
+  - `https://custom-gateway.io/v1` $\rightarrow$ `https://custom-gateway.io/v1/chat/completions`
+  - `https://custom-gateway.io/v1/chat/completions` $\rightarrow$ giữ nguyên chuẩn xác, không bị nhân đôi đường dẫn gây lỗi 404.
+- **Phân phát kép (Dual Delivery - SSE Stream kết hợp Non-Streaming Fallback)**:
+  1. Copilot gửi yêu cầu dạng streaming (`stream: true`) để hiển thị token theo thời gian thực.
+  2. Nếu Gateway tùy chỉnh không hỗ trợ Server-Sent Events (SSE) hoặc trả về mã lỗi streaming (400, 422, 500), Copilot **tự động thử lại ngay lập tức với yêu cầu thông thường (`stream: false`)**.
+  3. Nếu cả 2 lần gọi đều gặp lỗi (ví dụ: sai API key 401 hoặc endpoint không tồn tại 404), Copilot sẽ stream một thông báo cảnh báo lỗi chẩn đoán trực tiếp cho trader trước khi chuyển sang chạy thuật toán SMC cục bộ.
 
 ---
 
@@ -138,3 +156,5 @@ $$\frac{|\text{Giá}_{\text{TP}} - P_{\text{vào}}|}{|\text{Giá}_{\text{SL}} - 
 | `COPILOT-04` | Huy hiệu động cơ hiển thị trên tiêu đề HUD | Hiện `[⚡ Thuật toán SMC]` hoặc `[🧠 gpt-4o]` kèm tooltip | ✅ ĐẠT |
 | `COPILOT-05` | Không hardcode chuỗi UI trên cả 4 ngôn ngữ | Kiểm tra `npm run check:i18n` đạt 0 lỗi vi phạm | ✅ ĐẠT |
 | `COPILOT-06` | LLM bên ngoài mất mạng hoặc không kết nối được | Tự động fallback sang thuật toán SMC với R:R đã chuẩn hóa | ✅ ĐẠT |
+| `COPILOT-07` | Bấm nút Cài đặt `[⚙]` trên HUD -> Kiểm tra Ping & Lưu | Trả về độ trễ ms; cấu hình đã lưu đổi huy hiệu HUD ngay lập tức | ✅ ĐẠT |
+| `COPILOT-08` | Tự động chuẩn hóa Gateway URL & Phân phát kép | Tự động bổ sung `/v1` và tự fallback non-streaming nếu gateway không hỗ trợ SSE | ✅ ĐẠT |

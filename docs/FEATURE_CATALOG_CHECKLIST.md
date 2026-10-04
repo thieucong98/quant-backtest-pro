@@ -532,8 +532,12 @@ This document provides a single source of truth for all **63 features across 10 
 - **UI Navigation:** Top-bar / chart floating dock ➔ Click `Copilot` pill (draggable anywhere across chart canvas).
 - **Functionality:**
   - Real-time Server-Sent Events (SSE) streaming displaying token-by-token Chain-of-Thought reasoning connecting directly to AI Gateway (`/api/copilot/stream`, `/api/copilot/ask`) and user-configured LLM providers (`OpenAI`, `Gemini`, `Claude`, `DeepSeek`, `Ollama`, or Custom Proxy).
+  - **Embedded Quick Gateway & Model Settings (`⚙`)**: Header settings button opens an in-HUD configuration card to set Provider, Base URL, Model name, and API Key without leaving the chart canvas.
+  - **Smart Endpoint Auto-Normalization**: Backend normalizer detects and auto-completes plain hosts, `/v1` endpoints, or explicit `/chat/completions` paths without path duplication errors.
+  - **Live Gateway Connectivity Ping (`Test Ping`)**: Sends a lightweight probe to `/api/copilot/ping` measuring round-trip latency (ms) and returning diagnostic errors before saving.
+  - **Dual Delivery (SSE Streaming with Non-Streaming Fallback)**: Automatically attempts SSE streaming first; if a gateway rejects streaming or lacks SSE support, Copilot transparently retries with standard non-streaming requests.
   - **Dynamic Risk-to-Reward (R:R) NLP Calibration**: Heuristic and NLP parser extracts user-specified target R:R (`1:3`, `1:4`, `1:2.5`), custom StopLoss pips (`SL 15 pip`), TakeProfit pips (`TP 60 pip`), and directional bias from prompts in Vietnamese or English. Automatically calibrates Stop Loss and Take Profit levels mathematically to satisfy the requested ratio.
-  - **Active Inference Engine Badge**: Header displays live provider badge (`[⚡ SMC Algorithm]` or `[🧠 gpt-4o]`) with explanatory tooltip.
+  - **Active Inference Engine Badge**: Header displays live provider badge (`[⚡ SMC Algorithm]` or `[🧠 gpt-4o]`) with explanatory tooltip and real-time state synchronization.
   - **Interactive Prompt Guide & Popover**: `(?)` button reveals syntax guide for custom R:R, SL/TP pips, and institutional SMC confluence queries.
   - **One-Click R:R Preset Chips**: `[🎯 R:R 1:3]`, `[🎯 R:R 1:2]`, and `[🎯 R:R 1:4]` quick action chips for instant execution.
   - **Automatic extraction of typed `ActionPlan`**: (Side, Entry, SL, TP, calibrated R:R, Confidence).
@@ -543,10 +547,11 @@ This document provides a single source of truth for all **63 features across 10 
 - **QA Verification:**
   1. Ask `"Rủi ro / Lợi nhuận? tôi muốn tỉ lệ lợi nhuận là 1:3"` or click chip `[🎯 R:R 1:3]` -> Live reasoning streams and Action Plan card displays calibrated `R:R: 1 : 3.00` with TP distance $= 3 \times$ SL distance.
   2. Click prompt guide `(?)` -> Popover appears detailing syntax tips for R:R, SL/TP pips, and bias.
-  3. Verify Engine Badge -> Displays active engine (`[⚡ SMC Algorithm]` or `[🧠 Model]`).
-  4. Click collapse `[-]` button -> Panel collapses smoothly into a sleek floating capsule pill.
-  5. Click "Apply Plan" -> Market order executes with SL/TP lines drawn on chart; chart zoom, pan position, and 15-bar right breathing room remain 100% stable without resetting.
-  6. Drag HUD or click `◀` / `▶` -> HUD snaps to edges or follows cursor smoothly within viewport bounds.
+  3. Click settings icon `[⚙]` in HUD -> Card opens; enter endpoint and click "Test Ping" -> Returns latency ms; click "Save" -> HUD badge updates dynamically.
+  4. Verify Engine Badge -> Displays active engine (`[⚡ SMC Algorithm]` or `[🧠 Model]`).
+  5. Click collapse `[-]` button -> Panel collapses smoothly into a sleek floating capsule pill.
+  6. Click "Apply Plan" -> Market order executes with SL/TP lines drawn on chart; chart zoom, pan position, and 15-bar right breathing room remain 100% stable without resetting.
+  7. Drag HUD or click `◀` / `▶` -> HUD snaps to edges or follows cursor smoothly within viewport bounds.
 
 #### `F-SMC-08` - Multi-Timeframe (MTF) Trend Matrix Widget
 - **UI Navigation:** Compact widget docked below the Apex Copilot on the chart view.
