@@ -527,20 +527,25 @@ Tài liệu này là **nguồn thông tin chuẩn mực duy nhất (Single Sourc
   1. Khi chỉ có 1 yếu tố đơn lẻ -> Điểm hợp lưu $< 50$, không kích hoạt LLM tránh tốn tài nguyên.
   2. Khi có CHoCH + OB unmitigated + Vùng Discount -> Điểm vượt ngưỡng 65, hệ thống tự động sinh tín hiệu LLM.
 
-#### `F-SMC-07` - Apex AI Copilot HUD & Suy Luận CoT Trực Tiếp
+#### `F-SMC-07` - Apex AI Copilot HUD, Suy Luận CoT & Động Cơ Chuẩn Hóa R:R Tùy Chỉnh
 - **Điều hướng:** Thanh công cụ / bảng nổi biểu đồ ➔ Bấm nút `Copilot` (kéo thả tự do trên toàn màn hình biểu đồ).
 - **Chức năng:**
-  - Kết nối luồng Server-Sent Events (SSE) hiển thị Chain-of-Thought (chuỗi tư duy từng bước) của AI theo thời gian thực tương tác trực tiếp với AI Gateway (`/api/copilot/stream`, `/api/copilot/ask`) và các mô hình LLM người dùng đã cấu hình (`MiniMax`, `OpenAI`, `Gemini`, `Claude`, `DeepSeek`, `Ollama`).
-  - Tự động bóc tách khối `ActionPlan` (Hướng lệnh, Điểm vào, Cắt lỗ, Chốt lời, Tỷ lệ R:R, Độ tin cậy).
+  - Kết nối luồng Server-Sent Events (SSE) hiển thị Chain-of-Thought (chuỗi tư duy từng bước) của AI theo thời gian thực tương tác trực tiếp với AI Gateway (`/api/copilot/stream`, `/api/copilot/ask`) và các mô hình LLM người dùng đã cấu hình (`OpenAI`, `Gemini`, `Claude`, `DeepSeek`, `Ollama`, hoặc Custom Proxy).
+  - **Bóc tách ý định & Chuẩn hóa R:R động (Dynamic R:R NLP Parser)**: Bộ phân tích cú pháp thông minh nhận diện yêu cầu tỷ lệ R:R (`1:3`, `1:4`, `1:2.5`), SL tùy chỉnh (`SL 15 pip`), TP tùy chỉnh (`TP 60 pip`), và hướng lệnh ưu tiên từ câu hỏi tiếng Việt hoặc tiếng Anh. Tự động tính toán lại mức Cắt lỗ và Chốt lời toán học để thỏa mãn chính xác tỷ lệ R:R mong muốn.
+  - **Huy hiệu Động cơ Suy luận Trực quan**: Hiển thị nhãn công cụ đang phản hồi (`[⚡ Thuật toán SMC]` hoặc `[🧠 Model AI]`) kèm tooltip giải thích.
+  - **Bảng Hướng Dẫn Tác Chiến Tương Tác**: Nút `(?)` ngay cạnh ô nhập mở popover hướng dẫn cú pháp câu lệnh (R:R, SL/TP pips, Bias đa khung).
+  - **Chip chọn nhanh R:R 1 chạm**: Bổ sung các nút bấm `[🎯 R:R 1:3]`, `[🎯 R:R 1:2]`, `[🎯 R:R 1:4]` cho phép kích hoạt phân tích R:R mục tiêu ngay lập tức mà không cần gõ phím.
+  - **Tự động bóc tách khối `ActionPlan`**: (Hướng lệnh, Điểm vào, Cắt lỗ, Chốt lời, Tỷ lệ R:R đã chuẩn hóa, Độ tin cậy).
   - **Công thái học kéo thả & Dock linh hoạt**: Cửa sổ nổi tự do kéo thả lưu tọa độ qua `localStorage` (mặc định góc trên trái `(24, 52)` không bao giờ che khuất nến hay thước đo giá bên phải), hỗ trợ ghim nhanh 1 chạm (`◀ Ghim Trái`, `▶ Ghim Phải`), và chế độ viên thuốc con nhộng siêu gọn (`[-]` / `[↗]`).
-  - **Xác nhận thủ công an toàn mặc định**: `autoMode` khởi tạo mặc định bằng `false`, cam kết các thao tác nhanh (như `Best entry now?`) chỉ hiển thị đề xuất phân tích và chỉ vào lệnh khi người dùng chủ động nhấn nút "Áp dụng kế hoạch" (Apply Plan).
-  - **Bảo tồn góc nhìn & Zoom biểu đồ**: Tách rời hoàn toàn luồng hiển thị marker lệnh và tin tức khỏi hàm `setData()` của nến, đồng thời bổ sung lề thở `rightOffset: 15` để cây nến cuối cùng không bao giờ bị dính sát thước đo giá hay reset góc nhìn khi vào lệnh.
+  - **Xác nhận thủ công an toàn mặc định**: `autoMode` khởi tạo mặc định bằng `false`, cam kết các thao tác nhanh chỉ hiển thị đề xuất phân tích và chỉ vào lệnh khi người dùng chủ động nhấn nút "Áp dụng kế hoạch" (Apply Plan).
   - **Tương tác Mạng & Backend Thời Gian Thực**: Nhập câu hỏi vào "Hỏi Copilot" và nhấn "Gửi" kích hoạt yêu cầu mạng thực tế tới backend AI Gateway (`/api/copilot/stream` / `/api/copilot/ask`) với tiến trình streaming CoT trực tiếp, dọn dẹp ô nhập và cơ chế dự phòng thuật toán SMC ngoại tuyến mượt mà.
 - **QA Checklist:**
-  1. Bấm nút thu gọn `[-]` -> Bảng gập lại mượt mà thành viên nang con nhộng nhỏ gọn.
-  2. Nhập câu hỏi hoặc bấm thao tác nhanh (`Best entry now?`) -> Kích hoạt yêu cầu mạng trong DevTools (`/api/copilot/stream` hoặc `/api/copilot/ask`); chuỗi tư duy CoT streaming từng token; **tuyệt đối không tự động vào lệnh**.
-  3. Bấm "Áp dụng kế hoạch" (Apply Plan) -> Lệnh được khớp và vẽ đường SL/TP; **góc nhìn, mức zoom và lề thở 15 nến được bảo tồn nguyên vẹn 100% không bị reset**.
-  4. Kéo thả HUD hoặc bấm `◀` / `▶` -> HUD bám dính mượt mà và lưu lại vị trí mong muốn.
+  1. Nhập câu hỏi `"Rủi ro / Lợi nhuận? tôi muốn tỉ lệ lợi nhuận là 1:3"` hoặc bấm chip `[🎯 R:R 1:3]` -> Chuỗi suy luận streaming và thẻ Kế hoạch hành động hiển thị `R:R: 1 : 3.00` với khoảng cách TP $= 3 \times$ khoảng cách SL.
+  2. Bấm nút Hướng dẫn `(?)` -> Hiển thị popover giải thích mẹo câu lệnh R:R, SL/TP và bias.
+  3. Kiểm tra Huy hiệu Động cơ -> Hiển thị chính xác engine đang chạy (`[⚡ Thuật toán SMC]` hoặc `[🧠 Model]`).
+  4. Bấm nút thu gọn `[-]` -> Bảng gập lại mượt mà thành viên nang con nhộng nhỏ gọn.
+  5. Bấm "Áp dụng kế hoạch" (Apply Plan) -> Lệnh được khớp và vẽ đường SL/TP; góc nhìn, mức zoom và lề thở 15 nến được bảo tồn nguyên vẹn 100% không bị reset.
+  6. Kéo thả HUD hoặc bấm `◀` / `▶` -> HUD bám dính mượt mà và lưu lại vị trí mong muốn.
 
 #### `F-SMC-08` - Ma Trận Xu Hướng Đa Khung MTF Matrix Widget
 - **Điều hướng:** Bảng thẻ nổi tích hợp ngay dưới Apex Copilot trên biểu đồ nến.

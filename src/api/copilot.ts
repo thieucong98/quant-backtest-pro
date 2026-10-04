@@ -21,13 +21,97 @@ export interface CopilotAskParams {
   digits?: number;
 }
 
-function getStoredLlmConfig(): LLMConfig | null {
+export interface ParsedTradingIntent {
+  targetRR: number | null;
+  customSlPips: number | null;
+  customTpPips: number | null;
+  customSide: 'LONG' | 'SHORT' | null;
+}
+
+export function parseCopilotTradingIntent(question: string): ParsedTradingIntent {
+  if (!question || typeof question !== 'string') {
+    return { targetRR: null, customSlPips: null, customTpPips: null, customSide: null };
+  }
+
+  const q = question.toLowerCase();
+
+  // 1. Target Risk:Reward ratio (e.g. "1:3", "1 : 3", "r:r 1:3", "tỉ lệ lợi nhuận là 1:3", "risk/reward 1:4")
+  let targetRR: number | null = null;
+  const rrRegex = /(?:r:?r|t[ỉi]\s*l[ệe]\s*(?:l[ợo]i\s*nhu[ậa]n)?|t[yỷ]\s*l[ệe]|risk[\s\/-]*reward)[\s:=]*1\s*[:/]\s*(\d+(?:\.\d+)?)/i;
+  const rrMatch = q.match(rrRegex);
+  if (rrMatch && rrMatch[1]) {
+    const val = parseFloat(rrMatch[1]);
+    if (!isNaN(val) && val > 0 && val <= 50) {
+      targetRR = val;
+    }
+  }
+
+  if (targetRR === null) {
+    const ratioMatch = q.match(/\b1\s*[:/]\s*(\d+(?:\.\d+)?)\b/);
+    if (ratioMatch && ratioMatch[1]) {
+      const val = parseFloat(ratioMatch[1]);
+      if (!isNaN(val) && val > 0 && val <= 50) {
+        targetRR = val;
+      }
+    }
+  }
+
+  // 2. Custom SL pips (e.g. "sl 20", "cắt lỗ 15 pip", "stop loss: 25")
+  let customSlPips: number | null = null;
+  const slRegex = /(?:sl|stop\s*loss|cắt\s*lỗ)[\s:=]*(\d+(?:\.\d+)?)/i;
+  const slMatch = q.match(slRegex);
+  if (slMatch && slMatch[1]) {
+    const val = parseFloat(slMatch[1]);
+    if (!isNaN(val) && val > 0) {
+      customSlPips = val;
+    }
+  }
+
+  // 3. Custom TP pips (e.g. "tp 60", "chốt lời 45 pip", "take profit: 80")
+  let customTpPips: number | null = null;
+  const tpRegex = /(?:tp|take\s*profit|chốt\s*lời)[\s:=]*(\d+(?:\.\d+)?)/i;
+  const tpMatch = q.match(tpRegex);
+  if (tpMatch && tpMatch[1]) {
+    const val = parseFloat(tpMatch[1]);
+    if (!isNaN(val) && val > 0) {
+      customTpPips = val;
+    }
+  }
+
+  // 4. Directional bias override (e.g. "mua", "long", "bán", "short")
+  let customSide: 'LONG' | 'SHORT' | null = null;
+  if (/\b(long|buy|mua)\b/i.test(q)) {
+    customSide = 'LONG';
+  } else if (/\b(short|sell|bán)\b/i.test(q)) {
+    customSide = 'SHORT';
+  }
+
+  return { targetRR, customSlPips, customTpPips, customSide };
+}
+
+export function getStoredLlmConfig(): LLMConfig | null {
   try {
     const raw = localStorage.getItem(LLM_STORAGE_KEY);
     return raw ? JSON.parse(raw) : null;
   } catch {
     return null;
   }
+}
+
+export function getActiveCopilotProvider(): { provider: string; model?: string; isLocalAlgorithmic: boolean } {
+  const config = getStoredLlmConfig();
+  if (config && config.provider !== 'builtin' && (config.apiKey || config.provider === 'ollama' || config.provider === 'custom')) {
+    return {
+      provider: config.provider,
+      model: config.model,
+      isLocalAlgorithmic: false
+    };
+  }
+  return {
+    provider: 'algorithmic-smc',
+    model: 'SMC Quant Engine v2.1',
+    isLocalAlgorithmic: true
+  };
 }
 
 function getAuthToken(): string | null {
@@ -140,6 +224,11 @@ export async function askCopilotStream(
       const baseUrl = (llmConfig.baseUrl || 'https://api.openai.com/v1').replace(/\/+$/, '');
       const url = `${baseUrl}/chat/completions`;
 
+      const intent = parseCopilotTradingIntent(params.question);
+      const rrInstruction = intent.targetRR
+        ? `MANDATORY: User explicitly specified target Risk:Reward ratio 1:${intent.targetRR}. Calculate stopLoss and takeProfit to strictly match this R:R. The "rrRatio" field inside <action_plan> MUST equal ${intent.targetRR}.`
+        : `Aim for institutional SMC risk:reward >= 1:2.`;
+
       const promptText = `Symbol: ${params.symbol}, Timeframe: ${params.timeframe}, Price: ${params.currentPrice || 2650}.
 Dealing Range: ${params.mtf?.location || 'EQUILIBRIUM'}, H4: ${params.mtf?.bias?.h4 || 'BULLISH'}, D1: ${params.mtf?.bias?.d1 || 'BULLISH'}.
 Query: "${params.question}"`;
@@ -155,7 +244,7 @@ Query: "${params.question}"`;
           messages: [
             {
               role: 'system',
-              content: `You are Apex AI Copilot. Output reasoning inside <thinking>...</thinking> and trade plan inside <action_plan>{"side":"LONG"|"SHORT"|"NO_TRADE","entry":number,"stopLoss":number,"takeProfit":[number],"rrRatio":number,"rationale":string,"institutionalChecks":["HTF_BIAS_ALIGNED","KEY_POI_TAP","LIQUIDITY_SWEEP_CONFIRMED","LTF_CHOCH_CONFIRMED"],"confidence":number}</action_plan>`
+              content: `You are Apex AI Copilot. ${rrInstruction} Output reasoning inside <thinking>...</thinking> and trade plan inside <action_plan>{"side":"LONG"|"SHORT"|"NO_TRADE","entry":number,"stopLoss":number,"takeProfit":[number],"rrRatio":number,"rationale":string,"institutionalChecks":["HTF_BIAS_ALIGNED","KEY_POI_TAP","LIQUIDITY_SWEEP_CONFIRMED","LTF_CHOCH_CONFIRMED"],"confidence":number}</action_plan>`
             },
             { role: 'user', content: promptText }
           ],
@@ -212,13 +301,27 @@ Query: "${params.question}"`;
   const pip = params.pip || 0.1;
   const digits = params.digits ?? 2;
 
-  let side: 'LONG' | 'SHORT' = 'LONG';
-  if (loc === 'PREMIUM') side = 'SHORT';
-  else if (loc === 'DISCOUNT') side = 'LONG';
-  else side = biasH4 === 'BEARISH' ? 'SHORT' : 'LONG';
+  const intent = parseCopilotTradingIntent(params.question);
 
-  const slPips = 20;
-  const tpPips = 45;
+  let side: 'LONG' | 'SHORT' = 'LONG';
+  if (intent.customSide) {
+    side = intent.customSide;
+  } else if (loc === 'PREMIUM') {
+    side = 'SHORT';
+  } else if (loc === 'DISCOUNT') {
+    side = 'LONG';
+  } else {
+    side = biasH4 === 'BEARISH' ? 'SHORT' : 'LONG';
+  }
+
+  const slPips = intent.customSlPips ?? 20;
+  let tpPips = 45;
+  if (intent.targetRR !== null) {
+    tpPips = Number((slPips * intent.targetRR).toFixed(1));
+  } else if (intent.customTpPips !== null) {
+    tpPips = intent.customTpPips;
+  }
+
   const slPrice = side === 'LONG'
     ? Number((currentPrice - slPips * pip).toFixed(digits))
     : Number((currentPrice + slPips * pip).toFixed(digits));
@@ -233,7 +336,7 @@ Query: "${params.question}"`;
     stopLoss: slPrice,
     takeProfit: [tpPrice],
     rrRatio: rr,
-    rationale: `Institutional SMC confluence for ${params.symbol}: ${side} from Dealing Range ${loc} (H4: ${biasH4}, D1: ${biasD1}). POI Mitigation & Liquidity Sweep verified.`,
+    rationale: `Institutional SMC confluence for ${params.symbol}: ${side} from Dealing Range ${loc} (H4: ${biasH4}, D1: ${biasD1}) with calibrated 1:${rr} R:R. POI Mitigation & Liquidity Sweep verified.`,
     institutionalChecks: [
       'HTF_BIAS_ALIGNED',
       'KEY_POI_TAP',
@@ -244,13 +347,18 @@ Query: "${params.question}"`;
     mtfVector: params.mtf ?? undefined,
   };
 
+  const rrSummary = intent.targetRR !== null
+    ? `• Khớp tỷ lệ R:R mục tiêu: 1:${rr} (Trader chỉ định 1:${intent.targetRR})`
+    : `• Tỷ lệ R:R chuẩn SMC: 1:${rr}`;
+
   const offlineReasoning = `[Apex AI Copilot SMC Forensic Analysis]
 • Query: "${params.question}"
 • Asset: ${params.symbol} | Timeframe: ${params.timeframe}
 • Multi-Timeframe Bias: H4 ${biasH4}, D1 ${biasD1}
 • Fibonacci Dealing Range: ${loc}
 • Confluence: OB (${params.mtf?.activeOB?.state || 'UNMITIGATED'}), FVG (${params.mtf?.activeFVG?.state || 'OPEN'})
-• Institutional Rule Check: Validated (R:R 1:${rr} >= 1.5, Confidence 85%).
+${rrSummary}
+• Position Math: Entry ${currentPrice} | SL: ${slPrice} (${slPips} pips) | TP: ${tpPrice} (${tpPips} pips) | Confidence 85%.
 `;
 
   const now = Date.now();
@@ -267,5 +375,7 @@ Query: "${params.question}"`;
 }
 
 export const copilotApi = {
-  ask: askCopilotStream
+  ask: askCopilotStream,
+  parseIntent: parseCopilotTradingIntent,
+  getActiveProvider: getActiveCopilotProvider
 };

@@ -19,7 +19,9 @@ import {
   Shield,
   Layers,
   Activity,
-  Compass
+  Compass,
+  HelpCircle,
+  Target
 } from 'lucide-react';
 import { useBacktestStore } from '../../store/backtestStore';
 import { getTranslation } from '../../i18n';
@@ -30,6 +32,7 @@ import type {
 } from '../../types/smc';
 import { ActionPlanValidator } from '../../engine/smc/actionPlanValidator';
 import { MtfPromptRenderer } from '../../engine/smc/mtfPromptRenderer';
+import { getActiveCopilotProvider } from '../../api/copilot';
 
 export interface AICopilotHUDProps {
   /** Current MTF semantic vector from the worker. */
@@ -111,6 +114,20 @@ export const AICopilotHUD: React.FC<AICopilotHUDProps> = ({
     dockRight: t.apexCopilotDockRight,
     autoWarning: t.apexCopilotAutoWarning,
     interactivePromptHelp: t.apexCopilotInteractivePromptHelp,
+    engineBadgeSMC: t.apexCopilotEngineBadgeSMC,
+    engineBadgeLLM: t.apexCopilotEngineBadgeLLM,
+    engineTooltip: t.apexCopilotEngineTooltip,
+    helpTitle: t.apexCopilotHelpTitle,
+    helpTipRR: t.apexCopilotHelpTipRR,
+    helpTipSLTP: t.apexCopilotHelpTipSLTP,
+    helpTipBias: t.apexCopilotHelpTipBias,
+    askQuickRR3: t.apexCopilotAskQuickRR3,
+    askQuickRR2: t.apexCopilotAskQuickRR2,
+    askQuickRR4: t.apexCopilotAskQuickRR4,
+    calibratedBadge: t.apexCopilotCalibratedBadge,
+    promptRR3Template: t.apexCopilotPromptRR3Template,
+    promptRR2Template: t.apexCopilotPromptRR2Template,
+    promptRR4Template: t.apexCopilotPromptRR4Template,
     h4Label: t.apexCopilotMtfH4,
     d1Label: t.apexCopilotMtfD1,
     locationLabel: t.apexCopilotMtfLocation,
@@ -128,6 +145,9 @@ export const AICopilotHUD: React.FC<AICopilotHUDProps> = ({
     authRequired: t.apexCopilotAuthRequired,
     authLogin: t.apexCopilotAuthLogin,
   }), [t]);
+
+  const [showPromptGuide, setShowPromptGuide] = useState(false);
+  const activeProvider = useMemo(() => getActiveCopilotProvider(), []);
 
   // Position & Dragging State
   const [position, setPosition] = useState<{ x: number; y: number }>(() => {
@@ -409,7 +429,17 @@ export const AICopilotHUD: React.FC<AICopilotHUDProps> = ({
               <span>{tApex.title}</span>
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-xs shadow-emerald-400" />
             </span>
-            <span className="text-[9px] text-slate-400 leading-none mt-0.5">{tApex.sub}</span>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <span className="text-[9px] text-slate-400 leading-none">{tApex.sub}</span>
+              <span
+                className="text-[8px] px-1 py-0.2 rounded font-semibold bg-indigo-950 text-indigo-300 border border-indigo-500/30 truncate max-w-[130px]"
+                title={tApex.engineTooltip}
+              >
+                {activeProvider.isLocalAlgorithmic
+                  ? tApex.engineBadgeSMC
+                  : tApex.engineBadgeLLM.replace('{model}', activeProvider.model || activeProvider.provider)}
+              </span>
+            </div>
           </div>
         </div>
 
@@ -569,7 +599,9 @@ export const AICopilotHUD: React.FC<AICopilotHUDProps> = ({
                     </div>
                     <div className="flex justify-between p-1.5 rounded-lg bg-slate-900/80 border border-slate-800/60">
                       <span className="text-slate-400">{tApex.riskReward}:</span>
-                      <span className="font-bold text-indigo-300">1 : {plan.rrRatio.toFixed(2)}</span>
+                      <span className={`font-bold ${plan.rrRatio >= 3.0 ? 'text-emerald-400 font-black' : 'text-indigo-300'}`}>
+                        1 : {plan.rrRatio.toFixed(2)}
+                      </span>
                     </div>
                     <div className="flex justify-between p-1.5 rounded-lg bg-slate-900/80 border border-slate-800/60">
                       <span className="text-slate-400">{tApex.confidence}:</span>
@@ -638,9 +670,45 @@ export const AICopilotHUD: React.FC<AICopilotHUDProps> = ({
 
             {/* Input Prompt Section */}
             <div className="space-y-2 pt-2 border-t border-slate-800">
-              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block" htmlFor="apex-ask-input">
-                {tApex.askLabel}
-              </label>
+              <div className="flex items-center justify-between">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block" htmlFor="apex-ask-input">
+                  {tApex.askLabel}
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setShowPromptGuide(!showPromptGuide)}
+                  className="text-slate-400 hover:text-indigo-300 p-0.5 rounded transition-colors flex items-center gap-1 text-[10px]"
+                  title={tApex.helpTitle}
+                >
+                  <HelpCircle className="w-3.5 h-3.5 text-indigo-400" />
+                  <span className="text-[9px] text-indigo-300 font-semibold">{tApex.helpTitle}</span>
+                </button>
+              </div>
+
+              {/* Collapsible Prompt Help / Guide Card */}
+              {showPromptGuide && (
+                <div className="p-2.5 rounded-xl bg-indigo-950/80 border border-indigo-500/40 text-indigo-200 text-[10px] space-y-1.5 animate-in fade-in">
+                  <div className="font-bold flex items-center justify-between text-indigo-100">
+                    <span className="flex items-center gap-1.5">
+                      <Sparkles className="w-3 h-3 text-amber-400" />
+                      {tApex.helpTitle}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setShowPromptGuide(false)}
+                      className="text-slate-400 hover:text-white p-0.5"
+                      title={tApex.close}
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                  <div className="space-y-1 text-slate-300 leading-relaxed font-sans text-[10px]">
+                    <p>{tApex.helpTipRR}</p>
+                    <p>{tApex.helpTipSLTP}</p>
+                    <p>{tApex.helpTipBias}</p>
+                  </div>
+                </div>
+              )}
 
               <textarea
                 id="apex-ask-input"
@@ -652,15 +720,42 @@ export const AICopilotHUD: React.FC<AICopilotHUDProps> = ({
                 onKeyDown={handleKeyDown}
               />
 
-              {/* QUICK ACTION BUTTONS */}
-              <div className="space-y-1">
+              {/* QUICK ACTION BUTTONS & PRESET R:R CHIPS */}
+              <div className="space-y-1.5">
                 <span className="text-[9px] text-slate-500 block">
                   {tApex.interactivePromptHelp}
                 </span>
                 <div className="flex flex-wrap gap-1.5">
                   <button
                     type="button"
-                    className="px-2.5 py-1 rounded-lg bg-indigo-950/70 hover:bg-indigo-900 border border-indigo-500/30 text-indigo-300 text-[10px] font-bold transition-all active:scale-95 flex items-center gap-1"
+                    className="px-2 py-0.5 rounded-lg bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-500/40 text-emerald-300 text-[10px] font-bold transition-all active:scale-95 flex items-center gap-1 shadow-xs"
+                    onClick={() => handleQuickAction(tApex.promptRR3Template)}
+                    title={tApex.askQuickRR3}
+                  >
+                    <Target className="w-3 h-3 text-emerald-400" />
+                    <span>{tApex.askQuickRR3}</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="px-2 py-0.5 rounded-lg bg-indigo-950/70 hover:bg-indigo-900 border border-indigo-500/30 text-indigo-300 text-[10px] font-bold transition-all active:scale-95 flex items-center gap-1"
+                    onClick={() => handleQuickAction(tApex.promptRR2Template)}
+                    title={tApex.askQuickRR2}
+                  >
+                    <Target className="w-3 h-3 text-indigo-400" />
+                    <span>{tApex.askQuickRR2}</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="px-2 py-0.5 rounded-lg bg-indigo-950/70 hover:bg-indigo-900 border border-indigo-500/30 text-indigo-300 text-[10px] font-bold transition-all active:scale-95 flex items-center gap-1"
+                    onClick={() => handleQuickAction(tApex.promptRR4Template)}
+                    title={tApex.askQuickRR4}
+                  >
+                    <Target className="w-3 h-3 text-purple-400" />
+                    <span>{tApex.askQuickRR4}</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="px-2 py-0.5 rounded-lg bg-slate-900/90 hover:bg-slate-800 border border-slate-700/60 text-slate-300 text-[10px] font-semibold transition-all active:scale-95 flex items-center gap-1"
                     onClick={() => handleQuickAction(tApex.askQuickEntry)}
                   >
                     <Sparkles className="w-3 h-3 text-amber-400" />
@@ -668,7 +763,7 @@ export const AICopilotHUD: React.FC<AICopilotHUDProps> = ({
                   </button>
                   <button
                     type="button"
-                    className="px-2.5 py-1 rounded-lg bg-indigo-950/70 hover:bg-indigo-900 border border-indigo-500/30 text-indigo-300 text-[10px] font-bold transition-all active:scale-95 flex items-center gap-1"
+                    className="px-2 py-0.5 rounded-lg bg-slate-900/90 hover:bg-slate-800 border border-slate-700/60 text-slate-300 text-[10px] font-semibold transition-all active:scale-95 flex items-center gap-1"
                     onClick={() => handleQuickAction(tApex.askSetup)}
                   >
                     <Compass className="w-3 h-3 text-sky-400" />
@@ -676,7 +771,7 @@ export const AICopilotHUD: React.FC<AICopilotHUDProps> = ({
                   </button>
                   <button
                     type="button"
-                    className="px-2.5 py-1 rounded-lg bg-indigo-950/70 hover:bg-indigo-900 border border-indigo-500/30 text-indigo-300 text-[10px] font-bold transition-all active:scale-95 flex items-center gap-1"
+                    className="px-2 py-0.5 rounded-lg bg-slate-900/90 hover:bg-slate-800 border border-slate-700/60 text-slate-300 text-[10px] font-semibold transition-all active:scale-95 flex items-center gap-1"
                     onClick={() => handleQuickAction(tApex.askRisk)}
                   >
                     <Shield className="w-3 h-3 text-teal-400" />
