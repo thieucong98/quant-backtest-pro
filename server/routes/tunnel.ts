@@ -20,7 +20,7 @@ let tunnelState: TunnelState = {
   active: false,
   publicUrl: null,
   provider: null,
-  port: 5174,
+  port: 3111,
   startedAt: null,
   pin: null,
   error: null,
@@ -31,10 +31,10 @@ let activeLocaltunnel: any = null;
 let activeCloudflaredProcess: ChildProcess | null = null;
 
 /**
- * Helper to check which local port (5173 or 5174) is active
+ * Helper to check which local port (3111, 5174, 5173) is active
  */
 async function detectActiveFrontendPort(): Promise<number> {
-  const portsToTest = [5174, 5173, 4173];
+  const portsToTest = [3111, 5174, 5173, 4173];
   for (const port of portsToTest) {
     const isLive = await new Promise<boolean>((resolve) => {
       const req = http.get(`http://localhost:${port}/`, (res) => {
@@ -48,7 +48,7 @@ async function detectActiveFrontendPort(): Promise<number> {
     });
     if (isLive) return port;
   }
-  return 5174;
+  return 3111;
 }
 
 /**

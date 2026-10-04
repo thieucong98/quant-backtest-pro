@@ -173,6 +173,7 @@ export const TunnelModal: React.FC = () => {
           </div>
           <button
             onClick={() => setTunnelModalOpen(false)}
+            data-testid="close-tunnel-modal"
             className="p-1.5 text-slate-400 hover:text-slate-100 hover:bg-slate-800 rounded-lg transition shrink-0"
           >
             <X className="w-5 h-5" />
@@ -345,11 +346,13 @@ export const TunnelModal: React.FC = () => {
           <div className="flex items-center gap-2 text-xs text-slate-400">
             <span className={`w-2 h-2 rounded-full ${isActive ? 'bg-emerald-400 shadow-xs shadow-emerald-400/50' : 'bg-slate-500'}`} />
             <span>{isActive ? t.tunnelActive : t.tunnelInactive}</span>
+            <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-400 font-bold">:{port}</span>
           </div>
 
           <div className="flex items-center gap-2">
             <button
               type="button"
+              data-testid="footer-close-tunnel-modal"
               onClick={() => setTunnelModalOpen(false)}
               className="px-4 py-2 text-xs font-medium text-slate-400 hover:text-slate-200 transition"
             >

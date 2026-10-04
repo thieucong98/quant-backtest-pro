@@ -248,7 +248,7 @@ chmod +x start_all.sh && ./start_all.sh
 ```
 
 Mở trình duyệt tại địa chỉ:
-- **Giao diện Web**: `http://localhost:5173/`
+- **Giao diện Web**: `http://localhost:3111/`
 - **Kiểm tra API Backend**: `http://localhost:3001/api/health`
 
 ---

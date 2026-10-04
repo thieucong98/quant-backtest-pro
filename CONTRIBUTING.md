@@ -34,7 +34,7 @@ npm install
 npm run dev
 ```
 
-The application will be accessible at: `http://localhost:5173/` (Frontend) and `http://localhost:3001/` (REST API).
+The application will be accessible at: `http://localhost:3111/` (Frontend) and `http://localhost:3001/` (REST API).
 
 ---
 

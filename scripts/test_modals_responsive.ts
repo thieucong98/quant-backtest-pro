@@ -13,7 +13,7 @@ async function testModals() {
   const page = await browser.newPage();
   await page.setViewport({ width: 375, height: 812, isMobile: true });
 
-  await page.goto('http://localhost:5173/', { waitUntil: 'networkidle2', timeout: 20000 });
+  await page.goto('http://localhost:3111/', { waitUntil: 'networkidle2', timeout: 20000 });
   await new Promise(r => setTimeout(r, 1500));
 
   // 1. Test Quick Trade expansion on Mobile

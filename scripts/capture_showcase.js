@@ -22,8 +22,8 @@ async function captureShowcase() {
   const page = await browser.newPage();
   await page.setViewport({ width: 1920, height: 1080, deviceScaleFactor: 1 });
 
-  console.log('🌐 Navigating to http://localhost:5173/ ...');
-  await page.goto('http://localhost:5173/', { waitUntil: 'networkidle0' });
+  console.log('🌐 Navigating to http://localhost:3111/ ...');
+  await page.goto('http://localhost:3111/', { waitUntil: 'networkidle0' });
   await new Promise(r => setTimeout(r, 2500));
 
   // 1. Dashboard Hero

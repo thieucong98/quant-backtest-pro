@@ -33,10 +33,10 @@ Quant Backtest Pro hỗ trợ hệ thống xác thực linh hoạt, an toàn v�
 3. Chọn Application type: **Web application**.
 4. Cấu hình các đường dẫn URI:
    - **Authorized JavaScript origins** (Nguồn gốc JavaScript được ủy quyền):
-     - `http://localhost:5173` (Môi trường phát triển cục bộ)
+     - `http://localhost:3111` (Môi trường phát triển cục bộ)
      - `https://domain-cua-ban.com` (Môi trường production)
    - **Authorized redirect URIs** (URI chuyển hướng được ủy quyền):
-     - `http://localhost:5173/auth/callback/google`
+     - `http://localhost:3111/auth/callback/google`
      - `http://localhost:3001/api/auth/callback/google`
 5. Nhấn **Create**. Sao chép giá trị **Client ID** và **Client Secret**.
 
@@ -57,8 +57,8 @@ GOOGLE_CLIENT_SECRET="your-google-client-secret"
 3. Nhấn **New OAuth App** (Đăng ký ứng dụng OAuth mới).
 4. Điền các trường thông tin:
    - **Application name**: `Quant Backtest Pro`
-   - **Homepage URL**: `http://localhost:5173` (hoặc domain của bạn)
-   - **Authorization callback URL**: `http://localhost:3001/api/auth/callback/github` (hoặc `http://localhost:5173/auth/callback/github`)
+   - **Homepage URL**: `http://localhost:3111` (hoặc domain của bạn)
+   - **Authorization callback URL**: `http://localhost:3001/api/auth/callback/github` (hoặc `http://localhost:3111/auth/callback/github`)
 5. Nhấn **Register application**.
 
 ### Bước 2: Tạo Client Secret
@@ -122,6 +122,6 @@ APPLE_TEAM_ID="your-apple-team-id"
      }
    }
    ```
-4. Truy cập `http://localhost:5173` và mở bảng **Đăng nhập / Đăng ký**:
+4. Truy cập `http://localhost:3111` và mở bảng **Đăng nhập / Đăng ký**:
    - Chỉ các tùy chọn đã cấu hình thành công mới xuất hiện.
    - Nếu chưa cấu hình bất kỳ nhà cung cấp SSO nào, toàn bộ khu vực SSO và đường gạch nối sẽ được tự động ẩn đi, giữ cho giao diện luôn tinh gọn, tập trung và chuyên nghiệp.
