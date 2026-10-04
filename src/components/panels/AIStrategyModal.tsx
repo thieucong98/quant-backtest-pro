@@ -769,6 +769,7 @@ export const AIStrategyModal: React.FC = () => {
 
             <button
               onClick={() => setAIModalOpen(false)}
+              data-testid="close-ai-modal"
               className="p-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-lg transition-colors"
             >
               <X className="w-4 h-4" />

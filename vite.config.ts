@@ -5,7 +5,7 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
   server: {
-    port: 5173,
+    port: 3111,
     host: true,
     cors: true,
     // Cho phép tất cả Host header từ Tunnel (Cloudflare trycloudflare.com & Localtunnel loca.lt)
@@ -44,6 +44,10 @@ export default defineConfig({
         }
       }
     }
+  },
+  preview: {
+    port: 3111,
+    host: true
   },
   worker: {
     format: 'es'

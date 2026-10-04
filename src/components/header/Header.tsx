@@ -772,6 +772,7 @@ export const Header: React.FC = () => {
           {/* Language Switcher (Visible on md+ screens: tablet, laptop, desktop) */}
           <div className="relative shrink-0 hidden md:block">
             <button
+              data-testid="language-dropdown-btn"
               onClick={() => setIsLangDropdownOpen(!isLangDropdownOpen)}
               className="flex items-center gap-1.5 px-2 py-1.5 bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-indigo-500/50 rounded-lg text-xs font-mono text-slate-300 transition-all shadow-xs active:scale-95"
               title={t.languageLabel}
@@ -794,6 +795,7 @@ export const Header: React.FC = () => {
                   {languages.map(item => (
                     <button
                       key={item.code}
+                      data-testid={`lang-option-${item.code}`}
                       onClick={() => {
                         setLanguage(item.code);
                         setIsLangDropdownOpen(false);

@@ -13,16 +13,16 @@ start "QuantPro MT5 Gateway" cmd /k "cd mt5_gateway && start_gateway.bat"
 echo [2/3] Starting Backend API Server (Port 3001)...
 start "QuantPro Backend API" cmd /k "npm run server:start"
 
-echo [3/3] Starting Frontend Terminal (Port 5173)...
+echo [3/3] Starting Frontend Terminal (Port 3111)...
 start "QuantPro Web Terminal" cmd /k "npm run dev"
 
 echo.
 echo ===================================================================
 echo   ALL SERVICES LAUNCHED SUCCESSFULLY!
-echo   - Web Terminal:    http://localhost:5173
+echo   - Web Terminal:    http://localhost:3111
 echo   - MT5 Gateway:     http://localhost:8765/docs
 echo   - Backend Server:  http://localhost:3001
 echo ===================================================================
 echo.
 timeout /t 3 >nul
-start http://localhost:5173
+start http://localhost:3111

@@ -248,7 +248,7 @@ chmod +x start_all.sh && ./start_all.sh
 ```
 
 Open your browser at:
-- **Frontend UI**: `http://localhost:5173/`
+- **Frontend UI**: `http://localhost:3111/`
 - **Backend API Health**: `http://localhost:3001/api/health`
 
 ---

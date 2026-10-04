@@ -38,7 +38,7 @@ async function runResponsiveAudit() {
     const page = await browser.newPage();
     await page.setViewport({ width: vp.width, height: vp.height, isMobile: vp.isMobile });
 
-    await page.goto('http://localhost:5173/', { waitUntil: 'networkidle2', timeout: 20000 });
+    await page.goto('http://localhost:3111/', { waitUntil: 'networkidle2', timeout: 20000 });
     await new Promise(r => setTimeout(r, 1500));
 
     // 1. Capture base screenshot

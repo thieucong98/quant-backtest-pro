@@ -48,7 +48,7 @@ async function testCalendarSuite() {
   page.on('console', msg => console.log('BROWSER LOG:', msg.text()));
   page.on('pageerror', err => console.error('BROWSER ERROR:', err));
 
-  await page.goto('http://localhost:5173/', { waitUntil: 'networkidle2', timeout: 20000 });
+  await page.goto('http://localhost:3111/', { waitUntil: 'networkidle2', timeout: 20000 });
   await page.waitForSelector('header', { timeout: 10000 });
   await new Promise(r => setTimeout(r, 2000));
 

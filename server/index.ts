@@ -28,8 +28,8 @@ const PORT = process.env.PORT || 3001;
 
 // Allowed CORS origins: Local development, Docker, and Tunnel domains
 const allowedOriginPatterns = [
-  /^http:\/\/localhost:(5173|5174|5175|4173|3000|3001|3002)$/,
-  /^http:\/\/127\.0\.0\.1:(5173|5174|5175|4173|3000|3001|3002)$/,
+  /^http:\/\/localhost:(3111|5173|5174|5175|4173|3000|3001|3002)$/,
+  /^http:\/\/127\.0\.0\.1:(3111|5173|5174|5175|4173|3000|3001|3002)$/,
   /https:\/\/[a-zA-Z0-9-]+\.trycloudflare\.com$/,
   /https:\/\/[a-zA-Z0-9-]+\.loca\.lt$/
 ];

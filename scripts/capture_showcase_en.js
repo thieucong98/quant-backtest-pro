@@ -32,8 +32,8 @@ async function captureEnglishShowcase() {
   const page = await browser.newPage();
   await page.setViewport({ width: 1920, height: 1080, deviceScaleFactor: 1 });
 
-  console.log('🌐 Navigating to http://localhost:5173/ ...');
-  await page.goto('http://localhost:5173/', { waitUntil: 'networkidle0' });
+  console.log('🌐 Navigating to http://localhost:3111/ ...');
+  await page.goto('http://localhost:3111/', { waitUntil: 'networkidle0' });
   await new Promise(r => setTimeout(r, 2000));
 
   // Switch to English
@@ -41,7 +41,7 @@ async function captureEnglishShowcase() {
   await page.evaluate(() => {
     localStorage.setItem('quant_lang', 'en');
   });
-  await page.goto('http://localhost:5173/', { waitUntil: 'networkidle0' });
+  await page.goto('http://localhost:3111/', { waitUntil: 'networkidle0' });
   await new Promise(r => setTimeout(r, 2500));
 
   // 1. Dashboard Hero

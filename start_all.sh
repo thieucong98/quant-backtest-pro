@@ -65,15 +65,15 @@ echo -e "${MAGENTA}[2/3] Starting Backend API Server (Port 3001)...${NC}"
 npm run server:start &
 BACKEND_PID=$!
 
-# 3. Start Frontend Terminal (Port 5173)
-echo -e "${CYAN}[3/3] Starting Frontend Web Terminal (Port 5173)...${NC}"
+# 3. Start Frontend Terminal (Port 3111)
+echo -e "${CYAN}[3/3] Starting Frontend Web Terminal (Port 3111)...${NC}"
 npm run dev &
 FRONTEND_PID=$!
 
 echo ""
 echo -e "${BOLD}${GREEN}===================================================================${NC}"
 echo -e "${BOLD}${GREEN}  ALL SERVICES LAUNCHED SUCCESSFULLY!${NC}"
-echo -e "  - Web Terminal:    ${CYAN}http://localhost:5173${NC}"
+echo -e "  - Web Terminal:    ${CYAN}http://localhost:3111${NC}"
 echo -e "  - MT5 Gateway:     ${MAGENTA}http://localhost:8765/docs${NC}"
 echo -e "  - Backend Server:  ${GREEN}http://localhost:3001${NC}"
 echo -e "  ${YELLOW}(Press Ctrl + C anytime to stop all services)${NC}"
@@ -84,13 +84,13 @@ echo ""
 (
   sleep 2.5
   if command -v xdg-open >/dev/null 2>&1; then
-    xdg-open "http://localhost:5173" >/dev/null 2>&1 || true
+    xdg-open "http://localhost:3111" >/dev/null 2>&1 || true
   elif command -v open >/dev/null 2>&1; then
-    open "http://localhost:5173" >/dev/null 2>&1 || true
+    open "http://localhost:3111" >/dev/null 2>&1 || true
   elif command -v powershell.exe >/dev/null 2>&1; then
-    powershell.exe -Command "Start-Process 'http://localhost:5173'" >/dev/null 2>&1 || true
+    powershell.exe -Command "Start-Process 'http://localhost:3111'" >/dev/null 2>&1 || true
   elif command -v cmd.exe >/dev/null 2>&1; then
-    cmd.exe /c start "http://localhost:5173" >/dev/null 2>&1 || true
+    cmd.exe /c start "http://localhost:3111" >/dev/null 2>&1 || true
   fi
 ) &
 

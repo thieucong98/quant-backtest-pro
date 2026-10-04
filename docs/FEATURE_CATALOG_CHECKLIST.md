@@ -459,7 +459,7 @@ This document provides a single source of truth for all **63 features across 10 
   - `npm run dev:all`: Concurrently runs Backend API and Vite Frontend with colored terminal prefix.
   - `start_all.bat`: Windows one-click desktop launcher.
   - `start_all.sh`: POSIX Bash launcher for Linux/macOS/WSL with trap signal cleanup.
-- **QA Verification:** Run `npm run dev:all` -> Both `[API]` on port 3001 and `[WEB]` on port 5173 start simultaneously.
+- **QA Verification:** Run `npm run dev:all` -> Both `[API]` on port 3001 and `[WEB]` on port 3111 start simultaneously.
 
 ---
 

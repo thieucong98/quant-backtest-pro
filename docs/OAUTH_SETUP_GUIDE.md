@@ -33,10 +33,10 @@ Quant Backtest Pro supports a flexible, security-first authentication system wit
 3. Select Application type: **Web application**.
 4. Configure URIs:
    - **Authorized JavaScript origins**:
-     - `http://localhost:5173` (Development)
+     - `http://localhost:3111` (Development)
      - `https://your-domain.com` (Production)
    - **Authorized redirect URIs**:
-     - `http://localhost:5173/auth/callback/google`
+     - `http://localhost:3111/auth/callback/google`
      - `http://localhost:3001/api/auth/callback/google`
 5. Click **Create**. Copy the **Client ID** and **Client Secret**.
 
@@ -57,8 +57,8 @@ GOOGLE_CLIENT_SECRET="your-google-client-secret"
 3. Click **New OAuth App**.
 4. Fill in the application fields:
    - **Application name**: `Quant Backtest Pro`
-   - **Homepage URL**: `http://localhost:5173` (or production domain)
-   - **Authorization callback URL**: `http://localhost:3001/api/auth/callback/github` (or `http://localhost:5173/auth/callback/github`)
+   - **Homepage URL**: `http://localhost:3111` (or production domain)
+   - **Authorization callback URL**: `http://localhost:3001/api/auth/callback/github` (or `http://localhost:3111/auth/callback/github`)
 5. Click **Register application**.
 
 ### Step 2: Generate Client Secret
@@ -122,6 +122,6 @@ APPLE_TEAM_ID="your-apple-team-id"
      }
    }
    ```
-4. Open `http://localhost:5173` and click **Sign In / Sign Up**:
+4. Open `http://localhost:3111` and click **Sign In / Sign Up**:
    - Only configured providers will be rendered.
    - If all providers are omitted, the SSO section and divider are automatically hidden, keeping the interface minimal and clean.

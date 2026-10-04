@@ -458,7 +458,7 @@ Tài liệu này là **nguồn thông tin chuẩn mực duy nhất (Single Sourc
   - `npm run dev:all`: Chạy đồng thời Backend API và Frontend Vite với màu sắc phân biệt.
   - `start_all.bat`: Khởi chạy 1-click trên Windows.
   - `start_all.sh`: Khởi chạy chuẩn POSIX Bash trên Linux / macOS / WSL kèm cơ chế dọn dẹp tiến trình khi tắt.
-- **QA Checklist:** Chạy `npm run dev:all` -> Cả cổng 3001 và cổng 5173 đều hoạt động trơn tru.
+- **QA Checklist:** Chạy `npm run dev:all` -> Cả cổng 3001 và cổng 3111 đều hoạt động trơn tru.
 
 ---
 

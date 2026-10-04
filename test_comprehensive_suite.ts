@@ -1290,7 +1290,36 @@ async function runComprehensiveTests() {
   }
 
   // =========================================================================
-  // 23. SUMMARY OF TEST SUITE RESULTS
+  // 23. PORT 3111 INFRASTRUCTURE & CONFIGURATION TESTS
+  // =========================================================================
+  console.log('\n--- 23. Port 3111 Configuration & Infrastructure Parity Tests ---');
+  {
+    const viteContent = fs.readFileSync('vite.config.ts', 'utf-8');
+    assert(viteContent.includes('port: 3111'), 'Port3111Config', 'vite.config.ts configures port 3111 for development');
+    assert(viteContent.includes('preview: {\n    port: 3111') || viteContent.includes('preview: {\r\n    port: 3111'), 'Port3111Config', 'vite.config.ts configures port 3111 for preview');
+
+    const serverIndexContent = fs.readFileSync('server/index.ts', 'utf-8');
+    assert(serverIndexContent.includes('3111'), 'Port3111Config', 'server/index.ts includes port 3111 in CORS allowed origins');
+
+    const tunnelRouteContent = fs.readFileSync('server/routes/tunnel.ts', 'utf-8');
+    assert(tunnelRouteContent.includes('port: 3111'), 'Port3111Config', 'server/routes/tunnel.ts defaults tunnelState to port 3111');
+    assert(tunnelRouteContent.includes('[3111, 5174, 5173, 4173]'), 'Port3111Config', 'detectActiveFrontendPort tests port 3111 first');
+
+    const tunnelStoreContent = fs.readFileSync('src/store/tunnelStore.ts', 'utf-8');
+    assert(tunnelStoreContent.includes('port: 3111'), 'Port3111Config', 'src/store/tunnelStore.ts defaults port to 3111');
+
+    const mt5GatewayContent = fs.readFileSync('mt5_gateway/app.py', 'utf-8');
+    assert(mt5GatewayContent.includes('"http://localhost:3111"'), 'Port3111Config', 'mt5_gateway/app.py includes http://localhost:3111 in ALLOWED_ORIGINS');
+
+    const startBatContent = fs.readFileSync('start_all.bat', 'utf-8');
+    assert(startBatContent.includes('3111'), 'Port3111Config', 'start_all.bat points to port 3111');
+
+    const startShContent = fs.readFileSync('start_all.sh', 'utf-8');
+    assert(startShContent.includes('3111'), 'Port3111Config', 'start_all.sh points to port 3111');
+  }
+
+  // =========================================================================
+  // 24. SUMMARY OF TEST SUITE RESULTS
   // =========================================================================
   console.log('\n===============================================================');
   const total = testResults.length;
