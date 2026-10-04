@@ -147,7 +147,7 @@ export const ExportStrategyModal: React.FC<ExportStrategyModalProps> = ({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="font-bold text-sm text-slate-100">{t.exportBotModalTitle || 'Export Strategy to Trading Bot Hub'}</h2>
+                <h2 className="font-bold text-sm text-slate-100">{t.exportBotModalTitle}</h2>
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-950/80 border border-indigo-500/40 text-indigo-300 font-mono">
                   {strategy.name}
                 </span>

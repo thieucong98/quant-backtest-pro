@@ -536,6 +536,10 @@ Tài liệu này là **nguồn thông tin chuẩn mực duy nhất (Single Sourc
   - **Kiểm Tra Kết Nối Trực Tiếp (Test Ping)**: Gửi gói kiểm tra nhẹ tới `/api/copilot/ping` đo độ trễ round-trip (ms) và hiển thị cảnh báo lỗi chẩn đoán trước khi lưu cấu hình.
   - **Cơ Chế Phân Phát Kép (Dual Delivery - SSE Stream kết hợp Non-Streaming Fallback)**: Tự động gửi SSE stream trước; nếu gateway tùy chỉnh từ chối stream hoặc không hỗ trợ SSE, Copilot sẽ tự động thử lại bằng yêu cầu non-streaming.
   - **Bóc tách ý định & Chuẩn hóa R:R động (Dynamic R:R NLP Parser)**: Bộ phân tích cú pháp thông minh nhận diện yêu cầu tỷ lệ R:R (`1:3`, `1:4`, `1:2.5`), SL tùy chỉnh (`SL 15 pip`), TP tùy chỉnh (`TP 60 pip`), và hướng lệnh ưu tiên từ câu hỏi tiếng Việt hoặc tiếng Anh. Tự động tính toán lại mức Cắt lỗ và Chốt lời toán học để thỏa mãn chính xác tỷ lệ R:R mong muốn.
+  - **Nút Đóng [X] Chuẩn Hóa Không Bị Che Khuất**: Thanh tiêu đề HUD trang bị nút đóng `[X]` và nút thu gọn `[-]` unshrinkable không bao giờ bị tràn lề hay che khuất, cùng nút `[X]` trực tiếp trên chế độ con nhộng (capsule mode).
+  - **Tối Ưu Trạng Thái Chờ & Công Thái Học**: Loại bỏ các khối rỗng "None" chiếm diện tích, thay bằng banner "Sẵn sàng phân tích thị trường" hiện đại, đưa ô nhập lệnh và các chip R:R lên vị trí trực quan mà không cần cuộn trang.
+  - **Thẻ Cấu Hình Gateway Nâng Cao**: Trình chọn nhà cung cấp hiển thị sắc nét chống tràn chữ, nút ẩn/hiện API token bằng icon con mắt, nút Test Ping kiểm tra độ trễ trực tiếp và phản hồi lưu cấu hình mượt mà.
+  - **Chuẩn Hóa Nút Đóng [X] Trên Toàn Bộ Dialog & Popup**: 100% dialog, modal, flyout, menu ngữ cảnh trong toàn bộ hệ thống (`PropFirmHUD`, `AIBotHUD`, popover `QuickTradeDock`, modal sửa SL/TP trong `PositionsTable`, hộp thoại xác nhận trong `SessionManagerModal`, menu chuột phải `PriceScaleContextMenu`, `AICopilotHUD`) đều sở hữu nút đóng `[X]` rõ ràng, trực quan.
   - **Huy hiệu Động cơ Suy luận Trực quan**: Hiển thị nhãn công cụ đang phản hồi (`[⚡ Thuật toán SMC]` hoặc `[🧠 Model AI]`) kèm tooltip giải thích và đồng bộ hóa trạng thái tức thì.
   - **Bảng Hướng Dẫn Tác Chiến Tương Tác**: Nút `(?)` ngay cạnh ô nhập mở popover hướng dẫn cú pháp câu lệnh (R:R, SL/TP pips, Bias đa khung).
   - **Chip chọn nhanh R:R 1 chạm**: Bổ sung các nút bấm `[🎯 R:R 1:3]`, `[🎯 R:R 1:2]`, `[🎯 R:R 1:4]` cho phép kích hoạt phân tích R:R mục tiêu ngay lập tức mà không cần gõ phím.
@@ -544,13 +548,13 @@ Tài liệu này là **nguồn thông tin chuẩn mực duy nhất (Single Sourc
   - **Xác nhận thủ công an toàn mặc định**: `autoMode` khởi tạo mặc định bằng `false`, cam kết các thao tác nhanh chỉ hiển thị đề xuất phân tích và chỉ vào lệnh khi người dùng chủ động nhấn nút "Áp dụng kế hoạch" (Apply Plan).
   - **Tương tác Mạng & Backend Thời Gian Thực**: Nhập câu hỏi vào "Hỏi Copilot" và nhấn "Gửi" kích hoạt yêu cầu mạng thực tế tới backend AI Gateway (`/api/copilot/stream` / `/api/copilot/ask`) với tiến trình streaming CoT trực tiếp, dọn dẹp ô nhập và cơ chế dự phòng thuật toán SMC ngoại tuyến mượt mà.
 - **QA Checklist:**
-  1. Nhập câu hỏi `"Rủi ro / Lợi nhuận? tôi muốn tỉ lệ lợi nhuận là 1:3"` hoặc bấm chip `[🎯 R:R 1:3]` -> Chuỗi suy luận streaming và thẻ Kế hoạch hành động hiển thị `R:R: 1 : 3.00` với khoảng cách TP $= 3 \times$ khoảng cách SL.
-  2. Bấm nút Hướng dẫn `(?)` -> Hiển thị popover giải thích mẹo câu lệnh R:R, SL/TP và bias.
-  3. Bấm icon Cài đặt `[⚙]` trên HUD -> Mở thẻ cấu hình; nhập endpoint và bấm "Kiểm tra kết nối" -> Trả về độ trễ ms; bấm "Lưu cấu hình" -> Huy hiệu HUD đổi ngay lập tức.
-  4. Kiểm tra Huy hiệu Động cơ -> Hiển thị chính xác engine đang chạy (`[⚡ Thuật toán SMC]` hoặc `[🧠 Model]`).
-  5. Bấm nút thu gọn `[-]` -> Bảng gập lại mượt mà thành viên nang con nhộng nhỏ gọn.
-  6. Bấm "Áp dụng kế hoạch" (Apply Plan) -> Lệnh được khớp và vẽ đường SL/TP; góc nhìn, mức zoom và lề thở 15 nến được bảo tồn nguyên vẹn 100% không bị reset.
-  7. Kéo thả HUD hoặc bấm `◀` / `▶` -> HUD bám dính mượt mà và lưu lại vị trí mong muốn.
+  1. Kiểm tra tiêu đề Copilot HUD -> Nút đóng `[X]` hiển thị rõ nét góc trên bên phải; bấm vào đóng HUD ngay lập tức.
+  2. Chuyển sang chế độ capsule -> Hiển thị nút `[X]`; bấm vào tắt hoàn toàn capsule.
+  3. Kiểm tra trạng thái rảnh -> Hiển thị banner "Sẵn sàng phân tích thị trường"; ô gõ prompt và chip R:R nằm ngay trong tầm mắt không bị đẩy xuống dưới.
+  4. Nhập câu hỏi `"Rủi ro / Lợi nhuận? tôi muốn tỉ lệ lợi nhuận là 1:3"` hoặc bấm chip `[🎯 R:R 1:3]` -> Chuỗi suy luận streaming và thẻ Kế hoạch hành động hiển thị `R:R: 1 : 3.00` với khoảng cách TP $= 3 \times$ khoảng cách SL.
+  5. Bấm nút Hướng dẫn `(?)` -> Hiển thị popover giải thích mẹo câu lệnh R:R, SL/TP và bias; popover có nút `[X]` để đóng.
+  6. Bấm icon Cài đặt `[⚙]` trên HUD -> Mở thẻ cấu hình; nhập endpoint và bấm "Kiểm tra kết nối" -> Trả về độ trễ ms; bấm "Lưu cấu hình" -> Huy hiệu HUD đổi ngay lập tức; có nút `[X]` để tắt thẻ cài đặt.
+  7. Kiểm tra tất cả dialog/popup (`PropFirmHUD`, `AIBotHUD`, modal sửa lệnh `PositionsTable`, modal xác nhận `SessionManagerModal`, `PriceScaleContextMenu`, cài đặt `QuickTradeDock`) -> Mọi popup đều có nút `[X]` hoạt động chính xác.
 
 #### `F-SMC-08` - Ma Trận Xu Hướng Đa Khung MTF Matrix Widget
 - **Điều hướng:** Bảng thẻ nổi tích hợp ngay dưới Apex Copilot trên biểu đồ nến.

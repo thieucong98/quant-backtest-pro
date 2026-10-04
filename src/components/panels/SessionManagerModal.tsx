@@ -203,7 +203,16 @@ export const SessionManagerModal: React.FC = () => {
         {/* Confirmation Modal Overlay */}
         {confirmDialog && (
           <div className="absolute inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 animate-in fade-in">
-            <div className="bg-[#141a29] border border-rose-500/50 rounded-2xl max-w-md w-full p-6 text-center shadow-2xl space-y-4">
+            <div className="bg-[#141a29] border border-rose-500/50 rounded-2xl max-w-md w-full p-6 text-center shadow-2xl space-y-4 relative">
+              <button
+                type="button"
+                onClick={() => setConfirmDialog(null)}
+                className="absolute top-3.5 right-3.5 p-1.5 text-slate-400 hover:text-rose-400 hover:bg-slate-800 rounded-lg transition-colors"
+                title={t.cancel}
+                aria-label={t.cancel}
+              >
+                <X className="w-4 h-4" />
+              </button>
               <div className="w-12 h-12 rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/30 flex items-center justify-center mx-auto">
                 <AlertTriangle className="w-6 h-6" />
               </div>

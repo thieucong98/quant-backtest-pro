@@ -537,6 +537,10 @@ This document provides a single source of truth for all **63 features across 10 
   - **Live Gateway Connectivity Ping (`Test Ping`)**: Sends a lightweight probe to `/api/copilot/ping` measuring round-trip latency (ms) and returning diagnostic errors before saving.
   - **Dual Delivery (SSE Streaming with Non-Streaming Fallback)**: Automatically attempts SSE streaming first; if a gateway rejects streaming or lacks SSE support, Copilot transparently retries with standard non-streaming requests.
   - **Dynamic Risk-to-Reward (R:R) NLP Calibration**: Heuristic and NLP parser extracts user-specified target R:R (`1:3`, `1:4`, `1:2.5`), custom StopLoss pips (`SL 15 pip`), TakeProfit pips (`TP 60 pip`), and directional bias from prompts in Vietnamese or English. Automatically calibrates Stop Loss and Take Profit levels mathematically to satisfy the requested ratio.
+  - **Universal Unclipped Dismissal & Close Button**: Header includes a dedicated, unshrinkable `[X]` close button and `[-]` minimize button guaranteed never clipped by content, alongside capsule-mode close support.
+  - **Streamlined Empty State & Ergonomics**: Replaced bulky empty `None` boxes with an inviting "Ready for Market Analysis" teaser banner, keeping prompt input, quick action buttons, and R:R chips immediately accessible without scrolling.
+  - **Enhanced Gateway Configuration Card**: High-contrast, responsive provider selector with truncated text, secure API token eye toggle, real-time latency ping test, and instant save confirmation.
+  - **Universal Dialog & Popup Dismissal Compliance**: Every modal, flyout, context menu, and floating HUD across the platform (`PropFirmHUD`, `AIBotHUD`, `QuickTradeDock` popover, `PositionsTable` edit modal, `SessionManagerModal` confirm dialog, `PriceScaleContextMenu`, `AICopilotHUD`) now possesses an explicit `[X]` close button.
   - **Active Inference Engine Badge**: Header displays live provider badge (`[⚡ SMC Algorithm]` or `[🧠 gpt-4o]`) with explanatory tooltip and real-time state synchronization.
   - **Interactive Prompt Guide & Popover**: `(?)` button reveals syntax guide for custom R:R, SL/TP pips, and institutional SMC confluence queries.
   - **One-Click R:R Preset Chips**: `[🎯 R:R 1:3]`, `[🎯 R:R 1:2]`, and `[🎯 R:R 1:4]` quick action chips for instant execution.
@@ -545,13 +549,13 @@ This document provides a single source of truth for all **63 features across 10 
   - **Manual Confirmation by Default**: `autoMode` initializes strictly to `false` to guarantee quick actions only display analysis and require explicit user consent via the prominent "Apply Plan" button.
   - **Live Network & AI Interaction**: Typing in "Ask Copilot" and clicking "Send" dispatches active network requests to backend AI Gateway (`/api/copilot/stream` / `/api/copilot/ask`) with live streaming token telemetry, input reset, and offline algorithmic fallback.
 - **QA Verification:**
-  1. Ask `"Rủi ro / Lợi nhuận? tôi muốn tỉ lệ lợi nhuận là 1:3"` or click chip `[🎯 R:R 1:3]` -> Live reasoning streams and Action Plan card displays calibrated `R:R: 1 : 3.00` with TP distance $= 3 \times$ SL distance.
-  2. Click prompt guide `(?)` -> Popover appears detailing syntax tips for R:R, SL/TP pips, and bias.
-  3. Click settings icon `[⚙]` in HUD -> Card opens; enter endpoint and click "Test Ping" -> Returns latency ms; click "Save" -> HUD badge updates dynamically.
-  4. Verify Engine Badge -> Displays active engine (`[⚡ SMC Algorithm]` or `[🧠 Model]`).
-  5. Click collapse `[-]` button -> Panel collapses smoothly into a sleek floating capsule pill.
-  6. Click "Apply Plan" -> Market order executes with SL/TP lines drawn on chart; chart zoom, pan position, and 15-bar right breathing room remain 100% stable without resetting.
-  7. Drag HUD or click `◀` / `▶` -> HUD snaps to edges or follows cursor smoothly within viewport bounds.
+  1. Inspect Copilot HUD header -> `[X]` close button is clearly visible at top-right; clicking it closes the HUD cleanly.
+  2. Switch to capsule mode -> Capsule contains `[X]` button; clicking it dismisses the capsule.
+  3. Verify idle state -> Streamlined "Ready for Market Analysis" banner is shown; prompt textarea and quick actions are directly visible without vertical clutter.
+  4. Ask `"Rủi ro / Lợi nhuận? tôi muốn tỉ lệ lợi nhuận là 1:3"` or click chip `[🎯 R:R 1:3]` -> Live reasoning streams and Action Plan card displays calibrated `R:R: 1 : 3.00` with TP distance $= 3 \times$ SL distance.
+  5. Click prompt guide `(?)` -> Popover appears detailing syntax tips for R:R, SL/TP pips, and bias; includes `[X]` close button.
+  6. Click settings icon `[⚙]` in HUD -> Card opens; enter endpoint and click "Test Ping" -> Returns latency ms; click "Save" -> HUD badge updates dynamically; clicking `[X]` closes card.
+  7. Verify all modals (`PropFirmHUD`, `AIBotHUD`, `PositionsTable` edit modal, `SessionManagerModal` confirm, `PriceScaleContextMenu`, `QuickTradeDock` settings) -> Every dialog displays a visible, functional `[X]` button.
 
 #### `F-SMC-08` - Multi-Timeframe (MTF) Trend Matrix Widget
 - **UI Navigation:** Compact widget docked below the Apex Copilot on the chart view.

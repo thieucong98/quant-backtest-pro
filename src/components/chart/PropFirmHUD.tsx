@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Shield, ChevronUp, ChevronDown } from 'lucide-react';
+import { Shield, ChevronUp, ChevronDown, X } from 'lucide-react';
 import { AccountState } from '../../types/order';
 import { getTranslation } from '../../i18n';
 import { useBacktestStore } from '../../store/backtestStore';
@@ -10,6 +10,7 @@ interface PropFirmHUDProps {
   propFirmMaxDrawdownLimit: number;
   propFirmProfitTarget: number;
   propFirmStartingDayBalance: number;
+  onClose?: () => void;
 }
 
 export const PropFirmHUD: React.FC<PropFirmHUDProps> = ({
@@ -17,7 +18,8 @@ export const PropFirmHUD: React.FC<PropFirmHUDProps> = ({
   propFirmDailyLossLimit,
   propFirmMaxDrawdownLimit,
   propFirmProfitTarget,
-  propFirmStartingDayBalance
+  propFirmStartingDayBalance,
+  onClose
 }) => {
   const [isShieldExpanded, setIsShieldExpanded] = useState<boolean>(false);
   const language = useBacktestStore((s) => s.language);
@@ -73,6 +75,17 @@ export const PropFirmHUD: React.FC<PropFirmHUDProps> = ({
           >
             {isShieldExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
           </button>
+          {onClose && (
+            <button
+              type="button"
+              onClick={onClose}
+              className="p-1 text-slate-400 hover:text-rose-400 hover:bg-rose-950/60 rounded transition-colors"
+              title={t.cancel}
+              aria-label={t.cancel}
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
       </div>
 

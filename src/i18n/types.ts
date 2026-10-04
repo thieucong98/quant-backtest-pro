@@ -990,6 +990,8 @@ export interface TranslationDict {
   apexCopilotSettingsSuccess: string;
   apexCopilotSettingsError: string;
   apexCopilotSettingsSaved: string;
+  apexCopilotReadyTitle: string;
+  apexCopilotReadyDesc: string;
   // Quant Execution Bridge (v2.0)
   bridgeConnected: string;
   bridgeConnecting: string;

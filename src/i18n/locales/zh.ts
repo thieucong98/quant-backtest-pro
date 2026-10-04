@@ -942,6 +942,8 @@ export const zh: TranslationDict = {
   "apexCopilotSettingsSuccess": "连接成功",
   "apexCopilotSettingsError": "连接错误",
   "apexCopilotSettingsSaved": "Gateway配置保存成功！",
+  "apexCopilotReadyTitle": "已准备好进行市场分析",
+  "apexCopilotReadyDesc": "提出问题或在下方选择快捷操作，即可运行机构级SMC分析。",
   // Multi-Chart Layout & Synchronization (v2.0)
   "singleLayout": "单图表",
   "dualHorizontalLayout": "水平分屏（左右）",

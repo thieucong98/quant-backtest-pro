@@ -942,6 +942,8 @@ export const en: TranslationDict = {
   "apexCopilotSettingsSuccess": "Connected Successfully",
   "apexCopilotSettingsError": "Connection Error",
   "apexCopilotSettingsSaved": "Gateway configuration saved successfully!",
+  "apexCopilotReadyTitle": "Ready for Market Analysis",
+  "apexCopilotReadyDesc": "Ask a question or select a quick action below to run institutional SMC analysis.",
   // Multi-Chart Layout & Synchronization (v2.0)
   "singleLayout": "Single Chart",
   "dualHorizontalLayout": "Dual Split (Horizontal)",
