@@ -21,7 +21,11 @@ import {
   Activity,
   Compass,
   HelpCircle,
-  Target
+  Target,
+  Settings2,
+  RefreshCw,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import { useBacktestStore } from '../../store/backtestStore';
 import { getTranslation } from '../../i18n';
@@ -32,7 +36,13 @@ import type {
 } from '../../types/smc';
 import { ActionPlanValidator } from '../../engine/smc/actionPlanValidator';
 import { MtfPromptRenderer } from '../../engine/smc/mtfPromptRenderer';
-import { getActiveCopilotProvider } from '../../api/copilot';
+import {
+  getActiveCopilotProvider,
+  getStoredLlmConfig,
+  saveStoredLlmConfig,
+  pingLlmGateway
+} from '../../api/copilot';
+import { AI_PROVIDER_MODELS, type LLMConfig, type AIProvider } from '../../engine/aiService';
 
 export interface AICopilotHUDProps {
   /** Current MTF semantic vector from the worker. */
@@ -128,6 +138,18 @@ export const AICopilotHUD: React.FC<AICopilotHUDProps> = ({
     promptRR3Template: t.apexCopilotPromptRR3Template,
     promptRR2Template: t.apexCopilotPromptRR2Template,
     promptRR4Template: t.apexCopilotPromptRR4Template,
+    settingsBtn: t.apexCopilotSettingsBtn,
+    settingsTitle: t.apexCopilotSettingsTitle,
+    settingsProviderLabel: t.apexCopilotSettingsProviderLabel,
+    settingsBaseUrl: t.apexCopilotSettingsBaseUrl,
+    settingsModel: t.apexCopilotSettingsModel,
+    settingsApiKey: t.apexCopilotSettingsApiKey,
+    settingsTestBtn: t.apexCopilotSettingsTestBtn,
+    settingsSaveBtn: t.apexCopilotSettingsSaveBtn,
+    settingsTesting: t.apexCopilotSettingsTesting,
+    settingsSuccess: t.apexCopilotSettingsSuccess,
+    settingsError: t.apexCopilotSettingsError,
+    settingsSaved: t.apexCopilotSettingsSaved,
     h4Label: t.apexCopilotMtfH4,
     d1Label: t.apexCopilotMtfD1,
     locationLabel: t.apexCopilotMtfLocation,
@@ -147,7 +169,56 @@ export const AICopilotHUD: React.FC<AICopilotHUDProps> = ({
   }), [t]);
 
   const [showPromptGuide, setShowPromptGuide] = useState(false);
-  const activeProvider = useMemo(() => getActiveCopilotProvider(), []);
+  const [showSettings, setShowSettings] = useState(false);
+  const [showApiKey, setShowApiKey] = useState(false);
+  const [activeProvider, setActiveProvider] = useState(() => getActiveCopilotProvider());
+  const [gatewayConfig, setGatewayConfig] = useState<LLMConfig>(() => {
+    return getStoredLlmConfig() || {
+      provider: 'custom',
+      baseUrl: 'https://api.openai.com/v1',
+      model: 'gpt-4o',
+      apiKey: '',
+      temperature: 0.2
+    };
+  });
+  const [pingStatus, setPingStatus] = useState<'IDLE' | 'TESTING' | 'SUCCESS' | 'ERROR'>('IDLE');
+  const [pingMsg, setPingMsg] = useState('');
+  const [savedNotice, setSavedNotice] = useState(false);
+
+  useEffect(() => {
+    const handleConfigChange = () => {
+      setActiveProvider(getActiveCopilotProvider());
+      const cfg = getStoredLlmConfig();
+      if (cfg) setGatewayConfig(cfg);
+    };
+    window.addEventListener('quant_llm_config_changed', handleConfigChange);
+    return () => window.removeEventListener('quant_llm_config_changed', handleConfigChange);
+  }, []);
+
+  const handlePing = async () => {
+    setPingStatus('TESTING');
+    setPingMsg(tApex.settingsTesting);
+    try {
+      const res = await pingLlmGateway(gatewayConfig);
+      if (res.success) {
+        setPingStatus('SUCCESS');
+        setPingMsg(`${tApex.settingsSuccess} (${res.latencyMs}ms)`);
+      } else {
+        setPingStatus('ERROR');
+        setPingMsg(res.message || tApex.settingsError);
+      }
+    } catch (err: any) {
+      setPingStatus('ERROR');
+      setPingMsg(err?.message || tApex.settingsError);
+    }
+  };
+
+  const handleSaveGateway = () => {
+    saveStoredLlmConfig(gatewayConfig);
+    setActiveProvider(getActiveCopilotProvider());
+    setSavedNotice(true);
+    setTimeout(() => setSavedNotice(false), 2500);
+  };
 
   // Position & Dragging State
   const [position, setPosition] = useState<{ x: number; y: number }>(() => {
@@ -459,6 +530,23 @@ export const AICopilotHUD: React.FC<AICopilotHUDProps> = ({
             {statusText}
           </span>
 
+          {/* Quick Gateway Settings Toggle */}
+          <button
+            type="button"
+            onClick={() => {
+              setShowSettings(!showSettings);
+              setShowPromptGuide(false);
+            }}
+            className={`p-1 rounded-md transition-colors ${
+              showSettings
+                ? 'bg-purple-900/80 text-purple-200 border border-purple-500/50'
+                : 'text-slate-400 hover:text-white hover:bg-slate-800'
+            }`}
+            title={tApex.settingsBtn}
+          >
+            <Settings2 className="w-3.5 h-3.5 text-purple-400" />
+          </button>
+
           {/* Quick Dock Snap Buttons */}
           <button
             type="button"
@@ -498,6 +586,130 @@ export const AICopilotHUD: React.FC<AICopilotHUDProps> = ({
           </button>
         </div>
       </header>
+
+      {/* QUICK GATEWAY & MODEL SETTINGS PANEL */}
+      {showSettings && (
+        <div className="p-3 bg-[#0a0e1a] border-b border-indigo-500/40 space-y-2.5 text-[10px] animate-in fade-in select-text">
+          <div className="flex items-center justify-between">
+            <span className="font-bold text-slate-100 flex items-center gap-1.5 text-[11px]">
+              <Settings2 className="w-3.5 h-3.5 text-purple-400" />
+              <span>{tApex.settingsTitle}</span>
+            </span>
+            <button
+              type="button"
+              onClick={() => setShowSettings(false)}
+              className="text-slate-400 hover:text-white p-0.5"
+              title={tApex.close}
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-slate-400 block font-semibold">{tApex.settingsProviderLabel}</label>
+            <select
+              value={gatewayConfig.provider}
+              onChange={(e) => {
+                const newProv = e.target.value as AIProvider;
+                const def = AI_PROVIDER_MODELS[newProv];
+                setGatewayConfig({
+                  ...gatewayConfig,
+                  provider: newProv,
+                  baseUrl: def?.defaultBaseUrl ?? gatewayConfig.baseUrl,
+                  model: def?.models?.[0] ?? gatewayConfig.model
+                });
+                setPingStatus('IDLE');
+                setPingMsg('');
+              }}
+              className="w-full bg-slate-900 border border-slate-700/80 rounded-lg px-2.5 py-1.5 text-slate-200 text-[10px] focus:outline-none focus:border-purple-500 font-mono"
+            >
+              {(Object.keys(AI_PROVIDER_MODELS) as AIProvider[]).map((prov) => (
+                <option key={prov} value={prov}>
+                  {AI_PROVIDER_MODELS[prov]?.name || prov}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {gatewayConfig.provider !== 'builtin' && (
+            <>
+              <div className="space-y-1">
+                <label className="text-slate-400 block font-semibold">{tApex.settingsBaseUrl}</label>
+                <input
+                  type="text"
+                  value={gatewayConfig.baseUrl || ''}
+                  onChange={(e) => setGatewayConfig({ ...gatewayConfig, baseUrl: e.target.value })}
+                  placeholder="https://api.openai.com/v1"
+                  className="w-full bg-slate-900 border border-slate-700/80 rounded-lg px-2.5 py-1 text-slate-200 text-[10px] font-mono focus:outline-none focus:border-purple-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <label className="text-slate-400 block font-semibold">{tApex.settingsModel}</label>
+                  <input
+                    type="text"
+                    value={gatewayConfig.model || ''}
+                    onChange={(e) => setGatewayConfig({ ...gatewayConfig, model: e.target.value })}
+                    placeholder="gpt-4o"
+                    className="w-full bg-slate-900 border border-slate-700/80 rounded-lg px-2 py-1 text-slate-200 text-[10px] font-mono focus:outline-none focus:border-purple-500"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-slate-400 block font-semibold">{tApex.settingsApiKey}</label>
+                  <div className="relative">
+                    <input
+                      type={showApiKey ? 'text' : 'password'}
+                      value={gatewayConfig.apiKey || ''}
+                      onChange={(e) => setGatewayConfig({ ...gatewayConfig, apiKey: e.target.value })}
+                      placeholder="sk-..."
+                      className="w-full bg-slate-900 border border-slate-700/80 rounded-lg px-2 py-1 pr-6 text-slate-200 text-[10px] font-mono focus:outline-none focus:border-purple-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowApiKey(!showApiKey)}
+                      className="absolute right-1 top-1 text-slate-400 hover:text-slate-200 p-0.5"
+                    >
+                      {showApiKey ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+
+          <div className="flex items-center justify-between pt-1.5 border-t border-slate-800">
+            <div className="flex items-center gap-1.5">
+              {gatewayConfig.provider !== 'builtin' && (
+                <button
+                  type="button"
+                  onClick={handlePing}
+                  disabled={pingStatus === 'TESTING'}
+                  className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 text-[9px] font-bold flex items-center gap-1 transition-all active:scale-95 disabled:opacity-50"
+                >
+                  <RefreshCw className={`w-2.5 h-2.5 ${pingStatus === 'TESTING' ? 'animate-spin' : ''}`} />
+                  <span>{pingStatus === 'TESTING' ? tApex.settingsTesting : tApex.settingsTestBtn}</span>
+                </button>
+              )}
+              {pingMsg && (
+                <span className={`text-[9px] font-mono truncate max-w-[130px] ${
+                  pingStatus === 'SUCCESS' ? 'text-emerald-400 font-bold' : pingStatus === 'ERROR' ? 'text-rose-400' : 'text-slate-400'
+                }`}>
+                  {pingMsg}
+                </span>
+              )}
+            </div>
+
+            <button
+              type="button"
+              onClick={handleSaveGateway}
+              className="px-3 py-1 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-[10px] font-bold shadow-xs transition-all active:scale-95 flex items-center gap-1"
+            >
+              <span>{savedNotice ? tApex.settingsSaved : tApex.settingsSaveBtn}</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Navigation Tabs */}
       <nav className="flex items-center gap-1 px-3 py-1.5 bg-slate-950/70 border-b border-slate-800/80 text-[11px]">

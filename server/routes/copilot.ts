@@ -205,6 +205,75 @@ ${rrSummary}
   return { reasoning, plan, chunks };
 }
 
+export function normalizeOpenAiEndpoint(baseUrl?: string): string {
+  if (!baseUrl || !baseUrl.trim()) {
+    return 'https://api.openai.com/v1/chat/completions';
+  }
+  let clean = baseUrl.trim().replace(/\/+$/, '');
+  if (clean.endsWith('/chat/completions')) {
+    return clean;
+  }
+  if (clean.endsWith('/v1')) {
+    return `${clean}/chat/completions`;
+  }
+  if (clean.includes('/v1') || clean.includes('/v2') || clean.includes('/api')) {
+    return `${clean}/chat/completions`;
+  }
+  return `${clean}/v1/chat/completions`;
+}
+
+// POST /api/copilot/ping — Fast test connection for custom LLM Gateway
+copilotRouter.post('/ping', async (req: Request, res: Response) => {
+  try {
+    const { baseUrl, apiKey, model } = req.body;
+    const url = normalizeOpenAiEndpoint(baseUrl);
+    const start = Date.now();
+
+    console.log(`[Copilot Engine] 🔍 Testing connection to Gateway: ${url} (model: ${model || 'default'})`);
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {})
+      },
+      body: JSON.stringify({
+        model: model || 'gpt-4o',
+        messages: [{ role: 'user', content: 'Ping' }],
+        max_tokens: 5,
+        stream: false
+      }),
+      signal: AbortSignal.timeout(10000)
+    });
+
+    const latencyMs = Date.now() - start;
+    if (response.ok) {
+      console.log(`[Copilot Engine] ✅ Gateway Ping OK (${latencyMs}ms)`);
+      res.json({
+        success: true,
+        latencyMs,
+        url,
+        message: `HTTP 200 OK (${latencyMs}ms)`
+      });
+    } else {
+      const errText = await response.text().catch(() => '');
+      console.warn(`[Copilot Engine] ❌ Gateway Ping HTTP ${response.status}: ${errText.slice(0, 200)}`);
+      res.status(response.status).json({
+        success: false,
+        latencyMs,
+        url,
+        error: `HTTP ${response.status}: ${errText.slice(0, 200)}`
+      });
+    }
+  } catch (err: any) {
+    console.warn(`[Copilot Engine] ❌ Gateway Ping exception:`, err?.message);
+    res.status(500).json({
+      success: false,
+      error: err.message || 'Lỗi kết nối tới Gateway'
+    });
+  }
+});
+
 // POST /api/copilot/ask — Single request returning chunks
 copilotRouter.post('/ask', async (req: Request, res: Response) => {
   try {
@@ -224,8 +293,7 @@ copilotRouter.post('/ask', async (req: Request, res: Response) => {
       llmConfig.provider !== 'builtin'
     ) {
       try {
-        const baseUrl = (llmConfig.baseUrl || 'https://api.openai.com/v1').replace(/\/+$/, '');
-        const url = `${baseUrl}/chat/completions`;
+        const url = normalizeOpenAiEndpoint(llmConfig.baseUrl);
 
         const targetRRInstruction = intent.targetRR
           ? `MANDATORY RISK-TO-REWARD CONSTRAINT: The user explicitly specified target Risk:Reward ratio 1:${intent.targetRR}. You MUST calculate stopLoss and takeProfit such that |takeProfit - entry| / |entry - stopLoss| == ${intent.targetRR}. The "rrRatio" field inside <action_plan> MUST be ${intent.targetRR}.`
@@ -252,6 +320,8 @@ Then, output an actionable trade plan inside <action_plan>{...}</action_plan> as
 Dealing Range Location: ${mtf?.location || 'EQUILIBRIUM'}, H4: ${mtf?.bias?.h4 || 'BULLISH'}, D1: ${mtf?.bias?.d1 || 'BULLISH'}.
 User Query: "${question}"`;
 
+        console.log(`[Copilot Engine] 🚀 /ask Dispatching to Gateway: ${url} | Model: ${llmConfig.model || 'gpt-4o'}`);
+
         const llmResponse = await fetch(url, {
           method: 'POST',
           headers: {
@@ -265,7 +335,8 @@ User Query: "${question}"`;
               { role: 'user', content: promptText }
             ],
             temperature: llmConfig.temperature ?? 0.2
-          })
+          }),
+          signal: AbortSignal.timeout(25000)
         });
 
         if (llmResponse.ok) {
@@ -289,6 +360,7 @@ User Query: "${question}"`;
           }
 
           if (reasoning || actionJson) {
+            console.log(`[Copilot Engine] ✅ /ask Gateway response received successfully`);
             const now = Date.now();
             const chunks: CoTChunk[] = [
               { type: 'reasoning', delta: reasoning || content, timestamp: now },
@@ -298,9 +370,12 @@ User Query: "${question}"`;
             res.json({ chunks, success: true, provider: llmConfig.provider });
             return;
           }
+        } else {
+          const errText = await llmResponse.text().catch(() => '');
+          console.warn(`[Copilot Engine] ❌ /ask Gateway HTTP ${llmResponse.status}: ${errText.slice(0, 300)}`);
         }
-      } catch (llmErr) {
-        console.warn('[Copilot Route] External LLM failed, falling back to algorithmic inference:', llmErr);
+      } catch (llmErr: any) {
+        console.warn('[Copilot Engine] ⚠️ External LLM /ask failed, falling back to algorithmic inference:', llmErr?.message);
       }
     }
 
@@ -325,7 +400,7 @@ User Query: "${question}"`;
   }
 });
 
-// POST /api/copilot/stream — SSE Server-Sent Events real-time streaming
+// POST /api/copilot/stream — SSE Server-Sent Events real-time streaming with dual stream/non-stream delivery
 copilotRouter.post('/stream', async (req: Request, res: Response) => {
   try {
     const { question, symbol, timeframe, mtf, currentPrice, pip, digits, llmConfig } = req.body;
@@ -343,15 +418,13 @@ copilotRouter.post('/stream', async (req: Request, res: Response) => {
       (llmConfig.apiKey || llmConfig.provider === 'ollama' || llmConfig.provider === 'custom') &&
       llmConfig.provider !== 'builtin'
     ) {
-      try {
-        const baseUrl = (llmConfig.baseUrl || 'https://api.openai.com/v1').replace(/\/+$/, '');
-        const url = `${baseUrl}/chat/completions`;
+      const url = normalizeOpenAiEndpoint(llmConfig.baseUrl);
 
-        const targetRRInstruction = intent.targetRR
-          ? `MANDATORY RISK-TO-REWARD CONSTRAINT: The user explicitly requested a target Risk-to-Reward ratio of 1:${intent.targetRR}. You MUST set entry, stopLoss, and takeProfit such that the R:R (|takeProfit - entry| / |entry - stopLoss|) equals EXACTLY ${intent.targetRR}. The "rrRatio" field inside <action_plan> MUST be ${intent.targetRR}.`
-          : `Calibrate stopLoss and takeProfit according to institutional SMC risk parameters (aim for minimum 1:2 to 1:3 R:R).`;
+      const targetRRInstruction = intent.targetRR
+        ? `MANDATORY RISK-TO-REWARD CONSTRAINT: The user explicitly requested a target Risk-to-Reward ratio of 1:${intent.targetRR}. You MUST set entry, stopLoss, and takeProfit such that the R:R (|takeProfit - entry| / |entry - stopLoss|) equals EXACTLY ${intent.targetRR}. The "rrRatio" field inside <action_plan> MUST be ${intent.targetRR}.`
+        : `Calibrate stopLoss and takeProfit according to institutional SMC risk parameters (aim for minimum 1:2 to 1:3 R:R).`;
 
-        const systemPrompt = `You are Apex AI Copilot, an elite quantitative Smart Money Concepts (SMC) trading engine for Quant Backtest Pro.
+      const systemPrompt = `You are Apex AI Copilot, an elite quantitative Smart Money Concepts (SMC) trading engine for Quant Backtest Pro.
 Analyze the user's query with institutional SMC methodology (HTF Bias, Dealing Range Premium/Discount, Order Blocks, FVGs, Liquidity Sweeps).
 ${targetRRInstruction}
 
@@ -368,11 +441,17 @@ Then, output an actionable trade plan inside <action_plan>{...}</action_plan> as
   "confidence": number
 }`;
 
-        const promptText = `Symbol: ${symbol || 'XAUUSD'}, Timeframe: ${timeframe || 'M5'}, Current Price: ${currentPrice || 2650}.
+      const promptText = `Symbol: ${symbol || 'XAUUSD'}, Timeframe: ${timeframe || 'M5'}, Current Price: ${currentPrice || 2650}.
 Dealing Range Location: ${mtf?.location || 'EQUILIBRIUM'}, H4: ${mtf?.bias?.h4 || 'BULLISH'}, D1: ${mtf?.bias?.d1 || 'BULLISH'}.
 User Query: "${question || 'Phân tích tín hiệu'}"`;
 
-        const llmStreamRes = await fetch(url, {
+      console.log(`[Copilot Engine] 🚀 /stream Dispatching to Gateway: ${url} | Model: ${llmConfig.model || 'gpt-4o'} (stream: true)`);
+
+      let llmStreamRes: globalThis.Response | null = null;
+      let streamFetchError: string | null = null;
+
+      try {
+        llmStreamRes = await fetch(url, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -386,10 +465,17 @@ User Query: "${question || 'Phân tích tín hiệu'}"`;
             ],
             temperature: llmConfig.temperature ?? 0.2,
             stream: true
-          })
+          }),
+          signal: AbortSignal.timeout(25000)
         });
+      } catch (fetchErr: any) {
+        streamFetchError = fetchErr?.message || 'Network error';
+        console.warn(`[Copilot Engine] ⚠️ Gateway streaming fetch failed for ${url}:`, streamFetchError);
+      }
 
-        if (llmStreamRes.ok && llmStreamRes.body) {
+      // 1. Success on SSE Stream
+      if (llmStreamRes && llmStreamRes.ok && llmStreamRes.body) {
+        try {
           const reader = (llmStreamRes.body as any).getReader();
           const decoder = new TextDecoder();
           let fullText = '';
@@ -444,10 +530,87 @@ User Query: "${question || 'Phân tích tín hiệu'}"`;
           res.write(`data: ${JSON.stringify({ type: 'done', delta: '', timestamp: Date.now() })}\n\n`);
           res.write('data: [DONE]\n\n');
           res.end();
+          console.log(`[Copilot Engine] ✅ /stream completed via SSE`);
           return;
+        } catch (streamReadErr: any) {
+          console.warn(`[Copilot Engine] ⚠️ Error while reading SSE stream:`, streamReadErr?.message);
         }
-      } catch (llmStreamErr) {
-        console.warn('[Copilot Stream] External LLM stream error, falling back to algorithmic SMC:', llmStreamErr);
+      }
+
+      // 2. Dual Delivery: If stream: true was rejected (e.g. 400, 422, non-stream gateway), try stream: false!
+      const statusErr = llmStreamRes ? `HTTP ${llmStreamRes.status}` : streamFetchError;
+      console.warn(`[Copilot Engine] ⚠️ Gateway streaming failed (${statusErr}), retrying with non-streaming mode...`);
+
+      try {
+        const nonStreamRes = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(llmConfig.apiKey ? { Authorization: `Bearer ${llmConfig.apiKey}` } : {})
+          },
+          body: JSON.stringify({
+            model: llmConfig.model || 'gpt-4o',
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: promptText }
+            ],
+            temperature: llmConfig.temperature ?? 0.2,
+            stream: false
+          }),
+          signal: AbortSignal.timeout(25000)
+        });
+
+        if (nonStreamRes.ok) {
+          const data: any = await nonStreamRes.json();
+          const content = data.choices?.[0]?.message?.content || '';
+          console.log(`[Copilot Engine] ✅ Non-streaming retry succeeded from ${url} (${content.length} chars)`);
+
+          let reasoning = '';
+          let actionJson = '';
+
+          if (content.includes('<thinking>') && content.includes('</thinking>')) {
+            const thinkMatch = content.match(/<thinking>([\s\S]*?)<\/thinking>/);
+            reasoning = thinkMatch ? thinkMatch[1].trim() : '';
+          }
+
+          if (content.includes('<action_plan>') && content.includes('</action_plan>')) {
+            const planMatch = content.match(/<action_plan>([\s\S]*?)<\/action_plan>/);
+            actionJson = planMatch ? planMatch[1].trim() : '';
+          } else {
+            const jsonMatch = content.match(/\{[\s\S]*"side"[\s\S]*"entry"[\s\S]*\}/);
+            if (jsonMatch) actionJson = jsonMatch[0];
+          }
+
+          if (!actionJson) {
+            const fallback = computeAlgorithmicActionPlan({
+              question: question || 'Phân tích tín hiệu',
+              symbol: symbol || 'XAUUSD',
+              timeframe: timeframe || 'M5',
+              mtf,
+              currentPrice,
+              pip,
+              digits
+            });
+            actionJson = JSON.stringify(fallback.plan);
+          }
+
+          res.write(`data: ${JSON.stringify({ type: 'reasoning', delta: reasoning || content, timestamp: Date.now() })}\n\n`);
+          res.write(`data: ${JSON.stringify({ type: 'action', delta: actionJson, timestamp: Date.now() })}\n\n`);
+          res.write(`data: ${JSON.stringify({ type: 'done', delta: '', timestamp: Date.now() })}\n\n`);
+          res.write('data: [DONE]\n\n');
+          res.end();
+          return;
+        } else {
+          const errBody = await nonStreamRes.text().catch(() => '');
+          console.warn(`[Copilot Engine] ❌ Non-streaming retry failed HTTP ${nonStreamRes.status}: ${errBody.slice(0, 300)}`);
+          // Inform client of gateway error via stream
+          const notice = `⚠️ [Thông báo Gateway]: Gateway (${url}) phản hồi mã lỗi HTTP ${nonStreamRes.status}. Hệ thống tự động chuyển sang SMC Quant Engine.\n\n`;
+          res.write(`data: ${JSON.stringify({ type: 'reasoning', delta: notice, timestamp: Date.now() })}\n\n`);
+        }
+      } catch (nonStreamErr: any) {
+        console.warn(`[Copilot Engine] ❌ Non-streaming fetch exception:`, nonStreamErr?.message);
+        const notice = `⚠️ [Thông báo Gateway]: Không thể kết nối tới ${url} (${nonStreamErr?.message || 'Lỗi mạng'}). Hệ thống chuyển sang SMC Quant Engine.\n\n`;
+        res.write(`data: ${JSON.stringify({ type: 'reasoning', delta: notice, timestamp: Date.now() })}\n\n`);
       }
     }
 

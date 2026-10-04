@@ -20,7 +20,7 @@ The **Apex AI Copilot** is a high-performance quantitative co-pilot integrated d
 
 ```
 +--------------------------------------------------------------+
-| [:::] [🧠] Apex AI Copilot (●) [⚡ SMC Algorithm]   [◀] [▶] [-] [X] |
+| [:::] [🧠] Apex AI Copilot (●) [⚡ SMC Algorithm] [⚙] [◀] [▶] [-] [X] |
 +--------------------------------------------------------------+
 | [✨ Copilot]   [🥞 MTF Matrix]   [⚡ Diagnostics]            |
 +--------------------------------------------------------------+
@@ -48,6 +48,7 @@ The **Apex AI Copilot** is a high-performance quantitative co-pilot integrated d
 
 ### Key UI Elements:
 - **Engine Badge (`[⚡ SMC Algorithm]` / `[🧠 Model Name]`)**: Located next to the HUD title. Hovering reveals the active provider source and instructions for configuring custom API keys.
+- **Embedded Gateway Settings (`[⚙]`)**: Click the gear icon in the HUD header to toggle the Quick LLM Gateway & Provider configuration card directly without leaving the chart canvas.
 - **Interactive Prompt Guide (`(?)`)**: Click the guide button adjacent to "Ask Copilot" to reveal prompt engineering templates and supported syntax.
 - **Preset R:R Chips**: Click `[🎯 R:R 1:3]`, `[🎯 R:R 1:2]`, or `[🎯 R:R 1:4]` to immediately generate trade setups calibrated to your desired risk-reward ratio without typing.
 - **Action Plan Card**: Displays calculated Entry, Stop Loss, Take Profit, calibrated R:R ratio, and institutional checklist verifications (`HTF Bias Aligned`, `Key POI Tap`, `Liquidity Sweep Confirmed`, `LTF CHoCH Confirmed`).
@@ -84,19 +85,36 @@ The Financial Intent & Entity Parser recognizes multi-lingual natural language c
 
 ## 4. Configuring Custom Cloud & Local LLMs
 
-You can switch the inference engine from the default **SMC Algorithmic Co-Processor** to any external LLM provider:
+You can switch the inference engine from the default **SMC Algorithmic Co-Processor** to any external LLM provider or custom AI Gateway using two convenient methods:
 
+### Method A: Direct Quick Configuration from HUD Header (Recommended)
+1. In the Copilot HUD header, click the **Settings (`⚙`)** icon.
+2. The **LLM Gateway & Provider Settings** card drops down directly inside the HUD:
+   - **Provider**: Select your target engine (e.g. `Custom Gateway / Reverse Proxy`, `OpenAI`, `Google Gemini`, `DeepSeek`, `Ollama`).
+   - **Base URL**: Enter your gateway endpoint (e.g. `https://my-llm-gateway.example.com`, `http://localhost:8000/v1`).
+   - **Model**: Enter or choose your desired model name (e.g. `gpt-4o`, `deepseek-chat`, `claude-3-5-sonnet`).
+   - **API Key**: Enter your key (click the eye icon to reveal/mask).
+3. Click **Kiểm tra kết nối / Test Ping**:
+   - Sends a lightweight probe to `/api/copilot/ping` with your credentials.
+   - Shows round-trip latency in milliseconds (e.g. `Kết nối thành công (142ms)`) or detailed error diagnostics if the gateway is unreachable.
+4. Click **Lưu cấu hình / Save Settings**:
+   - Configuration is persisted to local storage and dynamically broadcasted via window events.
+   - The HUD header badge immediately reflects your custom model (e.g. `[🧠 gpt-4o]`) without requiring a browser refresh.
+
+### Method B: Via AI Strategy Studio Modal
 1. Click **AI Strategy Studio** (`[Trợ lý AI]` or `[AI Strategy]`) in the header or sidebar.
-2. Select the **Cài đặt / Settings** tab.
-3. Choose your preferred AI Provider:
-   - **Google Gemini Official API**: Enter your Google AI Studio API Key (`AIza...`).
-   - **OpenAI / OpenRouter / Groq**: Enter your API Key (`sk-...`) and select model (`gpt-4o`, `gpt-4o-mini`, `o1-mini`).
-   - **DeepSeek Official AI**: Enter your DeepSeek API Key and select `deepseek-chat` or `deepseek-coder`.
-   - **Anthropic Claude**: Enter your Claude API Key.
-   - **Ollama Local LLM**: Run models offline on your machine (`http://localhost:11434`, e.g. `llama3.2`, `deepseek-coder-v2`).
-   - **Custom Reverse Proxy Tunnel**: Connect via your custom OpenAI-compatible endpoint.
-4. Click **Lưu cấu hình / Save Settings**.
-5. Return to the chart. The Copilot HUD header will immediately update from `[⚡ SMC Algorithm]` to your configured model (e.g. `[🧠 gpt-4o]`).
+2. Select the **Cài đặt / Settings** tab and configure your keys.
+3. Click **Lưu cấu hình / Save Settings**.
+
+### Architecture: Smart URL Auto-Normalization & Dual Delivery
+- **Smart URL Normalization**: The backend endpoint normalizer handles any URL format seamlessly:
+  - `https://api.openai.com` $\rightarrow$ `https://api.openai.com/v1/chat/completions`
+  - `https://custom-gateway.io/v1` $\rightarrow$ `https://custom-gateway.io/v1/chat/completions`
+  - `https://custom-gateway.io/v1/chat/completions` $\rightarrow$ correctly preserved without path duplication.
+- **Dual Delivery (SSE Stream with Non-Streaming Failover)**:
+  1. Copilot first dispatches a streaming request (`stream: true`) to stream tokens in real-time.
+  2. If a custom gateway does not support Server-Sent Events (SSE) or returns an HTTP streaming error, Copilot **automatically retries with a standard non-streaming request (`stream: false`)**.
+  3. If both requests encounter errors (e.g. 401 Unauthorized, 404 Not Found), Copilot streams an explicit diagnostic warning notice to the trader before gracefully falling back to the local SMC engine.
 
 ---
 
@@ -133,3 +151,5 @@ is guaranteed to equal exactly **3.00**.
 | `COPILOT-04` | Engine indicator displays in HUD header | Shows `[⚡ SMC Algorithm]` or `[🧠 gpt-4o]` with explanatory tooltip | ✅ PASS |
 | `COPILOT-05` | Zero hardcoded UI strings across 4 locales | `npm run check:i18n` passes with 0 violations | ✅ PASS |
 | `COPILOT-06` | External LLM unavailable or offline | Seamlessly falls back to local SMC algorithm with calibrated R:R | ✅ PASS |
+| `COPILOT-07` | Click HUD Settings `[⚙]` -> Test Ping & Save | Ping returns latency; saved config updates HUD badge immediately | ✅ PASS |
+| `COPILOT-08` | Custom Gateway URL auto-normalization & Dual Delivery | Normalizes `/v1` endpoints and retries non-streaming if SSE unsupported | ✅ PASS |

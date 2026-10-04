@@ -89,6 +89,23 @@ export function parseCopilotTradingIntent(question: string): ParsedTradingIntent
   return { targetRR, customSlPips, customTpPips, customSide };
 }
 
+export function normalizeOpenAiEndpoint(baseUrl?: string): string {
+  if (!baseUrl || !baseUrl.trim()) {
+    return 'https://api.openai.com/v1/chat/completions';
+  }
+  let clean = baseUrl.trim().replace(/\/+$/, '');
+  if (clean.endsWith('/chat/completions')) {
+    return clean;
+  }
+  if (clean.endsWith('/v1')) {
+    return `${clean}/chat/completions`;
+  }
+  if (clean.includes('/v1') || clean.includes('/v2') || clean.includes('/api')) {
+    return `${clean}/chat/completions`;
+  }
+  return `${clean}/v1/chat/completions`;
+}
+
 export function getStoredLlmConfig(): LLMConfig | null {
   try {
     const raw = localStorage.getItem(LLM_STORAGE_KEY);
@@ -98,18 +115,63 @@ export function getStoredLlmConfig(): LLMConfig | null {
   }
 }
 
-export function getActiveCopilotProvider(): { provider: string; model?: string; isLocalAlgorithmic: boolean } {
+export function saveStoredLlmConfig(config: LLMConfig): void {
+  try {
+    localStorage.setItem(LLM_STORAGE_KEY, JSON.stringify(config));
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('quant_llm_config_changed', { detail: config }));
+    }
+  } catch {}
+}
+
+export async function pingLlmGateway(config: Partial<LLMConfig>): Promise<{ success: boolean; latencyMs: number; message: string }> {
+  const API_BASE = typeof window !== 'undefined' ? '/api' : 'http://localhost:3001/api';
+  try {
+    const res = await fetch(`${API_BASE}/copilot/ping`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        baseUrl: config.baseUrl,
+        apiKey: config.apiKey,
+        model: config.model
+      })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok) {
+      return {
+        success: true,
+        latencyMs: data.latencyMs || 0,
+        message: data.message || `HTTP 200 OK (${data.latencyMs}ms)`
+      };
+    }
+    return {
+      success: false,
+      latencyMs: data.latencyMs || 0,
+      message: data.error || `HTTP ${res.status}`
+    };
+  } catch (err: any) {
+    return {
+      success: false,
+      latencyMs: 0,
+      message: err?.message || 'Không thể kết nối Backend'
+    };
+  }
+}
+
+export function getActiveCopilotProvider(): { provider: string; model?: string; baseUrl?: string; isLocalAlgorithmic: boolean } {
   const config = getStoredLlmConfig();
   if (config && config.provider !== 'builtin' && (config.apiKey || config.provider === 'ollama' || config.provider === 'custom')) {
     return {
       provider: config.provider,
       model: config.model,
+      baseUrl: config.baseUrl,
       isLocalAlgorithmic: false
     };
   }
   return {
     provider: 'algorithmic-smc',
     model: 'SMC Quant Engine v2.1',
+    baseUrl: undefined,
     isLocalAlgorithmic: true
   };
 }
@@ -221,8 +283,7 @@ export async function askCopilotStream(
   // Attempt 3: Direct User LLM API call (if user has configured API key in settings)
   if (llmConfig && llmConfig.apiKey && llmConfig.provider !== 'builtin') {
     try {
-      const baseUrl = (llmConfig.baseUrl || 'https://api.openai.com/v1').replace(/\/+$/, '');
-      const url = `${baseUrl}/chat/completions`;
+      const url = normalizeOpenAiEndpoint(llmConfig.baseUrl);
 
       const intent = parseCopilotTradingIntent(params.question);
       const rrInstruction = intent.targetRR
@@ -377,5 +438,8 @@ ${rrSummary}
 export const copilotApi = {
   ask: askCopilotStream,
   parseIntent: parseCopilotTradingIntent,
-  getActiveProvider: getActiveCopilotProvider
+  getActiveProvider: getActiveCopilotProvider,
+  saveConfig: saveStoredLlmConfig,
+  pingGateway: pingLlmGateway,
+  normalizeEndpoint: normalizeOpenAiEndpoint
 };
