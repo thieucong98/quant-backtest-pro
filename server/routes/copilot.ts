@@ -401,13 +401,13 @@ User Query: "${question}"`;
             res.json({ chunks, success: true, provider: llmConfig.provider });
             return;
           }
-        } else {
-          const errText = await llmResponse.text().catch(() => '');
-          console.warn(`[Copilot Engine] ❌ /ask Gateway HTTP ${llmResponse.status}: ${errText.slice(0, 300)}`);
+          } else {
+            const errText = await llmResponse.text().catch(() => '');
+            console.warn(`[Copilot Engine] ❌ /ask Gateway HTTP ${llmResponse.status}: ${errText.slice(0, 300)}`);
+          }
         }
-        } catch (llmErr: any) {
-          console.warn('[Copilot Engine] ⚠️ External LLM /ask failed, falling back to algorithmic inference:', llmErr?.message);
-        }
+      } catch (llmErr: any) {
+        console.warn('[Copilot Engine] ⚠️ External LLM /ask failed, falling back to algorithmic inference:', llmErr?.message);
       }
     }
 
