@@ -30,7 +30,18 @@ export default defineConfig({
     proxy: {
       '/api': {
         target: 'http://localhost:3001',
-        changeOrigin: true
+        changeOrigin: true,
+        configure: (proxy) => {
+          proxy.on('error', (err, _req, res) => {
+            console.warn('[Vite Proxy] Backend on :3001 unreachable:', err.message);
+            if (res && 'writeHead' in res && !res.headersSent) {
+              res.writeHead(503, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({
+                error: 'Backend API server on :3001 is offline. Run `npm run dev:all` or `npm run server` to start backend.'
+              }));
+            }
+          });
+        }
       }
     }
   },

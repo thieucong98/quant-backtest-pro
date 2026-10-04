@@ -1244,7 +1244,53 @@ async function runComprehensiveTests() {
   }
 
   // =========================================================================
-  // 22. SUMMARY OF TEST SUITE RESULTS
+  // 22. COPILOT STREAMING & STRATEGIES API INTEGRATION TESTS
+  // =========================================================================
+  console.log('\n--- 22. Copilot Streaming & Strategies API Integration Tests ---');
+  {
+    const { copilotApi } = await import('./src/api/copilot');
+    const { ActionPlanValidator } = await import('./src/engine/smc/actionPlanValidator');
+    const { strategiesApi } = await import('./src/api/index');
+
+    // 22.1 Test copilotApi streaming with callback
+    let streamCallbacksCount = 0;
+    const streamChunks = await copilotApi.ask(
+      {
+        question: 'Giá vào tốt nhất?',
+        symbol: 'XAUUSD',
+        timeframe: 'M5',
+        currentPrice: 2650.0,
+        pip: 0.1,
+        digits: 2
+      },
+      (_chunk) => {
+        streamCallbacksCount++;
+      }
+    );
+
+    assert(streamChunks.length >= 3, 'CopilotApi', 'Copilot ask returns at least 3 chunks (reasoning, action, done)');
+    assert(streamCallbacksCount >= 3, 'CopilotApi', 'Copilot ask invokes streaming onChunk callback in real-time');
+
+    const reasoningChunk = streamChunks.find(c => c.type === 'reasoning');
+    assert(!!reasoningChunk && reasoningChunk.delta.length > 0, 'CopilotApi', 'Reasoning chunk contains CoT text');
+
+    const actionChunk = streamChunks.find(c => c.type === 'action');
+    assert(!!actionChunk && actionChunk.delta.includes('"side"'), 'CopilotApi', 'Action chunk contains ActionPlan JSON');
+
+    if (actionChunk) {
+      const parsedPlan = JSON.parse(actionChunk.delta);
+      const validator = new ActionPlanValidator();
+      const valResult = validator.validate(parsedPlan, null);
+      assert(valResult.ok, 'CopilotApi', 'Generated ActionPlan passes institutional ActionPlanValidator');
+    }
+
+    // 22.2 Test strategiesApi resilience
+    const strats = await strategiesApi.list();
+    assert(Array.isArray(strats), 'StrategiesApi', 'strategiesApi.list returns an array gracefully with offline resilience');
+  }
+
+  // =========================================================================
+  // 23. SUMMARY OF TEST SUITE RESULTS
   // =========================================================================
   console.log('\n===============================================================');
   const total = testResults.length;

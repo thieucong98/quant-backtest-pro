@@ -3,6 +3,7 @@ export * from './sessions';
 export * from './trades';
 export * from './tunnel';
 export * from './calendar';
+export * from './copilot';
 
 const OFFLINE_STRATEGIES_KEY = 'quant_offline_strategies';
 

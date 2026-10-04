@@ -1,15 +1,35 @@
 import { Router, Request, Response } from 'express';
 import { prisma } from '../index.js';
-import { authMiddleware } from './users.js';
+import { authMiddleware, getOrCreateDefaultUser } from './users.js';
 
 export const strategiesRouter = Router();
 strategiesRouter.use(authMiddleware);
 
+function safeParseJson(str: string | null | undefined, fallback: any = {}): any {
+  if (!str) return fallback;
+  try {
+    return JSON.parse(str);
+  } catch {
+    return fallback;
+  }
+}
+
 // Helper: get userId from authenticated request
-function getUserId(req: Request): string {
-  const userId = (req as any).userId;
+async function getUserId(req: Request): Promise<string> {
+  let userId = (req as any).userId;
+  if (!userId && process.env.NODE_ENV !== 'production') {
+    try {
+      const defaultUser = await getOrCreateDefaultUser();
+      if (defaultUser) {
+        userId = defaultUser.id;
+        (req as any).userId = userId;
+      }
+    } catch {}
+  }
   if (!userId) {
-    throw new Error('Unauthorized: Thiếu định danh người dùng hợp lệ');
+    const err: any = new Error('Unauthorized: Thiếu định danh người dùng hợp lệ');
+    err.status = 401;
+    throw err;
   }
   return userId;
 }
@@ -17,18 +37,23 @@ function getUserId(req: Request): string {
 // GET /api/strategies — List all strategies
 strategiesRouter.get('/', async (req: Request, res: Response) => {
   try {
-    const userId = getUserId(req);
+    const userId = await getUserId(req);
     const strategies = await prisma.strategy.findMany({
-      where: { userId },
+      where: {
+        OR: [
+          { userId },
+          { isBuiltIn: true }
+        ]
+      },
       orderBy: { updatedAt: 'desc' }
     });
 
     res.json(strategies.map(s => ({
       ...s,
-      parameters: JSON.parse(s.parameters || '{}')
+      parameters: safeParseJson(s.parameters, {})
     })));
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    res.status(err.status || 500).json({ error: err.message || 'Lỗi tải danh sách chiến lược' });
   }
 });
 
@@ -46,9 +71,9 @@ strategiesRouter.get('/:id', async (req: Request, res: Response) => {
       return;
     }
 
-    res.json({ ...strategy, parameters: JSON.parse(strategy.parameters || '{}') });
+    res.json({ ...strategy, parameters: safeParseJson(strategy.parameters, {}) });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    res.status(err.status || 500).json({ error: err.message || 'Lỗi xử lý chiến lược' });
   }
 });
 
@@ -64,14 +89,14 @@ strategiesRouter.post('/', async (req: Request, res: Response) => {
         name,
         description: description || '',
         code,
-        parameters: JSON.stringify(parameters || {}),
+        parameters: typeof parameters === 'string' ? parameters : JSON.stringify(parameters || {}),
         enabled: enabled !== false
       }
     });
 
-    res.status(201).json({ ...strategy, parameters: JSON.parse(strategy.parameters) });
+    res.status(201).json({ ...strategy, parameters: safeParseJson(strategy.parameters, {}) });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    res.status(err.status || 500).json({ error: err.message || 'Lỗi tạo chiến lược mới' });
   }
 });
 
@@ -96,9 +121,9 @@ strategiesRouter.put('/:id', async (req: Request, res: Response) => {
       data
     });
 
-    res.json({ ...strategy, parameters: JSON.parse(strategy.parameters) });
+    res.json({ ...strategy, parameters: safeParseJson(strategy.parameters, {}) });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    res.status(err.status || 500).json({ error: err.message || 'Lỗi cập nhật chiến lược' });
   }
 });
 
