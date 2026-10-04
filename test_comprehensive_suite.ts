@@ -1287,6 +1287,36 @@ async function runComprehensiveTests() {
     // 22.2 Test strategiesApi resilience
     const strats = await strategiesApi.list();
     assert(Array.isArray(strats), 'StrategiesApi', 'strategiesApi.list returns an array gracefully with offline resilience');
+
+    // 22.3 Test parseCopilotTradingIntent extracts 1:3 target R:R from Vietnamese query
+    const intentRR3 = copilotApi.parseIntent('Rủi ro / Lợi nhuận? tôi muốn tỉ lệ lợi nhuận là 1:3');
+    assert(intentRR3.targetRR === 3, 'CopilotIntent', 'parseIntent accurately extracts 1:3 target R:R from Vietnamese prompt');
+
+    // 22.4 Test parseCopilotTradingIntent extracts custom SL and 1:4 R:R
+    const intentCustom = copilotApi.parseIntent('Tôi muốn setup SL 15 pip, R:R 1:4');
+    assert(intentCustom.targetRR === 4, 'CopilotIntent', 'parseIntent extracts target R:R 1:4');
+    assert(intentCustom.customSlPips === 15, 'CopilotIntent', 'parseIntent extracts custom SL 15 pips');
+
+    // 22.5 Test dynamic Copilot Ask with requested 1:3 R:R returns ActionPlan with rrRatio 3
+    const dynamicRRChunks = await copilotApi.ask({
+      question: 'Rủi ro / Lợi nhuận? tôi muốn tỉ lệ lợi nhuận là 1:3',
+      symbol: 'XAGUSD',
+      timeframe: 'M5',
+      currentPrice: 32.273,
+      pip: 0.01,
+      digits: 3
+    });
+
+    const dynamicActionChunk = dynamicRRChunks.find(c => c.type === 'action');
+    assert(!!dynamicActionChunk, 'CopilotDynamicRR', 'Copilot returns action chunk for R:R 1:3 request');
+    if (dynamicActionChunk) {
+      const plan = JSON.parse(dynamicActionChunk.delta);
+      assert(plan.rrRatio === 3, 'CopilotDynamicRR', `Generated ActionPlan rrRatio is exactly 3 (got ${plan.rrRatio})`);
+      assert(plan.takeProfit && plan.takeProfit.length > 0, 'CopilotDynamicRR', 'Take profit level generated');
+      // For entry 32.273, sl 20 pips = 0.2 -> tp 60 pips = 0.6 -> TP 32.873
+      const expectedTp = Number((32.273 + 20 * 3 * 0.01).toFixed(3));
+      assert(plan.takeProfit[0] === expectedTp, 'CopilotDynamicRR', `Take profit calibrated to 32.873 (got ${plan.takeProfit[0]})`);
+    }
   }
 
   // =========================================================================

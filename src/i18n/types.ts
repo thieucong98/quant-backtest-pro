@@ -964,6 +964,20 @@ export interface TranslationDict {
   apexCopilotDockRight: string;
   apexCopilotAutoWarning: string;
   apexCopilotInteractivePromptHelp: string;
+  apexCopilotEngineBadgeSMC: string;
+  apexCopilotEngineBadgeLLM: string;
+  apexCopilotEngineTooltip: string;
+  apexCopilotHelpTitle: string;
+  apexCopilotHelpTipRR: string;
+  apexCopilotHelpTipSLTP: string;
+  apexCopilotHelpTipBias: string;
+  apexCopilotAskQuickRR3: string;
+  apexCopilotAskQuickRR2: string;
+  apexCopilotAskQuickRR4: string;
+  apexCopilotCalibratedBadge: string;
+  apexCopilotPromptRR3Template: string;
+  apexCopilotPromptRR2Template: string;
+  apexCopilotPromptRR4Template: string;
   // Quant Execution Bridge (v2.0)
   bridgeConnected: string;
   bridgeConnecting: string;

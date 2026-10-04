@@ -528,20 +528,25 @@ This document provides a single source of truth for all **63 features across 10 
   1. Isolated low-probability setup -> Score remains below 50; no LLM tokens wasted.
   2. Aligned HTF trend + Sweep + Discount OB -> Score exceeds 65; LLM Chain-of-Thought stream triggers automatically.
 
-#### `F-SMC-07` - Apex AI Copilot HUD & Streaming CoT
+#### `F-SMC-07` - Apex AI Copilot HUD, Streaming CoT & Dynamic R:R Engine
 - **UI Navigation:** Top-bar / chart floating dock ➔ Click `Copilot` pill (draggable anywhere across chart canvas).
 - **Functionality:**
-  - Real-time Server-Sent Events (SSE) streaming displaying token-by-token Chain-of-Thought reasoning connecting directly to AI Gateway (`/api/copilot/stream`, `/api/copilot/ask`) and user-configured LLM providers (`MiniMax`, `OpenAI`, `Gemini`, `Claude`, `DeepSeek`, `Ollama`).
-  - Automatic extraction of typed `ActionPlan` (Side, Entry, SL, TP, R:R, Confidence).
+  - Real-time Server-Sent Events (SSE) streaming displaying token-by-token Chain-of-Thought reasoning connecting directly to AI Gateway (`/api/copilot/stream`, `/api/copilot/ask`) and user-configured LLM providers (`OpenAI`, `Gemini`, `Claude`, `DeepSeek`, `Ollama`, or Custom Proxy).
+  - **Dynamic Risk-to-Reward (R:R) NLP Calibration**: Heuristic and NLP parser extracts user-specified target R:R (`1:3`, `1:4`, `1:2.5`), custom StopLoss pips (`SL 15 pip`), TakeProfit pips (`TP 60 pip`), and directional bias from prompts in Vietnamese or English. Automatically calibrates Stop Loss and Take Profit levels mathematically to satisfy the requested ratio.
+  - **Active Inference Engine Badge**: Header displays live provider badge (`[⚡ SMC Algorithm]` or `[🧠 gpt-4o]`) with explanatory tooltip.
+  - **Interactive Prompt Guide & Popover**: `(?)` button reveals syntax guide for custom R:R, SL/TP pips, and institutional SMC confluence queries.
+  - **One-Click R:R Preset Chips**: `[🎯 R:R 1:3]`, `[🎯 R:R 1:2]`, and `[🎯 R:R 1:4]` quick action chips for instant execution.
+  - **Automatic extraction of typed `ActionPlan`**: (Side, Entry, SL, TP, calibrated R:R, Confidence).
   - **Ergonomic Floating & Docking**: Freely draggable window with persistent localStorage coordinates (defaults to top-left `(24, 52)` leaving price scale and candles 100% unobstructed), one-click dock snapping (`◀ Dock Left`, `▶ Dock Right`), and ultra-compact capsule minimize mode (`[-]` / `[↗]`).
-  - **Manual Confirmation by Default**: `autoMode` initializes strictly to `false` to guarantee quick actions (e.g. `Best entry now?`) only display analysis and require explicit user consent via the prominent "Apply Plan" button.
-  - **Chart Viewport & Zoom Preservation**: Decoupled trade execution and economic markers from candle dataset re-renders with 15-bar rightOffset, preventing chart view resets or candle clipping against the right axis.
+  - **Manual Confirmation by Default**: `autoMode` initializes strictly to `false` to guarantee quick actions only display analysis and require explicit user consent via the prominent "Apply Plan" button.
   - **Live Network & AI Interaction**: Typing in "Ask Copilot" and clicking "Send" dispatches active network requests to backend AI Gateway (`/api/copilot/stream` / `/api/copilot/ask`) with live streaming token telemetry, input reset, and offline algorithmic fallback.
 - **QA Verification:**
-  1. Click collapse `[-]` button -> Panel collapses smoothly into a sleek floating capsule pill.
-  2. Type question or click Quick Action (`Best entry now?`) -> Live network request triggers in DevTools (`/api/copilot/stream` or `/api/copilot/ask`); CoT reasoning streams token-by-token; **zero automated orders are placed**.
-  3. Click "Apply Plan" -> Market order executes with SL/TP lines drawn on chart; **chart zoom, pan position, and 15-bar right breathing room remain 100% stable without resetting**.
-  4. Drag HUD or click `◀` / `▶` -> HUD snaps to edges or follows cursor smoothly within viewport bounds.
+  1. Ask `"Rủi ro / Lợi nhuận? tôi muốn tỉ lệ lợi nhuận là 1:3"` or click chip `[🎯 R:R 1:3]` -> Live reasoning streams and Action Plan card displays calibrated `R:R: 1 : 3.00` with TP distance $= 3 \times$ SL distance.
+  2. Click prompt guide `(?)` -> Popover appears detailing syntax tips for R:R, SL/TP pips, and bias.
+  3. Verify Engine Badge -> Displays active engine (`[⚡ SMC Algorithm]` or `[🧠 Model]`).
+  4. Click collapse `[-]` button -> Panel collapses smoothly into a sleek floating capsule pill.
+  5. Click "Apply Plan" -> Market order executes with SL/TP lines drawn on chart; chart zoom, pan position, and 15-bar right breathing room remain 100% stable without resetting.
+  6. Drag HUD or click `◀` / `▶` -> HUD snaps to edges or follows cursor smoothly within viewport bounds.
 
 #### `F-SMC-08` - Multi-Timeframe (MTF) Trend Matrix Widget
 - **UI Navigation:** Compact widget docked below the Apex Copilot on the chart view.
