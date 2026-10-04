@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowUpRight, ArrowDownRight, Minus, Plus, Scale, ChevronUp, ChevronDown } from 'lucide-react';
+import { ArrowUpRight, ArrowDownRight, Minus, Plus, Scale, ChevronUp, ChevronDown, X } from 'lucide-react';
 import { Candle, InstrumentSpec } from '../../types/market';
 import { AccountState } from '../../types/order';
 import { LiveTickUpdate } from '../../types/broker';
@@ -167,6 +167,18 @@ export const QuickTradeDock: React.FC<QuickTradeDockProps> = ({
               >
                 <ChevronUp className="w-3.5 h-3.5" />
               </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsQuickDockOpen(false);
+                  setShowSettings(false);
+                }}
+                className="p-1 text-slate-400 hover:text-rose-400"
+                title={t.cancel}
+                aria-label={t.cancel}
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
             </div>
 
             {/* DESKTOP ROW (sm:flex) */}
@@ -278,11 +290,40 @@ export const QuickTradeDock: React.FC<QuickTradeDockProps> = ({
               >
                 <ChevronUp className="w-3.5 h-3.5" />
               </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsQuickDockOpen(false);
+                  setShowSettings(false);
+                }}
+                className="p-1 text-slate-400 hover:text-rose-400 hover:bg-rose-950/60 rounded-lg transition-colors"
+                title={t.cancel}
+                aria-label={t.cancel}
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
             </div>
 
             {/* ADVANCED RISK / REWARD & PRESET POPOVER */}
             {showSettings && (
               <div className="absolute top-10 left-0 z-50 p-2.5 rounded-xl bg-[#111622]/98 border border-slate-700/90 shadow-2xl backdrop-blur-md flex flex-col gap-2 min-w-[260px] animate-in fade-in zoom-in-95 font-mono text-xs">
+                {/* Popover Header with Title and Close X */}
+                <div className="flex items-center justify-between border-b border-slate-800/80 pb-1.5">
+                  <span className="text-[10px] text-slate-300 font-bold uppercase flex items-center gap-1.5">
+                    <Scale className="w-3.5 h-3.5 text-indigo-400" />
+                    <span>{t.scaleSettingsTooltip}</span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setShowSettings(false)}
+                    className="p-0.5 text-slate-400 hover:text-rose-400 transition-colors"
+                    title={t.cancel}
+                    aria-label={t.cancel}
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
                 {/* Lot Presets */}
                 <div className="flex items-center justify-between gap-1 border-b border-slate-800/80 pb-1.5">
                   <span className="text-[10px] text-slate-400 font-bold uppercase">Presets:</span>

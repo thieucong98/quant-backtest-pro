@@ -1295,10 +1295,21 @@ export const PositionsTable: React.FC = () => {
       {/* EDIT SL/TP & TAGGING MODAL DIALOG */}
       {editingPosition && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-in fade-in">
-          <div className="bg-slate-900 border border-slate-700 p-5 rounded-lg w-84 max-w-[calc(100vw-2rem)] shadow-2xl space-y-3.5 text-xs">
-            <h3 className="font-bold text-sm text-slate-200">
-              {isLiveTradingMode ? 'Modify Live SL / TP' : `${t.editSLTP} & ${t.tagStrategy}`}
-            </h3>
+          <div className="bg-slate-900 border border-slate-700 p-5 rounded-xl w-84 max-w-[calc(100vw-2rem)] shadow-2xl space-y-3.5 text-xs">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+              <h3 className="font-bold text-sm text-slate-200">
+                {isLiveTradingMode ? 'Modify Live SL / TP' : `${t.editSLTP} & ${t.tagStrategy}`}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setEditingPosition(null)}
+                className="p-1 text-slate-400 hover:text-rose-400 hover:bg-slate-800 rounded-lg transition-colors"
+                title={t.cancel}
+                aria-label={t.cancel}
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
 
             <div className="space-y-2.5">
               <div>

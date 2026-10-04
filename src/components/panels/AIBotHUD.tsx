@@ -11,7 +11,8 @@ import {
   Zap,
   TrendingUp,
   ShieldAlert,
-  Sliders
+  Sliders,
+  X
 } from 'lucide-react';
 import { useBacktestStore } from '../../store/backtestStore';
 import { getTranslation } from '../../i18n';
@@ -108,6 +109,15 @@ export const AIBotHUD: React.FC = () => {
                 title={t.botCollapseTooltip}
               >
                 <ChevronUp className="w-3.5 h-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsMinimized(true)}
+                className="p-1 text-slate-400 hover:text-rose-400 hover:bg-rose-950/60 rounded transition-colors"
+                title={t.cancel}
+                aria-label={t.cancel}
+              >
+                <X className="w-3.5 h-3.5" />
               </button>
             </div>
           </div>

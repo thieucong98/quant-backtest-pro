@@ -6,7 +6,8 @@ import {
   Settings,
   Lock,
   ArrowLeftRight,
-  Plus
+  Plus,
+  X
 } from 'lucide-react';
 import { useBacktestStore } from '../../store/backtestStore';
 import { getTranslation } from '../../i18n';
@@ -109,6 +110,22 @@ export const PriceScaleContextMenu: React.FC<PriceScaleContextMenuProps> = ({
       style={{ left: `${pos.left}px`, top: `${pos.top}px` }}
       className="fixed z-50 w-64 bg-[#131722]/95 backdrop-blur-xl border border-[#2a2e39] rounded-lg shadow-2xl py-1 text-xs select-none animate-in fade-in zoom-in-95 duration-100 font-sans"
     >
+      {/* Context Menu Header with Title and Close X Button */}
+      <div className="flex items-center justify-between px-3 py-1.5 border-b border-[#2a2e39] mb-1">
+        <span className="text-[11px] font-bold text-slate-300 font-mono flex items-center gap-1.5">
+          <Settings className="w-3 h-3 text-indigo-400" />
+          <span>{t.scaleSettingsTooltip}</span>
+        </span>
+        <button
+          type="button"
+          onClick={onClose}
+          className="p-0.5 text-slate-400 hover:text-rose-400 rounded transition-colors cursor-pointer"
+          title={t.cancel}
+          aria-label={t.cancel}
+        >
+          <X className="w-3.5 h-3.5" />
+        </button>
+      </div>
       {/* 1. RESET PRICE SCALE */}
       <button
         type="button"

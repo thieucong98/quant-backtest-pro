@@ -1442,6 +1442,7 @@ export const TradingViewChart: React.FC<TradingViewChartProps> = ({
                       propFirmMaxDrawdownLimit={propFirmMaxDrawdownLimit}
                       propFirmProfitTarget={propFirmProfitTarget}
                       propFirmStartingDayBalance={propFirmStartingDayBalance}
+                      onClose={() => setActiveAssistantPanel(null)}
                     />
                   </div>
                 )}

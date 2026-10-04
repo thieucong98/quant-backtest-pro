@@ -942,6 +942,8 @@ export const vi: TranslationDict = {
   "apexCopilotSettingsSuccess": "Kết nối thành công",
   "apexCopilotSettingsError": "Lỗi kết nối",
   "apexCopilotSettingsSaved": "Đã lưu cấu hình Gateway thành công!",
+  "apexCopilotReadyTitle": "Sẵn sàng phân tích thị trường",
+  "apexCopilotReadyDesc": "Đặt câu hỏi hoặc chọn một hành động nhanh bên dưới để chạy phân tích SMC chuyên sâu.",
   // Multi-Chart Layout & Synchronization (v2.0)
   "singleLayout": "Biểu đồ đơn",
   "dualHorizontalLayout": "Chia đôi (Ngang)",

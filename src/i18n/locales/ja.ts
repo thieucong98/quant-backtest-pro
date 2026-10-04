@@ -942,6 +942,8 @@ export const ja: TranslationDict = {
   "apexCopilotSettingsSuccess": "接続に成功しました",
   "apexCopilotSettingsError": "接続エラー",
   "apexCopilotSettingsSaved": "Gateway設定が正常に保存されました！",
+  "apexCopilotReadyTitle": "市場分析の準備完了",
+  "apexCopilotReadyDesc": "質問を入力するか、下のクイックアクションを選択して機関投資家SMC分析を実行します。",
   // Multi-Chart Layout & Synchronization (v2.0)
   "singleLayout": "シングルチャート",
   "dualHorizontalLayout": "水平分割（左右）",
